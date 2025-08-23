@@ -28,6 +28,7 @@
             android:layout_height="wrap_content">
             <com.au.module_android.widget.CustomButton
                 android:id="@+id/nativeTtsButton"
+                android:enabled="false"
                 style="@style/StyleButtonPrimary"
                 android:text="nativeTTS"
                 android:layout_marginBottom="0dp"
@@ -37,6 +38,7 @@
                 android:layout_height="48dp"/>
             <com.au.module_android.widget.CustomButton
                 android:id="@+id/edgeTtsButton"
+                android:enabled="false"
                 style="@style/StyleButtonPrimary"
                 android:layout_marginStart="9dp"
                 android:text="edgeTTS"

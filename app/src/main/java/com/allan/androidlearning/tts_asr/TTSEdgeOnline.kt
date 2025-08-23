@@ -55,23 +55,10 @@ class TTSEdgeOnline : ITts {
     private var mPlayer: MyMediaPlayer? = null
 
     override fun init() {
-        mPlayer = MyMediaPlayer().apply {
-                setStCallback { st->
-                    when(st) {
-                        MyMediaPlayer.St.NOT_INIT -> {
-
-                        }
-                        MyMediaPlayer.St.INIT -> {
-                        }
-                        MyMediaPlayer.St.PLAYING -> {
-
-                        }
-                        MyMediaPlayer.St.PAUSED -> {
-
-                        }
-                    }
-                }
-            )
+        mPlayer = MyMediaPlayer()
+        mPlayer?.setOnCompleteCallback {
+            logd { "edgeTTS play completed!" }
+            mDoneCb()
         }
 
         val files = baseDir().listFiles()

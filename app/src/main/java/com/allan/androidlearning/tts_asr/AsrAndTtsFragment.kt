@@ -2,6 +2,7 @@ package com.allan.androidlearning.tts_asr
 
 import android.Manifest
 import android.os.Bundle
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -91,6 +92,11 @@ class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
         )
         for (tts in mTts) {
             tts.init()
+            tts.setOnDoneCallback {
+                lifecycleScope.launch {
+                    setTtsButtonStatus(true)
+                }
+            }
         }
         permissionHelper.safeRun({
             toastOnTop("录音权限，授权通过！")
@@ -98,7 +104,7 @@ class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
             toastOnTop("录音权限，授权未通过！")
         })
 
-        initTtsButtons()
+        initTts()
         initAsr()
     }
 
@@ -143,21 +149,33 @@ class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
         viewModel.dispatch(AsrAndTtsViewModel.UnzipAsrModelAction())
     }
 
-    private fun initTtsButtons() {
+    private fun setTtsButtonStatus(isEnable: Boolean) {
+        binding.nativeTtsButton.isEnabled = isEnable
+        binding.edgeTtsButton.isEnabled = isEnable
+    }
+
+    private fun initTts() {
         binding.nativeTtsButton.onClick {
-            val tts = binding.nativeEdit.text?.toString()
-            if (!tts.isNullOrEmpty()) {
-                lifecycleScope.launchOnIOThread {
-                    mTts.getOrNull(0)?.speak(tts)
-                }
-            }
+            callTts(0)
         }
         binding.edgeTtsButton.onClick {
-            val tts = binding.nativeEdit.text?.toString()
-            if (!tts.isNullOrEmpty()) {
-                lifecycleScope.launchOnIOThread {
-                    mTts.getOrNull(1)?.speak(tts)
-                }
+            callTts(1)
+        }
+        binding.nativeEdit.doAfterTextChanged {
+            if (!it.isNullOrEmpty()) {
+               setTtsButtonStatus(true)
+            } else {
+                setTtsButtonStatus(false)
+            }
+        }
+    }
+
+    private fun callTts(index:Int) {
+        val tts = binding.nativeEdit.text?.toString()
+        if (!tts.isNullOrEmpty()) {
+            setTtsButtonStatus(false)
+            lifecycleScope.launchOnIOThread {
+                mTts.getOrNull(index)?.speak(tts)
             }
         }
     }

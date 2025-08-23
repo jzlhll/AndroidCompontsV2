@@ -4,6 +4,7 @@ import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
+import java.util.UUID
 
 // 在 MainActivity 类内部或外部定义这个接口类：
 class TTSNative(private val context: Context) : ITts{
@@ -21,20 +22,19 @@ class TTSNative(private val context: Context) : ITts{
                 // 注意：设置语言的结果需要检查，可能不支持某种语言
                 tts?.language = Locale.ENGLISH
             }
-        }.apply {
-            setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                override fun onDone(utteranceId: String?) {
-                    mDoneCb()
-                }
-
-                override fun onError(utteranceId: String?) {
-                }
-
-                override fun onStart(utteranceId: String?) {
-                }
-
-            })
         }
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onDone(utteranceId: String?) {
+                mDoneCb()
+            }
+
+            override fun onError(utteranceId: String?) {
+            }
+
+            override fun onStart(utteranceId: String?) {
+            }
+
+        })
     }
 
     override fun destroy() {
@@ -44,7 +44,7 @@ class TTSNative(private val context: Context) : ITts{
     }
 
     override fun speak(text: String) {
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
     }
 
     override fun stop() {

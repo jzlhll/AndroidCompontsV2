@@ -11,21 +11,17 @@ public class MyMediaPlayer implements MediaPlayer.OnPreparedListener, MediaPlaye
     private MediaPlayer mMediaPlayer;
     private St mCurrentSt = St.NOT_INIT;
 
-    private static final int MSG_UPDATE_VISIBLE = 2;
-    private static final int MSG_UPDATE_POS = 1;
-    private static final int MSG_UPDATE_POS_INIT = 0;
+    private Runnable mCompleteCallback;
+
+    public void setOnCompleteCallback(Runnable runnable) {
+        mCompleteCallback = runnable;
+    }
 
     public enum St {
         NOT_INIT,
         INIT,
         PLAYING,
         PAUSED,
-    }
-
-    private StCallback mStCallback;
-
-    public void setStCallback(StCallback s) {
-        mStCallback = s;
     }
 
     public MyMediaPlayer() {
@@ -65,7 +61,6 @@ public class MyMediaPlayer implements MediaPlayer.OnPreparedListener, MediaPlaye
         if (mCurrentSt == St.PLAYING) {
             mMediaPlayer.pause();
             mCurrentSt = St.PAUSED;
-            mStCallback.onStChange(St.PAUSED);
         }
     }
 
@@ -73,7 +68,6 @@ public class MyMediaPlayer implements MediaPlayer.OnPreparedListener, MediaPlaye
         if (mCurrentSt == St.PAUSED) {
             mMediaPlayer.start();
             mCurrentSt = St.PLAYING;
-            mStCallback.onStChange(St.PLAYING);
         }
     }
 
@@ -81,16 +75,16 @@ public class MyMediaPlayer implements MediaPlayer.OnPreparedListener, MediaPlaye
         if (mCurrentSt == St.NOT_INIT) {
             return;
         }
-        mMediaPlayer.stop();
-        mMediaPlayer.reset();
+        if (mMediaPlayer != null) {
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+        }
         mCurrentSt = St.INIT;
-        mStCallback.onStChange(St.INIT);
     }
 
     public void release() {
-        mMediaPlayer.release();
+        if(mMediaPlayer != null) mMediaPlayer.release();
         mCurrentSt = St.NOT_INIT;
-        mStCallback.onStChange(St.NOT_INIT);
         mMediaPlayer = null;
     }
 
@@ -99,15 +93,12 @@ public class MyMediaPlayer implements MediaPlayer.OnPreparedListener, MediaPlaye
     public void onPrepared(MediaPlayer mp) {
         mMediaPlayer.start();
         mCurrentSt = St.PLAYING;
-        mStCallback.onStChange(St.PLAYING);
     }
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
         stop();
-    }
-
-    public interface StCallback {
-        void onStChange(St st);
+        var cb = mCompleteCallback;
+        if(cb != null) cb.run();
     }
 }
