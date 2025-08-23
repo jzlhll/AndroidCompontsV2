@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_marginHorizontal="@dimen/ui_padding_edge"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <com.au.module_android.widget.CustomFontText
+            style="@style/StyleFontMText"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="24dp"
+            android:text="Audio Recorder and Player Demos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/audioRecorder"
+            style="@style/StyleButtonPrimary"
+            android:text="Audio Recorder"
+            android:layout_marginTop="48dp"
+            android:layout_marginBottom="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/audioPlayer"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="Audio Player"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/bluetooth"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="bluetooth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/bluetoothBle"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="BLE"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/camera1"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="Camera1SurfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/camera1TextureView"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="Camera1TextureView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/camera2"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="Camera2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/camerax"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="CameraX"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/uvcCamera"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="UVC Camera"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+</ScrollView>

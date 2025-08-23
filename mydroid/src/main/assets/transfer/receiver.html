@@ -1,0 +1,467 @@
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDroid</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 750px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f5f6fa;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .upload-section {
+            display: inline-flex;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-button {
+            height: 48px;
+            line-height: 24px;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .custom-button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        #dropZone {
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+            color: #7f8c8d;
+        }
+
+        #dropZone.dragover {
+            border-color: #3498db;
+            background-color: #e8f4ff;
+            color: #3498db;
+        }
+
+        .normal-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        #uploadProgress {
+            height: 100%;
+            width : 0%;
+            background: #3498db;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .divider {
+            margin: 50px 0 20px 0;
+            border-top: 1px solid #ddd;
+        }
+
+        #overlayView {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #overlayView-content {
+            text-align: center;
+            padding: 30px;
+            max-width: 80%;
+        }
+
+        #overlayView h2 {
+            color: #ff4444;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #overlayView p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+    </style>
+    <title></title>
+</head>
+
+<script src="mydroid-md5generator.js"></script>
+<script src="mydroid-uploadfile.js"></script>
+<script src="spark-md5.min.js"></script>
+<script src="mydroid-utils.js"></script>
+<script src="mydroid-websockets.js"></script>
+<script src="mydroid-websocket-receiver.js"></script>
+<script src="mydroid-locales.js"></script>
+
+<!-- 指定 app/worker 否则无法识别。-->
+<script src="worker-mydroid-md5.js" type="app/worker"></script>
+
+<body>
+<div class="container">
+    <h1>MyDroid</h1>
+    <p id="subtitle" style="text-align: center; color: #95a5a6; font-size: 1.0em; margin-top: -20px; margin-bottom: 30px;">
+    </p>
+    <div class="form-container">
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-section">
+                <input type="file" multiple name="file" id="real-file">
+                <button id="selectedFileBtn" type="button" class="custom-button" onclick="document.getElementById('real-file').click()">
+                </button>
+            </div>
+        </form>
+        
+        <button id="uploadButton" type="button" class="custom-button" 
+                style="background-color: #27ae60" 
+                onclick="startUpload()">
+        </button>
+    </div>
+
+    <div id="status" class="normal-message" style="visibility: hidden;">...</div>
+
+    <div class="progress-container">
+        <div id="uploadProgress" class="progress-bar"></div>
+    </div>
+
+    <div id="dropZone" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+    </div>
+
+    <div id="fileList" class="normal-message" style="display: none;white-space: pre-line;">
+    </div>
+    <div class="divider" style="display: none;">
+    </div>
+</div>
+
+<!-- 错误遮罩层 -->
+<div id="overlayView">
+    <div id="overlayView-content">
+        <h2 id="overlayError1"></h2>
+        <p id="overlayError2"></p>
+    </div>
+</div>
+
+<script>
+     //正在操作中
+    let isActioning = false;
+
+    //init locales
+    document.getElementById('subtitle').textContent = loc["local_network_fast_transfer"];
+    document.getElementById('selectedFileBtn').textContent = loc["select_file"];
+    document.getElementById('uploadButton').textContent = loc["start_upload"];
+    document.getElementById('dropZone').textContent = loc["drag_drop_hint"];
+    document.getElementById('overlayError1').textContent = loc["connection_lost"];
+    document.getElementById('overlayError2').textContent = loc["reconnect_prompt"];
+
+    function showStatus(message, type, shouldReset=true) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.style.visibility = 'visible';
+        statusDiv.textContent = message;
+        statusDiv.className = `status-message ${type}`;
+        if (shouldReset) {
+            setTimeout(() => {
+                statusDiv.style.visibility = 'hidden';
+            }, 3000);
+        }
+    }
+
+    window.htmlUpdateLeftSpace = function(newText) {
+        document.getElementById('subtitle').textContent = newText;
+    }
+
+    window.commonHtmlConnectError = function(message) {
+        const overlay = document.getElementById('overlayView');
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function requireNotActioning(continueCallback) {
+        if (isActioning) {
+            showStatus(loc["not_action_message"], "error", true);
+        } else {
+            continueCallback();
+        }
+    }
+
+    document.getElementById('real-file').addEventListener('change', function(e) {
+        requireNotActioning(()=>{
+            showFileInfo(e.target.files);
+        });
+    });
+
+    function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').classList.remove('dragover');
+        requireNotActioning(()=>{
+            showFileInfo(e.dataTransfer.files);
+        });
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').classList.add('dragover');
+    }
+    
+    //字段：name, fileSizeStr, md5, md5Time, uploadInfo
+    let selectedFileMap = new Map();
+    let isMd5Process = true;
+
+    function showSelectedFilesInfo() {
+        let str = loc["selected_files"];
+        console.log("selected file map " + selectedFileMap.size);
+        for (let i = 0; i < selectedFileMap.size; i++) {
+            const info = selectedFileMap.get(i);
+            const name = info.file.name;
+            const fileSizeStr = info.fileSizeStr;
+
+            const md5 = info.md5 ?? "--";
+            
+            if (isMd5Process) {
+                const md5Time = info.md5Time ?? "--";
+                const tStr = loc["time_consumed"];
+                str = str + `${name} ${fileSizeStr} \nmd5:${md5} ${tStr}:${md5Time}ms\n\n`;
+            } else {
+                const uploadInfo = info.uploadInfo ?? "--";
+                const upStr = loc["upload"];
+                str = str + `${name} ${fileSizeStr} \nmd5:${md5} ${upStr}:${uploadInfo}\n\n`;
+            }
+        }
+        const fileListDiv = document.getElementById('fileList');
+        fileListDiv.style.display = 'block';
+        fileListDiv.textContent = str;
+    }
+
+    async function showFileInfo(files) {
+        console.log("show FileInfo file list: ", files);
+        if (files) {
+            const startTs = Date.now();
+            window.lastStartTsFlagArr = window.lastStartTsFlagArr || {};
+            window.lastStartTsFlagArr.checkMd5StartTime = startTs;
+
+            isActioning = true;
+
+            //1. 设定 检查loop开始
+            console.log("show FileInfo file list 1.");
+            let deltaTs = 0;
+            isMd5Process = true;
+            const loopController = new LoopController();
+            loopController.start(showSelectedFilesInfo);
+
+            //2. 初始化map
+            console.log("show FileInfo file list 2.");
+            selectedFileMap.clear();
+            for (let i = 0; i < files.length; i++) {
+                selectedFileMap.set(i, {
+                    file: files[i],
+                    name: files[i].name,
+                    fileSizeStr: myDroidFormatSize(files[i].size)
+                });
+            }
+            //2.1 一上来就检查一次
+            showSelectedFilesInfo();
+            
+            //3. 开始generate md5
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                try {
+                    let md5 = "";
+                    const one = selectedFileMap.get(i);
+
+                    const oneStartTs = Date.now();
+                    //console.log(`show FileInfo file list 3.1 ${one.name}`);
+                    if (window.Worker && file.size > 50 * 1024 * 1024) { //50MB就用大的
+                        md5 = await streamBasedHashWorker(file, startTs);
+                    } else {
+                        md5 = await generateMd5Small(file);
+                    }
+                    one.md5 = md5;
+                    one.md5Time = Date.now() - oneStartTs;
+                    console.log(`show FileInfo file list 3.2 ${one.name} ${one.md5} ${one.md5Time}`);
+                } catch(error) {
+                    if (error == 'aborted') {
+                        console.log(`md5: ${file.name} (${fileSize}) 已终止。`);
+                    } else {
+                        console.log(`md5: ${file.name} 错误：(${error})。`);
+                    }
+                    one.md5 = loc["md5_error"];
+                    one.md5Time = Date.now() - oneStartTs;
+                }
+            }
+            
+            //4. 结束检查
+            loopController.stop();
+            
+            showSelectedFilesInfo();
+            console.log("end show file info!");
+            isActioning = false;
+        }
+    }
+
+    function myHtmlChangeProgressVisible(visible) {
+        if(visible) 
+            document.querySelector('.progress-container').style.display = 'block';
+        else 
+            document.querySelector('.progress-container').style.display = 'none';
+    }
+
+    function changeUploadButton(reset) {
+        const uploadButton = document.getElementById('uploadButton');
+        
+        if (reset) {
+            // 重置为上传状态（原始样式）
+            uploadButton.innerHTML = loc["start_upload"];
+            uploadButton.style.backgroundColor = '#27ae60';
+            uploadButton.onclick = startUpload;
+        } else {
+            // 变为取消状态
+            uploadButton.innerHTML = loc["cancel_upload"];
+            uploadButton.style.backgroundColor = '#e74c3c'; // 红色
+            uploadButton.onclick = cancelUpload;
+        }
+    }
+
+    //取消上传
+    function cancelUpload() {
+        if (window.lastStartTsFlagArr) {
+            window.lastStartTsFlagArr.startUploadTime = Date.now();
+        }
+    }
+
+    // 开始上传
+    function startUpload() {
+        requireNotActioning(async ()=>{
+            if (selectedFileMap.size == 0) {
+                showStatus(loc["select_file"], "error", true);
+                return;
+            }
+
+            isActioning = true;
+            changeUploadButton(false);
+
+            const startTime = Date.now();
+            window.lastStartTsFlagArr.startUploadTime = startTime;
+
+            myHtmlChangeProgressVisible(true);
+
+            isMd5Process = false;
+
+            for (let i = 0; i < selectedFileMap.size; i++) {
+                updateProgress(0);
+                const one = selectedFileMap.get(i);
+
+                console.log(`${one.name} start upload...`);
+                try {
+                    const message = await startUploadFile(startTime, one.file, one.md5, 
+                        (uploadChunks, totalChunks, speed, str) => {
+                        //console.log(`updateChunks ${uploadChunks}/${totalChunks} ${speed} ${str}`);
+                        if (str == "mergeChunksStart") {
+                            updateProgress(100);
+                            one.uploadInfo = loc["final_check"];
+                        } else if(str == "uploadChunk") {
+                            const percent = Math.round((uploadChunks / totalChunks) * 100);
+                            updateProgress(percent);
+                            one.uploadInfo = `${percent}%，${speed}`;
+                        } else if (str == "complete") {
+                            one.uploadInfo = loc["send_success"];
+                        } else if (str == "abort") {
+                            one.uploadInfo = loc["operation_cancelled"];
+                        }
+                    });
+                    console.log(message);
+                } catch(error) {
+                    console.error(error);
+                    one.uploadInfo = error;
+                }
+
+                showSelectedFilesInfo();
+            }
+        
+            isActioning = false;
+            changeUploadButton(true);
+            afterUpload();
+        });
+    }
+
+    // 重置UI状态
+    function afterUpload() {
+        document.getElementById('real-file').value = '';
+        selectedFileMap.clear();
+        updateProgress(0);
+        myHtmlChangeProgressVisible(false);
+    }
+
+    function updateProgress(percent) {
+        const progressBar = document.getElementById('uploadProgress');
+        progressBar.style.width = `${percent}%`;
+    }
+
+    ////////run init functions//////
+    startWsConnect();
+</script>
+</body>
+</html>

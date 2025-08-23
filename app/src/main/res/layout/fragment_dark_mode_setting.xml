@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent">
+    <com.au.module_android.widget.CustomFontText
+        android:layout_marginStart="@dimen/ui_padding_edge"
+        style="@style/StyleFontBText"
+        android:textSize="20sp"
+        android:text="@string/language"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/localesFollowSystemHost"
+            android:orientation="horizontal"
+            android:layout_marginStart="@dimen/ui_padding_edge"
+            android:layout_marginEnd="@dimen/ui_padding_edge"
+            android:paddingTop="21dp"
+            android:paddingBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.au.module_android.widget.CustomFontText
+                style="@style/StyleFontText"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/followSystemTitle"
+                android:textSize="16sp"
+                android:text="@string/follow_system"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="1dp"/>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="24dp"
+                android:tint="@color/colorPrimary"
+                android:visibility="invisible"
+                tools:visibility="visible"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/localesFollowSystemCheck"
+                android:src="@drawable/ic_correct"
+                android:layout_height="24dp"/>
+        </LinearLayout>
+        <View
+            android:background="@color/color_line"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"/>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_marginStart="@dimen/ui_padding_edge"
+            android:layout_marginEnd="@dimen/ui_padding_edge"
+            android:paddingTop="21dp"
+            android:paddingBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.au.module_android.widget.CustomFontText
+                style="@style/StyleFontText"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:text="@string/language_cn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="1dp"/>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="24dp"
+                android:tint="@color/colorPrimary"
+                android:visibility="invisible"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/localesCNCheck"
+                android:src="@drawable/ic_correct"
+                android:layout_height="24dp"/>
+        </LinearLayout>
+
+        <View
+            android:background="@color/color_line"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"/>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_marginStart="@dimen/ui_padding_edge"
+            android:layout_marginEnd="@dimen/ui_padding_edge"
+            android:paddingTop="21dp"
+            android:paddingBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.au.module_android.widget.CustomFontText
+                style="@style/StyleFontText"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:text="@string/language_tw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="1dp"/>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:visibility="invisible"
+                android:layout_width="24dp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/localesTWCheck"
+                android:src="@drawable/ic_correct"
+                android:tint="@color/colorPrimary"
+                android:layout_height="24dp"/>
+        </LinearLayout>
+
+        <View
+            android:background="@color/color_line"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"/>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_marginStart="@dimen/ui_padding_edge"
+            android:layout_marginEnd="@dimen/ui_padding_edge"
+            android:paddingTop="21dp"
+            android:paddingBottom="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.au.module_android.widget.CustomFontText
+                style="@style/StyleFontText"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:text="@string/language_en"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="1dp"/>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:visibility="invisible"
+                android:layout_width="24dp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/localesENCheck"
+                android:src="@drawable/ic_correct"
+                android:tint="@color/colorPrimary"
+                android:layout_height="24dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_marginTop="12dp"
+        android:background="@color/color_line"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"/>
+
+    <com.au.module_android.widget.CustomFontText
+        android:layout_marginStart="@dimen/ui_padding_edge"
+        android:layout_marginTop="24dp"
+        style="@style/StyleFontBText"
+        android:textSize="20sp"
+        android:text="@string/dark_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_marginStart="@dimen/ui_padding_edge"
+            android:layout_marginEnd="@dimen/ui_padding_edge"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content">
+                <com.au.module_android.widget.CustomFontText
+                    style="@style/StyleFontText"
+                    android:textSize="16sp"
+                    android:text="@string/follow_system"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <com.au.module_android.widget.CustomFontText
+                    style="@style/StyleFontText"
+                    android:textSize="13sp"
+                    android:textColor="@color/color_text_desc"
+                    android:text="@string/automatic_desc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <com.au.module_androidui.widget.SwitchButton
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="20dp"
+                android:id="@+id/switchBtn"
+                android:layout_width="50dp"
+                android:layout_height="26dp"/>
+        </LinearLayout>
+
+        <View
+            android:layout_marginTop="12dp"
+            android:background="@color/color_line"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"/>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:id="@+id/hideLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.au.module_android.widget.CustomFontText
+                style="@style/StyleFontText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/ui_padding_edge"
+                android:layout_marginTop="20dp"
+                android:text="@string/select_manually"
+                android:textColor="@color/color_text_desc"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:id="@+id/lightHost"
+                android:orientation="horizontal"
+                android:layout_marginStart="@dimen/ui_padding_edge"
+                android:layout_marginEnd="@dimen/ui_padding_edge"
+                android:paddingTop="21dp"
+                android:paddingBottom="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <com.au.module_android.widget.CustomFontText
+                    style="@style/StyleFontText"
+                    android:layout_gravity="center_vertical"
+                    android:textSize="16sp"
+                    android:text="@string/light"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="1dp"/>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="24dp"
+                    android:tint="@color/colorPrimary"
+                    android:visibility="invisible"
+                    tools:visibility="visible"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/lightModeCheck"
+                    android:src="@drawable/ic_correct"
+                    android:layout_height="24dp"/>
+            </LinearLayout>
+
+            <View
+                android:background="@color/color_line"
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"/>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_marginStart="@dimen/ui_padding_edge"
+                android:layout_marginEnd="@dimen/ui_padding_edge"
+                android:paddingTop="21dp"
+                android:paddingBottom="16dp"
+                android:id="@+id/darkHost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <com.au.module_android.widget.CustomFontText
+                    style="@style/StyleFontText"
+                    android:layout_gravity="center_vertical"
+                    android:textSize="16sp"
+                    android:text="@string/dark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="1dp"/>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:visibility="invisible"
+                    android:layout_width="24dp"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/darkModeCheck"
+                    android:src="@drawable/ic_correct"
+                    android:tint="@color/colorPrimary"
+                    android:layout_height="24dp"/>
+            </LinearLayout>
+
+            <View
+                android:background="@color/color_line"
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

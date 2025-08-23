@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="20dp"
+    android:layout_height="match_parent">
+    <Button
+        android:id="@+id/directTakePicBtn"
+        android:text="直接拍照"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <com.au.module_android.widget.FlowLayout
+        app:flChildSpacing="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/takeActionDialog5Btn"
+            android:text="actionDialog 5个图和视频"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/takeActionDialog1Btn"
+            android:text="actionDialog 1个图"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/takeActionDialog3Btn"
+            android:layout_marginStart="4dp"
+            android:text="actionDialog 3个视频"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </com.au.module_android.widget.FlowLayout>
+
+    <LinearLayout
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/singlePic"
+            android:text="单选图片"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/singleVideo"
+            android:text="单选视频"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/singlePicAndVideo"
+            android:text="单图片&amp;视频"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="18dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/multiPic4"
+            android:text="多选图片"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/multiVideo3"
+            android:text="多选视频"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/multiPicAndVideo5"
+            android:text="多图片&amp;视频"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="18dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/multiPicV2"
+            android:text="多选图片2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/multiVideoV2"
+            android:text="多选视频2"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/multiPicAndVideoV2"
+            android:text="多图片&amp;视频2"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <com.au.module_android.widget.FlowLayout
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        app:flChildSpacing="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/pic1"
+            android:layout_width="80dp"
+            android:layout_height="80dp"/>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/pic2"
+            android:layout_width="80dp"
+            android:layout_height="80dp"/>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/pic3"
+            android:layout_width="80dp"
+            android:layout_height="80dp"/>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/pic4"
+            android:layout_width="80dp"
+            android:layout_height="80dp"/>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/pic5"
+            android:layout_width="80dp"
+            android:layout_height="80dp"/>
+    </com.au.module_android.widget.FlowLayout>
+</LinearLayout>

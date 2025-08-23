@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="fontMode" format="string" />
+    <attr name="isFontNum" format="boolean" />
+
+    <attr name="backgroundAlpha" format="float|integer" />
+    <attr name="backgroundNormal" format="color" />
+    <attr name="backgroundPressed" format="color" />
+    <attr name="backgroundDisabled" format="color" />
+
+    <attr name="autoHideIme" format="boolean" />
+</resources>

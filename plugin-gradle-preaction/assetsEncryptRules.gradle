@@ -1,0 +1,127 @@
+import java.nio.file.Paths
+
+String XOR_KEY = findProperty("encrypt.assets.key").toString() // 建议使用更长的密钥增强安全性
+String[] IGNORE_FILES = findProperty("encrypt.assets.ignore_list").toString().split(",")
+
+int CHUNK_SIZE = 4096
+/**
+ * XOR转换（加密和解密使用相同方法）
+ * @param data 要处理的数据
+ * @param key 混淆密钥字节数组
+ */
+private static def xorTransform(byte[] data, byte[] key) {
+    for (int i = 0; i < data.length; i++) {
+        data[i] = (data[i] ^ key[i % key.length]) as byte
+    }
+}
+
+/**
+ * 加密文件
+ * @param sourceFile 源文件
+ * @param targetFile 目标文件
+ * @param xorKey 加密密钥
+ */
+static def encryptFile(File sourceFile, File targetFile, String xorKey, int chunkSize) throws IOException {
+    byte[] keyBytes = xorKey.getBytes('UTF-8')
+
+    targetFile.withOutputStream { os ->
+        sourceFile.withInputStream { is ->
+            byte[] buffer = new byte[chunkSize]
+            int bytesRead
+
+            while ((bytesRead = is.read(buffer)) != -1) {
+                // 只处理实际读取到的字节
+                xorTransform(buffer, keyBytes)
+                os.write(buffer, 0, bytesRead)
+            }
+        }
+    }
+}
+
+
+/**
+ * 判断 fullPath 是否以 relativePath 结尾。
+ * relativePath 中始终使用 '/' 分隔，
+ * fullPath 中使用当前平台的分隔符。
+ *
+ * @param relativePath 例如 "transfer/xxx.js"
+ * @param fullPath     例如 "D:\\...\\transfer\\xxx.js" 或 "/home/.../transfer/xxx.js"
+ */
+static boolean matchesRelative(String relativePath, String fullPath) {
+    // 1. 把 fullPath 转为 Path
+    def full = Paths.get(fullPath)
+
+    // 2. 把 relativePath 按 '/' 分隔，然后构造一个相对 Path
+    String[] parts = relativePath.split("/")
+    def rel = Paths.get(parts[0], Arrays.copyOfRange(parts, 1, parts.length))
+
+    // 3. 用 endsWith 比对末尾元素序列
+    return full.endsWith(rel)
+}
+
+android {
+    applicationVariants.all { variant ->
+
+        def variantName = variant.name
+        def capitalized = variantName.capitalize()
+        def modifiedDir = layout.buildDirectory.dir("tmp/assets_modified/${variantName}").get().asFile
+
+        def copyTask = tasks.register("copyAssetsFor${capitalized}", Copy) {
+            // 排除掉目标目录本身
+            def sourceDirs = variant.sourceSets*.assets.srcDirs.flatten().findAll {
+                !it.absolutePath.startsWith(modifiedDir.absolutePath)
+            }
+
+            //println("[au-assetsEncryptRules] sourceDirs: " + sourceDirs)
+
+            from(sourceDirs)
+            into(modifiedDir)
+
+            // 遇到重复 asset 名字就跳过
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
+
+        // 2. 注册 Modify 任务，对 copied 文件进行修改
+        def modifyTask = tasks.register("modifyCopiedAssetsFor${capitalized}") {
+            dependsOn(copyTask)
+
+            doLast {
+                //println("[au-assetsEncryptRules] modifying: ${modifiedDir}")
+                modifiedDir.eachFileRecurse { file ->
+                    if (file.isFile()) {
+                        def isMatchIgnore = false
+                        for (String ignoreFile : IGNORE_FILES) {
+                            if (matchesRelative(ignoreFile, file.absolutePath)) {
+                                isMatchIgnore = true
+                                break
+                            }
+                        }
+
+                        if (!isMatchIgnore) {
+                            // 创建临时加密文件
+                            def tmpFile = new File(file.parent, file.name + ".tmp")
+                            // 调用你定义的加密方法
+                            encryptFile(file, tmpFile, XOR_KEY, CHUNK_SIZE)
+                            // 替换原始文件
+                            file.delete()
+                            def isSuc = tmpFile.renameTo(file)
+                            println("[au-assetsEncryptRules] modifying file: ${file} isSuc ${isSuc}")
+                        } else {
+                            println("[au-assetsEncryptRules] ignore file: ${file}")
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. 替换原始 sourceSet 的 assets 输入路径
+        android.sourceSets.named(variantName) {
+            assets.srcDirs = [modifiedDir]
+        }
+
+        // 4. 确保 mergeAssets 依赖于我们修改任务
+        variant.mergeAssetsProvider.configure {
+            dependsOn(modifyTask)
+        }
+    }
+}

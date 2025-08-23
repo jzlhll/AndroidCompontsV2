@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDroid</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        #bigTitle {
+            font-size: 16px;
+            color: #333;
+            padding: 8px;
+            min-height: 40px;
+            flex: 1;
+        }
+
+        .custom-button {
+            height: 48px;
+            line-height: 24px;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            width: 100%;
+            display: block;
+        }
+
+        .custom-button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .custom-button:active {
+            transform: translateY(0);
+        }
+
+        #overlayView {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #overlayView-content {
+            text-align: center;
+            padding: 30px;
+            max-width: 80%;
+        }
+
+        #overlayView h2 {
+            color: #ff4444;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #overlayView p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        #file-list-container {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            background: white;
+            display: none;
+            margin: 16px 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        #file-list-container table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        #file-list-container th,
+        #file-list-container td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        #file-list-container th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #444;
+        }
+
+        #file-list-container td:nth-child(1) { width: 60%; } /* 文件名列 */
+        #file-list-container td:nth-child(2) { width: 20%; min-width: 80px; } /* 大小列 */
+        #file-list-container td:nth-child(3) { width: 20%; min-width: 100px; } /* 操作列 */
+
+        @media (max-width: 768px) {
+            #file-list-container td:nth-child(1) { width: 50%; }
+            #file-list-container td:nth-child(2),
+            #file-list-container td:nth-child(3) { width: 25%; }
+
+            #file-list-container th,
+            #file-list-container td {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        }
+
+        /* 互动效果 */
+        #file-list-container tr:hover td {
+            background: #f5f5f5;
+        }
+
+        /* 下载链接美化 */
+        .download-link {
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .download-link:hover {
+            color: #0056b3;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .download-link.disabled {
+            color: #999;
+            pointer-events: none;
+            text-decoration: none;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+
+<script src="mydroid-md5generator.js"></script>
+<script src="spark-md5.min.js"></script>
+<script src="mydroid-utils.js"></script>
+<script src="mydroid-websockets.js"></script>
+<script src="mydroid-websocket-send.js"></script>
+<script src="localforage.min.js"></script>
+<script src="mydroid-locales.js"></script>
+
+<body>
+    <div class="container">
+        <h1>MyDroid</h1>
+        <p style="text-align: center; margin-top: -24px; ">
+            <span id="secondTitle" style="color: #444444; font-size: 0.98em;"></span>
+        </p>
+        <p style="text-align: center; margin-top: 4px; margin-bottom: 22px;">
+            <span id="bigTitleColor" style="display: none; width: 15px; height: 15px; border-radius: 50%; margin-right: -3px;"></span>
+            <span id="bigTitle" style="color: #444444; font-size: 0.98em;"></span>
+        </p>
+        <table id="file-list-container">
+            <thead>
+            <tr>
+                <th id="fileNameTh"></th>
+                <th id="fileSizeTh"></th>
+                <th id="fileActionTh"></th>
+            </tr>
+            </thead>
+            <tbody id="file-list-body"></tbody>
+        </table>
+    </div>
+
+    <div id="loading-text" style="text-align: center; font-size: 3em; font-family: 'Arial Black', sans-serif;
+         color: #3498db; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin: 50px 0;">
+        Loading...
+    </div>
+
+    <div id="overlayView">
+        <div id="overlayView-content">
+            <h2 id="overlayError1"></h2>
+            <p id="overlayError2"></p>
+        </div>
+    </div>
+
+    <script>
+        let isDownloading = false;
+        
+        document.getElementById('secondTitle').textContent = loc["refresh_list_by_f5"];
+
+        //init loc
+        document.getElementById('fileNameTh').textContent = loc["filename"];
+        document.getElementById('fileSizeTh').textContent = loc["size"];
+        document.getElementById('fileActionTh').textContent = loc["action"];
+        document.getElementById('overlayError1').textContent = loc["connection_lost"];
+        document.getElementById('overlayError2').textContent = loc["reconnect_prompt"];
+
+        window.commonHtmlConnectError = function(message) {
+            const overlay = document.getElementById('overlayView');
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        window.htmlUpdateIpClient = function(mode, name, color) {
+            document.getElementById('bigTitle').textContent = `${name} (${mode})`;
+            const circle = document.getElementById('bigTitleColor');
+            circle.style.display = 'inline-block';
+            document.getElementById('bigTitleColor').style.backgroundColor = color;
+        };
+
+        // 接收并显示数据的JS函数
+        window.htmlShowFileList = function(uriRealInfoHtmlList) {
+            document.getElementById('loading-text').style.display = 'none';
+            document.getElementById('file-list-container').style.display = 'table';
+            const tbody = document.getElementById('file-list-body');
+            tbody.innerHTML = '';
+
+            uriRealInfoHtmlList.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>
+                            <div class="file-name">${item.name || 'noNameFile'}</div>
+                        </td>
+                        <td>${item.fileSizeStr}</td>
+                        <td>
+                            <a id="${item.uriUuid}" class="download-link"
+                               onclick="startDownload('${item.uriUuid}')">
+                               下载
+                            </a>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        };
+
+        function updateDownloadLink(good, uriUuid, text) {
+            const a = document.getElementById(uriUuid);
+            a.textContent = text;
+            if (good) {
+                a.classList.remove('disabled');
+            } else {
+                a.classList.add('disabled');
+            }
+        }
+        
+        async function startDownload(uriUuid) {
+            startDownloadUri(uriUuid);
+        };
+
+        window.onStartDownErr = function(msg, uriUuid) {
+            updateDownloadLink(false, uriUuid, msg);
+        };
+
+        window.htmlDownloadProcess = function(uuid, str, enable) {
+            updateDownloadLink(enable, uuid, str)
+        };
+
+        ////////run init functions//////
+        startWsConnect();
+    </script>
+</body>
+</html>

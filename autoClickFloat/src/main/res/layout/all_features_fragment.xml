@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.autooneclick.AutoContinuousClickActivityFragment">
+
+    <com.au.module_android.widget.BgBuildLinearLayout
+        android:orientation="vertical"
+        app:backgroundNormal="@color/color_normal_block2"
+        app:cornerRadius="8dp"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:id="@+id/recordModeHost"
+        android:layout_marginVertical="24dp"
+        android:layout_width="match_parent"
+        android:paddingVertical="32dp"
+        android:layout_height="match_parent">
+        <com.au.module_android.widget.CustomButton
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:id="@+id/recordModeBtn"
+            android:layout_marginHorizontal="30dp"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_height="50dp"
+            android:text="录制方案"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:layout_marginTop="24dp"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:id="@+id/autoClickButton"
+            android:layout_marginHorizontal="30dp"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_height="50dp"
+            android:text="自动点击"/>
+
+        <com.au.module_android.widget.CustomButton
+            style="@style/StyleButtonPrimary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="0dp"
+            android:id="@+id/nongyaoBtn"
+            android:layout_marginHorizontal="30dp"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_height="50dp"
+            android:text="AutoWorkTg"/>
+
+        <com.au.module_android.widget.CustomButton
+            style="@style/StyleButtonPrimary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="0dp"
+            android:id="@+id/autoFsBtn"
+            android:layout_marginHorizontal="30dp"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_height="50dp"
+            android:text="auto fs work"/>
+
+        <com.au.module_android.widget.CustomButton
+            style="@style/StyleButtonPrimary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="0dp"
+            android:id="@+id/coverScreenBtn"
+            android:layout_marginHorizontal="30dp"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_height="50dp"
+            android:text="cover screen"/>
+
+        <com.au.module_android.widget.CustomButton
+            style="@style/StyleButtonPrimary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="0dp"
+            android:id="@+id/debugBtn"
+            android:layout_marginHorizontal="30dp"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_height="50dp"
+            android:text="Debug"/>
+
+        <com.au.module_android.widget.CustomButton
+            style="@style/StyleButtonPrimary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="0dp"
+            android:id="@+id/logSysBtn"
+            android:layout_marginHorizontal="30dp"
+            android:layout_width="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_height="50dp"
+            android:text="logSys"/>
+    </com.au.module_android.widget.BgBuildLinearLayout>
+
+</FrameLayout>

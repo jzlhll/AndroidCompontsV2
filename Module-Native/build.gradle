@@ -1,0 +1,103 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+class ASCIICipher {
+    private Random random
+    private List<Character> asciiTable
+
+    ASCIICipher(Long seed = null) {
+        this.random = seed ? new Random(seed) : new Random()
+        this.asciiTable = generateAsciiTable()
+    }
+
+    private static List<Character> generateAsciiTable() {
+        List<Character> table = []
+        for (int i = 0; i < 128; i++) {
+            table.add((char) i)
+        }
+        return table
+    }
+
+    String encrypt(String text) {
+        // 生成随机偏移量 (1-100)
+        int offset = random.nextInt(9) + 1
+
+        // 加密每个字符
+        List<String> encryptedChars = []
+        for (char c : text.toCharArray()) {
+            int asciiVal = (int) c
+            int encryptedVal = asciiVal + offset
+            encryptedChars.add(encryptedVal.toString())
+        }
+
+        // 返回格式: "偏移量,加密值1,加密值2,..."
+        return "${offset},${encryptedChars.join(',')}"
+    }
+}
+
+def cipher = new ASCIICipher(System.currentTimeMillis()) // 可选的种子值
+
+def APP_SIGN = cipher.encrypt(findProperty("app.sha1"))
+def APP_ID = cipher.encrypt(findProperty("app.appid"))
+def APP_KEY = cipher.encrypt(findProperty("app.appkey"))
+
+def ENCRYPT_STRING_KEY = cipher.encrypt(findProperty("encrypt.string.key"))
+def ENCRYPT_ASSETS_KEY = cipher.encrypt(findProperty("encrypt.assets.key"))
+
+android {
+    namespace='com.example.module_native'
+    compileSdk=gradle.ext.compileSdk
+
+    defaultConfig {
+        minSdk=gradle.ext.minSdk
+
+        consumerProguardFiles "consumer-rules.pro"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+                // 添加多个参数
+                arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                        "-DAPP_SIGN=$APP_SIGN",
+                        "-DAPP_ID=$APP_ID",
+                        "-DAPP_KEY=$APP_KEY",
+                        "-DENCRYPT_STRING_KEY=$ENCRYPT_STRING_KEY",
+                        "-DENCRYPT_ASSETS_KEY=$ENCRYPT_ASSETS_KEY"
+                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            }
+        }
+        ndkVersion = '27.1.12297006'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled=false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            // Release 模式下的配置
+            externalNativeBuild {
+                cmake {
+                    cppFlags "-DIS_RELEASE"
+                }
+            }
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+    compileOptions {
+        sourceCompatibility=JavaVersion.VERSION_17
+        targetCompatibility=JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation project(":Module-Android")
+
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.material
+}

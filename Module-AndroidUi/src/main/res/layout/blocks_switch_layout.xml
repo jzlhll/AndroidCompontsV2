@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:layout_width="wrap_content"
+    android:minWidth="52dp"
+    tools:layout_height="28dp"
+    android:padding="@dimen/switch_block_padding"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    app:backgroundNormal="@color/color_switch_block_bg"
+    app:cornerRadius="2dp">
+
+    <com.au.module_android.widget.BgBuildView
+        app:layout_constraintStart_toStartOf="parent"
+        android:id="@+id/select_bg_view"
+        android:layout_width="0dp"
+        app:layout_constraintWidth_percent="0.5"
+        app:backgroundNormal="@color/color_switch_block_text"
+        app:cornerRadius="2dp"
+        android:layout_height="match_parent" />
+</merge>

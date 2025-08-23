@@ -1,0 +1,46 @@
+plugins {
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+}
+
+android {
+    namespace='com.au.logsystem'
+    compileSdk=gradle.ext.compileSdk
+
+    defaultConfig {
+        minSdk=gradle.ext.minSdk
+
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled=false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility=JavaVersion.VERSION_17
+        targetCompatibility=JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        viewBinding=true
+    }
+
+    kotlinOptions {
+        jvmTarget = gradle.ext.jvmTarget
+    }
+}
+
+dependencies {
+
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.material
+
+    implementation project(":Module-Android")
+    implementation project(":Module-AndroidUi")
+    implementation project(":Module-AndroidColor")
+    implementation project(":Module-Nested")
+}

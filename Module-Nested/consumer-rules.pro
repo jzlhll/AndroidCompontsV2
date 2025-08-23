@@ -1,0 +1,2 @@
+-keep public class com.au.module_nested.layout.* { *; }
+-keep public class com.au.module_nested.widget.* { *; }

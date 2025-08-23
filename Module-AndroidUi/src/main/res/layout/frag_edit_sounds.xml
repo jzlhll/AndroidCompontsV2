@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:layout_height="500dp">
+
+    <View
+        android:id="@+id/topLine"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/color_line_on_block"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"/>
+
+    <View
+        android:id="@+id/background"
+        app:layout_constraintTop_toBottomOf="@id/topLine"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="match_parent"
+        android:background="@color/color_normal_block"
+        android:layout_height="0dp" />
+
+    <com.au.module_android.widget.AutoResizeEditText
+        android:id="@+id/edit"
+        app:layout_constraintTop_toBottomOf="@id/topLine"
+        android:layout_marginTop="12dp"
+        style="@style/StyleBlankEditText"
+        android:paddingHorizontal="13dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:maxLines="999"
+        android:layout_width="0dp"
+        android:minHeight="48dp"
+        android:maxHeight="84dp"
+        android:hint="Send Message or Hold to Talk"
+        android:layout_height="wrap_content" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

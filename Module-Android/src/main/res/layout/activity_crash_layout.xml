@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:background="#ffffff"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:textColor="#000000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginTop="4dp"
+        android:text="Sorry it is crashed!\nScreenshot and feedback!"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#666666"
+        android:id="@+id/versionName"
+        android:gravity="center"
+        android:layout_marginBottom="12dp"
+        android:lineSpacingMultiplier="1.2"
+        tools:text="1.2.0"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="#f8f8f8"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/tvInfo"
+            android:textColor="#999999"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:lineSpacingMultiplier="1.2"
+            android:textSize="13sp" />
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/clearupBtn"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/ui_padding_edge"
+            android:text="清理缓存"/>
+
+        <Button
+            android:id="@+id/restartBtn"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/ui_padding_edge"
+            android:text="重启应用"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/checkAndUploadBtn"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/ui_padding_edge"
+            android:text="检查并升级"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/feedbackText"
+        android:layout_marginTop="6dp"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:layout_marginBottom="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

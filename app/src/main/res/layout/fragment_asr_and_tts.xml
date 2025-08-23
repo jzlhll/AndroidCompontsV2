@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/ttsHost"
+        android:orientation="vertical"
+        android:layout_marginTop="24dp"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:layout_marginBottom="32dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <com.au.module_android.widget.CustomEditText
+            android:paddingHorizontal="8dp"
+            android:id="@+id/nativeEdit"
+            style="@style/StyleBlankEditText"
+            android:layout_width="match_parent"
+            android:layout_height="80dp" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.au.module_android.widget.CustomButton
+                android:id="@+id/nativeTtsButton"
+                style="@style/StyleButtonPrimary"
+                android:text="nativeTTS"
+                android:layout_marginBottom="0dp"
+                android:layout_marginEnd="9dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"/>
+            <com.au.module_android.widget.CustomButton
+                android:id="@+id/edgeTtsButton"
+                style="@style/StyleButtonPrimary"
+                android:layout_marginStart="9dp"
+                android:text="edgeTTS"
+                android:layout_marginBottom="0dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <com.au.module_android.widget.CustomFontText
+        android:id="@+id/asrText"
+        android:layout_below="@id/ttsHost"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        style="@style/StyleFontText"
+        android:layout_marginTop="38dp"
+        android:layout_width="match_parent"
+        android:minHeight="120dp"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:id="@+id/asrHost"
+        android:layout_below="@id/asrText"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:layout_width="match_parent"
+        android:layout_height="50dp">
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/stopAsrBtn"
+            style="@style/StyleButtonWarn"
+            android:text="stop native Vosk ASR..."
+            android:visibility="gone"
+            android:layout_marginBottom="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/asrButton"
+            style="@style/StyleButtonPrimary"
+            android:text="native Vosk ASR"
+            android:layout_marginBottom="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/loading"
+        tools:visibility="gone"
+        android:background="@color/windowBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ProgressBar
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </FrameLayout>
+</RelativeLayout>
