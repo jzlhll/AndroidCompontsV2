@@ -12,6 +12,7 @@ import kotlin.Comparator
 import kotlin.Int
 import kotlin.RuntimeException
 import kotlin.String
+import kotlin.math.abs
 
 class PreviewSizeUtil {
     class CompareSizesByArea : Comparator<Size> {
@@ -35,22 +36,29 @@ class PreviewSizeUtil {
                 sizes = map.getOutputSizes(fmt)
             }
         }
-        if (sizes != null) {
-            for (size in sizes) {
-                if (needSize == null) {
+        var needRadioW = Double.MAX_VALUE / 3
+        var needRadioH = needRadioW
+        if (sizes != null && sizes.isNotEmpty()) {
+            needSize = sizes[0]
+            var i = 0
+            while (i < sizes.size) {
+                val size = sizes[i]
+                val radioW = abs(1.0 - size.width.toFloat() / wishWidth)
+                val radioH = abs(1.0 - size.height.toFloat() / wishHeight)
+                val plus = radioW + radioH
+                if (plus < needRadioW + needRadioH) {
+                    needRadioW = radioW
+                    needRadioH = radioH
                     needSize = size
                 }
-                MyLog.d("$from size: " + size.width + " " + size.height)
-                if (size.height >= wishHeight && size.width >= wishWidth) {
-                    needSize = size
-                }
+                i++
             }
         }
 
         if (needSize == null) {
             throw RuntimeException("No need Camera Size!")
         }
-
+        MyLog.d("$from size2: " + needSize.width + " " + needSize.height)
         return needSize
     }
 }

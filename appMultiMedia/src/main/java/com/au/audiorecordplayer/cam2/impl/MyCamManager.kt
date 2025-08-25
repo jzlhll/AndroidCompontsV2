@@ -27,6 +27,7 @@ import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.asOrNull
+import com.au.module_cached.delegate.AppDataStoreIntCache
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +38,8 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
                    looper: Looper) : Handler(looper), ICameraMgr, ITakePictureCallback {
 
     companion object {
+        const val KEY_CAMERA_ID_SAVED = "camera2Demo_cameraId"
+
         const val constStateNone = "StateCameraClosed"
         const val constStateDied = "StateCameraOpened"
         const val constStatePreview = "StatePreview"
@@ -61,7 +64,8 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
 
     var currentState: AbstractStateBase? = null //当前preview的状态
     var cameraDevice: CameraDevice? = null //camera device
-    var cameraId = CameraCharacteristics.LENS_FACING_BACK
+
+    var cameraId by AppDataStoreIntCache(KEY_CAMERA_ID_SAVED, CameraCharacteristics.LENS_FACING_BACK)
 
     var surface : Surface? = null
 
@@ -108,7 +112,6 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
             curState.takePicture(TakePictureCallbackWrap(dir, name, this))
         } else {
             MyLog.d("current mode not support take picture" + (_toastState.tryEmit(UiToastBean("当前模式不支持拍照", "info"))))
-
         }
     }
 

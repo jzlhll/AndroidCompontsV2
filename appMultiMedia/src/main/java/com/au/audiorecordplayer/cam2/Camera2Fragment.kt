@@ -86,10 +86,8 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     private fun onSurfaceCreatedInit() {
         val needSize = previewNeedSize
-        binding.previewView.realView?.asOrNull<SurfaceView>()?.holder?.setFixedSize(needSize.width, needSize.height)
-        binding.previewView.realView?.asOrNull<TextureView>()?.surfaceTexture?.setDefaultBufferSize(needSize.width, needSize.height)
-
-        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        MyLog.d("previewView ${binding.previewView.width} * ${binding.previewView.height}")
+        if (orientation != Configuration.ORIENTATION_LANDSCAPE) {
             binding.previewView.setAspectRatio(needSize.width, needSize.height)
         } else {
             binding.previewView.setAspectRatio(needSize.height, needSize.width)
@@ -113,7 +111,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         }
         MyLog.d("wishSize $wishW*$wishH")
         val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        previewNeedSize = PreviewSizeUtil().needSize("State Preview", clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
+        previewNeedSize = PreviewSizeUtil().needSize("<State Preview>", clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
         MyLog.d("needSize " + previewNeedSize.width + " * " + previewNeedSize.height)
     }
 
