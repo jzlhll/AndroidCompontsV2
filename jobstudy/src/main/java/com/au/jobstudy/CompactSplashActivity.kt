@@ -10,7 +10,7 @@ import com.au.module_android.utils.startActivityFix
  * @description:
  */
 class CompactSplashActivity : AbsSplashActivity() {
-    override fun goActivity() {
+    override fun goActivity(intent: Intent?) {
         startActivityFix(Intent(this, MainActivity::class.java))
     }
 }

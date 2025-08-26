@@ -18,6 +18,7 @@ import com.au.audiorecordplayer.cam2.impl.PreviewSizeUtil
 import com.au.audiorecordplayer.util.FileUtil
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
+import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.ignoreError
 
 class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPreview(mgr), MediaRecorder.OnErrorListener, MediaRecorder.OnInfoListener, IActionRecord {
@@ -75,10 +76,8 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
             }
         } catch (e: Exception) {
             MyLog.ex(e)
-            if (mMediaRecorder != null) {
-                mMediaRecorder!!.release()
-                mMediaRecorder = null
-            }
+            mMediaRecorder?.release()
+            mMediaRecorder = null
         }
     }
 
@@ -96,20 +95,17 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
                 camSession = cameraCaptureSession
                 s2_camCaptureSessionSetRepeatingRequest(cameraDevice, cameraCaptureSession)
                 try {
-                    if (mMediaRecorder != null) {
-                        mMediaRecorder!!.start()
-                    } else {
+                    if (mMediaRecorder == null) {
                         MyLog.e("error!!!! mediaRecord is null")
                     }
-                    val statePPRCB = mStateBaseCb as IStateTakePictureRecordCallback?
-                    statePPRCB!!.onRecordStart(true)
+                    mMediaRecorder?.start()
+                    mStateBaseCb.asOrNull<IStateTakePictureRecordCallback>()?.onRecordStart(true)
                 } catch (ignored: CameraAccessException) {
                 }
             }
 
             override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                val statePPRCB = mStateBaseCb as IStateTakePictureRecordCallback?
-                statePPRCB!!.onRecordStart(false)
+                mStateBaseCb?.asOrNull<IStateTakePictureRecordCallback>()?.onRecordStart(false)
             }
         }
     }
@@ -125,8 +121,7 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
             mediaRecorder.release()
         }
         mMediaRecorder = null
-        val statePPRCB = mStateBaseCb as IStateTakePictureRecordCallback?
-        statePPRCB!!.onRecordEnd(mLastMp4)
+        mStateBaseCb.asOrNull<IStateTakePictureRecordCallback>()?.onRecordEnd(mLastMp4)
     }
 
     override fun closeSession() {
@@ -135,8 +130,7 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
     }
 
     override fun onError(mediaRecorder: MediaRecorder?, i: Int, i1: Int) {
-        val statePPRCB = mStateBaseCb as IStateTakePictureRecordCallback?
-        statePPRCB!!.onRecordError(i)
+        mStateBaseCb.asOrNull<IStateTakePictureRecordCallback>()?.onRecordError(i)
     }
 
     override fun onInfo(mediaRecorder: MediaRecorder?, i: Int, i1: Int) {
