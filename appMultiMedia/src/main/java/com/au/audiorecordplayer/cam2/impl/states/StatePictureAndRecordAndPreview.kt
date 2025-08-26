@@ -10,6 +10,7 @@ import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
 import android.media.CamcorderProfile
 import android.media.MediaRecorder
+import android.os.Build
 import android.view.Surface
 import com.au.audiorecordplayer.cam2.base.IActionRecord
 import com.au.audiorecordplayer.cam2.impl.IStateTakePictureRecordCallback
@@ -35,7 +36,13 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
 
     init {
         try {
-            mMediaRecorder = MediaRecorder().also {
+            val mMediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                MediaRecorder(mgr.context!!)
+            } else {
+                MediaRecorder()
+            }
+
+            mMediaRecorder.also {
                 it.setOnErrorListener(this)
                 it.setOnInfoListener(this)
                 it.setAudioSource(MediaRecorder.AudioSource.DEFAULT)

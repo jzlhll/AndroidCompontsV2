@@ -69,6 +69,16 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
 
     var surface : Surface? = null
 
+    var context: Context? = null
+
+    override fun attachContext(context: Context) {
+        this.context = context
+    }
+
+    override fun detachContext() {
+        context = null
+    }
+
     override fun openCamera(surface: Surface) {
         MyLog.d("open Camera in manage!");
         this.surface = surface

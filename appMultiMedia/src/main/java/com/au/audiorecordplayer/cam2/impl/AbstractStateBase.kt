@@ -4,8 +4,15 @@ import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
+import android.os.Build
 import android.view.Surface
+import androidx.annotation.RequiresApi
 import com.au.audiorecordplayer.util.MyLog
+import com.au.module_android.utils.HandlerExecutor
+import java.util.concurrent.Executor
+
 
 /**
  * 抽象类，用于描述，不同的camera session状态
@@ -56,14 +63,15 @@ abstract class AbstractStateBase protected constructor(protected var cameraManag
      */
     open fun createSession(cb: IStateBaseCallback?): Boolean {
         mStateBaseCb = cb
+
         val cameraDevice = cameraManager.cameraDevice
         if (cameraDevice != null) {
             try {
-                //todo 可不能只做图片的surface即可
-                cameraManager.cameraDevice!!.createCaptureSession(
-                    allIncludePictureSurfaces(),
-                    s1_createCaptureSessionStateCallback(cameraDevice), cameraManager
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    createSessionOld(cameraDevice)
+                } else {
+                    createSessionOld(cameraDevice)
+                }
             } catch (e: Exception) {
                 MyLog.ex(e)
                 return false
@@ -71,4 +79,63 @@ abstract class AbstractStateBase protected constructor(protected var cameraManag
         }
         return true
     }
+
+    private fun createSessionOld(cameraDevice: CameraDevice) {
+        cameraDevice.createCaptureSession(
+            allIncludePictureSurfaces(),
+            s1_createCaptureSessionStateCallback(cameraDevice), cameraManager
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.P)
+    private fun createSessionNew(cameraDevice: CameraDevice) {
+        // 1. 创建 OutputConfiguration 列表
+        val outputConfigurations = ArrayList<OutputConfiguration>()
+        for (surface in allIncludePictureSurfaces()) { // surfaces 是你的目标 Surface 列表（预览、录像等）
+            val config = OutputConfiguration(surface)
+            outputConfigurations.add(config)
+        }
+
+        // 2. 准备一个 Executor（不建议使用主线程执行器:cite[1]）
+        // 你可以使用 Context.getMainExecutor() 获取主线程执行器，但官方建议使用后台线程:cite[1]。
+        // 通常使用一个专门的相机线程的 Executor。如果你之前有 mCameraHandler，可以这样包装：
+        val cameraExecutor: Executor = HandlerExecutor(cameraManager)
+
+        // 3. 创建 StateCallback
+        val sessionCallback = object : CameraCaptureSession.StateCallback() {
+            override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                camSession = cameraCaptureSession
+                s2_camCaptureSessionSetRepeatingRequest(cameraDevice, cameraCaptureSession)
+
+                if (mStateBaseCb != null) {
+                    val cb = mStateBaseCb as IStatePreviewCallback
+                    cb.onPreviewSucceeded()
+                }
+            }
+
+            override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
+                MyLog.e("Error Configure Preview!")
+                if (mStateBaseCb != null) {
+                    val cb = mStateBaseCb as IStatePreviewCallback
+                    cb.onPreviewFailed()
+                }
+            }
+        }
+
+// 4. 构建 SessionConfiguration 对象
+        val sessionConfiguration = SessionConfiguration(
+            SessionConfiguration.SESSION_HIGH_SPEED,  // 常规会话类型。高速拍摄可使用 SESSION_HIGH_SPEED
+            outputConfigurations,
+            cameraExecutor,  // 传入 Executor
+            sessionCallback
+        )
+
+        // 7. 创建捕获会话
+        try {
+            cameraDevice.createCaptureSession(sessionConfiguration)
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
+    }
+
 }

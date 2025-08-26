@@ -116,6 +116,8 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        viewModel.camManager.attachContext(requireActivity())
+
         changePreviewNeedSize(requireActivity())
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

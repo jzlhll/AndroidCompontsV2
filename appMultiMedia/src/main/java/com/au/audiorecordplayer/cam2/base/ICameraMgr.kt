@@ -1,5 +1,6 @@
 package com.au.audiorecordplayer.cam2.base
 
+import android.content.Context
 import android.view.Surface
 
 /**
@@ -8,6 +9,13 @@ import android.view.Surface
  * @code MyCamera
  */
 interface ICameraMgr {
+    /**
+     * 与context挂钩
+     */
+    fun attachContext(context: Context)
+
+    fun detachContext()
+
     fun openCamera(surface: Surface)
 
     fun showPreview()

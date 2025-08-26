@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 
 class MyCamViewModel : ViewModel() {
     val camManager:MyCamManager
+
     private var mSubThread: HandlerThread? = null
 
     init {
@@ -16,6 +17,7 @@ class MyCamViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
+        camManager.detachContext()
         camManager.closeCameraDirectly(true)
         mSubThread?.quitSafely()
     }
