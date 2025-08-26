@@ -54,6 +54,9 @@ class Cam2PreviewView : FrameLayout {
                 it.setCallback(mCallback)
             })
         }
+
+        addView(DrawFrameLayout(context))
+
         mIsInit = true
     }
 
@@ -122,4 +125,5 @@ class Cam2PreviewView : FrameLayout {
             setMeasuredDimension(newWidth, newHeight)
         }
     }
+
 }
