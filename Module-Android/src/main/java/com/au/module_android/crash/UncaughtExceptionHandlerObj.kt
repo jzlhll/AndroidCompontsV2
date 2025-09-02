@@ -70,15 +70,41 @@ object UncaughtExceptionHandlerObj : Thread.UncaughtExceptionHandler {
                     val isThrowableMainThreadAndInOnCreate = isThrowableMainThreadAndInOnCreate(Thread.currentThread(), e)
                     logd(TAG) { "uncaughtException2 loop crash: " + e.message + ", isCreateMain: " + isThrowableMainThreadAndInOnCreate }
                     e.printStackTrace()
-                    //主线程Activity，Fragment的create函数崩溃，导致界面无法显示。这种情况其实是很少的。
                     manualUploadCrashLog("main loop", e)
-                    ignoreError {
-                        crashAction(Thread.currentThread(), e, isThrowableMainThreadAndInOnCreate)
+
+                    if (!shouldIgnore(e)) {
+                        //主线程Activity，Fragment的create函数崩溃，导致界面无法显示。这种情况其实是很少的。
+                        ignoreError {
+                            crashAction(Thread.currentThread(), e, isThrowableMainThreadAndInOnCreate)
+                        }
+                        logdNoFile(TAG) { "<<<=======" }
                     }
-                    logdNoFile(TAG) { "<<<=======" }
                 }
             }
         }
+    }
+
+    private fun shouldIgnore(e: Throwable) : Boolean{
+        val msg = e.message ?: return false
+        //
+        if (msg.contains("android.content.ClipDescription.hasMimeType(java.lang.String)' on a null object reference")) {
+            return true
+        }
+
+        //小米手机上出现
+        if (msg.contains("NullPointerException:Attempt to invoke virtual method 'int android.text.Layout.getLineForOffset(int)' on a null object reference")) {
+            return true
+        }
+
+        if (msg.contains("android.view.WindowManager\$BadTokenException:Unable to add window")) {
+            return true
+        }
+
+        if (msg.contains("Activity client record must not be null to execute transaction item: android.app.servertransaction.TransferSplashScreenViewStateItem\n")) {
+            return true
+        }
+
+        return false
     }
 
     private fun manualUploadCrashLog(customLog:String, ex:Throwable) {
