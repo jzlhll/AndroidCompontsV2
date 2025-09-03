@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能滚动解决方案</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .container{
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .list-view{
+      flex: 1;
+      overflow-y: auto;
+    }
+    .action-row{
+      padding: 16px;
+      border-top: 1px solid #cccccc;
+    }
+    .action-row textarea{
+      width: 100%;
+    }
+    .action-row textarea:focus {
+      border-color: #6e8efb;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="list-view" id="listView">
+    <div >
+      <h3>初始内容</h3>
+      <p>这是一个消息列表的开始。继续向下滚动查看更多内容。</p>
+    </div>
+
+    <div >
+      <h3>消息 #1</h3>
+      <p>这是第一条消息的内容。它包含一些文本信息，用于填充列表。</p>
+    </div>
+
+    <div >
+      <h3>消息 #2</h3>
+      <p>这是第二条消息的内容。列表需要足够多的内容才能产生滚动。</p>
+    </div>
+
+    <div >
+      <h3>消息 #3</h3>
+      <p>这是第三条消息的内容。继续添加更多消息以测试滚动行为。</p>
+    </div>
+
+    <div >
+      <h3>消息 #4</h3>
+      <p>这是第四条消息的内容。列表越来越长了，可以开始测试滚动。</p>
+    </div>
+
+    <div >
+      <h3>消息 #5</h3>
+      <p>这是第五条消息的内容。快要到达列表的底部了。</p>
+    </div>
+
+    <div >
+      <h3>消息 #6</h3>
+      <p>这是第六条消息的内容。继续向下滚动。</p>
+    </div>
+
+    <div >
+      <h3>消息 #7</h3>
+      <p>这是第七条消息的内容。几乎到达底部了。</p>
+    </div>
+
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>消息 #8</h3>
+      <p>这是第八条消息的内容。这是最后一条消息，列表现在可以滚动了。</p>
+    </div>
+    <div >
+      <h3>Last</h3>
+      <p>这是Last。</p>
+    </div>
+  </div>
+
+  <div class="action-row">
+    <textarea rows="2" placeholder="点击这里输入内容..." id="messageInput"></textarea>
+  </div>
+</div>
+<script>
+  // 获取DOM元素
+ const listView = document.getElementById('listView');
+ const messageInput = document.getElementById('messageInput');
+ var isFocusOnInputAndNeedScrollToBottom = false;
+
+ // 检查是否滚动到底部
+ function isAtBottom() {
+   const threshold = 10; // 阈值，单位像素
+   const distanceToBottom = listView.scrollHeight - listView.scrollTop - listView.clientHeight;
+   return distanceToBottom <= threshold;
+ }
+
+ // 滚动到底部
+ function scrollToBottom() {
+   listView.scrollTop = listView.scrollHeight;
+ }
+
+ // 监听textarea获得焦点事件（键盘弹出）
+ messageInput.addEventListener('focus', () => {
+     if (isAtBottom()) {
+       isFocusOnInputAndNeedScrollToBottom = true;
+     } else {
+       isFocusOnInputAndNeedScrollToBottom = false;
+     }
+ });
+ messageInput.addEventListener('blur', function() {
+   isFocusOnInputAndNeedScrollToBottom = false;
+ });
+
+ function throttle(func, limit) {
+     let inThrottle;
+     return function() {
+         const args = arguments;
+         const context = this;
+         if (!inThrottle) {
+             func.apply(context, args);
+             inThrottle = true;
+             setTimeout(() => { inThrottle = false; }, limit);
+         }
+     }
+ }
+
+ // 改进版节流函数 - 确保最后一次调用被执行
+ function throttleImproved(func, limit) {
+     let lastFunc;
+     let lastRan;
+     return function() {
+         const args = arguments;
+         const context = this;
+         if (!lastRan) {
+             func.apply(context, args);
+             lastRan = Date.now();
+         } else {
+             clearTimeout(lastFunc);
+             lastFunc = setTimeout(function() {
+                 if ((Date.now() - lastRan) >= limit) {
+                     func.apply(context, args);
+                     lastRan = Date.now();
+                 }
+             }, limit - (Date.now() - lastRan));
+         }
+     }
+ }
+
+ window.addEventListener('resize', function() {
+     //追加is android判断
+     if (isFocusOnInputAndNeedScrollToBottom) {
+       scrollToBottom();
+     }
+ }); //16毫秒是合适的帧率。N毫秒内只触发一次resize事件处理函数
+</script>
+</body>
+</html>
