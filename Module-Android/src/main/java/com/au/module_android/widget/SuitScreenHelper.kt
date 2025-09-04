@@ -1,11 +1,10 @@
 package com.au.module_android.widget
 
-import android.nfc.Tag
 import android.util.Log
 import android.util.Size
 import android.view.View
+import android.view.ViewGroup
 import androidx.annotation.WorkerThread
-import androidx.constraintlayout.widget.ConstraintLayout
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.getScreenFullSize
 
@@ -20,9 +19,6 @@ class SuitScreenHelper(private val view: View,
     companion object {
         private const val IS_DEBUG = true
         private const val TAG = "SuitScreenHelper"
-    }
-
-    private sealed class LayoutParamAdapter {
     }
 
     var minPadding = 12.dp
@@ -40,7 +36,7 @@ class SuitScreenHelper(private val view: View,
 
             val minHeightByWidth = currentWidth * origHeight / origWidth //基于宽度的最小高度要求
 
-            val lp = view.layoutParams as ConstraintLayout.LayoutParams
+            val lp = view.layoutParams as ViewGroup.MarginLayoutParams
             val topMargin = lp.topMargin
             val bottomMargin = lp.bottomMargin
 

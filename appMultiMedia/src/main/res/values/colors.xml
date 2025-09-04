@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="returnLineColorDisabled">#44666666</color>
+    <color name="returnLineColorEnabled">#666666</color>
 </resources>

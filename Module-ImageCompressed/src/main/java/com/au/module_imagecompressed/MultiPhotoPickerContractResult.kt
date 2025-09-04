@@ -15,6 +15,7 @@ import com.au.module_android.permissions.IContractResult
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
+import com.au.module_android.utilsmedia.CopyMode
 import com.au.module_android.utilsmedia.MimeUtil
 import com.au.module_android.utilsmedia.URI_COPY_PARAM_ANY_TO_JPG
 import com.au.module_android.utilsmedia.URI_COPY_PARAM_HEIC_TO_JPG
@@ -34,19 +35,6 @@ class MultiPhotoPickerContractResult(
     var max:Int,
     resultContract: ActivityResultContract<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>)
     : IContractResult<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>(fragment, resultContract) {
-    enum class CopyMode {
-        /**
-         * 不做拷贝, 都是原始Uri。
-         */
-        COPY_NOTHING,
-
-        //基本上所有都不做拷贝，原始Uri。只有heic图片做转换为jpg拷贝。
-        COPY_NOTHING_BUT_CVT_HEIC,
-
-        /** 基本上所有都不做拷贝，原始Uri。heic和png等图片能转为jpg都做拷贝。*/
-        COPY_CVT_IMAGE_TO_JPG,
-    }
-
     enum class PickerType {
         IMAGE,
         VIDEO,
@@ -184,6 +172,16 @@ class MultiPhotoPickerContractResult(
                 } else {
                     UriWrap(uri, totalNum, fileSize, isImage = false, mime = mime, fileName = fileName)
                 }
+            }
+
+            CopyMode.COPY_ALWAYS -> {
+                val size = longArrayOf(-1L)
+                val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_HEIC_TO_JPG, subCacheDir, copyFilePrefix, size)
+                val pair = MimeUtil(copyUri.getUriMimeType(null)).goodMimeTypeAndFileName()
+                UriWrap(
+                    copyUri, totalNum, if (size[0] == -1L) fileSize else size[0], isImage = true, beCopied = copyUri != uri,
+                    mime = pair.first, fileName = pair.second
+                )
             }
         }
     }

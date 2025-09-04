@@ -38,8 +38,10 @@ fun isHasHttp(path: String): Boolean {
     return path.startsWith("http") || path.startsWith("https")
 }
 
+/**
+ * 基本上都已经拷贝过的图才能如此操作。
+ */
 fun isPicNeedCompress(path:String) = isUrlHasImage(path) && !isHasHttp(path)
-
 
 /**
  * 将Uri识别，拷贝到本地cache；如果param有传参，则会进行转换拷贝。
@@ -71,7 +73,8 @@ fun Uri.copyToCacheConvert(cr:ContentResolver,
  * @return 不太可能是空。
  */
 @WorkerThread
-fun Uri.copyToCacheFile(cr: ContentResolver, param:String? = null,
+fun Uri.copyToCacheFile(cr: ContentResolver,
+                        param:String? = null,
                         subCacheDir:String,
                         copyFilePrefix:String = "copy_",
                         size:LongArray? = null): File {
@@ -92,6 +95,19 @@ private fun Uri.copyToCacheFileSchemeContent(cr: ContentResolver,
     val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getUriMimeType(cr))?.lowercase()
     val isSourceHeic = extension == "heic"
     logt(tag = "picker") { "$this $param, extension: $extension"}
+    val cvtExtension = targetFileExtensionName(extension, param, isSourceHeic)
+
+    val displayName = copyFilePrefix + System.currentTimeMillis() + "_" + (Math.random() * 1000).toInt().toString() + "." + cvtExtension
+    val subDirFile = File(cacheDir.absolutePath + "/$subCacheDir")
+    if (!subDirFile.exists()) {
+        subDirFile.mkdirs()
+    }
+    val targetFile = File(cacheDir.absolutePath + "/$subCacheDir", displayName)
+    copyFromCr(cr, targetFile, param, extension, isSourceHeic, size)
+    return targetFile
+}
+
+private fun targetFileExtensionName(extension: String?, param: String?, isSourceHeic: Boolean): String? {
     var cvtExtension = extension
     if (extension != null && isSupportConvertImage(extension)) {
         when (param) {
@@ -112,16 +128,7 @@ private fun Uri.copyToCacheFileSchemeContent(cr: ContentResolver,
             }
         }
     }
-
-    val displayName = copyFilePrefix + System.currentTimeMillis() + "_" + (Math.random() * 1000).toInt().toString() + "." + cvtExtension
-    val subDirFile = File(cacheDir.absolutePath + "/$subCacheDir")
-    if (!subDirFile.exists()) {
-        subDirFile.mkdirs()
-    }
-    val cache = File(cacheDir.absolutePath + "/$subCacheDir", displayName)
-    val file = cache
-    copyFromCr(cr, cache, param, extension, isSourceHeic, size)
-    return file
+    return cvtExtension
 }
 
 /**
@@ -160,15 +167,15 @@ private fun Uri.copyToCacheFileSchemeFile(size:LongArray? = null): File? {
 
 private fun Uri.copyFromCr(
     cr: ContentResolver,
-    cache: File,
+    targetFile: File,
     param: String?,
-    extension: String?,
+    extension: String?, /*如果为空，则不做转换，直接拷贝。*/
     isSourceHeic: Boolean,
     size: LongArray?
 ) {
     try {
         cr.openInputStream(this)?.use { inputStream ->
-            val fos = FileOutputStream(cache)
+            val fos = FileOutputStream(targetFile)
             var cvtFmt: String? = null
             if (param != null && extension != null && isSupportConvertImage(extension)) {
                 when (param) {
@@ -201,8 +208,8 @@ private fun Uri.copyFromCr(
             fos.flush()
             fos.close()
 
-            size?.set(0, cache.length())
-            logt(tag = "picker") { "$cache $cvtFmt after copy ${size?.get(0)}" }
+            size?.set(0, targetFile.length())
+            logt(tag = "picker") { "$targetFile $cvtFmt after copy ${size?.get(0)}" }
         }
     } catch (e: Exception) {
         e.printStackTrace()
