@@ -76,17 +76,17 @@
         android:background="@color/returnLineColorDisabled"
         android:layout_height="2dp" />
 
-    <View
-        android:id="@+id/horzLine3"
-        android:background="@color/returnLineColorDisabled"
-        app:layout_constraintTop_toTopOf="@id/horGuide80"
-        android:layout_width="match_parent"
-        android:layout_height="2dp" />
+<!--    <View-->
+<!--        android:id="@+id/horzLine3"-->
+<!--        android:background="@color/returnLineColorDisabled"-->
+<!--        app:layout_constraintTop_toTopOf="@id/horGuide80"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="2dp" />-->
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/adjustImageGroup"
-        android:visibility="gone"
-        app:constraint_referenced_ids="horzLine1, horzLine2, horzLine3, verticalLine1, verticalLine2"
+        android:visibility="invisible"
+        app:constraint_referenced_ids="horzLine1, horzLine2, verticalLine1, verticalLine2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

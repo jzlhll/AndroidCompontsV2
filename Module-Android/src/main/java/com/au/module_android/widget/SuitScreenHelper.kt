@@ -23,6 +23,8 @@ class SuitScreenHelper(private val view: View,
 
     var minPadding = 12.dp
 
+    var endOfSuitCallback:(()->Unit) = {}
+
     @WorkerThread
     fun doOnCreate() {
         val size = fetchImageSizeBlock()
@@ -72,6 +74,8 @@ class SuitScreenHelper(private val view: View,
 
                 view.layoutParams = lp
             }
+
+            endOfSuitCallback()
 
             if (IS_DEBUG) {
                 view.postDelayed({

@@ -11,6 +11,7 @@ import com.au.audiorecordplayer.cam1.Camera1Fragment
 import com.au.audiorecordplayer.cam2.Camera2Fragment
 import com.au.audiorecordplayer.camx.CameraXFragment
 import com.au.audiorecordplayer.draws.DrawTestFragment
+import com.au.audiorecordplayer.imgprocess.ReturnYourFaceFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.FragmentShellActivity
 
@@ -51,6 +52,9 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.drawView).onClick {
             FragmentShellActivity.start(this@MainActivity, DrawTestFragment::class.java)
+        }
+        findViewById<View>(R.id.returnFaceBtn).onClick {
+            FragmentShellActivity.start(this@MainActivity, ReturnYourFaceFragment::class.java)
         }
     }
 }

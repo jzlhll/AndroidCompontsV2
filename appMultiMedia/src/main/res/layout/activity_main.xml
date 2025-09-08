@@ -13,6 +13,7 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
         <com.au.module_android.widget.CustomFontText
             style="@style/StyleFontMText"
             app:layout_constraintTop_toTopOf="parent"
@@ -22,10 +23,19 @@
             android:layout_height="wrap_content"/>
 
         <com.au.module_android.widget.CustomButton
+            android:id="@+id/returnFaceBtn"
+            style="@style/StyleButtonPrimary"
+            android:text="Return face"
+            android:layout_marginTop="48dp"
+            android:layout_marginBottom="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
             android:id="@+id/audioRecorder"
             style="@style/StyleButtonPrimary"
             android:text="Audio Recorder"
-            android:layout_marginTop="48dp"
+            android:layout_marginTop="18dp"
             android:layout_marginBottom="0dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
