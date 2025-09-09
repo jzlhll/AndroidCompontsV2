@@ -8,8 +8,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.BuildConfig
 import com.allan.mydroid.beans.WSChatMessageBean
-import com.allan.mydroid.beansinner.UriRealInfoEx
-import com.allan.mydroid.beansinner.UriRealInfoHtml
 import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.views.send.SendListSelectorDialog
 import com.allan.mydroid.views.textchat.uibean.AbsItem
@@ -19,45 +17,50 @@ import com.au.module_android.click.onClick
 import com.au.module_android.utils.ImeHelper
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.getScreenFullSize
-import com.au.module_android.utils.logd
 import com.au.module_android.utils.setMaxLength
 import com.au.module_android.utils.transparentStatusBar
-import com.au.module_android.utilsmedia.getRealInfo
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
 import com.au.module_imagecompressed.MultiPhotoPickerContractResult
 import com.au.module_imagecompressed.TakePhotoActionDialog
+import com.au.module_imagecompressed.UriWrap
 import kotlinx.coroutines.launch
 import java.io.File
 
 abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBinding): TakePhotoActionDialog.ITakePhotoActionDialogCallback {
     private lateinit var adapter: TextChatRcvAdapter
 
+    override fun onNothingTakeDialogClosed() {
+    }
+
     override fun onClickSelectPhoto() {
-    }
-
-    override fun onClickTakePic() {
-        TODO("Not yet implemented")
-    }
-
-    override fun onNothingClosed() {
-    }
-
-    private fun cvtUri(uri: Uri): UriRealInfoHtml {
-        val real = uri.getRealInfo(Globals.app)
-        if (real.goodPath() == null) {
-            logd { "no good path? $real" }
+        cameraAndSelectHelper.launchSelectPhotos { uriWraps ->
+            uriWraps.forEach {
+                onPicGot(it)
+            }
         }
-        val bean = UriRealInfoEx.Companion.copyFrom(real)
-        return bean.copyToHtml()
     }
 
-    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, object : CameraPermissionHelp.Supplier {
-        override fun createFileProvider(): Pair<File, Uri> {
-            return createFileProviderMine()
+    override fun onClickTakePic(): Boolean {
+        cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(f.requireContext()) { info, uriWrap->
+            uriWrap?.let { onPicGot(it) }
         }
-    })
+        return true
+    }
+
+    private fun onPicGot(uriWrap: UriWrap) {
+        //todo file
+    }
+
+    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, MultiPhotoPickerContractResult.PickerType.IMAGE,
+        object : CameraPermissionHelp.Supplier {
+            override fun createFileProvider(): Pair<File, Uri> {
+                return createFileProviderMine()
+            }
+        }).also {
+            it.takePhotoCallback = this@TextChatCommon
+    }
 
     private fun createFileProviderMine(): Pair<File, Uri> {
         val picture = File(Globals.goodCacheDir.path + "/shared")
@@ -70,19 +73,6 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
         )
         return file to uri
     }
-
-//    private val photoVideoPicker = CameraAndSelectPhotosPermissionHelper(f,
-//        com.allan.mydroid.BuildConfig.APPLICATION_ID,
-//        1,
-//        pickerType = MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO).also {
-//        it.allResultsAction = { results->
-//            logd { "photoVideoPicker $results" }
-//            for (uri in results) {
-//                val uriRealInfoHtml = cvtUri(uri.uri)
-//                buttonSend(createBean(WSChatMessageBean.Content("", uriRealInfoHtml)))
-//            }
-//        }
-//    }
 
     fun onCreate() {
         binding.edit.setMaxLength(Int.MAX_VALUE)
@@ -110,23 +100,11 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
         initRcv()
 
         binding.selectImagesBtn.onClick {
-            cameraAndSelectHelper.showPhotoAndCameraDialog(1)
-            cameraAndSelectHelper.multiResult.launchByAll(MultiPhotoPickerContractResult.PickerType.IMAGE, null) {
-                for (uri in it) {
-                    val uriRealInfoHtml = cvtUri(uri.uri)
-                    buttonSend(createBean(WSChatMessageBean.Content("", uriRealInfoHtml)))
-                }
-            }
+            cameraAndSelectHelper.showTakeActionDialog(1, MultiPhotoPickerContractResult.PickerType.IMAGE)
         }
 
         binding.selectVideoBtn.onClick {
-            cameraAndSelectHelper.showPhotoAndCameraDialog(3)
-            cameraAndSelectHelper.multiResult.launchByAll(MultiPhotoPickerContractResult.PickerType.IMAGE, null) {
-                for (uri in it) {
-                    val uriRealInfoHtml = cvtUri(uri.uri)
-                    buttonSend(createBean(WSChatMessageBean.Content("", uriRealInfoHtml)))
-                }
-            }
+            cameraAndSelectHelper.showTakeActionDialog(3, MultiPhotoPickerContractResult.PickerType.IMAGE)
         }
         binding.sendListBtn.onClick {
             val height = f.requireActivity().getScreenFullSize().second
@@ -186,21 +164,5 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
                 buttonSend(createBean(WSChatMessageBean.Content(text, null))) //todo file
             }
         }
-    }
-
-    fun selectPics() {
-
-    }
-
-    fun selectVideos() {
-
-    }
-
-    fun selectFiles() {
-
-    }
-
-    fun showImportSendList() {
-
     }
 }

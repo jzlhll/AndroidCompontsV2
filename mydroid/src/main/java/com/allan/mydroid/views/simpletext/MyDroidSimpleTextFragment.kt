@@ -14,6 +14,8 @@ import com.au.module_androidcolor.R
 class MyDroidSimpleTextFragment : AbsLiveFragment<FragmentMyDroidSimpleTextBinding>() {
     private lateinit var adapter: SimpleTextAdapter
 
+    override fun isPaddingStatusBar() = false
+
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
         binding.adHost.setColor(Globals.getColor(R.color.color_normal_block0))

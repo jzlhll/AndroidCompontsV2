@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 
 class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
     private var mIp:String? = null
+    override fun isPaddingStatusBar() = false
 
     init {
         LifeSimpleNetworkObserver(this).apply {

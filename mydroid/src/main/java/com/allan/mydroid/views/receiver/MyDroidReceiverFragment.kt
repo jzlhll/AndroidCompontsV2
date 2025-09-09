@@ -33,6 +33,8 @@ class MyDroidReceiverFragment : AbsLiveFragment<FragmentMyDroidReceiveBinding>()
     lateinit var receivedFileListTab: TabLayout.Tab
     lateinit var exportHistoryTab: TabLayout.Tab
 
+    override fun isPaddingStatusBar() = false
+
     val fileExportFailCallback:(String)->Unit = { info->
         Globals.mainScope.launchOnUi {
             ToastBuilder().setOnTop().setMessage(info).setIcon("error").toast()

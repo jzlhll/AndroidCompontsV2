@@ -20,6 +20,8 @@ import com.au.module_android.utils.visible
 import com.au.module_androidcolor.R
 
 class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
+    override fun isPaddingStatusBar() = false
+
     private lateinit var entryFileList: List<UriRealInfoEx>
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {

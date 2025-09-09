@@ -10,6 +10,8 @@ class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
                                             var pickerType : MultiPhotoPickerContractResult.PickerType = MultiPhotoPickerContractResult.PickerType.IMAGE,
                                             supplier: CameraPermissionHelp.Supplier) {
 
+    var takePhotoCallback: TakePhotoActionDialog.ITakePhotoActionDialogCallback? = null
+
     private val multiResult = f.compatMultiPhotoPickerForResult(3).also {
         it.setNeedLubanCompress()
     }
@@ -22,7 +24,7 @@ class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
     fun showTakeActionDialog(maxNum:Int, pickerType: MultiPhotoPickerContractResult.PickerType) {
         this.pickerType = pickerType
         multiResult.setCurrentMaxItems(maxNum)
-        TakePhotoActionDialog.pop(f)
+        TakePhotoActionDialog.pop(f, takePhotoCallback)
     }
 
     fun launchSelectPhotos(callback: (Array<UriWrap>) -> Unit) {

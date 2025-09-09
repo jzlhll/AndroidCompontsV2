@@ -16,6 +16,8 @@ import com.au.module_android.utils.gone
 import com.au.module_android.utils.unsafeLazy
 
 class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendListSelectorDialog.ISelectItemClick {
+    override fun isPaddingStatusBar() = false
+
     private val common : TextChatCommon by unsafeLazy {
         object : TextChatCommon(this, binding) {
             override fun createBean(content: WSChatMessageBean.Content): WSChatMessageBean {

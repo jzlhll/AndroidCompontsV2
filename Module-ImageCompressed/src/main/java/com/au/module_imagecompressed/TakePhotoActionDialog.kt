@@ -33,6 +33,8 @@ class TakePhotoActionDialog : ViewFragment() {
     }
 
     companion object {
+        private var sTakeCallback:ITakePhotoActionDialogCallback? = null
+
         /**
          * 通过在parentFragment(RecipeDetailFragment)之上显示的dialog。因此是在一个activity中。
          * pop出来的。
@@ -41,6 +43,18 @@ class TakePhotoActionDialog : ViewFragment() {
             if (owner !is ITakePhotoActionDialogCallback) {
                 throw IllegalArgumentException("pop owner must implement ITakePhotoActionDialogCallback")
             }
+            pop(owner, null, cameraText, photosText)
+        }
+
+        /**
+         * 通过在parentFragment(RecipeDetailFragment)之上显示的dialog。因此是在一个activity中。
+         * pop出来的。
+         */
+        fun pop(owner: LifecycleOwner,
+                callback:ITakePhotoActionDialogCallback?,
+                cameraText:String="Camera", photosText:String="Select from Photos") {
+            sTakeCallback = callback
+
             val isFragment = owner is Fragment
             val b = bundleOf(
                 "isFragment" to isFragment,
@@ -59,13 +73,12 @@ class TakePhotoActionDialog : ViewFragment() {
         }
     }
 
-    private val isFragment by lazy {
+    private val isFrg by lazy {
         arguments?.getBoolean("isFragment") ?: false
     }
 
     private val clickCallback:ITakePhotoActionDialogCallback?
-        get() = if(isFragment) parentFragment?.parentFragment.asOrNull()
-                else parentFragment?.activity?.asOrNull()
+        get() = sTakeCallback ?: ((if(isFrg) parentFragment?.parentFragment else parentFragment?.activity)?.asOrNull())
 
     private fun createBottomSpace() : View {
         val space = Space(requireActivity())
@@ -109,6 +122,7 @@ class TakePhotoActionDialog : ViewFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        sTakeCallback = null
         if(!isGotoCameraOrPhotoPickerSuccess) clickCallback?.onNothingTakeDialogClosed()
     }
 

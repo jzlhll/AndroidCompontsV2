@@ -30,6 +30,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>() {
+    override fun isPaddingStatusBar() = false
+
     private val common = object : SendListSelectorCommon(this, false) {
         override fun rcv() = binding.rcv
 
