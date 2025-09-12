@@ -4,7 +4,7 @@ import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.beansinner.WebSocketClientInfo
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidGlobalService
+import com.allan.mydroid.globals.MyDroidConstServer
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketSendModeMessenger
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
@@ -53,7 +53,7 @@ class WebsocketServer(port:Int) : NanoWSD(port) {
     var onTransferBothMsgCallback:((message: WSChatMessageBean)->Unit)? = null
 
     fun addIntoConnections(websocket: WebsocketClientInServer) {
-        MyDroidGlobalService.updateAliveTs("when new client add")
+        MyDroidConstServer.updateAliveTs("when new client add")
         clients.add(websocket)
         triggerConnectionsList()
     }

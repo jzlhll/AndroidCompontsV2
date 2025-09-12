@@ -40,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:backgroundNormal="@color/color_normal_block2"
+            app:backgroundNormal="@color/color_normal_block"
             app:cornerRadius="24dp">
 
             <com.au.module_android.widget.CustomButton

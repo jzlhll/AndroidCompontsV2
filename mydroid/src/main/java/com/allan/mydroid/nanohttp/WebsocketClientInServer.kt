@@ -13,7 +13,7 @@ import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.DEBUG_SLOW_RECEIVER_TRANSFER
 import com.allan.mydroid.globals.DEBUG_SLOW_SEND_TRANSFER
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidGlobalService
+import com.allan.mydroid.globals.MyDroidConstServer
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.json.toJsonString
@@ -103,7 +103,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
         val json = JSONObject(text)
         val api = json.optString("api")
 
-        MyDroidGlobalService.updateAliveTs("when ws on message $api")
+        MyDroidConstServer.updateAliveTs("when ws on message $api")
         when (api) {
             API_WS_INIT -> {
                 val targetName = json.optString("wsName")

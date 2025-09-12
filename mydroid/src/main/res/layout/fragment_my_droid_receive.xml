@@ -45,7 +45,7 @@
 
     <com.au.module_androidui.widget.ShineView
         android:id="@+id/adHost"
-        android:background="@color/color_normal_block2"
+        android:background="@color/color_normal_block"
         android:layout_marginVertical="8dp"
         app:layout_constraintTop_toBottomOf="@id/title"
         app:layout_constraintBottom_toTopOf="@id/rcvGuideLine"

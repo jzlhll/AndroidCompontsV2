@@ -8,7 +8,7 @@
 
     <com.au.module_android.widget.BgBuildLinearLayout
         android:orientation="vertical"
-        app:backgroundNormal="@color/color_normal_block2"
+        app:backgroundNormal="@color/color_normal_block"
         app:cornerRadius="8dp"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"
         android:id="@+id/recordModeHost"

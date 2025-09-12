@@ -7,8 +7,7 @@
 
     <!-- 背景色 ：文字图标，或者一片框框-->
     <color name="color_normal_block0">#ffffff</color>
-    <color name="color_normal_block">#f6f6f6</color>
-    <color name="color_normal_block2">#f0f0f0</color>
+    <color name="color_normal_block">#f0f0f0</color>
 
     <!-- 品牌主题色 | 超链接文字颜色 -->
     <color name="colorPrimary">#248067</color>
@@ -16,8 +15,8 @@
     <color name="colorPrimary_press">#5f9483</color>
 
     <!-- 文字颜色 -->
-    <color name="color_text_normal">#212121</color>
-    <string name="color_text_normal_str" translatable="false">"#212121"</string>
+    <color name="color_text_normal">#111111</color>
+    <string name="color_text_normal_str" translatable="false">"#111111"</string>
     <color name="color_text_normal_press">#999999</color>
     <color name="color_text_reverse">#ffffff</color>
     <color name="color_text_reverse_press">#ccffffff</color>
@@ -34,7 +33,7 @@
     <!-- button: secondary button色 -->
     <color name="color_second_btn_bg">#f0f0f0</color>
     <color name="color_second_btn_bg_press">#f0f0f0</color>
-    <color name="color_second_btn_text">#212121</color>
+    <color name="color_second_btn_text">#111111</color>
     <color name="color_second_btn_text_press">#999999</color>
 
     <!-- button: disable -->
@@ -49,16 +48,16 @@
     <!-- edit: 相关一切颜色 -->
     <color name="color_edit_text_hint">#cccccc</color>
 
-    <color name="color_edit_background">#f6f6f6</color>
-    <color name="color_edit_background_error">#FFF0EF</color>
+    <color name="color_edit_background">#f0f0f0</color>
+    <color name="color_edit_background_error">#66fa3939</color>
 
-    <color name="color_edit_board_select">#212121</color>
+    <color name="color_edit_board_select">#111111</color>
     <color name="color_edit_board_normal">#cccccc</color>
     <color name="color_edit_board_error">#fa3939</color>
 
     <!-- tabLayout: 相关一切颜色。由于tabLayout有不同的样式。这里只提供一个常规的。 -->
     <color name="color_tab_text_no_select">#999999</color>
-    <color name="color_tab_text_select">#212121</color>
+    <color name="color_tab_text_select">#111111</color>
 
     <!-- 分割线的颜色 -->
     <color name="color_line">#f0f0f0</color>
@@ -68,18 +67,17 @@
     <!-- switch控件的颜色 -->
     <color name="color_switch_block_bg">#f0f0f0</color>
     <color name="color_switch_block_sel_dis_bg">#f6f6f6</color>
-    <color name="color_switch_block_text">#212121</color>
+    <color name="color_switch_block_text">#111111</color>
     <color name="color_switch_block_text_dis">#cccccc</color>
-    <color name="color_switch_block_text_sel">#212121</color>
+    <color name="color_switch_block_text_sel">#111111</color>
     <color name="color_switch_block_text_sel_dis">#999999</color>
 
     <!-- toolBar相关 -->
-    <color name="color_toolbar_text">#212121</color>
+    <color name="color_toolbar_text">#111111</color>
     <color name="color_toolbar_background">#ffffff</color>
 
     <!-- glide 的基础颜色 -->
     <color name="color_glide_gray_default">#f0f0f0</color>
-    <color name="color_glide_gray_default2">#f0f0f0</color>
 
     <!-- 悬挂提醒DING信息背景色 -->
     <color name="color_ding_bg">#fff2e0</color>

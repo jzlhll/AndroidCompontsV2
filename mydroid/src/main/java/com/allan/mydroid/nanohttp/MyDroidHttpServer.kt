@@ -10,7 +10,7 @@ import com.allan.mydroid.api.UPLOAD_CHUNK
 import com.allan.mydroid.beans.httpdata.IpPortResult
 import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidGlobalService
+import com.allan.mydroid.globals.MyDroidConstServer
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
@@ -79,7 +79,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
     private fun handleGetRequest(session: IHTTPSession): Response {
         val url = session.uri ?: ""
         logdNoFile { "handle Get Request $url" }
-        MyDroidGlobalService.updateAliveTs("http get request")
+        MyDroidConstServer.updateAliveTs("http get request")
         val error:String
         when {
             // 主页面请求
@@ -90,6 +90,9 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
                     }
                     MyDroidMode.Receiver -> {
                         return serveAssetFile("transfer/receiver.html")
+                    }
+                    MyDroidMode.Middle -> {
+                        return serveAssetFile("transfer/middleServer.html")
                     }
                     else -> {
                         error = Globals.getString(R.string.server_not_support) + "(E02)"
@@ -116,7 +119,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
     }
 
     private fun handlePostRequest(session: IHTTPSession): Response {
-        MyDroidGlobalService.updateAliveTs("http post request")
+        MyDroidConstServer.updateAliveTs("http post request")
         return when (session.uri) {
             UPLOAD_CHUNK -> chunksMgr.handleUploadChunk(session)
             MERGE_CHUNKS -> chunksMgr.handleMergeChunk(session)

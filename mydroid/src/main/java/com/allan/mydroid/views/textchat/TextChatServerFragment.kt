@@ -7,7 +7,7 @@ import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.beansinner.UriRealInfoEx
 import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidGlobalService
+import com.allan.mydroid.globals.MyDroidConstServer
 import com.allan.mydroid.views.AbsLiveFragment
 import com.allan.mydroid.views.send.SendListSelectorDialog
 import com.allan.mydroid.views.textchat.uibean.NormalItem
@@ -32,7 +32,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
 
             override fun buttonSend(bean: WSChatMessageBean) {
                 //我自己的点击消息
-                MyDroidGlobalService.websocketServer?.serverSendTextChatMessage(bean)
+                MyDroidConstServer.websocketServer?.serverSendTextChatMessage(bean)
             }
         }
     }
@@ -41,7 +41,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
         super.onStart()
         MyDroidConst.currentDroidMode = MyDroidMode.TextChat
         //接收中转的msg
-        MyDroidGlobalService.websocketServer?.onTransferBothMsgCallback = { bean->
+        MyDroidConstServer.websocketServer?.onTransferBothMsgCallback = { bean->
             val isMe = bean.sender.isServer //这里就是服务器收到的消息，直接判断sender是不是服务器的消息类型，就认为是自己即可
             val bean = NormalItem(isMe).also { it.message = bean }
             common.onAddChatItem(bean)
@@ -50,7 +50,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
 
     override fun onStop() {
         super.onStop()
-        MyDroidGlobalService.websocketServer?.onTransferBothMsgCallback = null
+        MyDroidConstServer.websocketServer?.onTransferBothMsgCallback = null
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {

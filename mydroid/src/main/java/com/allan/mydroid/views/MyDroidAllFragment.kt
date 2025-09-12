@@ -5,10 +5,11 @@ import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidAllBinding
 import com.allan.mydroid.globals.MY_DROID_SHARE_IMPORT_URIS
-import com.allan.mydroid.globals.SimpleNetworkObserver
+import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.views.receiver.MyDroidReceiverFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.allan.mydroid.views.textchat.TextChatSelectorDialog
+import com.allan.mydroid.views.transferserver.MyDroidTransferServerFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.permissions.PermissionStorageHelper
 import com.au.module_android.ui.FragmentShellActivity
@@ -22,23 +23,14 @@ import kotlinx.coroutines.launch
 
 class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
     private var mIp:String? = null
-    private val netObserver = object : SimpleNetworkObserver() {
-        public override fun netRegister() {
-            super.netRegister()
-        }
-        public override fun netUnregister() {
-            super.netUnregister()
-        }
-    }.apply {
-        onChanged = { ip->
-            mIp = ip
-            lifecycleScope.launch {
-                val curIp = mIp
-                if (!curIp.isNullOrEmpty()) {
-                    binding.title.text = curIp
-                } else {
-                    binding.title.setText(R.string.connect_wifi_or_hotspot)
-                }
+
+    private fun uploadMyIp() {
+        lifecycleScope.launch {
+            val curIp = mIp
+            if (!curIp.isNullOrEmpty()) {
+                binding.title.text = curIp
+            } else {
+                binding.title.setText(R.string.connect_wifi_or_hotspot)
             }
         }
     }
@@ -53,17 +45,12 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        netObserver.netRegister()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        netObserver.netUnregister()
-    }
-
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        MyDroidConst.ipPortData.observe(viewLifecycleOwner) {
+            mIp = it?.ip
+            uploadMyIp()
+        }
+
         binding.textChatBtn.onClick {
             runCheckIp {
                 TextChatSelectorDialog.show(this)
@@ -80,6 +67,9 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
             }
         }
         binding.middleLogicBtn.onClick {
+            runCheckIp {
+                FragmentShellActivity.start(requireActivity(), MyDroidTransferServerFragment::class.java)
+            }
         }
 
         val helper = PermissionStorageHelper()

@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.R
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.databinding.FragmentTextChatBinding
-import com.allan.mydroid.globals.LifeSimpleNetworkObserver
+import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.textchat.uibean.NormalItem
 import com.au.module_android.json.toJsonString
@@ -21,15 +21,6 @@ import kotlinx.coroutines.launch
 class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
     private var mIp:String? = null
     override fun isPaddingStatusBar() = false
-
-    init {
-        LifeSimpleNetworkObserver(this).apply {
-            onChanged = { ip->
-                mIp = ip
-                uploadMyIp()
-            }
-        }
-    }
 
     private fun uploadMyIp() {
         lifecycleScope.launch {
@@ -102,6 +93,11 @@ class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
 
         val fmt = getString(R.string.not_close_window)
         binding.descTitle.text = String.format(fmt, "")
+
+        MyDroidConst.ipPortData.observe(viewLifecycleOwner) {
+            mIp = it?.ip
+            uploadMyIp()
+        }
     }
 
     ////////////////////////////

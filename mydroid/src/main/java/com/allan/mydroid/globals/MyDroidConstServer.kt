@@ -8,7 +8,6 @@ import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
-import com.au.module_android.init.IInterestLife
 import com.au.module_android.init.InterestActivityCallbacks
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.utils.clearDirOldFiles
@@ -16,11 +15,13 @@ import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.loge
 import com.au.module_android.utils.logt
+import com.au.module_androidui.toast.ToastBuilder
 import fi.iki.elonen.NanoHTTPD
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.net.ServerSocket
 
-object MyDroidGlobalService : InterestActivityCallbacks() {
+object MyDroidConstServer : InterestActivityCallbacks() {
     private var httpServer: MyDroidHttpServer?= null
     var websocketServer: WebsocketServer?= null
 
@@ -53,7 +54,7 @@ object MyDroidGlobalService : InterestActivityCallbacks() {
         Globals.mainHandler.postDelayed(aliveCheckRun, ALIVE_DEAD_TIME)
     }
 
-    fun findAvailablePort(): Int {
+    private fun findAvailablePort(): Int {
         while (mLastHttpServerPort < 65535) {
             try {
                 ServerSocket(mLastHttpServerPort).close()
@@ -63,7 +64,7 @@ object MyDroidGlobalService : InterestActivityCallbacks() {
         return -1
     }
 
-    fun findAvailableWsPort(): Int {
+    private fun findAvailableWsPort(): Int {
         while (mLastWsServerPort < 65535) {
             try {
                 ServerSocket(mLastWsServerPort).close()
@@ -73,8 +74,22 @@ object MyDroidGlobalService : InterestActivityCallbacks() {
         return -1
     }
 
+    private fun startServerWrap() {
+        if (!MyDroidConst.serverIsOpen && hasLifeActivity()) {
+            startServer { msg ->
+                scope.launch {
+                    ToastBuilder()
+                        .setOnTop()
+                        .setIcon("error")
+                        .setMessage(msg)
+                        .toast()
+                }
+            }
+        }
+    }
+
     @MainThread
-    fun startServer(errorCallback:(String)->Unit) {
+    private fun startServer(errorCallback:(String)->Unit) {
         val p = findAvailablePort()
         val wsPort = findAvailableWsPort()
         httpServer = MyDroidHttpServer(p)
@@ -105,7 +120,7 @@ object MyDroidGlobalService : InterestActivityCallbacks() {
         }
     }
 
-    fun stopServer() {
+    private fun stopServer() {
         logd { ">>>stop server." }
         httpServer?.closeAllConnections()
         websocketServer?.closeAllConnections()
@@ -113,41 +128,37 @@ object MyDroidGlobalService : InterestActivityCallbacks() {
     }
 
     //////////////////////////life////
-
-    private val lifeObservers = ArrayList<IInterestLife>().apply {
-        add(MyDroidNetworkObserver())
-    }
-
-    /**
-     * 不做内部list保险。请在application或者最早接入的地方接入。
-     */
-    fun addObserverEarly(interestLife: IInterestLife) {
-        if(!lifeObservers.contains(interestLife)) lifeObservers.add(interestLife)
+    private var isObserverIpChanged = false
+    private fun observerIpChanged() {
+        if (isObserverIpChanged) {
+            return
+        }
+        isObserverIpChanged = true
+        MyDroidConst.ipPortData.observeForever {
+            val ip = it?.ip
+            if (ip.isNullOrEmpty()) {
+                stopServer()
+            } else {
+                startServerWrap()
+            }
+        }
     }
 
     override fun onLifeOpen() {
-        for (life in lifeObservers) {
-            life.onLifeOpen()
-        }
+        observerIpChanged()
         updateAliveTs("when liveOpen")
     }
 
     override fun onLifeOpenEach() {
         logd { "on life open each" }
-        for (life in lifeObservers) {
-            life.onLifeOpenEach()
-        }
         updateAliveTs("when liveOpenEach")
+        startServerWrap()
     }
 
     override fun onLifeClose() {
         logd { "on life close." }
         stopServer()
-        MyDroidConst.ipPortData.setValueSafe(null)
         MyDroidConst.receiverProgressData.setValueSafe(emptyMap())
-        for (life in lifeObservers) {
-            life.onLifeClose()
-        }
         Globals.mainHandler.removeCallbacks(aliveCheckRun)
     }
 

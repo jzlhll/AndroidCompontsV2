@@ -27,7 +27,7 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
     }
 
     fun addListener(callback:(Boolean)->Unit) {
-        listeners.add(callback)
+        if(!listeners.contains(callback)) listeners.add(callback)
     }
 
     fun removeListener(callback:(Boolean)->Unit) {

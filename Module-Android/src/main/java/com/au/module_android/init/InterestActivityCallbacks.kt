@@ -20,6 +20,7 @@ abstract class InterestActivityCallbacks : Application.ActivityLifecycleCallback
         get() = mScope!!
 
     private var lifeCount = 0
+    fun hasLifeActivity() = lifeCount > 0
 
     /**
      * 是不是我们需要关注的activity。

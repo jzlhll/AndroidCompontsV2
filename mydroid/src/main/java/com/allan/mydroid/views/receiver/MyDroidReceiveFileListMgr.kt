@@ -6,7 +6,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.R
-import com.allan.mydroid.globals.MyDroidGlobalService
+import com.allan.mydroid.globals.MyDroidConstServer
 import com.allan.mydroid.globals.MyDroidMess
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
@@ -61,7 +61,7 @@ class MyDroidReceiveFileListMgr(val f: MyDroidReceiverFragment) {
 
     fun loadFileList() {
         logd { "load file list0" }
-        MyDroidGlobalService.scope.launchOnThread {
+        MyDroidConstServer.scope.launchOnThread {
             val fileList = MyDroidMess().loadFileList()
             logd { "load file list1" }
             f.lifecycleScope.launch {
@@ -79,7 +79,7 @@ class MyDroidReceiveFileListMgr(val f: MyDroidReceiverFragment) {
 
     @SuppressLint("SetTextI18n")
     fun loadHistory(init: Boolean) {
-        MyDroidGlobalService.scope.launchOnThread {
+        MyDroidConstServer.scope.launchOnThread {
             val history = MyDroidMess().loadExportHistory()
             f.lifecycleScope.launch {
                 f.binding.exportHistoryTv.text = R.string.keep_recent_records.resStr() + "\n\n" + history
