@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace 'com.au.audiorecordplayer'
-    compileSdk 36
+    compileSdk=gradle.ext.compileSdk
 
     defaultConfig {
         applicationId "com.au.audiorecordplayer"
@@ -13,8 +13,6 @@ android {
         targetSdk 36
         versionCode 1
         versionName "1.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -50,8 +48,4 @@ dependencies {
     implementation libs.androidx.camera.lifecycle
 // CameraX View class
     implementation libs.androidx.camera.view
-
-    testImplementation libs.junit
-    androidTestImplementation libs.androidx.junit
-    androidTestImplementation libs.androidx.espresso.core
 }

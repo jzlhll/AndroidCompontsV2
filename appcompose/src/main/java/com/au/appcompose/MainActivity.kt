@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,13 +21,15 @@ import androidx.compose.ui.unit.Dp
 import com.au.appcompose.ui.theme.AndroidCompontsTheme
 
 class MainActivity : ComponentActivity() {
+    private var clicks = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AndroidCompontsTheme {
                 Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
-                    Greeting(
+                    MainUi(
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -37,7 +40,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun MainUi(name: String, modifier: Modifier = Modifier) {
     Column(
         modifier = Modifier.background(
             color = Color(android.graphics.Color.GREEN),
@@ -49,12 +52,19 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             modifier = modifier
         )
         Text("Hello2 $name!")
+        ClickCounter(cli)
     }
+}
 
+@Composable
+fun ClickCounter(clicks: Int, onClick: () -> Unit) {
+    Button(onClick = onClick) {
+        Text("I've been clicked $clicks times")
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    Greeting("Changed")
+    MainUi("Changed")
 }

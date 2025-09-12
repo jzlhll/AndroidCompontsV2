@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.au.audiorecordplayer.camx.AspectFrameLayout
+    <com.au.audiorecordplayer.cam1.AspectFrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:layout_editor_absoluteX="0dp"
@@ -17,7 +17,7 @@
             android:id="@+id/textureView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-    </com.au.audiorecordplayer.camx.AspectFrameLayout>
+    </com.au.audiorecordplayer.cam1.AspectFrameLayout>
 
     <com.au.module_android.widget.CustomButton
         android:id="@+id/recordBtn"

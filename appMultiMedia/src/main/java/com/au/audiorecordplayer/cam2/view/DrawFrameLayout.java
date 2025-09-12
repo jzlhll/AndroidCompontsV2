@@ -117,7 +117,7 @@ public class DrawFrameLayout extends View {
         canvas.drawText("adfajdks", 0, 0, 0, 0, paint);
         canvas.drawBitmap(cacheBitmap, 0, 0, bmpPaint); //绘制cacheBitmap
         canvas.drawPath(mCurrentPath, paint);	//绘制路径
-        canvas.save();	//保存canvas的状态
+        //canvas.save();	//保存canvas的状态
         //canvas.restore();	//恢复canvas之前保存的状态，防止保存后对canvas执行的操作对后续的绘制有影响
     }
 }

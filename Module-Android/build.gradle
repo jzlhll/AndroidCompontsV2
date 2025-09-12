@@ -2,7 +2,6 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
-//    id 'dagger.hilt.android.plugin'
 }
 
 android {
@@ -106,8 +105,4 @@ dependencies {
 
     implementation libs.androidx.core.splashscreen
     //implementation libs.android.cn.oaid
-
-    //hilt
-//    implementation(libs.hilt.android)
-//    ksp(libs.hilt.android.compiler)
 }

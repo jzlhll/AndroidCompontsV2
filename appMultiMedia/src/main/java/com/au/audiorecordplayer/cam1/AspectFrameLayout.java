@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.au.audiorecordplayer.camx;
+package com.au.audiorecordplayer.cam1;
 
 import android.content.Context;
 import android.util.AttributeSet;
