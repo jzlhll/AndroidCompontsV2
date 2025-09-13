@@ -19,7 +19,7 @@ import com.au.module_android.utils.visible
 import com.au.module_nested.decoration.VertPaddingItemDecoration
 import kotlinx.coroutines.launch
 
-class MyDroidReceiveFileListMgr(val f: MyDroidReceiverFragment) {
+class MyDroidReceiveFileListMgr(val f: MyDroidReceiverListFragment) {
     val mAdapter = MyDroidReceiveFileListAdapter(fullClick = { bean ->
         ShowReceiveItemDialog.Companion.pop(
             f.childFragmentManager, arrayOf(
@@ -47,15 +47,17 @@ class MyDroidReceiveFileListMgr(val f: MyDroidReceiverFragment) {
     }
 
     fun changeRcvEmptyTextVisible() {
-        val isRcvVisible = f.binding.receiveRcv.isVisible
-        if (isRcvVisible) {
-            if (mAdapter.datas.isEmpty()) {
-                f.binding.receiveRcvEmptyTv.visible()
+        f.binding.apply {
+            val isRcvVisible = receiveRcv.isVisible
+            if (isRcvVisible) {
+                if (mAdapter.datas.isEmpty()) {
+                    receiveRcvEmptyTv.visible()
+                } else {
+                    receiveRcvEmptyTv.gone()
+                }
             } else {
-                f.binding.receiveRcvEmptyTv.gone()
+                receiveRcvEmptyTv.gone()
             }
-        } else {
-            f.binding.receiveRcvEmptyTv.gone()
         }
     }
 
