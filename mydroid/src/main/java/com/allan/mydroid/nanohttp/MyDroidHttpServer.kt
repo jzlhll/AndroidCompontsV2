@@ -86,10 +86,10 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             url == "/" -> {
                 when (MyDroidConst.currentDroidMode) {
                     MyDroidMode.Send -> {
-                        return serveAssetFile("transfer/send.html")
+                        return serveAssetFile("transfer/ReceiveFromPhone.html")
                     }
                     MyDroidMode.Receiver -> {
-                        return serveAssetFile("transfer/receiver.html")
+                        return serveAssetFile("transfer/SendToPhone.html")
                     }
                     MyDroidMode.Middle -> {
                         return serveAssetFile("transfer/middleServer.html")

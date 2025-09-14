@@ -3,6 +3,21 @@
     const UPLOAD_CHUNK = "/upload-chunk";
     const ABORT_UPLOAD_CHUNKS = "/abort-upload-chunks";
 
+    window.parseMessage = function(eventData) {
+        const jsonData = JSON.parse(eventData);
+        const data = jsonData.data;
+        const api = jsonData.api;
+        const msg = jsonData.msg;
+        if (api == API_WS_LEFT_SPACE) {
+            htmlUpdateLeftSpace(loc["remaining_phone_space"] + data.leftSpace);
+            return true;
+        } else if (api == API_WS_CLIENT_INIT_CALLBACK) {
+            window.debugReceiver = data.debugReceiver;
+            return true;
+        }
+        return false;
+    }
+
     window.generateMd5Small = async function(file) {
         const spark = new SparkMD5.ArrayBuffer();
         const stream = file.stream().getReader();
