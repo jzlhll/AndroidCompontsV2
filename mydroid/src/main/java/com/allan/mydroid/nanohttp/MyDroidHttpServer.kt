@@ -104,11 +104,10 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             url == TEXT_CHAT_READ_WEBSOCKET_IP_PORT -> {
                 return getWebsocketIpPortWrap()
             }
-            // JS 文件请求
-            url.endsWith(".js") -> {
+            // JS / html 文件请求
+            url.endsWith(".js") || url.endsWith(".html") -> {
                 val jsName = url.substring(1)
-//                serveAssetFile("transfer/$jsName")
-                return serverJsFile("transfer/$jsName")
+                return serverAssetTextFile("transfer/$jsName")
             }
             else -> {
                 error = Globals.getString(R.string.server_not_support) + "(E01)"
@@ -164,7 +163,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
         }
     }
 
-    private fun serverJsFile(jsAssetFile:String) : Response{
+    private fun serverAssetTextFile(jsAssetFile:String) : Response{
         try {
             val text = AppNative.asts(Globals.app, jsAssetFile)
             val response = newFixedLengthResponse(text)
