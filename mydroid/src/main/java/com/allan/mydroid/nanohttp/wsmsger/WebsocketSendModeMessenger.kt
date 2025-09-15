@@ -3,6 +3,7 @@ package com.allan.mydroid.nanohttp.wsmsger
 import android.net.Uri
 import androidx.lifecycle.Observer
 import com.allan.mydroid.R
+import com.allan.mydroid.api.WSApisConst.Companion.API_WS_FILE_DOWNLOAD_CANCEL
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_FILE_DOWNLOAD_COMPLETE
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_REQUEST_FILE
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_SEND_FILE_CHUNK
@@ -36,8 +37,15 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.FileInputStream
 import java.io.InputStream
+import kotlin.collections.set
 
 class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocketClientMessenger(client) {
+    companion object {
+        private const val DEBUG_SEND = true
+    }
+
+    private val sUuidDowningFlagMap = hashMapOf<String, Boolean>()
+
     private val sendUriMapOb = object : Observer<HashMap<String, UriRealInfoEx>> {
         override fun onChanged(value: HashMap<String, UriRealInfoEx>) {
             val cvtList = mutableListOf<UriRealInfoHtml>()
@@ -47,7 +55,9 @@ class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocket
                 }
             }
             client.server.scope.launchOnThread {
-                val ret = WSResultBox(CODE_SUC, R.string.send_files_to_html.resStr(), API_WS_SEND_FILE_LIST, FileListForHtmlData(cvtList))
+                val msg = R.string.send_files_to_html.resStr()
+                val data = FileListForHtmlData(cvtList)
+                val ret = WSResultBox(CODE_SUC, msg, API_WS_SEND_FILE_LIST, data)
                 val json = ret.toJsonString()
                 logt { "${Thread.currentThread()} on map changed. send file list to html" }
                 logt { "send:$json" }
@@ -71,11 +81,21 @@ class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocket
     override fun onMessage(origJsonStr:String, api:String, json: JSONObject) {
         val wsApiUuid = origJsonStr.fromJson<WSResultBox<UriUuidData>>()
         when (api) {
-            API_WS_REQUEST_FILE ->{
+            API_WS_REQUEST_FILE -> {
                 val uriUuid = wsApiUuid?.data?.uriUuid ?: ""
                 val info = MyDroidConst.sendUriMap.value?.get(uriUuid)
                 onSendFile(uriUuid, info)
             }
+            API_WS_FILE_DOWNLOAD_CANCEL -> {
+                val uriUuid = wsApiUuid?.data?.uriUuid ?: ""
+                val info = MyDroidConst.sendUriMap.value?.get(uriUuid)
+                info?.uriUuid?.let { uriUuid ->
+                    if (sUuidDowningFlagMap.contains(uriUuid)) {
+                        sUuidDowningFlagMap[uriUuid] = false
+                    }
+                }
+            }
+
             API_WS_FILE_DOWNLOAD_COMPLETE -> {
                 val uriUuid = wsApiUuid?.data?.uriUuid ?: ""
                 MyDroidConst.sendUriMap.value?.get(uriUuid)?.let { info->
@@ -159,7 +179,13 @@ class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocket
         }
     }
 
+    private fun isDowning(uriUuid:String) : Boolean {
+        return sUuidDowningFlagMap.contains(uriUuid) && sUuidDowningFlagMap[uriUuid] == true
+    }
+
     private suspend fun sendFile(uriUuid:String, fileSize:Long?, fileName:String?, inputStream: InputStream) {
+        sUuidDowningFlagMap[uriUuid] = true
+
         val chunkSize = getWSSendFileChunkSize(fileSize).toInt()
         val buffer = ByteArray(chunkSize)
 
@@ -188,12 +214,38 @@ class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocket
         logt { "send file start $startJson" }
         client.send(startJson)
         delay(100)
+
+        val cancelJson = WSResultBox(
+            CODE_SUC,
+            R.string.download_canceled.resStr(), api,
+            WSChunkActionData(
+                "cancel",
+                uriUuid, fileSize ?: 0,
+                totalChunks, ""
+            )
+        ).toJsonString()
+        if (!isDowning(uriUuid)) {
+            client.send(cancelJson)
+            return
+        }
+
         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
             val chunk = if (bytesRead == buffer.size) buffer else buffer.copyOf(bytesRead)
             val arr = mgr.buildChunkPacket(uriUuid, index++, totalChunks, offset, bytesRead, chunk)
             offset += bytesRead
             client.send(arr)
+            if (DEBUG_SEND) {
+                delay(1000)
+            }
+            if (!isDowning(uriUuid)) {
+                break
+            }
         }
+        if (!isDowning(uriUuid)) {
+            client.send(cancelJson)
+            return
+        }
+
         delay(1000)
         val endJson = WSResultBox(
             CODE_SUC,

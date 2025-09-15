@@ -169,6 +169,22 @@
             cursor: not-allowed;
         }
 
+        .cancel-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #ff5252;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background-color 0.2s;
+        }
+        .cancel-btn:hover {
+            background-color: #e04444;
+        }
+
     </style>
 </head>
 
@@ -176,6 +192,7 @@
 <script src="spark-md5.min.js"></script>
 <script src="mydroid-utils.js"></script>
 <script src="mydroid-websockets.js"></script>
+<script src="StreamSaver.js"></script>
 <script src="mydroid-receive-from-phone.js"></script>
 <script src="localforage.min.js"></script>
 <script src="mydroid-locales.js"></script>
@@ -216,6 +233,8 @@
 
     <script>
         let isDownloading = false;
+
+        streamSaver.mitm = 'mitm.html';
         
         document.getElementById('secondTitle').textContent = loc["refresh_list_by_f5"];
 
@@ -245,8 +264,11 @@
             document.getElementById('file-list-container').style.display = 'table';
             const tbody = document.getElementById('file-list-body');
             tbody.innerHTML = '';
+            const downloadStr = loc["download"];
+            const cancelStr = loc["cancel"];
 
             uriRealInfoHtmlList.forEach(item => {
+
                 const row = `
                     <tr>
                         <td>
@@ -254,37 +276,62 @@
                         </td>
                         <td>${item.fileSizeStr}</td>
                         <td>
-                            <a id="${item.uriUuid}" class="download-link"
-                               onclick="startDownload('${item.uriUuid}')">
-                               下载
+                            <a id="down-item-${item.uriUuid}" class="download-link" style="display:block;" onclick="startDownload('${item.uriUuid}')">
+                               ${downloadStr}
                             </a>
+                            <button id="down-item-cancel-${item.uriUuid}" class="cancel-btn" style="display:none;" 
+                                onclick="cancelDownload('${item.uriUuid}')">${cancelStr}</button>   
                         </td>
                     </tr>
                 `;
                 tbody.innerHTML += row;
             });
-        };
+        }
 
-        function updateDownloadLink(good, uriUuid, text) {
-            const a = document.getElementById(uriUuid);
+        function updateDownloadLink(good, uriUuid, text, showCancelBtn) {
+            const a = document.getElementById('down-item-' + uriUuid);
             a.textContent = text;
             if (good) {
                 a.classList.remove('disabled');
             } else {
                 a.classList.add('disabled');
             }
+
+            const cancelBtn = document.getElementById(`down-item-cancel-${uriUuid}`);
+            if (showCancelBtn) {
+                cancelBtn.style.display = 'inline-block';
+            } else {
+                cancelBtn.style.display = 'none';
+            }
+        }
+
+        function updateDownloadRestore(uriUuid) {
+            const a = document.getElementById('down-item-' + uriUuid);
+            a.textContent = loc["download"];
+            a.classList.remove('disabled');
+
+            const cancelBtn = document.getElementById(`down-item-cancel-${uriUuid}`);
+            cancelBtn.style.display = 'none';
         }
         
         async function startDownload(uriUuid) {
             startDownloadUri(uriUuid);
         };
 
+        function cancelDownload(uriUuid) {
+            cancelDownloadUri(uriUuid);
+        }
+
         window.onStartDownErr = function(msg, uriUuid) {
-            updateDownloadLink(false, uriUuid, msg);
+            updateDownloadLink(false, uriUuid, msg, false);
         };
 
-        window.htmlDownloadProcess = function(uuid, str, enable) {
-            updateDownloadLink(enable, uuid, str)
+        window.htmlDownloadProcess = function(uuid, str, enable, showCancelBtn) {
+            updateDownloadLink(enable, uuid, str, showCancelBtn);
+        };
+
+        window.htmlDownloadCancel = function(uuid) {
+            updateDownloadRestore(uuid);
         };
 
         ////////run init functions//////

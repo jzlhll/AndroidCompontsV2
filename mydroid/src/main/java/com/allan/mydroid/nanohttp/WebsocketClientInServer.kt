@@ -145,10 +145,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
             MyDroidModeData(
                 mode,
                 clientName,
-                color,
-                debugReceiver = DEBUG_SLOW_RECEIVER_TRANSFER,
-                debugSend = DEBUG_SLOW_SEND_TRANSFER
-            )
+                color)
         ).toJsonString()
         logt { "send: $json" }
         send(json)

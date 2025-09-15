@@ -34,6 +34,8 @@ window.loc = {
 "remaining_phone_space": "手机剩余空间：",
 "no_file_selected": "没有选择文件！",
 "md5_error": "md5 错误",
+"download": "下载",
+"cancel": "取消",
 }
     } else if (systemLang == "zh-TW") {
 window.loc = {
@@ -69,6 +71,8 @@ window.loc = {
 "remaining_phone_space": "手機剩餘空間：",
 "no_file_selected": "沒有選擇文件！",
 "md5_error": "md5 錯誤",
+"download": "傳輸",
+"cancel": "取消",
 }
     } else {
 window.loc = {
@@ -104,6 +108,8 @@ window.loc = {
 "remaining_phone_space": "Remaining phone space:",
 "no_file_selected": "No file selected!",
 "md5_error": "md5 Error",
+"download": "Download",
+"cancel": "Cancel",
 }
     }
 })();

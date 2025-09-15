@@ -16,6 +16,7 @@
 
     window.API_WS_INIT = "c_wsInit";
     window.API_WS_REQUEST_FILE = "c_requestFile";
+    window.API_WS_FILE_DOWNLOAD_CANCEL = "c_downloadFileCancel";
     window.API_WS_FILE_DOWNLOAD_COMPLETE = "c_downloadFileComplete";
     window.API_WS_PING = "c_ping";
 

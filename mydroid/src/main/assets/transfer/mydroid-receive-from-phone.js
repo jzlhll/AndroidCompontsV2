@@ -12,6 +12,13 @@
         WS.send(JSON.stringify(json));
     }
 
+    window.cancelDownloadUri = function(uriUuid) {
+        const json = {};
+        json.api = API_WS_FILE_DOWNLOAD_CANCEL;
+        json.data = {uriUuid: uriUuid};
+        WS.send(JSON.stringify(json));
+    }
+
     window.downloadUriComplete = function(uriUuid) {
         const json = {};
         json.api = API_WS_FILE_DOWNLOAD_COMPLETE;
@@ -42,149 +49,68 @@
         }
         
         async onStart(uuid, totalFileSize, totalChunks) {
-
         }
 
         async onStop(uuid, fileName, totalFileSize, totalChunks) {
-
         }
 
         async handleChunk(uuid, index, total, offset, dataSize, data) {
-
         }
 
-        async fileComplete(uuid) {
-            // 上传分片
-            let response = null;
-            try {
-                response = await fetch(UPLOAD_CHUNK, {
-                        method: 'POST',
-                        body: formData,
-                    });
-            } catch(e) {}
-            if (!response) throw new Error(loc["error_upload_failure_e01"]);
-            if (!response.ok) throw new Error(loc["error_upload_failure_e02"] + (await response.text()));
-            return await response.json();
+        async cancelDownload(uuid) {
         }
     }
 
-    class IndexedDBFileSaver extends AbsFileSaver {
+    class LargeFileSaver extends AbsFileSaver {
         constructor() {
             super();
         }
 
-//        initLocalForage() {
-//            if(isInitLocalForage) return;
-//            isInitLocalForage = true;
-//
-//            // 配置 LocalForage
-//            localforage.config({
-//                driver: localforage.INDEXEDDB, // 使用 IndexedDB 存储引擎
-//                name: 'myDroid', // 数据库名称
-//                version: 1.0, // 数据库版本
-//                storeName: 'merge_file' // 存储表名称
-//            });
-//        }
-
-        async endChunks(totalIndexs) {
-            const chunks = [];
-            
-            // 按顺序获取所有分片
-            for (let i = 0; i < totalIndexs; i++) {
-                const chunk = await localforage.getItem(`${uuid}_${i}`);
-                if (!chunk) throw new Error(`Missing chunk ${i} for file ${uuid}`);
-                chunks.push(chunk);
-            }
-
-            // 合并分片为Blob对象
-            const blob = new Blob(chunks);
-            const url = URL.createObjectURL(blob);
-            
-            // 创建下载链接
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = uuid; // 设置下载文件名
-            document.body.appendChild(a);
-            a.click();
-            
-            // 清理资源
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-
-            // 删除临时分片
-            for (let i = 0; i < totalIndexs; i++) {
-                await localforage.removeItem(`${uuid}_${i}`);
-            }
-        }
-
-        async onStop() {
-            // 存储分片数据
-            //await localforage.setItem(`${uuid}_${index}`, data);
-        }
-    }
-
-    class SmallFileSaver extends AbsFileSaver {
-        constructor() {
-            super();
-        }
-
-        chunkMap = new Map(); // 用于跟踪文件分片状态
+        fileStreamMap = new Map();
 
         async onStart(uuid, totalFileSize, totalChunks) {
-            if (this.chunkMap.has(uuid)) {
-                this.chunkMap.delete(uuid);
+            // 创建可写流
+            if (this.fileStreamMap.has(uuid)) {
+                this.fileStreamMap.delete(uuid);
             }
-            this.chunkMap.set(uuid, new Map());
-            htmlDownloadProcess(uuid, loc["transfer_start"], false);
+            const fileStream = StreamSaver.createWriteStream(uuid, {
+                size: totalFileSize
+            });
+            this.fileStreamMap.set(uuid, fileStream);
+            htmlDownloadProcess(uuid, loc["transfer_start"], false, false);
         }
 
         async handleChunk(uuid, index, total, offset, dataSize, data) {
-            const chunks = this.chunkMap.get(uuid);
-            const a = {};
-            a.index = index;
-            a.dataSize = dataSize;
-            a.data = data;
-            chunks.set(index, a);
+            const fileStream = this.fileStreamMap.get(uuid);
+            if (!fileStream) {
+                console.error("No file Stream for " + uuid);
+                return;
+            }
+
+            try {
+                await fileStream.getWriter().write(data);
+            } catch (error) {
+                console.error('写入流错误:', error);
+                this.cancelDownload(uuid);
+            }
+            
             let percent = 0;
             const transferStr = loc["progress"];
             if (total > 0) {
                 percent = (index * 100 / total) | 0;
-                htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false);
+                htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
             } else {
                 const sz = myDroidFormatSize(offset);
-                htmlDownloadProcess(uuid, `${transferStr} ${sz}`, false);
+                htmlDownloadProcess(uuid, `${transferStr} ${sz}`, false, true);
             }
-        }
-
-        checkCompletionOnce(uuid, totalChunks) {
-            const chunks = this.chunkMap.get(uuid);
-            if (!chunks) return false;
-
-            let i = 0;
-            while (i < totalChunks) {
-                if (!chunks.get(i++)) {
-                    return false;
-                }
-            }
-            return true;
         }
 
         async onStop(uuid, fileName, totalFileSize, totalChunks) {
             const chunks = this.chunkMap.get(uuid);
             if (!chunks) return;
 
-            htmlDownloadProcess(uuid, loc["merging"], false);
+            htmlDownloadProcess(uuid, loc["merging"], false, false);
             let checkCount = 5;
-            while (checkCount-- >= 0) {
-                const isCompleted = this.checkCompletionOnce(uuid, totalChunks);
-                if (isCompleted) {
-                    break;
-                }
-                await delay(500);
-            }
-            
             if (checkCount > 0) {
                 console.log(`${nowTimeStr()} on Stop all is good.`);
                 try {
@@ -205,7 +131,7 @@
                     document.body.appendChild(downloadLink);
                     downloadLink.click();
 
-                    htmlDownloadProcess(uuid, loc["download_complete"], false);
+                    htmlDownloadProcess(uuid, loc["download_complete"], false, false);
 
                     // 立即清理资源
                     requestAnimationFrame(() => {
@@ -223,6 +149,117 @@
                 console.log(`${nowTimeStr()} on Stop is bad.`);
                 this.chunkMap.delete(uuid);
             }
+        }
+
+        async cancelDownload(uuid) {
+        }
+    }
+
+    class SmallFileSaver extends AbsFileSaver {
+        constructor() {
+            super();
+        }
+
+        chunkMap = new Map(); // 用于跟踪文件分片状态
+
+        async onStart(uuid, totalFileSize, totalChunks) {
+            if (this.chunkMap.has(uuid)) {
+                this.chunkMap.delete(uuid);
+            }
+            this.chunkMap.set(uuid, new Map());
+            htmlDownloadProcess(uuid, loc["transfer_start"], false, false);
+        }
+
+        async handleChunk(uuid, index, total, offset, dataSize, data) {
+            const chunks = this.chunkMap.get(uuid);
+            const a = {};
+            a.index = index;
+            a.dataSize = dataSize;
+            a.data = data;
+            chunks.set(index, a);
+            let percent = 0;
+            const transferStr = loc["progress"];
+            if (total > 0) {
+                percent = (index * 100 / total) | 0;
+                htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
+            } else {
+                const sz = myDroidFormatSize(offset);
+                htmlDownloadProcess(uuid, `${transferStr} ${sz}`, false, true);
+            }
+        }
+
+        // checkCompletionOnce(uuid, totalChunks) {
+        //     const chunks = this.chunkMap.get(uuid);
+        //     if (!chunks) return false;
+
+        //     let i = 0;
+        //     while (i < totalChunks) {
+        //         if (!chunks.get(i++)) {
+        //             return false;
+        //         }
+        //     }
+        //     return true;
+        // }
+
+        async onStop(uuid, fileName, totalFileSize, totalChunks) {
+            const chunks = this.chunkMap.get(uuid);
+            if (!chunks) return;
+
+            htmlDownloadProcess(uuid, loc["merging"], false, false);
+            let checkCount = 5;
+            // while (checkCount-- >= 0) {
+            //     const isCompleted = this.checkCompletionOnce(uuid, totalChunks);
+            //     if (isCompleted) {
+            //         break;
+            //     }
+            //     await delay(500);
+            // }
+            if (checkCount > 0) {
+                console.log(`${nowTimeStr()} on Stop all is good.`);
+                try {
+                    // 合并分片
+                    const sortedChunks = Array.from(chunks.values())
+                        .sort((a, b) => a.index - b.index)
+                        .map(c => c.data);
+                    
+                    const mergedBlob = new Blob(sortedChunks, { type: 'application/octet-stream' });
+
+                    // 创建下载链接
+                    const downloadLink = document.createElement('a');
+                    const objectUrl = URL.createObjectURL(mergedBlob);
+                    
+                    // 现代浏览器下载方案
+                    downloadLink.href = objectUrl;
+                    downloadLink.download = fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+
+                    htmlDownloadProcess(uuid, loc["download_complete"], false, false);
+
+                    // 立即清理资源
+                    requestAnimationFrame(() => {
+                        document.body.removeChild(downloadLink);
+                        URL.revokeObjectURL(objectUrl);
+                    });
+
+                    console.log(`文件 ${fileName} 下载完成`);
+                } catch (error) {
+                    console.error('合并下载失败:', error);
+                }
+                
+                this.chunkMap.delete(uuid);
+            } else {
+                console.log(`${nowTimeStr()} on Stop is bad.`);
+                this.chunkMap.delete(uuid);
+            }
+        }
+
+        async cancelDownload(uuid) {
+            console.log(`文件 ${uuid} 取消下载`);
+            if (this.chunkMap.has(uuid)) {
+                this.chunkMap.delete(uuid);
+            }
+            htmlDownloadCancel(uuid);
         }
     }
 
@@ -250,10 +287,12 @@
                         fileName = data.uriUuid;
                     }
                     mFileSaver?.onStop(data.uriUuid, fileName, data.totalFileSize, data.totalChunks);
+                } else if (data.action == "cancel") {
+                    console.log(api, msg, data);
+                    mFileSaver?.cancelDownload(data.uriUuid);
                 }
                 return true;
             } else if (api == API_WS_CLIENT_INIT_CALLBACK) {
-                window.debugSend = data.debugSend;
                 htmlUpdateIpClient(data.myDroidMode, data.clientName, data.color);
                 return true;
             } else if (api == API_WS_SEND_FILE_LIST) {

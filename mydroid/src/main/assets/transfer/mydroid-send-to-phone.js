@@ -3,6 +3,8 @@
     const UPLOAD_CHUNK = "/upload-chunk";
     const ABORT_UPLOAD_CHUNKS = "/abort-upload-chunks";
 
+    const DEBUG_SEND_CHUNKS = false;
+
     window.parseMessage = function(eventData) {
         const jsonData = JSON.parse(eventData);
         const data = jsonData.data;
@@ -12,7 +14,6 @@
             htmlUpdateLeftSpace(loc["remaining_phone_space"] + data.leftSpace);
             return true;
         } else if (api == API_WS_CLIENT_INIT_CALLBACK) {
-            window.debugReceiver = data.debugReceiver;
             return true;
         }
         return false;
@@ -146,8 +147,7 @@
                 }
             }
             onProgress(uploadedChunks, chunks, sendSpeedStr, "uploadChunk");
-
-            if (window.debugReceiver == true) {
+            if (DEBUG_SEND_CHUNKS) {
                 await delay(1000);
             }
         }
