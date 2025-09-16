@@ -39,9 +39,9 @@ fun nanoTempCacheMergedDir()  = Globals.goodCacheDir.absolutePath + File.separat
 const val MIME_TYPE_JSON = "application/json; charset=UTF-8"
 
 /**
- * 250MB就认为是小文件。
+ * 认为是小文件。
  */
-const val SMALL_FILE_DEFINE_SIZE = 250 * 1024 * 1024L
+const val SMALL_FILE_DEFINE_SIZE = 150 * 1024 * 1024L
 
 const val CODE_SUC = "0"
 const val CODE_FAIL = "-1"

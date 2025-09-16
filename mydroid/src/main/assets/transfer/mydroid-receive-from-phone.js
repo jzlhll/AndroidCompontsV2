@@ -32,7 +32,9 @@
         const offset = dataView.getBigUint64(40, false);
         const dataSize = dataView.getUint32(48, false);
         const data = blob.slice(52, 52 + dataSize);
+        console.log("handle chunk blob " + index);
         await mFileSaver?.handleChunk(uuid, index, totalChunks, offset, dataSize, data);
+        console.log("handle chunk blob end " + index);
     }
 
     class AbsFileSaver {
@@ -89,9 +91,11 @@
                 this.chunkMap.delete(uuid);
             }
 
-            this.chunkMap.set(uuid, StreamSaver.createWriteStream(fileName, {
+            const fileStream = window.streamSaver.createWriteStream(fileName, {
                 size: totalFileSize
-            }));
+            });
+            const writer = fileStream.getWriter();
+            this.chunkMap.set(uuid, writer);
             this.chunkMap.set("fileName-" + uuid, fileName);
             this.chunkMap.set("totalFileSize-" + uuid, totalFileSize);
             
@@ -99,12 +103,7 @@
         }
 
         getWriter(uuid) {
-            const fileStream = this.chunkMap.get(uuid);
-            if (!fileStream) {
-                console.error("No file Stream for " + uuid);
-                return null;
-            }
-            const writer = fileStream.getWriter();
+            const writer = this.chunkMap.get(uuid);
             if (!writer) {
                 console.error("No file stream writer for " + uuid);
                 return null;
@@ -115,19 +114,25 @@
         async handleChunk(uuid, index, totalChunks, offset, dataSize, data) {
             const writer = this.getWriter(uuid);
             if(!writer) return;
+            console.log("downing index0 " + index);
             try {
-                await writer.write(data);
+                const dataArrayBuffer = await data.arrayBuffer();
+                console.log("downing index1 " + index);
+                const dataUint8Array = new Uint8Array(dataArrayBuffer);
+                console.log("downing index2 " + index);
+                await writer.write(dataUint8Array);
             } catch (error) {
                 console.error('写入流错误:', error);
                 this.onComplete(uuid, false);
                 return;
             }
-            
+            console.log("downing index3 " + index);
             const transferStr = loc["progress"];
             const percent = (index * 100 / totalChunks) | 0;
             htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
 
             this.handleIfChunkLast(uuid, index, totalChunks, offset, dataSize);
+            console.log("downing index end " + index);
         }
 
         async onStop(uuid, fileName) {
@@ -182,6 +187,7 @@
 
             const transferStr = loc["progress"];
             const percent = (index * 100 / totalChunks) | 0;
+            //console.log("downing index " + index);
             htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
 
             this.handleIfChunkLast(uuid, index, totalChunks, offset, dataSize);
@@ -248,7 +254,11 @@
                 if (data.action == "start") {
                     console.log(api, msg, data);
                     if (!mFileSaver) {
-                        mFileSaver = new SmallFileSaver();
+                        if (api == API_WS_SEND_SMALL_FILE_CHUNK) {
+                            mFileSaver = new SmallFileSaver();
+                        } else {
+                            mFileSaver = new LargeFileSaver();
+                        }
                     }
                     mFileSaver.onStart(data.uriUuid, data.fileName, data.totalFileSize, data.totalChunks);
                 } else if (data.action == "end") {

@@ -45,7 +45,8 @@ import kotlin.collections.set
 
 class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocketClientMessenger(client) {
     companion object {
-        private const val DEBUG_SEND = false
+        private const val DEBUG_SEND = true
+        private const val DEBUG_SEND_DELAY_TS = 200L
         private val sUuidDowningFlagMap = ConcurrentHashMap<String, Unit>()
         private fun isDowning(uriUuid:String) : Boolean {
             return sUuidDowningFlagMap.containsKey(uriUuid)
@@ -204,7 +205,7 @@ class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocket
         val chunkSize = getWSSendFileChunkSize(fileSize).toInt()
         val buffer = ByteArray(chunkSize)
 
-        val mgr = BufferManager(chunkSize)
+        val mgr = BufferManager(uriUuid, chunkSize)
 
         // 分片发送文件内容
         var bytesRead: Int
@@ -222,11 +223,11 @@ class WebsocketSendModeMessenger(client: WebsocketClientInServer) : AbsWebSocket
 
         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
             val chunk = if (bytesRead == buffer.size) buffer else buffer.copyOf(bytesRead)
-            val arr = mgr.buildChunkPacket(uriUuid, index++, totalChunks, offset, bytesRead, chunk)
+            val arr = mgr.buildChunkPacket(index++, totalChunks, offset, bytesRead, chunk)
             offset += bytesRead
             client.send(arr)
             if (DEBUG_SEND) {
-                delay(1000)
+                delay(DEBUG_SEND_DELAY_TS)
             }
             if (!isDowning(uriUuid)) {
                 break
