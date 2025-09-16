@@ -44,7 +44,7 @@
 
         async handleChunk(uuid, index, totalChunks, offset, dataSize, data) {}
 
-        onStop(uuid, fileName) {}
+        async onStop(uuid, fileName) {}
 
         handleIfChunkLast(uuid, index, totalChunks, offset, dataSize) {
             if (index == totalChunks - 1) {
@@ -60,15 +60,21 @@
             }
         }
 
-        async cancelDownload(uuid) {
-            this.onComplete(uuid, false);
-        }
-
         onComplete(uuid, isSuccess) {
             const json = {};
             json.api = API_WS_FILE_DOWNLOAD_COMPLETE;
             json.data = {uriUuid: uuid, isSuccess: isSuccess};
             WS.send(JSON.stringify(json));
+        }
+
+        async cancelDownload(uuid) {
+            console.log(`文件 ${uuid} 取消下载`);
+            if (this.chunkMap.has(uuid)) {
+                this.chunkMap.delete(uuid);
+                this.chunkMap.delete("fileName-" + uuid);
+                this.chunkMap.delete("totalFileSize-" + uuid);
+            }
+            htmlDownloadCancel(uuid);
         }
     }
 
@@ -83,7 +89,7 @@
                 this.chunkMap.delete(uuid);
             }
 
-            this.chunkMap.set(uuid, StreamSaver.createWriteStream(uuid, {
+            this.chunkMap.set(uuid, StreamSaver.createWriteStream(fileName, {
                 size: totalFileSize
             }));
             this.chunkMap.set("fileName-" + uuid, fileName);
@@ -92,18 +98,29 @@
             htmlDownloadProcess(uuid, loc["transfer_start"], false, false);
         }
 
-        async handleChunk(uuid, index, totalChunks, offset, dataSize, data) {
+        getWriter(uuid) {
             const fileStream = this.chunkMap.get(uuid);
             if (!fileStream) {
                 console.error("No file Stream for " + uuid);
-                return;
+                return null;
             }
+            const writer = fileStream.getWriter();
+            if (!writer) {
+                console.error("No file stream writer for " + uuid);
+                return null;
+            }
+            return writer;
+        }
 
+        async handleChunk(uuid, index, totalChunks, offset, dataSize, data) {
+            const writer = this.getWriter(uuid);
+            if(!writer) return;
             try {
-                await fileStream.getWriter().write(data);
+                await writer.write(data);
             } catch (error) {
                 console.error('写入流错误:', error);
-                this.cancelDownload(uuid);
+                this.onComplete(uuid, false);
+                return;
             }
             
             const transferStr = loc["progress"];
@@ -113,53 +130,26 @@
             this.handleIfChunkLast(uuid, index, totalChunks, offset, dataSize);
         }
 
-        onStop(uuid, fileName) {
-            const chunks = this.chunkMap.get(uuid);
-            if (!chunks) return;
+        async onStop(uuid, fileName) {
+            const writer = this.getWriter(uuid);
+            if(!writer) return;
 
             htmlDownloadProcess(uuid, loc["merging"], false, false);
-            let checkCount = 5;
-            if (checkCount > 0) {
-                console.log(`${nowTimeStr()} on Stop all is good.`);
-                try {
-                    // 合并分片
-                    const sortedChunks = Array.from(chunks.values())
-                        .sort((a, b) => a.index - b.index)
-                        .map(c => c.data);
-                    
-                    const mergedBlob = new Blob(sortedChunks, { type: 'application/octet-stream' });
-
-                    // 创建下载链接
-                    const downloadLink = document.createElement('a');
-                    const objectUrl = URL.createObjectURL(mergedBlob);
-                    
-                    // 现代浏览器下载方案
-                    downloadLink.href = objectUrl;
-                    downloadLink.download = fileName;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-
-                    htmlDownloadProcess(uuid, loc["download_complete"], false, false);
-
-                    // 立即清理资源
-                    requestAnimationFrame(() => {
-                        document.body.removeChild(downloadLink);
-                        URL.revokeObjectURL(objectUrl);
-                    });
-
-                    console.log(`文件 ${fileName} 下载完成`);
-                } catch (error) {
-                    console.error('合并下载失败:', error);
-                }
-                
-                this.chunkMap.delete(uuid);
-            } else {
-                console.log(`${nowTimeStr()} on Stop is bad.`);
-                this.chunkMap.delete(uuid);
+            console.log(`${nowTimeStr()} on Stop all is good.`);
+            try {
+                await writer.close();
+                console.log(`文件 ${fileName} 下载完成`);
+                htmlDownloadProcess(uuid, loc["download_complete"], false, false);
+                this.onComplete(uuid, true);
+            } catch (error) {
+                console.error('合并下载失败:', error);
+                this.onComplete(uuid, false);
             }
-        }
 
-        async cancelDownload(uuid) {
+            this.chunkMap.delete(uuid);
+            this.chunkMap.delete("fileName-" + uuid);
+            this.chunkMap.delete("totalFileSize-" + uuid);
+            console.log(`${nowTimeStr()} on Stop all is good end.`);
         }
     }
 
@@ -197,7 +187,7 @@
             this.handleIfChunkLast(uuid, index, totalChunks, offset, dataSize);
         }
 
-        onStop(uuid, fileName) {
+        async onStop(uuid, fileName) {
             const chunks = this.chunkMap.get(uuid);
             if (!chunks) return;
 
@@ -234,20 +224,13 @@
                 this.onComplete(uuid, true);
             } catch (error) {
                 console.error('合并下载失败:', error);
+                this.onComplete(uuid, false);
             }
 
             this.chunkMap.delete(uuid);
             this.chunkMap.delete("fileName-" + uuid);
             this.chunkMap.delete("totalFileSize-" + uuid);
             console.log(`${nowTimeStr()} on Stop all is good end.`);
-        }
-
-        async cancelDownload(uuid) {
-            console.log(`文件 ${uuid} 取消下载`);
-            if (this.chunkMap.has(uuid)) {
-                this.chunkMap.delete(uuid);
-            }
-            htmlDownloadCancel(uuid);
         }
     }
 
