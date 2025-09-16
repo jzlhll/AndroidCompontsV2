@@ -13,6 +13,7 @@
     window.API_WS_SEND_FILE_CHUNK = "s_sendFileChunk";
     window.API_WS_SEND_SMALL_FILE_CHUNK = "s_sendSmallFileChunk";
     window.API_WS_SEND_FILE_NOT_EXIST = "s_sendFileNotExist";
+    window.API_WS_SEND_NO_FILE_SIZE = "s_sendFileNoFileSize";
 
     window.API_WS_INIT = "c_wsInit";
     window.API_WS_REQUEST_FILE = "c_requestFile";

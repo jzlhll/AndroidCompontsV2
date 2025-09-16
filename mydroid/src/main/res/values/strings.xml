@@ -25,6 +25,7 @@
     <string name="download_canceled">Download canceled.</string>
     <string name="send_file_end">Send File End.</string>
     <string name="file_not_exist">File does not exist</string>
+    <string name="no_file_size">"No file size?"</string>
     <string name="file_not_received">File not received.</string>
     <string name="chunk_receiver_error">chunk receiver error.</string>
     <string name="error_merge_chunk_params">Error merge chunk params.</string>

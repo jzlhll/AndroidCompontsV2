@@ -74,11 +74,11 @@ class SeekHelp(val f:Fragment) {
 
                         it.progress = getCurrentScreenBrightness()
                         if (canWrite(f.requireContext())) {
-                            logd { "Can write setting. allan." }
+                            logd { "Can write setting." }
                             it.enableAndStyle()
                             iAutoFs.hideGotoWriteSettingButton()
                         } else {
-                            logd { "Cannot write setting. allan." }
+                            logd { "Cannot write setting." }
                             it.disableAndStyle()
                             iAutoFs.showGotoWriteSettingButton()
                         }

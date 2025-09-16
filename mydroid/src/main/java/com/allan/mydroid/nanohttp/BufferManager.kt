@@ -22,18 +22,18 @@ class BufferManager(val chunkSize:Int) {
     fun buildChunkPacket(
         uriUuid: String,
         index: Int,
-        total: Int,
+        totalChunks: Int,
         offset: Long,
         dataSize:Int,
         data: ByteArray,
     ): ByteArray {
         val uuidBytes = uriUuid.toByteArray(Charsets.UTF_8)
-        logd { "serverChunk: ${uuidBytes.size} index:$index/$total, dataSize:$dataSize - $offset" }
+        logd { "serverChunk: ${uuidBytes.size} index:$index/$totalChunks, dataSize:$dataSize - $offset" }
         buffer.apply {
             clear()
             put(uuidBytes)               // 32字节
             putInt(index)                // 4字节index
-            putInt(total)                // 4字节total
+            putInt(totalChunks)                // 4字节total
             putLong(offset)               // 8字节offset
             putInt(dataSize)             // 4字节dataSize
             put(data)                    // 变长数据体

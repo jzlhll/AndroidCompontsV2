@@ -19,13 +19,6 @@
         WS.send(JSON.stringify(json));
     }
 
-    window.downloadUriComplete = function(uriUuid) {
-        const json = {};
-        json.api = API_WS_FILE_DOWNLOAD_COMPLETE;
-        json.data = {uriUuid: uriUuid};
-        WS.send(JSON.stringify(json));
-    }
-
     async function handleChunk(blob) {
         const arrayBuffer = await blob.arrayBuffer();
         const dataView = new DataView(arrayBuffer);
@@ -35,29 +28,47 @@
         const uuid = uuidDecoder.decode(arrayBuffer.slice(0, uuidLen));
         // 后续为分片信息
         const index = dataView.getUint32(32, false);
-        const total = dataView.getUint32(36, false);
+        const totalChunks = dataView.getUint32(36, false);
         const offset = dataView.getBigUint64(40, false);
         const dataSize = dataView.getUint32(48, false);
         const data = blob.slice(52, 52 + dataSize);
-        //console.log(`handle Chunk ${uuid} index:${index}/${total} offset:${offset} dataSize:${dataSize}`);
-
-        await mFileSaver?.handleChunk(uuid, index, total, offset, dataSize, data);
+        await mFileSaver?.handleChunk(uuid, index, totalChunks, offset, dataSize, data);
     }
 
     class AbsFileSaver {
-        constructor() {
-        }
-        
-        async onStart(uuid, totalFileSize, totalChunks) {
-        }
+        constructor() {}
 
-        async onStop(uuid, fileName, totalFileSize, totalChunks) {
-        }
+        chunkMap = new Map();
 
-        async handleChunk(uuid, index, total, offset, dataSize, data) {
+        async onStart(uuid, fileName, totalFileSize, totalChunks) {}
+
+        async handleChunk(uuid, index, totalChunks, offset, dataSize, data) {}
+
+        onStop(uuid, fileName) {}
+
+        handleIfChunkLast(uuid, index, totalChunks, offset, dataSize) {
+            if (index == totalChunks - 1) {
+                const fileSize = this.chunkMap.get("totalFileSize-" + uuid);
+                console.log("offset " + offset + " dataSize " + dataSize + " fileSize " + fileSize);
+                if (BigInt(offset) + BigInt(dataSize) == fileSize) {
+                    //正确结束
+                    const fileName = this.chunkMap.get("fileName-" + uuid);
+                    this.onStop(uuid, fileName);
+                } else {
+                    console.error("the last one is error fileSize not match???");
+                }
+            }
         }
 
         async cancelDownload(uuid) {
+            this.onComplete(uuid, false);
+        }
+
+        onComplete(uuid, isSuccess) {
+            const json = {};
+            json.api = API_WS_FILE_DOWNLOAD_COMPLETE;
+            json.data = {uriUuid: uuid, isSuccess: isSuccess};
+            WS.send(JSON.stringify(json));
         }
     }
 
@@ -66,22 +77,23 @@
             super();
         }
 
-        fileStreamMap = new Map();
-
-        async onStart(uuid, totalFileSize, totalChunks) {
+        async onStart(uuid, fileName, totalFileSize, totalChunks) {
             // 创建可写流
-            if (this.fileStreamMap.has(uuid)) {
-                this.fileStreamMap.delete(uuid);
+            if (this.chunkMap.has(uuid)) {
+                this.chunkMap.delete(uuid);
             }
-            const fileStream = StreamSaver.createWriteStream(uuid, {
+
+            this.chunkMap.set(uuid, StreamSaver.createWriteStream(uuid, {
                 size: totalFileSize
-            });
-            this.fileStreamMap.set(uuid, fileStream);
+            }));
+            this.chunkMap.set("fileName-" + uuid, fileName);
+            this.chunkMap.set("totalFileSize-" + uuid, totalFileSize);
+            
             htmlDownloadProcess(uuid, loc["transfer_start"], false, false);
         }
 
-        async handleChunk(uuid, index, total, offset, dataSize, data) {
-            const fileStream = this.fileStreamMap.get(uuid);
+        async handleChunk(uuid, index, totalChunks, offset, dataSize, data) {
+            const fileStream = this.chunkMap.get(uuid);
             if (!fileStream) {
                 console.error("No file Stream for " + uuid);
                 return;
@@ -94,18 +106,14 @@
                 this.cancelDownload(uuid);
             }
             
-            let percent = 0;
             const transferStr = loc["progress"];
-            if (total > 0) {
-                percent = (index * 100 / total) | 0;
-                htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
-            } else {
-                const sz = myDroidFormatSize(offset);
-                htmlDownloadProcess(uuid, `${transferStr} ${sz}`, false, true);
-            }
+            const percent = (index * 100 / totalChunks) | 0;
+            htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
+
+            this.handleIfChunkLast(uuid, index, totalChunks, offset, dataSize);
         }
 
-        async onStop(uuid, fileName, totalFileSize, totalChunks) {
+        onStop(uuid, fileName) {
             const chunks = this.chunkMap.get(uuid);
             if (!chunks) return;
 
@@ -162,96 +170,76 @@
 
         chunkMap = new Map(); // 用于跟踪文件分片状态
 
-        async onStart(uuid, totalFileSize, totalChunks) {
+        async onStart(uuid, fileName, totalFileSize, totalChunks) {
             if (this.chunkMap.has(uuid)) {
                 this.chunkMap.delete(uuid);
             }
             this.chunkMap.set(uuid, new Map());
+            this.chunkMap.set("fileName-" + uuid, fileName);
+            this.chunkMap.set("totalFileSize-" + uuid, totalFileSize);
             htmlDownloadProcess(uuid, loc["transfer_start"], false, false);
         }
 
-        async handleChunk(uuid, index, total, offset, dataSize, data) {
+        async handleChunk(uuid, index, totalChunks, offset, dataSize, data) {
             const chunks = this.chunkMap.get(uuid);
+            if (!chunks) return;
+
             const a = {};
             a.index = index;
             a.dataSize = dataSize;
             a.data = data;
             chunks.set(index, a);
-            let percent = 0;
+
             const transferStr = loc["progress"];
-            if (total > 0) {
-                percent = (index * 100 / total) | 0;
-                htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
-            } else {
-                const sz = myDroidFormatSize(offset);
-                htmlDownloadProcess(uuid, `${transferStr} ${sz}`, false, true);
-            }
+            const percent = (index * 100 / totalChunks) | 0;
+            htmlDownloadProcess(uuid, `${transferStr} ${percent}%`, false, true);
+
+            this.handleIfChunkLast(uuid, index, totalChunks, offset, dataSize);
         }
 
-        // checkCompletionOnce(uuid, totalChunks) {
-        //     const chunks = this.chunkMap.get(uuid);
-        //     if (!chunks) return false;
-
-        //     let i = 0;
-        //     while (i < totalChunks) {
-        //         if (!chunks.get(i++)) {
-        //             return false;
-        //         }
-        //     }
-        //     return true;
-        // }
-
-        async onStop(uuid, fileName, totalFileSize, totalChunks) {
+        onStop(uuid, fileName) {
             const chunks = this.chunkMap.get(uuid);
             if (!chunks) return;
 
             htmlDownloadProcess(uuid, loc["merging"], false, false);
-            let checkCount = 5;
-            // while (checkCount-- >= 0) {
-            //     const isCompleted = this.checkCompletionOnce(uuid, totalChunks);
-            //     if (isCompleted) {
-            //         break;
-            //     }
-            //     await delay(500);
-            // }
-            if (checkCount > 0) {
-                console.log(`${nowTimeStr()} on Stop all is good.`);
-                try {
-                    // 合并分片
-                    const sortedChunks = Array.from(chunks.values())
-                        .sort((a, b) => a.index - b.index)
-                        .map(c => c.data);
-                    
-                    const mergedBlob = new Blob(sortedChunks, { type: 'application/octet-stream' });
-
-                    // 创建下载链接
-                    const downloadLink = document.createElement('a');
-                    const objectUrl = URL.createObjectURL(mergedBlob);
-                    
-                    // 现代浏览器下载方案
-                    downloadLink.href = objectUrl;
-                    downloadLink.download = fileName;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-
-                    htmlDownloadProcess(uuid, loc["download_complete"], false, false);
-
-                    // 立即清理资源
-                    requestAnimationFrame(() => {
-                        document.body.removeChild(downloadLink);
-                        URL.revokeObjectURL(objectUrl);
-                    });
-
-                    console.log(`文件 ${fileName} 下载完成`);
-                } catch (error) {
-                    console.error('合并下载失败:', error);
-                }
+            console.log(`${nowTimeStr()} on Stop all is good.`);
+            try {
+                // 合并分片
+                const sortedChunks = Array.from(chunks.values())
+                    .sort((a, b) => a.index - b.index)
+                    .map(c => c.data);
                 
-                this.chunkMap.delete(uuid);
-            } else {
-                console.log(`${nowTimeStr()} on Stop is bad.`);
-                this.chunkMap.delete(uuid);
+                const mergedBlob = new Blob(sortedChunks, { type: 'application/octet-stream' });
+
+                // 创建下载链接
+                const downloadLink = document.createElement('a');
+                const objectUrl = URL.createObjectURL(mergedBlob);
+                
+                // 现代浏览器下载方案
+                downloadLink.href = objectUrl;
+                downloadLink.download = fileName;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+
+                htmlDownloadProcess(uuid, loc["download_complete"], false, false);
+
+                // 立即清理资源
+                requestAnimationFrame(() => {
+                    document.body.removeChild(downloadLink);
+                    URL.revokeObjectURL(objectUrl);
+                });
+
+                console.log(`文件 ${fileName} 下载完成`);
+
+                this.onComplete(uuid, true);
+            } catch (error) {
+                console.error('合并下载失败:', error);
             }
+
+            this.chunkMap.delete(uuid);
+            this.chunkMap.delete("fileName-" + uuid);
+            this.chunkMap.delete("totalFileSize-" + uuid);
+            console.log(`${nowTimeStr()} on Stop all is good end.`);
         }
 
         async cancelDownload(uuid) {
@@ -279,7 +267,7 @@
                     if (!mFileSaver) {
                         mFileSaver = new SmallFileSaver();
                     }
-                    mFileSaver.onStart(data.uriUuid, data.totalFileSize, data.totalChunks);
+                    mFileSaver.onStart(data.uriUuid, data.fileName, data.totalFileSize, data.totalChunks);
                 } else if (data.action == "end") {
                     console.log(api, msg, data);
                     let fileName = data.fileName;
@@ -298,7 +286,7 @@
             } else if (api == API_WS_SEND_FILE_LIST) {
                 htmlShowFileList(data.urlRealInfoHtmlList);
                 return true;
-            } else if (api == API_WS_SEND_FILE_NOT_EXIST) {
+            } else if (api == API_WS_SEND_FILE_NOT_EXIST || api == API_WS_SEND_NO_FILE_SIZE) {
                 onStartDownErr(msg, data.uriUuid);
                 return true;
             }
