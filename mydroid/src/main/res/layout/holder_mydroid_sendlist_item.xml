@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="122dp"
+    android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -33,15 +33,16 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="12dp"
             android:id="@+id/fileNameTv"
+            android:layout_marginTop="8dp"
             app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintEnd_toStartOf="@id/checkBox"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/fileSizeAndMD5Tv"
             app:layout_constraintVertical_chainStyle="packed"
             android:textSize="16sp"
-            android:maxLines="1"
             android:ellipsize="start"
-            tools:text="text ajdkfjfdk dafjkadsfjkasdj ajkdfjkad"
+            android:maxLines="1"
+            tools:text="NUC dfhffkdfj_dajfk12114_4914dfdjakffdjfaf.apk"
             android:textStyle="bold"
             android:layout_width="0dp"
             android:layout_height="wrap_content" />
@@ -55,10 +56,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="13sp"
-            android:maxLines="3"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:maxLines="2"
             app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintTop_toBottomOf="@id/fileNameTv"
+            app:layout_constraintBottom_toTopOf="@id/deleteBtn"
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="text ajdkfjfdkfaklfd jakfjkad fjadjkfkjd f89fjkadsfjk " />
 
@@ -67,12 +68,17 @@
             app:cornerRadius="4dp"
             android:textColor="@color/color_text_normal"
             app:backgroundNormal="@color/color_ding_bg"
-            android:layout_marginEnd="12dp"
-            android:paddingHorizontal="8dp"
+            android:textSize="11sp"
+            android:paddingHorizontal="24dp"
             android:paddingVertical="2dp"
             android:text="@string/delete"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="6dp"
+            android:layout_marginStart="4dp"
+            app:layout_constraintStart_toEndOf="@id/icon"
+            app:layout_constraintTop_toBottomOf="@id/fileSizeAndMD5Tv"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            android:layout_marginBottom="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </androidx.constraintlayout.widget.ConstraintLayout>

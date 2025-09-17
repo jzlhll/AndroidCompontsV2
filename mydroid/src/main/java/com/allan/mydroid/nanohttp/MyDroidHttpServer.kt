@@ -20,6 +20,7 @@ import com.modulenative.AppNative
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
+import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 
@@ -104,6 +105,9 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             url == TEXT_CHAT_READ_WEBSOCKET_IP_PORT -> {
                 return getWebsocketIpPortWrap()
             }
+            url.startsWith("/file_download_uuid/") -> {
+                return fileDownload(url.substring("/file_download_uuid/".length))
+            }
             // JS / html 文件请求
             url.endsWith(".js") || url.endsWith(".html") -> {
                 val jsName = url.substring(1)
@@ -115,6 +119,52 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
         }
 
         return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, error)
+    }
+
+    fun fileDownload(uriUuid:String) : NanoHTTPD.Response {
+        try {
+            val info = MyDroidConst.sendUriMap.value?.get(uriUuid)
+            val realPath = info?.realPath
+            if (realPath.isNullOrEmpty()) {
+                return fileNotFoundResponse()
+            }
+            val fileSize = info.fileSize ?: 0
+            if (fileSize <= 0) {
+                return fileSizeIs0Response()
+            }
+
+            logdNoFile { "handle Get Request fileDownload:$realPath size:$fileSize" }
+            val filename = info.goodName()
+            val fileInputStream = FileInputStream(realPath)
+            // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
+            val response = newFixedLengthResponse(Status.OK,
+                "application/octet-stream", fileInputStream, fileSize)
+
+            // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
+            // 使用 "attachment" 表示希望浏览器将响应体保存为文件
+            // filename 指定建议的文件名，浏览器可能会使用它作为默认保存名
+            response.addHeader("Content-Disposition", "attachment; filename=\"$filename\"")
+
+            // 3. （可选但推荐）设置 Content-Length 头
+            response.addHeader("Content-Length", "" + fileSize)
+            // 4. （可选）设置 Content-Type，如果你确切知道文件类型，可以设置更具体的 MIME 类型
+            // 例如 "image/jpeg", "application/pdf"
+            // 但对于强制下载，"application/octet-stream" 是通用选择
+            return response
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+            return fileNotFoundResponse()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file.")
+        }
+    }
+
+    private fun fileNotFoundResponse() : NanoHTTPD.Response {
+        return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "File not found.")
+    }
+    private fun fileSizeIs0Response() : NanoHTTPD.Response {
+        return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "File size is 0.")
     }
 
     private fun handlePostRequest(session: IHTTPSession): Response {
@@ -142,9 +192,10 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
         val data = MyDroidConst.ipPortData
         val ip = data.value?.ip
         val wsPort = data.value?.webSocketPort
+        val httpPort = data.value?.httpPort
 
-        return if (ip != null && wsPort != null) {
-            val info = IpPortResult(ip, wsPort)
+        return if (ip != null && wsPort != null && httpPort != null) {
+            val info = IpPortResult(ip, wsPort, httpPort)
             logdNoFile { "get websocket ipPort $info" }
             ResultBean(CODE_SUC, "Success!", info).okJsonResponse()
         } else {

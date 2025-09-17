@@ -10,8 +10,6 @@ import com.allan.mydroid.beans.wsdata.MyDroidModeData
 import com.allan.mydroid.beans.WSResultBox
 import com.allan.mydroid.api.toName
 import com.allan.mydroid.globals.CODE_SUC
-import com.allan.mydroid.globals.DEBUG_SLOW_RECEIVER_TRANSFER
-import com.allan.mydroid.globals.DEBUG_SLOW_SEND_TRANSFER
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.MyDroidConstServer
 import com.au.module_android.Globals

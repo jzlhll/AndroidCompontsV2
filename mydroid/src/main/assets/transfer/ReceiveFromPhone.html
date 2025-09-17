@@ -128,14 +128,14 @@
             color: #444;
         }
 
-        #file-list-container td:nth-child(1) { width: 60%; } /* 文件名列 */
-        #file-list-container td:nth-child(2) { width: 20%; min-width: 80px; } /* 大小列 */
-        #file-list-container td:nth-child(3) { width: 20%; min-width: 100px; } /* 操作列 */
+        #file-list-container td:nth-child(1) { width: 64%; } /* 文件名列 */
+        #file-list-container td:nth-child(2) { width: 18%; min-width: 80px; } /* 大小列 */
+        #file-list-container td:nth-child(3) { width: 18%; min-width: 80px; } /* 操作列 */
 
         @media (max-width: 768px) {
-            #file-list-container td:nth-child(1) { width: 50%; }
+            #file-list-container td:nth-child(1) { width: 65%; }
             #file-list-container td:nth-child(2),
-            #file-list-container td:nth-child(3) { width: 25%; }
+            #file-list-container td:nth-child(3) { width: 18%; }
 
             #file-list-container th,
             #file-list-container td {
@@ -250,7 +250,7 @@
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
-        
+
         window.htmlUpdateIpClient = function(mode, name, color) {
             document.getElementById('bigTitle').textContent = `${name} (${mode})`;
             const circle = document.getElementById('bigTitleColor');
@@ -268,7 +268,6 @@
             const cancelStr = loc["cancel"];
 
             uriRealInfoHtmlList.forEach(item => {
-
                 const row = `
                     <tr>
                         <td>
@@ -279,59 +278,15 @@
                             <a id="down-item-${item.uriUuid}" class="download-link" style="display:block;" onclick="startDownload('${item.uriUuid}')">
                                ${downloadStr}
                             </a>
-                            <button id="down-item-cancel-${item.uriUuid}" class="cancel-btn" style="display:none;" 
-                                onclick="cancelDownload('${item.uriUuid}')">${cancelStr}</button>   
                         </td>
                     </tr>
                 `;
                 tbody.innerHTML += row;
             });
         }
-
-        function updateDownloadLink(good, uriUuid, text, showCancelBtn) {
-            const a = document.getElementById('down-item-' + uriUuid);
-            a.textContent = text;
-            if (good) {
-                a.classList.remove('disabled');
-            } else {
-                a.classList.add('disabled');
-            }
-
-            const cancelBtn = document.getElementById(`down-item-cancel-${uriUuid}`);
-            if (showCancelBtn) {
-                cancelBtn.style.display = 'inline-block';
-            } else {
-                cancelBtn.style.display = 'none';
-            }
-        }
-
-        function updateDownloadRestore(uriUuid) {
-            const a = document.getElementById('down-item-' + uriUuid);
-            a.textContent = loc["download"];
-            a.classList.remove('disabled');
-
-            const cancelBtn = document.getElementById(`down-item-cancel-${uriUuid}`);
-            cancelBtn.style.display = 'none';
-        }
         
-        async function startDownload(uriUuid) {
-            startDownloadUri(uriUuid);
-        };
-
-        function cancelDownload(uriUuid) {
-            cancelDownloadUri(uriUuid);
-        }
-
-        window.onStartDownErr = function(msg, uriUuid) {
-            updateDownloadLink(false, uriUuid, msg, false);
-        };
-
-        window.htmlDownloadProcess = function(uuid, str, enable, showCancelBtn) {
-            updateDownloadLink(enable, uuid, str, showCancelBtn);
-        };
-
-        window.htmlDownloadCancel = function(uuid) {
-            updateDownloadRestore(uuid);
+        function startDownload(uriUuid) {
+            window.open(`http://${window.mydroidIpPort.ip}:${window.mydroidIpPort.httpPort}/file_download_uuid/${uriUuid}`, '_blank');
         };
 
         ////////run init functions//////

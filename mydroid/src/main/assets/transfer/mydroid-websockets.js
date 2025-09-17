@@ -7,21 +7,18 @@
 
     window.WS = null;
 
+    window.READ_WEBSOCKET_IP_PORT = "/read-websocket-ip-port";
+
     window.API_WS_SEND_FILE_LIST = "s_sendFileList";
     window.API_WS_LEFT_SPACE = "s_leftSpace";
     window.API_WS_CLIENT_INIT_CALLBACK = "s_clientInitBack";
-    window.API_WS_SEND_FILE_CHUNK = "s_sendFileChunk";
-    window.API_WS_SEND_SMALL_FILE_CHUNK = "s_sendSmallFileChunk";
-    window.API_WS_SEND_FILE_NOT_EXIST = "s_sendFileNotExist";
-    window.API_WS_SEND_NO_FILE_SIZE = "s_sendFileNoFileSize";
 
     window.API_WS_INIT = "c_wsInit";
-    window.API_WS_REQUEST_FILE = "c_requestFile";
-    window.API_WS_FILE_DOWNLOAD_CANCEL = "c_downloadFileCancel";
-    window.API_WS_FILE_DOWNLOAD_COMPLETE = "c_downloadFileComplete";
     window.API_WS_PING = "c_ping";
 
     window.HEARTBEAT_INTERVAL = 12000;
+
+    window.mydroidIpPort = {};
 
     const heartbeatFrame = JSON.stringify({
                 api: window.API_WS_PING
@@ -43,7 +40,7 @@
         }
     }
 
-    function setupSocketFileList(ipPort) {
+    function setupWSFileList(ipPort) {
         try{
             // 创建 WebSocket 连接 (ws:// 或 wss://)
             const socket = new WebSocket(`ws://${ipPort}/ws-test`);
@@ -108,7 +105,7 @@
         let response = null;
         let shouldStopInterval = false;
         try {
-            response = await fetch('/read-websocket-ip-port', {
+            response = await fetch(window.READ_WEBSOCKET_IP_PORT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -128,8 +125,12 @@
             } catch(e) {}
             const ip = ipPortJson?.data?.ip;
             const port = ipPortJson?.data?.port;
-            if (isValidString(ip) && port) {
-                isSuc = setupSocketFileList(ip + ":" + port);
+            const httpPort = ipPortJson?.data?.httpPort;
+            if (isValidString(ip) && port && httpPort) {
+                isSuc = setupWSFileList(ip + ":" + port);
+                window.mydroidIpPort.ip = ip;
+                window.mydroidIpPort.port = port;
+                window.mydroidIpPort.httpPort = httpPort;
             }
         }
 
