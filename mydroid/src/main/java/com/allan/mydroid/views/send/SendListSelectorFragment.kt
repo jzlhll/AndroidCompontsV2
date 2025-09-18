@@ -13,17 +13,21 @@ import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.permissions.PermissionStorageHelper
+import com.au.module_android.permissions.getContentForResult
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.ToolbarMenuManager
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.NotificationUtil
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -136,11 +140,35 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
 
     private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
 
+    val pickerResult = compatMultiPhotoPickerForResult(9)
+    val documentResult = getContentForResult()
+
+    private fun initActionButtons() {
+        binding.selectDocumentBtn.onClick {
+            documentResult.start("*/*") { uris->
+                uris?.forEach {uri->
+                    logdNoFile { "get documents $uri" }
+                }
+            }
+        }
+        binding.selectImageAndVideoBtn.onClick {
+            pickerResult.setCurrentMaxItems(9)
+            pickerResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO, null) {uri->
+                logd { "file uri: $uri" }
+            }
+        }
+        binding.sendListBtn.onClick {
+
+        }
+    }
+
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         logdNoFile {"onBinding Created"}
         NotificationUtil.Companion.requestPermission(permissionUtil) {
             MyDroidKeepLiveService.Companion.keepMyDroidAlive()
         }
+
+        initActionButtons()
 
         binding.adHost.setColor(Globals.getColor(com.au.module_androidcolor.R.color.color_normal_block0))
         binding.adHost.startAnimation()

@@ -1,5 +1,6 @@
 package com.au.module_android.permissions.permission
 
+import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.core.app.ActivityOptionsCompat
 import com.au.module_android.permissions.IContractResult
@@ -17,4 +18,8 @@ abstract class IOnePermissionResult(val permission:String,
      * 因为block放在了这里设置。
      */
     abstract fun safeRun(block:()->Unit, notGivePermissionBlock:(()->Unit)? = null, option: ActivityOptionsCompat? = null)
+
+    override fun start(input: String, callback: ActivityResultCallback<Boolean>?) {
+        throw IllegalAccessException("not support please call safeRun.")
+    }
 }

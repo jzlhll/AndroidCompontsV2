@@ -28,4 +28,8 @@ class ActivityForResult(cxt:Any) : IContractResult<Intent, ActivityResult>(cxt, 
         intent.data = Uri.fromParts("package", appContext.packageName, null)
         start(intent, null, null)
     }
+
+    override fun start(input: Intent, callback: ActivityResultCallback<ActivityResult>?) {
+        start(input, null, callback)
+    }
 }

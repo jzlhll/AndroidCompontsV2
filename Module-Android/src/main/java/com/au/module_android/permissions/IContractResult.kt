@@ -19,6 +19,8 @@ abstract class IContractResult<I, O> (cxt:Any, val resultContract:ActivityResult
 
     private val mResultCallback = ActivityResultCallback<O> { result -> onResultCallback?.onActivityResult(result) }
 
+    abstract fun start(input:I, callback:ActivityResultCallback<O>?)
+
     val launcher: ActivityResultLauncher<I> = when (cxt) {
         is Fragment -> {
             cxt.registerForActivityResult(resultContract, mResultCallback)

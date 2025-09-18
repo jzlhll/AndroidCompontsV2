@@ -19,9 +19,9 @@ class SystemTakeVideoFaceForResult(owner:Any,
     /**
      * 启动activity
      */
-    fun start(uri:Uri, callback: ActivityResultCallback<Boolean>?) {
+    override fun start(input:Uri, callback: ActivityResultCallback<Boolean>?) {
         callback?.let { setResultCallback(it) }
-        launcher.launch(uri)
+        launcher.launch(input)
     }
 }
 

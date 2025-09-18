@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import com.au.module_android.Globals
 import com.au.module_android.permissions.activity.ActivityForResult
+import com.au.module_android.permissions.activity.GetContentForResult
 import com.au.module_android.permissions.activity.SystemTakePictureForResult
 import com.au.module_android.permissions.activity.SystemTakeVideoFaceForResult
 import com.au.module_android.permissions.activity.SystemTakeVideoForResult
@@ -26,6 +27,8 @@ import com.au.module_android.utils.startActivityFix
 
 const val REQUEST_OVERLAY_CODE: Int = 1001
 //todo https://article.juejin.cn/post/7082314521284444173 增加拍照等
+
+fun LifecycleOwner.getContentForResult() = GetContentForResult(this)
 
 fun LifecycleOwner.systemTakePictureForResult() = SystemTakePictureForResult(this)
 
@@ -46,6 +49,7 @@ fun LifecycleOwner.createMultiPermissionForResult(permissions:Array<String>)
 fun LifecycleOwner.createStoragePermissionForResult(types:Array<PermissionStorageHelper.MediaType>)
         : IMultiPermissionsResult
     = createMultiPermissionForResult(PermissionStorageHelper().getRequiredPermissions(types))
+
 
 /**
  * 单权限的申请
