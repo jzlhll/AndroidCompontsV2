@@ -15,7 +15,7 @@
         android:layout_height="match_parent" />
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontMText"
+        style="@style/StyleAuTextNormal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginStart="21dp"
@@ -27,7 +27,7 @@
         android:text="2025-01-04.txt" />
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="21dp"
         android:id="@+id/sizeTv"

@@ -56,7 +56,7 @@
         <item name="android:textStyle">normal</item>
         <item name="android:lines">1</item>
         <item name="android:gravity">center</item>
-        <item name="fontMode">mid</item>
+        <item name="customFontMode">mid</item>
     </style>
     
     <!-- 灰色长按钮-->
@@ -93,68 +93,104 @@
     <!--想要字体有粗，请命名为XXXBTextXXX。或者额外设置textStyle=bold
         如果想要中粗，则必须命名为XXXMTextXXX 或者额外设置fontMode=mid StyleFontUtil中有改。-->
 
-    <!-- 大标题的样式。字体大小不做限定；自行设置；主要约束了行间距和颜色。 -->
-    <style name="StyleTitleBText">
+    <!-- UI规范 : 文字 -->
+    <!-- 大title -->
+    <style name="StyleAuBTextTitle1">
         <item name="android:textColor">@color/color_text_normal</item>
-        <item name="android:lineSpacingMultiplier">1.1</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">24sp</item>
+        <item name="android:lineSpacingExtra">-4sp</item>
+        <item name="android:textSize">26sp</item>
     </style>
 
-    <style name="StyleFontSecondTitleText">
+    <!-- 二title -->
+    <style name="StyleAuBTextTitle2">
+        <item name="android:textColor">@color/color_text_normal</item>
+        <item name="android:lineSpacingExtra">-4sp</item>
+        <item name="android:textSize">22sp</item>
+    </style>
+
+    <!-- tool bar/tab text文案 或者 粗体标题 -->
+    <style name="StyleAuBTextHeadline">
+        <item name="android:textColor">@color/color_text_normal</item>
+        <item name="android:lineSpacingExtra">-2sp</item>
+        <item name="android:textSize">16.5sp</item>
+        <item name="customFontMode">bold</item>
+    </style>
+
+    <!-- font-regular -->
+    <style name="StyleAuTextBig" parent="StyleAuTextNormal">
+        <item name="android:textSize">19sp</item>
+    </style>
+
+    <!-- 中粗文字  -->
+    <style name="StyleAuTextNormalMid">
+        <item name="android:textColor">@color/color_text_normal</item>
+        <item name="android:lineSpacingExtra">-2sp</item>
+        <item name="android:textSize">16.5sp</item>
+        <item name="customFontMode">mid</item>
+    </style>
+
+    <!-- auto版本 自适应大小显示 -->
+    <style name="StyleAuTextNormalAuto">
+        <item name="android:textColor">@color/color_text_normal</item>
+        <item name="android:autoSizeTextType">uniform</item>
+        <item name="android:autoSizeMinTextSize">11sp</item>
+        <item name="android:autoSizeMaxTextSize">16.5sp</item>
+        <item name="android:lineSpacingExtra">-3sp</item>
+    </style>
+
+    <style name="StyleAuTextNormal">
+        <item name="android:textColor">@color/color_text_normal</item>
+        <item name="android:lineSpacingExtra">-2sp</item>
+        <item name="android:textSize">16.5sp</item>
+    </style>
+
+    <style name="StyleAuTextNormalDesc" parent="StyleAuTextNormal">
         <item name="android:textColor">@color/color_text_desc</item>
-        <item name="android:lineSpacingMultiplier">1.1</item>
-        <item name="android:textSize">20sp</item>
-        <item name="fontMode">mid</item>
     </style>
 
-    <style name="StyleFontTitleDescText">
-        <item name="android:textColor">@color/color_text_desc</item>
-        <item name="android:lineSpacingMultiplier">1.1</item>
-        <item name="android:textSize">16sp</item>
+    <style name="StyleAuTextNormalDp" parent="StyleAuTextNormal">
+        <item name="android:textSize">16.5dp</item>
+        <item name="android:lineSpacingExtra">-2dp</item>
     </style>
 
-    <!-- 一般的字体 -->
-    <style name="StyleFontText">
-        <item name="android:textColor">@color/color_text_normal</item>
-        <item name="android:lineSpacingMultiplier">1.1</item>
-        <item name="android:textSize">16sp</item>
+    <style name="StyleAuTextNormalDescDp" parent="StyleAuTextNormalDesc">
+        <item name="android:textSize">16.5dp</item>
+        <item name="android:lineSpacingExtra">-2dp</item>
     </style>
 
-    <style name="StyleFontMenuText">
-        <item name="android:textColor">@color/color_text_normal</item>
-        <item name="android:textSize">18sp</item>
-        <item name="fontMode">mid</item>
-    </style>
-
-    <style name="StyleFontSecondaryText">
+    <style name="StyleAuTextThin" parent="StyleAuTextNormal">
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/color_text_desc</item>
-        <item name="android:lineSpacingMultiplier">1.05</item>
     </style>
 
-    <!--显示成为中粗-->
-    <style name="StyleFontMText" parent="StyleFontText"/>
+    <style name="StyleAuTextThinDp" parent="StyleAuTextNormalDp">
+        <item name="android:textSize">14dp</item>
+    </style>
 
-    <!--显示成为粗-->
-    <style name="StyleFontBText" parent="StyleFontText"/>
-
-    <style name="StyleMinText">
-        <item name="android:textColor">@color/color_text_normal</item>
-        <item name="android:lineSpacingMultiplier">1.05</item>
+    <style name="StyleAuTextThinDesc" parent="StyleAuTextNormalDesc">
         <item name="android:textSize">14sp</item>
     </style>
 
-    <style name="StyleSmallText">
-        <item name="android:textSize">13sp</item>
-        <item name="android:textColor">@color/color_text_desc</item>
-        <item name="android:lineSpacingMultiplier">1.15</item>
+    <style name="StyleAuTextSmallDesc" parent="StyleAuTextThinDesc">
+        <item name="android:textSize">12.5sp</item>
+        <item name="android:lineSpacingExtra">-1sp</item>
     </style>
 
-    <!-- 假装为正方形，长方形，方块背景 -->
-    <style name="StyleFakeEditText" parent="StyleFontText">
-        <item name="android:textSize">24sp</item>
-        <item name="android:textStyle">bold</item>
+    <style name="StyleAuTextSmallHint" parent="StyleAuTextSmallDesc">
+        <item name="android:textColor">@color/color_hint_text</item>
+    </style>
+
+    <style name="StyleAuTextSmallDescDp" parent="StyleAuTextSmallDesc">
+        <item name="android:textSize">12.5dp</item>
+        <item name="android:lineSpacingExtra">-1dp</item>
+    </style>
+
+    <style name="StyleAuTextMicroDesc" parent="StyleAuTextNormalDesc">
+        <item name="android:textSize">10sp</item>
+        <item name="android:lineSpacingExtra">0dp</item>
+    </style>
+
+    <!-- 新规范=》假装为输入框的Text样式 -->
+    <style name="StyleAuTextFakeEdit" parent="StyleAuBTextTitle2">
         <item name="android:background">@drawable/fake_edit_board_bg</item>
         <item name="android:gravity">center</item>
     </style>

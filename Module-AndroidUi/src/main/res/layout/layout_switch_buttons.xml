@@ -31,7 +31,7 @@
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/leftTv"
         android:paddingHorizontal="6dp"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextThin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
@@ -39,7 +39,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/padding"
-        android:textSize="14sp"
         tools:text="first" />
 
     <View
@@ -51,14 +50,13 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/rightTv"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextThin"
         android:layout_width="wrap_content"
         android:paddingHorizontal="6dp"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/padding"
-        android:textSize="14sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:text="second" />

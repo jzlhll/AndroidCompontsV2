@@ -92,7 +92,7 @@
         android:layout_height="0dp">
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/uploadTitleTv"
-            style="@style/StyleFontMenuText"
+            style="@style/StyleAuBTextHeadline"
             android:layout_marginTop="12dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -102,8 +102,8 @@
             android:text="压缩中, 尽量不要关闭"/>
 
         <com.au.module_android.widget.CustomFontText
-            style="@style/StyleFontBText"
-            android:textSize="56dp"
+            style="@style/StyleAuBTextTitle1"
+            android:textSize="42dp"
             android:paddingHorizontal="24dp"
             android:layout_marginTop="24dp"
             android:id="@+id/progressPercentText"
@@ -116,7 +116,7 @@
             android:layout_height="wrap_content" />
 
         <com.au.module_android.widget.CustomFontText
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             android:id="@+id/progressText"
             android:layout_marginTop="12dp"
             android:layout_marginHorizontal="20dp"

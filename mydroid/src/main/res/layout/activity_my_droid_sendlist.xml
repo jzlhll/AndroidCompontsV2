@@ -27,10 +27,9 @@
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/descTitle"
         android:layout_marginTop="4dp"
-        style="@style/StyleFontSecondTitleText"
+        style="@style/StyleAuTextThin"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         android:textColor="#ffffff"
-        android:textSize="13sp"
         android:text="@string/select_files_to_send"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"
@@ -40,7 +39,7 @@
         android:id="@+id/actionListHost"
         android:layout_marginStart="8dp"
         app:layout_constraintTop_toBottomOf="@id/descTitle"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="6dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <androidx.appcompat.widget.AppCompatImageView
@@ -78,8 +77,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcv"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginTop="3dp"
         app:layout_constraintBottom_toTopOf="@id/rcvGuideLine"
         app:layout_constraintTop_toBottomOf="@id/actionListHost"
         android:layout_width="match_parent"
@@ -88,42 +86,77 @@
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/empty"
         android:visibility="gone"
+        tools:visibility="visible"
         android:text="@string/empty_file_hint"
-        style="@style/StyleFontSecondaryText"
-        android:textSize="21sp"
-        android:gravity="center"
+        style="@style/StyleAuTextBig"
+        android:gravity="center_horizontal"
         android:layout_marginVertical="4dp"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"
         app:layout_constraintTop_toBottomOf="@id/descTitle"
         app:layout_constraintBottom_toTopOf="@id/rcvGuideLine"
         android:layout_width="match_parent"
-        android:layout_height="0dp" />
+        android:layout_height="wrap_content" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/rcvGuideLine"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.76"
+        app:layout_constraintGuide_percent="0.68"
         android:layout_width="wrap_content"
         android:layout_height="1dp" />
 
     <com.au.module_androidui.widget.ShineView
         android:background="@color/color_normal_block0"
         android:id="@+id/adHost"
-        android:layout_marginVertical="8dp"
+        android:layout_marginVertical="4dp"
         app:layout_constraintTop_toBottomOf="@id/rcvGuideLine"
-        app:layout_constraintBottom_toTopOf="@id/infoText"
+        app:layout_constraintBottom_toTopOf="@id/helpText"
         android:layout_width="match_parent"
         android:layout_height="0dp" />
 
-    <com.au.module_android.widget.CustomFontTextlink
+    <LinearLayout
         android:id="@+id/infoText"
-        android:layout_marginHorizontal="@dimen/ui_padding_edge"
-        style="@style/StyleFontSecondTitleText"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="12dp"
-        android:textSize="13sp"
-        android:text="@string/disclaimer_title"
-        android:gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/btn_margin_bottom_m"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.AppCompatImageView
+            android:src="@drawable/ic_small_info"
+            android:tint="@color/color_text_desc"
+            android:layout_gravity="center_vertical"
+            android:layout_width="16dp"
+            android:layout_height="16dp"/>
+
+        <com.au.module_android.widget.CustomFontTextlink
+            style="@style/StyleAuTextSmallDesc"
+            android:text="@string/disclaimer_title"
+            android:layout_marginStart="6dp"
+            android:gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/helpText"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/infoText"
+        android:layout_marginBottom="6dp"
+        android:layout_width="match_parent"
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.AppCompatImageView
+            android:src="@drawable/ic_small_quest"
+            android:tint="@color/color_text_desc"
+            android:layout_gravity="center_vertical"
+            android:layout_width="16dp"
+            android:layout_height="16dp"/>
+        <com.au.module_android.widget.CustomFontTextlink
+            style="@style/StyleAuTextSmallDesc"
+            android:layout_marginStart="6dp"
+            android:text="@string/how_to_select_files"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

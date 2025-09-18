@@ -25,11 +25,11 @@ class CustomToolbar @JvmOverloads constructor(
                 if (it is TextView) {
                     if (isBlod) {
                         //        paint.isFakeBoldText = true
-                        it.setFontFromAsset(context, FontMode.BOLD, false)
+                        it.setFontFromAsset(context, FontMode.BOLD, false, "")
                     } else if (isMid) {
-                        it.setFontFromAsset(context, FontMode.MID, false)
+                        it.setFontFromAsset(context, FontMode.MID, false, "")
                     } else {
-                        it.setFontFromAsset(context, FontMode.NORMAL, false)
+                        it.setFontFromAsset(context, FontMode.NORMAL, false, "")
                     }
                 }
             }

@@ -32,7 +32,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/titleTv"
-            style="@style/StyleFontBText"
+            style="@style/StyleAuBTextTitle2"
             android:textColor="@color/color_text_normal"
             app:layout_constraintTop_toBottomOf="@id/icon"
             android:layout_width="match_parent"
@@ -46,7 +46,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/contentTv"
-            style="@style/StyleMinText"
+            style="@style/StyleAuTextNormalDesc"
             app:layout_constraintTop_toBottomOf="@id/titleTv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -70,9 +70,7 @@
             app:layout_constraintHorizontal_chainStyle="packed"
             android:layout_marginTop="30dp"
             android:layout_marginStart="20dp"
-            android:textColor="@color/color_text_normal"
-            android:layout_marginEnd="6dp"
-            android:textSize="16sp"/>
+            android:layout_marginEnd="6dp" />
 
         <com.au.module_android.widget.CustomButton
             android:id="@+id/sureButton"

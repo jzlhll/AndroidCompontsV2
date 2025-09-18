@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <attr name="fontMode" format="string" />
-    <attr name="isFontNum" format="boolean" />
+    <attr name="customFontName" format="string" />
+    <attr name="customFontMode" format="string" />
+    <attr name="customFontIsNum" format="boolean" />
 
     <attr name="backgroundAlpha" format="float|integer" />
     <attr name="backgroundNormal" format="color" />

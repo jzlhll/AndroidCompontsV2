@@ -17,7 +17,7 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/disclaimerTv"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextSmallDesc"
         android:text="@string/disclaimer_content"
         android:layout_marginVertical="4dp"
         android:gravity="center_vertical"
@@ -31,9 +31,9 @@
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/empty"
         android:visibility="gone"
+        tools:visibility="visible"
         android:text="@string/empty_file_hint"
-        style="@style/StyleFontSecondaryText"
-        android:textSize="18sp"
+        style="@style/StyleAuTextBig"
         android:gravity="center"
         android:layout_marginVertical="4dp"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"
@@ -42,15 +42,27 @@
         android:layout_width="match_parent"
         android:layout_height="0dp" />
 
-    <com.au.module_android.widget.CustomFontTextlink
+    <LinearLayout
         android:id="@+id/infoText"
-        android:layout_marginHorizontal="@dimen/ui_padding_edge"
-        style="@style/StyleFontSecondTitleText"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="12dp"
-        android:textSize="13sp"
-        android:text="@string/disclaimer_title"
-        android:gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/btn_margin_bottom_m"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.AppCompatImageView
+            android:src="@drawable/ic_small_info"
+            android:tint="@color/color_text_desc"
+            android:layout_gravity="center_vertical"
+            android:layout_width="16dp"
+            android:layout_height="16dp"/>
+
+        <com.au.module_android.widget.CustomFontTextlink
+            style="@style/StyleAuTextSmallDesc"
+            android:text="@string/disclaimer_title"
+            android:layout_marginStart="6dp"
+            android:gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

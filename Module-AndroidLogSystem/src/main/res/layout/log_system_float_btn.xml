@@ -6,9 +6,11 @@
     android:layout_height="match_parent">
 
     <com.au.module_android.widget.BgBuildCustomFontText
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="6dp"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
         app:backgroundNormal="#66CAE1E8"
+        style="@style/StyleAuTextNormal"
+        android:textSize="13sp"
         android:alpha="0.75"
         app:cornerRadius="6dp"
         android:text="LogSys"

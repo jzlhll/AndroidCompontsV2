@@ -26,9 +26,8 @@
         android:id="@+id/descTitle"
         android:layout_marginTop="4dp"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
-        style="@style/StyleFontSecondTitleText"
+        style="@style/StyleAuTextThin"
         android:textColor="#ffffff"
-        android:textSize="13sp"
         tools:text="不退出，不熄屏"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"
@@ -36,8 +35,8 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/title"
-        style="@style/StyleFontMText"
-        android:layout_marginTop="8dp"
+        style="@style/StyleAuTextThin"
+        android:layout_marginTop="6dp"
         app:layout_constraintTop_toBottomOf="@id/descTitle"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"

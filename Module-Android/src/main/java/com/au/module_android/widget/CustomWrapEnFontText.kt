@@ -7,6 +7,7 @@ import com.au.module_android.fontutil.checkBoldAndSetFont
 import com.au.module_android.fontutil.setFontFromAsset
 import com.google.android.material.textview.MaterialTextView
 import kotlin.math.ceil
+import kotlin.math.max
 
 /**
  * @author au
@@ -21,7 +22,7 @@ open class CustomWrapEnFontText : MaterialTextView {
         }
         set(value) {
             mode.fontMode = value
-            setFontFromAsset(context, mode.fontMode, mode.isNumber)
+            setFontFromAsset(context, mode.fontMode, mode.isNumber, mode.fontName)
             invalidate()
         }
 
@@ -31,12 +32,12 @@ open class CustomWrapEnFontText : MaterialTextView {
         }
         set(value) {
             mode.isNumber = value
-            setFontFromAsset(context, mode.fontMode, mode.isNumber)
+            setFontFromAsset(context, mode.fontMode, mode.isNumber, mode.fontName)
             invalidate()
         }
 
     constructor(context: Context) : super(context) {
-        mode = TextViewCheckMode(FontMode.NORMAL, false)
+        mode = TextViewCheckMode(FontMode.NORMAL, false, "")
     }
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
         mode = checkBoldAndSetFont(context, attrs)
@@ -66,7 +67,7 @@ open class CustomWrapEnFontText : MaterialTextView {
         val lines = layout.lineCount
         var i = 0
         while (i < lines) {
-            maximumWidth = Math.max(layout.getLineWidth(i), maximumWidth)
+            maximumWidth = max(layout.getLineWidth(i), maximumWidth)
             i++
         }
 

@@ -22,8 +22,10 @@
     <string name="success_message">成功！</string>
     <string name="server_error_exception">伺服器異常錯誤</string>
     <string name="send_file_start">發送檔案開始。</string>
+    <string name="download_canceled">下載取消</string>
     <string name="send_file_end">發送檔案結束。</string>
     <string name="file_not_exist">檔案不存在</string>
+    <string name="no_file_size">檔案大小爲0？</string>
     <string name="file_not_received">未接收到檔案。</string>
     <string name="chunk_receiver_error">分塊接收錯誤。</string>
     <string name="error_merge_chunk_params">合併分塊參數錯誤。</string>
@@ -55,6 +57,7 @@
     <string name="app_management_permission">應用程式管理權限</string>
     <string name="global_permission_prompt">此功能需要全域設定權限，即將跳轉開啟該功能。</string>
     <string name="disclaimer_title">免責聲明</string>
+    <string name="how_to_select_files">如何選擇檔案</string>
     <string name="disclaimer_content">從系統相簿、檔案管理員匯入的檔案，僅解析檔名和大小，不會複製。從其他應用匯入的會暫存於快取，使用後自動刪除。\n下次啟動應用時需重新分享匯入。</string>
     <string name="action_confirm">知道了</string>
     <string name="action_auto_next">自動下一步</string>
@@ -62,6 +65,7 @@
     <string name="transfer_list_title">傳輸清單</string>
     <string name="file_send">檔案傳送</string>
     <string name="app_file_send">檔案傳送</string>
+    <string name="app_simple_text">簡單文字聊天</string>
     <string name="file_receive">檔案接收</string>
     <string name="text_chat_pro">文字聊天 pro</string>
     <string name="text_chat_server_next">文字聊天服務: %d ▶</string>
@@ -91,4 +95,7 @@
     <string name="server_is_closed">伺服器已關閉！</string>
     <string name="server_is_not_textchat">伺服器不是\"文字聊天\"模式！</string>
     <string name="server_not_support">不支援</string>
+
+    <string name="app_middle_server">中轉服務器</string>
+    <string name="more_actions">更多操作</string>
 </resources>

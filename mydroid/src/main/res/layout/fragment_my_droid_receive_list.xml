@@ -40,13 +40,15 @@
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/receiveRcvEmptyTv"
         android:visibility="gone"
+        tools:visibility="visible"
+        android:gravity="center"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/tabLayoutHost"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextBig"
         android:text="@string/no_received_files"/>
 
     <ScrollView
@@ -62,7 +64,7 @@
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/exportHistoryTv"
             android:layout_marginHorizontal="8dp"
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </ScrollView>

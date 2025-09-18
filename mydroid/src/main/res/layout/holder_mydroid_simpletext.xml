@@ -14,13 +14,12 @@
         android:paddingStart="20dp">
         <com.au.module_android.widget.BgBuildCustomFontText
             android:id="@+id/leftTv"
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingHorizontal="12dp"
             android:paddingVertical="8dp"
             android:textIsSelectable="true"
-            android:textSize="15sp"
             app:backgroundNormal="@color/color_line"
             app:cornerRadius="8dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -37,13 +36,12 @@
         android:paddingStart="40dp">
         <com.au.module_android.widget.BgBuildCustomFontText
             android:id="@+id/rightTv"
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingHorizontal="12dp"
             android:paddingVertical="8dp"
             android:textIsSelectable="true"
-            android:textSize="15sp"
             app:backgroundNormal="@color/color_line"
             app:cornerRadius="8dp"
             app:layout_constraintEnd_toEndOf="parent"

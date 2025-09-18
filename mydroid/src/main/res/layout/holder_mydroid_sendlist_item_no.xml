@@ -20,15 +20,15 @@
             android:layout_height="33dp" />
 
         <com.au.module_android.widget.CustomFontText
+            android:id="@+id/fileNameTv"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="12dp"
-            android:id="@+id/fileNameTv"
+            style="@style/StyleAuTextNormal"
             app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/fileSizeAndMD5Tv"
             app:layout_constraintVertical_chainStyle="packed"
-            android:textSize="16sp"
             android:maxLines="1"
             android:ellipsize="start"
             tools:text="text ajdkfjfdk dafjkadsfjkasdj ajkdfjkad"
@@ -39,11 +39,10 @@
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileSizeAndMD5Tv"
             android:layout_marginStart="4dp"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuTextThinDesc"
             android:layout_marginEnd="12dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
             android:maxLines="3"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/icon"

@@ -19,7 +19,7 @@
         <!-- 预留一份空间4dp。这样就可以让title是16dp或者20dp的marginTop -->
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/titleTv"
-            style="@style/StyleFontBText"
+            style="@style/StyleAuBTextTitle2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
@@ -27,14 +27,12 @@
             android:layout_marginEnd="20dp"
             android:gravity="center"
             android:maxLines="3"
-            android:textColor="@color/color_text_normal"
-            android:textSize="20sp"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="fir asdfjk z9 " />
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/contentTv"
-            style="@style/StyleMinText"
+            style="@style/StyleAuTextNormalDesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="18dp"

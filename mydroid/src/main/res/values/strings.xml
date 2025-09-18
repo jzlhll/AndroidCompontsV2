@@ -22,7 +22,7 @@
     <string name="success_message">Success!</string>
     <string name="server_error_exception">Server Exception Error</string>
     <string name="send_file_start">Send File Start.</string>
-    <string name="download_canceled">Download canceled.</string>
+    <string name="download_canceled">Download canceled</string>
     <string name="send_file_end">Send File End.</string>
     <string name="file_not_exist">File does not exist</string>
     <string name="no_file_size">"No file size?"</string>
@@ -57,6 +57,7 @@
     <string name="app_management_permission">App Management Permission</string>
     <string name="global_permission_prompt">This feature requires system settings permission. Redirecting to enable it.</string>
     <string name="disclaimer_title">Disclaimer</string>
+    <string name="how_to_select_files">How to select files</string>
     <string name="disclaimer_content">Files from system gallery/file manager are only parsed for name/size without copying. Files from other apps are temporarily cached and deleted after use.\nYou need to re-share imports when app restarts.</string>
     <string name="action_confirm">Got it</string>
     <string name="action_auto_next">Auto Next</string>
@@ -95,6 +96,6 @@
     <string name="server_is_not_textchat">Server is not \"Text Chat\" mode!</string>
     <string name="server_not_support">Not support.</string>
 
-    <string name="app_middle_server">Transfer Server</string>
+    <string name="app_middle_server">Transit Server</string>
     <string name="more_actions">More actions</string>
 </resources>

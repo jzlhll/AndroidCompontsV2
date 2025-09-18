@@ -30,12 +30,11 @@
         android:paddingBottom="8dp"
         android:layout_marginStart="8dp"
         android:id="@+id/text"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:maxLines="3"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ellipsize="end"
-        android:textSize="16sp"
         tools:text="dfjksdafhjkf jkfjk 18949i 489 22 cooool!!! djkfdasjkf zxcjvk 83204i jadskfja 18904 ajdkfa 182941j makxsf  81294 adjkf 189023 jdfka 12891 dskjf" />
 
     <androidx.appcompat.widget.AppCompatImageView

@@ -19,7 +19,7 @@ open class CustomFontText : MaterialTextView {
         }
         set(value) {
             mode.fontMode = value
-            setFontFromAsset(context, mode.fontMode, mode.isNumber)
+            setFontFromAsset(context, mode.fontMode, mode.isNumber, mode.fontName)
             invalidate()
         }
 
@@ -29,7 +29,7 @@ open class CustomFontText : MaterialTextView {
         }
         set(value) {
             mode.isNumber = value
-            setFontFromAsset(context, mode.fontMode, mode.isNumber)
+            setFontFromAsset(context, mode.fontMode, mode.isNumber, mode.fontName)
             invalidate()
         }
 

@@ -17,8 +17,7 @@
         tools:text="Remove"
         android:layout_gravity="center_vertical"
         android:layout_marginStart="24dp"
-        android:textColor="@color/color_text_normal"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 </LinearLayout>

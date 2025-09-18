@@ -39,8 +39,9 @@
     </declare-styleable>
 
     <declare-styleable name="CustomTextView">
-        <attr name="fontMode" />
-        <attr name="isFontNum" />
+        <attr name="customFontIsNum" />
+        <attr name="customFontMode" />
+        <attr name="customFontName" />
     </declare-styleable>
 
     <declare-styleable name="CustomImageFontText">

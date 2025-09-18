@@ -36,7 +36,7 @@
         app:layout_constraintEnd_toStartOf="@id/icon"
         android:maxLines="1"
         android:layout_marginEnd="4dp"
-        style="@style/StyleFontSecondaryText"
+        style="@style/StyleAuTextSmallDesc"
         tools:text="192.168.0.3:5555 | @xx2x2d"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
@@ -56,7 +56,7 @@
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/text"
             android:paddingHorizontal="2dp"
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             app:layout_constraintTop_toTopOf="parent"
             android:ellipsize="end"
             android:maxLength="1999"
@@ -76,13 +76,12 @@
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileNameTv"
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             app:layout_constraintEnd_toStartOf="@id/fileTypeIcon"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             android:gravity="end"
             android:paddingHorizontal="4dp"
-            android:textSize="16sp"
             android:maxLines="1"
             android:ellipsize="start"
             tools:text="xx xxx xxx.zip"
@@ -92,11 +91,10 @@
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileSizeAndMD5Tv"
             android:paddingHorizontal="4dp"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuTextSmallDesc"
             app:layout_constraintStart_toStartOf="parent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
             android:maxLines="3"
             android:gravity="end"
             app:layout_constraintEnd_toStartOf="@id/fileTypeIcon"

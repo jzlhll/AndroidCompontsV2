@@ -7,20 +7,20 @@
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/text1"
         android:gravity="center_vertical"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <com.au.module_android.widget.CustomFontText
         android:layout_marginTop="12dp"
         android:id="@+id/text2"
         android:gravity="center_vertical"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <com.au.module_android.widget.CustomFontText
         android:layout_marginTop="12dp"
         android:id="@+id/text3"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:gravity="center_vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

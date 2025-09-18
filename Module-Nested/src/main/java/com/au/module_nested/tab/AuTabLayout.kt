@@ -63,9 +63,9 @@ class AuTabLayout : TabLayout {
         forEachChild {
             if (it is TextView) {
                 if (isBlod){
-                    it.setFontFromAsset(context, FontMode.BOLD, false)
+                    it.setFontFromAsset(context, FontMode.BOLD, false, "")
                 }else{
-                    it.setFontFromAsset(context, FontMode.NORMAL, false)
+                    it.setFontFromAsset(context, FontMode.NORMAL, false, "")
                 }
             }
         }

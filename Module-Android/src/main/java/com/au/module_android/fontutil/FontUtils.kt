@@ -62,10 +62,12 @@ fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewC
     //具体的判断。优先使用。
     var isNumber = false
     var fontMode: FontMode = FontMode.NORMAL
+    var fontName = ""
 
     if (attrs != null) {
         cxt.withStyledAttributes(attrs, R.styleable.CustomTextView) {
-            when (getString(R.styleable.CustomTextView_fontMode)) {
+            fontName = getString(R.styleable.CustomTextView_customFontName) ?: ""
+            when (getString(R.styleable.CustomTextView_customFontMode)) {
                 FontMode.BOLD.mode -> fontMode = FontMode.BOLD
                 FontMode.MID.mode -> fontMode = FontMode.MID
                 null -> {
@@ -92,16 +94,16 @@ fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewC
                 }
             }
 
-            isNumber = getBoolean(R.styleable.CustomTextView_isFontNum, false)
+            isNumber = getBoolean(R.styleable.CustomTextView_customFontIsNum, false)
         }
     }
 
     paint.isFakeBoldText = fontMode != FontMode.NORMAL
-    setFontFromAsset(context, fontMode, isNumber)
-    return TextViewCheckMode(fontMode, isNumber)
+    setFontFromAsset(context, fontMode, isNumber, fontName)
+    return TextViewCheckMode(fontMode, isNumber, fontName)
 }
 
-fun TextView.setFontFromAsset(context: Context, mode: FontMode, isNumber:Boolean) {
+fun TextView.setFontFromAsset(context: Context, mode: FontMode, isNumber:Boolean, fontName:String) {
     //todo 根据是否存在这些字体，来决定比如mid=bold，或者num=非num。
     val isSuc = if (isNumber) {
         when (mode) {

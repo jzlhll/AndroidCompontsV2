@@ -30,32 +30,31 @@
             android:layout_height="32dp" />
 
         <com.au.module_android.widget.CustomFontText
+            android:id="@+id/fileNameTv"
+            style="@style/StyleAuTextNormal"
+            android:textStyle="bold"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="12dp"
-            android:id="@+id/fileNameTv"
             android:layout_marginTop="8dp"
             app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintEnd_toStartOf="@id/checkBox"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/fileSizeAndMD5Tv"
             app:layout_constraintVertical_chainStyle="packed"
-            android:textSize="16sp"
             android:ellipsize="start"
             android:maxLines="1"
             tools:text="NUC dfhffkdfj_dajfk12114_4914dfdjakffdjfaf.apk"
-            android:textStyle="bold"
             android:layout_width="0dp"
             android:layout_height="wrap_content" />
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileSizeAndMD5Tv"
             android:layout_marginStart="4dp"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuTextThinDesc"
             app:layout_constraintEnd_toStartOf="@id/checkBox"
             android:layout_marginEnd="12dp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
             android:maxLines="2"
             app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintTop_toBottomOf="@id/fileNameTv"
@@ -65,10 +64,10 @@
 
         <com.au.module_android.widget.BgBuildCustomFontText
             android:id="@+id/deleteBtn"
+            style="@style/StyleAuTextSmallDesc"
             app:cornerRadius="4dp"
             android:textColor="@color/color_text_normal"
             app:backgroundNormal="@color/color_ding_bg"
-            android:textSize="11sp"
             android:paddingHorizontal="24dp"
             android:paddingVertical="2dp"
             android:text="@string/delete"
