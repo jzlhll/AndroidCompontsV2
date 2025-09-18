@@ -23,6 +23,9 @@ import fi.iki.elonen.NanoHTTPD.Response.Status
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.net.URLEncoder
+
+
 
 interface IChunkMgr {
     fun handleUploadChunk(session: NanoHTTPD.IHTTPSession): Response
@@ -134,7 +137,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             }
 
             logdNoFile { "handle Get Request fileDownload:$realPath size:$fileSize" }
-            val filename = info.goodName()
+            val filename = info.goodName() ?: "file"
             val fileInputStream = FileInputStream(realPath)
             // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
             val response = newFixedLengthResponse(Status.OK,
@@ -143,7 +146,15 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
             // 使用 "attachment" 表示希望浏览器将响应体保存为文件
             // filename 指定建议的文件名，浏览器可能会使用它作为默认保存名
-            response.addHeader("Content-Disposition", "attachment; filename=\"$filename\"")
+            val encodedFileName = URLEncoder.encode(filename, "UTF-8")
+                .replace("\\+".toRegex(), "%20") // 替换空格编码
+            response.addHeader(
+                "Content-Disposition",
+                "attachment; filename=\"" +
+                        String(filename.toByteArray(charset("GBK")),
+                            charset("ISO-8859-1")) + "\"; " +
+                        "filename*=UTF-8''" + encodedFileName
+            )
 
             // 3. （可选但推荐）设置 Content-Length 头
             response.addHeader("Content-Length", "" + fileSize)
