@@ -51,7 +51,7 @@ class ReceiveActionDialog(private var file: File? = null) : AbsActionDialogFragm
         private const val TAG_SHARE = "share"
         private const val TAG_DELETE = "delete"
         private const val TAG_EXPORT_ONLY = "exportOnly"
-        private const val TAG_EXPORT_AND_DOWNLOAD = "exportAndDownload"
+        private const val TAG_EXPORT_AND_DEL = "exportAndDelete"
     }
 
     val normalColor = ColorStateList.valueOf(Globals.getColor(com.au.module_androidcolor.R.color.color_text_normal))
@@ -60,7 +60,7 @@ class ReceiveActionDialog(private var file: File? = null) : AbsActionDialogFragm
         ItemBean(TAG_SHARE, R.string.share.resStr(), R.drawable.ic_share, normalColor),
         ItemBean(TAG_DELETE, R.string.delete.resStr(), R.drawable.ic_delete, normalColor),
         ItemBean(TAG_EXPORT_ONLY, R.string.export.resStr(), R.drawable.ic_export, normalColor),
-        ItemBean(TAG_EXPORT_AND_DOWNLOAD, R.string.export_and_delete.resStr(), R.drawable.ic_export_and_delete, normalColor))
+        ItemBean(TAG_EXPORT_AND_DEL, R.string.export_and_delete.resStr(), R.drawable.ic_export_and_delete, normalColor))
     override val items: List<ItemBean>
         get() = mItems
 
@@ -70,7 +70,6 @@ class ReceiveActionDialog(private var file: File? = null) : AbsActionDialogFragm
     }
 
     private fun export(delete: Boolean) {
-        //todo new function compact
         Globals.mainScope.launchOnThread {
             logd { "export file: $file" }
             exportInThread(file!!, delete)
@@ -81,10 +80,11 @@ class ReceiveActionDialog(private var file: File? = null) : AbsActionDialogFragm
     private suspend fun exportInThread(file: File, delete: Boolean) {
         delay(0)
 
-        //val info = exportFileToDownload(file.name , file)
         val uri = ignoreError {
             saveFileToPublicDirectory(
-                Globals.app, file, delete,
+                Globals.app,
+                file,
+                delete,
                 "MyDroidTransfer"
             )
         }
@@ -118,7 +118,7 @@ class ReceiveActionDialog(private var file: File? = null) : AbsActionDialogFragm
             TAG_EXPORT_ONLY -> {
                 export(false)
             }
-            TAG_EXPORT_AND_DOWNLOAD -> {
+            TAG_EXPORT_AND_DEL -> {
                 export(true)
             }
             TAG_DELETE -> {

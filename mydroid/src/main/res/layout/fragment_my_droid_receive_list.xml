@@ -64,7 +64,7 @@
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/exportHistoryTv"
             android:layout_marginHorizontal="8dp"
-            style="@style/StyleAuTextNormal"
+            style="@style/StyleAuTextThin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </ScrollView>
