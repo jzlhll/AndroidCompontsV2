@@ -16,7 +16,6 @@ import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
-import com.au.module_android.simplelivedata.asNoStickLiveData
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingActivity
 import com.au.module_android.utils.findCustomFragmentGetActivity
@@ -33,6 +32,28 @@ import com.au.module_android.utilsmedia.getRealInfo
 import com.au.module_android.utilsmedia.isFromMyApp
 
 class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
+    companion object {
+        fun parseImportList(uris: List<Uri>, newImportList:MutableList<UriRealInfoEx>) : Boolean{
+            val map = MyDroidConst.sendUriMap.realValue ?: hashMapOf()
+            val oldList = map.values.toList()
+
+            var hasNoPath = false
+            uris.forEach { uri->
+                if (oldList.find { it.uri == uri } == null) {
+                    val real = uri.getRealInfo(Globals.app)
+                    if (real.goodPath() == null) {
+                        hasNoPath = true
+                    }
+                    val bean = UriRealInfoEx.copyFrom(real)
+                    newImportList.add(bean)
+                }
+            }
+
+            return hasNoPath
+        }
+
+    }
+
     override fun onDestroy() {
         super.onDestroy()
 
@@ -80,25 +101,6 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
         return isFromMyApp
     }
 
-    private fun parseImportList(uris: List<Uri>, newImportList:MutableList<UriRealInfoEx>) : Boolean{
-        val map = MyDroidConst.sendUriMap.realValue ?: hashMapOf()
-        val oldList = map.values.toList()
-
-        var hasNoPath = false
-        uris.forEach { uri->
-            if (oldList.find { it.uri == uri } == null) {
-                val real = uri.getRealInfo(Globals.app)
-                if (real.goodPath() == null) {
-                    hasNoPath = true
-                }
-                val bean = UriRealInfoEx.Companion.copyFrom(real)
-                newImportList.add(bean)
-            }
-        }
-
-        return hasNoPath
-    }
-
     private fun handleIncreaseUris(uris: List<Uri>) {
         logdNoFile { "handle increase uris $uris" }
 
@@ -107,7 +109,10 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
             finish()
             return
         }
+        import(uris)
+    }
 
+    fun import(uris: List<Uri>) {
         val newImportList = mutableListOf<UriRealInfoEx>()
         val hasNoPath = parseImportList(uris, newImportList)
 
@@ -120,7 +125,7 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
                 for (bean in newImportList) {
                     val copiedFileUri = bean.uri.copyToCacheConvert(contentResolver, null, CACHE_IMPORT_COPY_DIR)
                     val info = copiedFileUri.getRealInfo(this@ShareImportActivity)
-                    newImportCacheList.add(UriRealInfoEx.Companion.copyFrom(info))
+                    newImportCacheList.add(UriRealInfoEx.copyFrom(info))
                 }
                 logt { "newImportCacheList $newImportCacheList" }
                 importMapAndJumpFinish(newImportCacheList)

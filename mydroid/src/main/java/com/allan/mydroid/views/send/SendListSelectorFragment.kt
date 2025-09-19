@@ -52,6 +52,11 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
         }
     }
 
+    private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
+
+    val pickerResult = compatMultiPhotoPickerForResult(9)
+    val documentResult = getContentForResult()
+
     private var mAutoNextJob: Job? = null
     private var mDelayCancelDialog: ConfirmBottomSingleDialog? = null
     private var mDelayTime = 3
@@ -128,11 +133,6 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
 
         MyDroidKeepLiveService.Companion.stopMyDroidAlive()
     }
-
-    private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
-
-    val pickerResult = compatMultiPhotoPickerForResult(9)
-    val documentResult = getContentForResult()
 
     private fun initActionButtons() {
         if (!isPhotoPickerAvailable(requireActivity())) {
