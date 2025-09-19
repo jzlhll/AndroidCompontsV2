@@ -71,7 +71,6 @@
     <string name="text_chat_pro">Text Chat (pro)</string>
     <string name="text_chat_server_next">Text Chat Server: %d ▶</string>
     <string name="text_chat_client_next">Text Chat ▶</string>
-    <string name="app_file_receive">File Receive</string>
     <string name="transfer_server">Transit Server (pro)</string>
     <string name="image_preview">Image Preview (pro)</string>
     <string name="video_playback">Video Playback (pro)</string>

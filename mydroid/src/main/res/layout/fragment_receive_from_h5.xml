@@ -12,7 +12,7 @@
         android:layout_height="0dp"/>
 
     <com.au.module_android.widget.CustomToolbar
-        app:title="@string/app_file_receive"
+        app:title="@string/file_receive"
         app:titleCentered="true"
         android:id="@+id/toolbar"
         app:layout_constraintTop_toTopOf="parent"
@@ -60,7 +60,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/bottomHostId"
-        android:name="com.allan.mydroid.views.receiver.MyDroidReceiverListFragment"
+        android:name="com.allan.mydroid.views.receiver.ReceiveFromH5FileListFragment"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rcvGuideLine"
         android:layout_width="match_parent"

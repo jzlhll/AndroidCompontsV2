@@ -7,12 +7,12 @@ import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.serializableCompat
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 
-class ShowReceiveItemDialog : BindingFragment<ShowReceiveItemInfosBinding>() {
-    companion object {
+class ReceiveFromH5FileDetailDialog : BindingFragment<ShowReceiveItemInfosBinding>() {
+    companion object Companion {
         fun pop(manager: FragmentManager,
                 texts:Array<String>) {
             assert(texts.size >= 3)
-            FragmentBottomSheetDialog.show<ShowReceiveItemDialog>(manager, bundleOf("texts" to texts))
+            FragmentBottomSheetDialog.show<ReceiveFromH5FileDetailDialog>(manager, bundleOf("texts" to texts))
         }
     }
 

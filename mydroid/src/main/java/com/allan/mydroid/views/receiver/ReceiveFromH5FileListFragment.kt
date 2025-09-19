@@ -23,11 +23,11 @@ import com.au.module_androidui.toast.ToastBuilder
 import com.google.android.material.tabs.TabLayout
 import kotlin.getValue
 
-class MyDroidReceiverListFragment : BindingFragment<FragmentMyDroidReceiveListBinding>() {
+class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveListBinding>() {
     lateinit var receivedFileListTab: TabLayout.Tab
     lateinit var exportHistoryTab: TabLayout.Tab
 
-    private val mFileListMgr by unsafeLazy { MyDroidReceiveFileListMgr(this) }
+    private val mFileListMgr by unsafeLazy { ReceiveFromH5FileListManager(this) }
 
     private val isActivityMode by unsafeLazy { arguments?.getBoolean("isActivityMode") ?: false }
 

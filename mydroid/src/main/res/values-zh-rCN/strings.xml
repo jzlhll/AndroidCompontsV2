@@ -71,7 +71,6 @@
     <string name="text_chat_pro">文字聊天 pro</string>
     <string name="text_chat_server_next">文字聊天服务: %d ▶</string>
     <string name="text_chat_client_next">文字聊天 ▶</string>
-    <string name="app_file_receive">文件接收</string>
     <string name="transfer_server">中转服务器 pro</string>
     <string name="image_preview">图片预览 pro</string>
     <string name="video_playback">视频点播 pro</string>

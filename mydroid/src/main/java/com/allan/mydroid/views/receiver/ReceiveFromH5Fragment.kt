@@ -7,7 +7,7 @@ import androidx.core.os.bundleOf
 import com.allan.mydroid.R
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.api.MyDroidMode
-import com.allan.mydroid.databinding.FragmentMyDroidReceiveBinding
+import com.allan.mydroid.databinding.FragmentReceiveFromH5Binding
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.json.toJsonString
@@ -19,7 +19,7 @@ import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utilsmedia.getExternalFreeSpace
 
-class MyDroidReceiverFragment : AbsLiveFragment<FragmentMyDroidReceiveBinding>() {
+class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
 
     private val menuMgr by unsafeLazy {
         ToolbarMenuManager(
@@ -30,7 +30,7 @@ class MyDroidReceiverFragment : AbsLiveFragment<FragmentMyDroidReceiveBinding>()
             when (menuItem.itemId) {
                 R.id.more -> {
                     FragmentShellActivity.start(requireActivity(),
-                        MyDroidReceiverListFragment::class.java,
+                        ReceiveFromH5FileListFragment::class.java,
                         bundleOf("isActivityMode" to true)
                     )
                 }
