@@ -23,7 +23,6 @@
             android:id="@+id/checkBox"
             android:tint="@color/color_text_normal"
             android:layout_marginEnd="12dp"
-            android:src="@drawable/ic_download"
             app:layout_constraintTop_toTopOf="@id/fileNameTv"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_width="32dp"

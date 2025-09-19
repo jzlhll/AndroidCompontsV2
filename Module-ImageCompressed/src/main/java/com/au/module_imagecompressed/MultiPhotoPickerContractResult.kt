@@ -3,6 +3,7 @@ package com.au.module_imagecompressed
 import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
+import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
@@ -269,5 +270,12 @@ class MultiPhotoPickerContractResult(
         }
 
         launcher.launch(intent, option)
+    }
+
+    override fun start(
+        input: PickVisualMediaRequest,
+        callback: ActivityResultCallback<List<@JvmSuppressWildcards Uri>>?
+    ) {
+        //do nothing.
     }
 }

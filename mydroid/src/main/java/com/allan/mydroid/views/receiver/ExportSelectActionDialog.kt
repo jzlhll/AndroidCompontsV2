@@ -55,7 +55,6 @@ class ExportSelectActionDialog(private var file: File? = null) : AbsActionDialog
         }
 
         private const val TAG_SHARE = "share"
-        private const val TAG_SEND_IMPORT = "sendImport"
         private const val TAG_DELETE = "delete"
         private const val TAG_EXPORT_ONLY = "exportOnly"
         private const val TAG_EXPORT_AND_DOWNLOAD = "exportAndDownload"
@@ -65,10 +64,9 @@ class ExportSelectActionDialog(private var file: File? = null) : AbsActionDialog
 
     val mItems = listOf(
         ItemBean(TAG_SHARE, R.string.share.resStr(), R.drawable.ic_share, normalColor),
-        ItemBean(TAG_SEND_IMPORT, R.string.import_to_send_list.resStr(), R.drawable.ic_send, normalColor),
         ItemBean(TAG_DELETE, R.string.delete.resStr(), R.drawable.ic_delete, normalColor),
-        ItemBean(TAG_EXPORT_ONLY, R.string.export.resStr(), R.drawable.ic_download, normalColor),
-        ItemBean(TAG_EXPORT_AND_DOWNLOAD, R.string.export_and_delete.resStr(), R.drawable.ic_download, normalColor))
+        ItemBean(TAG_EXPORT_ONLY, R.string.export.resStr(), R.drawable.ic_export, normalColor),
+        ItemBean(TAG_EXPORT_AND_DOWNLOAD, R.string.export_and_delete.resStr(), R.drawable.ic_export_and_delete, normalColor))
     override val items: List<ItemBean>
         get() = mItems
 
@@ -128,22 +126,6 @@ class ExportSelectActionDialog(private var file: File? = null) : AbsActionDialog
             }
             TAG_EXPORT_AND_DOWNLOAD -> {
                 export(true)
-            }
-            TAG_SEND_IMPORT -> {
-                val map = MyDroidConst.sendUriMap.realValue ?: hashMapOf()
-                val oldValues = map.values
-
-                val fileUri = Uri.fromFile(file!!)
-                if (oldValues.find { it.uri == fileUri } != null) {
-                    ToastBuilder().setMessage(R.string.already_in_sending_list.resStr()).setIcon("info").setOnTopLater(200).toast()
-                    return
-                }
-                val info = fileUri.getRealInfo(Globals.app)
-                val infoEx = UriRealInfoEx.Companion.copyFrom(info)
-                map.put(infoEx.uriUuid, infoEx)
-                MyDroidConst.updateSendUriMap(map)
-
-                importSendCallback?.get()?.invoke()
             }
             TAG_DELETE -> {
                 Globals.mainScope.launchOnThread {

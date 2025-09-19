@@ -38,6 +38,7 @@
     <string name="mydroid_running_only_for_alive">Pigeon Pass- running only for alive</string>
     <string name="import_to_send_list_hint">Please tap \"Import to send list\" instead of \"Share\"!</string>
     <string name="share">Share</string>
+    <string name="share_in">Share In</string>
     <string name="download">Download</string>
     <string name="delete">delete</string>
     <string name="export">Export</string>
@@ -46,7 +47,7 @@
     <string name="already_in_sending_list">Already exists in the send list.</string>
     <string name="save_failed">Save failed!</string>
     <string name="save_to_success">Saved to %s successfully!</string>
-    <string name="keep_recent_records">Keep only the last 80–100 export records.</string>
+    <string name="keep_recent_records">Keep only 80 export records.</string>
     <string name="storage_remaining"> Storage Remaining:</string>
     <string name="file_received_success_fmt">File received successfully: %s!</string>
     <string name="connect_wifi_or_hotspot">Please connect to WI-FI or enable hotspot</string>
@@ -81,6 +82,7 @@
 
     <string name="server">Server</string>
     <string name="select_images">Select Images</string>
+    <string name="gallery">Gallery</string>
     <string name="select_videos">Select Videos</string>
     <string name="select_files">Select Files</string>
     <string name="send">Send</string>

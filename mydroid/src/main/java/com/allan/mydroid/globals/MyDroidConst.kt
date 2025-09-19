@@ -66,16 +66,16 @@ object MyDroidConst {
         var time = System.currentTimeMillis()
         try {
             val json = AppDataStore.readBlocked("mydroid_sendUriMap", "")
-            logdNoFile{"load cache sendUriMap json: $json"}
+            logdNoFile{"load cache sendUri Map json: $json"}
             if (json.isEmpty()) {
                 return hashMapOf()
             }
             val list: HashMap<String, UriRealInfoEx>? = json.fromJson()
-            logdNoFile{"load cache sendUriMap json2: $list"}
+            logdNoFile{"load cache sendUri Map json2: $list"}
             return list ?: hashMapOf()
         } finally {
             time = System.currentTimeMillis() - time
-            logdNoFile{"load cache sendUriMap time: $time"}
+            logdNoFile{"load cache sendUri Map time: $time"}
         }
     }
 

@@ -103,9 +103,6 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
             cameraAndSelectHelper.showTakeActionDialog(1, MultiPhotoPickerContractResult.PickerType.IMAGE)
         }
 
-        binding.selectVideoBtn.onClick {
-            cameraAndSelectHelper.showTakeActionDialog(3, MultiPhotoPickerContractResult.PickerType.IMAGE)
-        }
         binding.sendListBtn.onClick {
             val height = f.requireActivity().getScreenFullSize().second
             FragmentBottomSheetDialog.show<SendListSelectorDialog>(f.childFragmentManager, height = height / 2)

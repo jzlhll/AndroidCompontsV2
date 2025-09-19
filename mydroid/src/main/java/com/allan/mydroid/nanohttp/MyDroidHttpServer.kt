@@ -25,8 +25,6 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URLEncoder
 
-
-
 interface IChunkMgr {
     fun handleUploadChunk(session: NanoHTTPD.IHTTPSession): Response
     fun handleMergeChunk(session: NanoHTTPD.IHTTPSession) : Response
@@ -96,7 +94,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
                         return serveAssetFile("transfer/SendToPhone.html")
                     }
                     MyDroidMode.Middle -> {
-                        return serveAssetFile("transfer/middleServer.html")
+                        return serveAssetFile("transfer/MiddleServer.html")
                     }
                     else -> {
                         error = Globals.getString(R.string.server_not_support) + "(E02)"

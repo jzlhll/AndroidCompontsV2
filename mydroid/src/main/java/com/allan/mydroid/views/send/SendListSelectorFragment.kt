@@ -2,6 +2,7 @@ package com.allan.mydroid.views.send
 
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.R
@@ -19,10 +20,13 @@ import com.au.module_android.ui.ToolbarMenuManager
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.NotificationUtil
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.gone
+import com.au.module_android.utils.isPhotoPickerAvailable
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_android.utils.visible
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
@@ -132,7 +136,6 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
     val permissionUtil = NotificationUtil.Companion.createPostNotificationPermissionResult(this)
 
     override fun onDestroy() {
-        logdNoFile {"on destrory"}
         super.onDestroy()
 
         MyDroidKeepLiveService.Companion.stopMyDroidAlive()
@@ -144,26 +147,33 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
     val documentResult = getContentForResult()
 
     private fun initActionButtons() {
-        binding.selectDocumentBtn.onClick {
+        if (!isPhotoPickerAvailable(requireActivity())) {
+            binding.selectImageAndVideoText.gone()
+            binding.selectImageAndVideoBtn.gone()
+        } else {
+            val selectGalleryRun:(view: View)->Unit  = {
+                pickerResult.setCurrentMaxItems(9)
+                pickerResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO, null) {uri->
+                    logd { "file uri: $uri" }
+                }
+            }
+
+            binding.selectImageAndVideoBtn.onClick(selectGalleryRun)
+            binding.selectImageAndVideoText.onClick(selectGalleryRun)
+        }
+
+        val documentRun:(view: View)->Unit = {
             documentResult.start("*/*") { uris->
-                uris?.forEach {uri->
+                uris.forEach {uri->
                     logdNoFile { "get documents $uri" }
                 }
             }
         }
-        binding.selectImageAndVideoBtn.onClick {
-            pickerResult.setCurrentMaxItems(9)
-            pickerResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO, null) {uri->
-                logd { "file uri: $uri" }
-            }
-        }
-        binding.sendListBtn.onClick {
-
-        }
+        binding.selectDocumentBtn.onClick(documentRun)
+        binding.selectDocumentText.onClick(documentRun)
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        logdNoFile {"onBinding Created"}
         NotificationUtil.Companion.requestPermission(permissionUtil) {
             MyDroidKeepLiveService.Companion.keepMyDroidAlive()
         }
@@ -196,8 +206,13 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
             insets
         }
 
-        common.onBindingCreated()
+        common.onCreated()
         if (autoImport) autoImportAction()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        common.onStart()
     }
 
     private fun autoImportAction() {

@@ -34,7 +34,7 @@ class SendListSelectorDialog : BindingFragment<DialogMyDroidSendlistBinding>() {
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        common.onBindingCreated()
+        common.onCreated()
         binding.infoText.onClick {
             if (binding.disclaimerTv.isVisible) {
                 binding.disclaimerTv.gone()
@@ -46,6 +46,10 @@ class SendListSelectorDialog : BindingFragment<DialogMyDroidSendlistBinding>() {
                 binding.empty.gone()
             }
         }
+    }
 
+    override fun onStart() {
+        super.onStart()
+        common.onStart()
     }
 }
