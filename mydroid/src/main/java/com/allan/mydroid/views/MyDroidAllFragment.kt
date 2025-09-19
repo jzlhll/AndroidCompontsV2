@@ -51,14 +51,14 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
             uploadMyIp()
         }
 
-        binding.textChatBtn.onClick {
-            runCheckIp {
-                TextChatSelectorDialog.show(this)
-            }
-        }
         binding.receiveFileLogicBtn.onClick {
             runCheckIp {
                 FragmentShellActivity.start(requireActivity(), ReceiveFromH5Fragment::class.java)
+            }
+        }
+        binding.textChatBtn.onClick {
+            runCheckIp {
+                TextChatSelectorDialog.show(this)
             }
         }
         binding.sendFileLogicBtn.onClick {
