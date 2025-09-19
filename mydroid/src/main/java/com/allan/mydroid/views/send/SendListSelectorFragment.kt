@@ -26,7 +26,6 @@ import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
-import com.au.module_android.utils.visible
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
@@ -77,7 +76,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
         ) { menuItem ->
             when (menuItem.itemId) {
                 R.id.next -> {
-                    when (isEmpty()) {
+                    when (common.isEmpty()) {
                         2 -> {
                             ToastBuilder().setOnActivity(requireActivity()).setMessage(
                                 getString(R.string.select_files_hint)
@@ -96,17 +95,6 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
                 }
             }
         }
-    }
-
-    /**
-     * 1表示有数据。2表示有数据，但是全都没勾；0表示无数据。
-     */
-    private fun isEmpty() : Int{
-        val values = MyDroidConst.sendUriMap.realValue?.values
-        if (values == null || values.size == 0) {
-            return 0
-        }
-        return if(values.find { it.isChecked } != null) 1 else 2
     }
 
     private fun jumpIntoMyDroidSend() {
@@ -231,7 +219,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
                 mDelayCancelDialog?.changeContent(dialogContent())
             }
             //自动跳入
-            if (isEmpty() == 1) {
+            if (common.isEmpty() == 1) {
                 jumpIntoMyDroidSend()
             }
         }

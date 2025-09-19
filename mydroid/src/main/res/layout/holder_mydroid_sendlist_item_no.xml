@@ -12,7 +12,7 @@
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icon"
             app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="6dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             tools:src="@drawable/ic_filetype_archive"
@@ -21,7 +21,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileNameTv"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="10dp"
             android:layout_marginEnd="12dp"
             style="@style/StyleAuTextNormal"
             app:layout_constraintStart_toEndOf="@id/icon"
@@ -38,7 +38,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileSizeAndMD5Tv"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="10dp"
             style="@style/StyleAuTextThinDesc"
             android:layout_marginEnd="12dp"
             android:layout_width="0dp"

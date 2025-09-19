@@ -27,18 +27,18 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/actionBtn"
         android:tint="@color/color_text_normal"
+        android:layout_marginEnd="4dp"
         android:layout_marginBottom="12dp"
         android:src="@drawable/ic_menu"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="10dp"
         android:padding="16dp"
         android:layout_width="56dp"
         android:layout_height="56dp" />
 
     <com.au.module_android.widget.CustomFontText
-        android:layout_marginStart="4dp"
+        android:layout_marginStart="10dp"
         android:id="@+id/fileNameTv"
         style="@style/StyleAuTextNormal"
         android:textStyle="bold"
@@ -55,7 +55,7 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/fileSizeAndMD5Tv"
-        android:layout_marginStart="4dp"
+        android:layout_marginStart="10dp"
         style="@style/StyleAuTextThinDesc"
         app:layout_constraintEnd_toStartOf="@id/actionBtn"
         android:layout_width="0dp"

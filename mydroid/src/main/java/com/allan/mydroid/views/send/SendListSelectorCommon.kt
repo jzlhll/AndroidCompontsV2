@@ -45,6 +45,9 @@ abstract class SendListSelectorCommon(val f : Fragment, noSelectBtns:Boolean) {
                 UriRealInfoEx.Companion.copyFrom(real)
             }
             mIsScanFiles = true
+            scanList.forEach {
+                it.hasDeleteButton = false
+            }
             mScanList = scanList
 
             if (mIsObserverChanged) {
@@ -54,6 +57,22 @@ abstract class SendListSelectorCommon(val f : Fragment, noSelectBtns:Boolean) {
                 withContext(Dispatchers.Main) {
                     updateList(sendUriList, scanList)
                 }
+            }
+        }
+    }
+
+    private fun initRcv() {
+        val rcv = rcv()
+        rcv.adapter = adapter
+        rcv.layoutManager = LinearLayoutManager(rcv.context)
+        rcv.setHasFixedSize(true)
+
+        MyDroidConst.sendUriMap.observe(f) { map-> //监听没问题
+            mIsObserverChanged = true
+            if (mIsScanFiles) {
+                val sendUriList = ArrayList<UriRealInfoEx>()
+                sendUriList.addAll(map?.values ?: emptyList())
+                updateList(sendUriList, mScanList ?: emptyList())
             }
         }
     }
@@ -78,21 +97,18 @@ abstract class SendListSelectorCommon(val f : Fragment, noSelectBtns:Boolean) {
         }
     }
 
-    fun isEmptyList() = adapter.datas.isEmpty()
-
-    private fun initRcv() {
-        val rcv = rcv()
-        rcv.adapter = adapter
-        rcv.layoutManager = LinearLayoutManager(rcv.context)
-        rcv.setHasFixedSize(true)
-
-        MyDroidConst.sendUriMap.observe(f) { map-> //监听没问题
-            mIsObserverChanged = true
-            if (mIsScanFiles) {
-                val sendUriList = ArrayList<UriRealInfoEx>()
-                sendUriList.addAll(map?.values ?: emptyList())
-                updateList(sendUriList, mScanList ?: emptyList())
+    /**
+     * 1表示有数据。2表示有数据，但是全都没勾；0表示无数据。
+     */
+    fun isEmpty() : Int {
+        if (adapter.datas.size == 0) {
+            return 0
+        }
+        adapter.datas.forEach {
+            if (it is UriRealInfoEx && it.isChecked) {
+                return 1
             }
         }
+        return 2
     }
 }

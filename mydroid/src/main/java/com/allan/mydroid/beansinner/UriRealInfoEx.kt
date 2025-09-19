@@ -12,8 +12,7 @@ import java.io.File
 import java.util.UUID
 
 @Keep
-data class UriRealInfoEx(
-                         val uriUuid:String,
+data class UriRealInfoEx(val uriUuid:String,
                          @JsonAdapter(JsonUriAdapter::class)
                          val uri: Uri,
                          val name:String? = null,
@@ -23,6 +22,7 @@ data class UriRealInfoEx(
                          val fileSizeStr:String) {
 
     @Transient var isChecked: Boolean = true
+    @Transient var hasDeleteButton = true
 
     companion object {
         fun copyFrom(info: UriRealInfo) : UriRealInfoEx {

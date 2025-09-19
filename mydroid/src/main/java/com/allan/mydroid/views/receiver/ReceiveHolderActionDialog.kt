@@ -21,7 +21,7 @@ import kotlinx.coroutines.delay
 import java.io.File
 import java.lang.ref.WeakReference
 
-class ReceiveActionDialog(private var file: File? = null) : AbsActionDialogFragment() {
+class ReceiveHolderActionDialog(private var file: File? = null) : AbsActionDialogFragment() {
     companion object Companion {
         /////////////////////////////////////////////
         var fileExportSuccessCallback: WeakReference<((info:String, exportFileStr:String)->Unit)>? = null
@@ -41,7 +41,7 @@ class ReceiveActionDialog(private var file: File? = null) : AbsActionDialogFragm
                 fileExportFailCallback:(String)->Unit = {},
                 refreshFileListCallback:()->Unit = {},
                 importSendCallback:()->Unit = {}) {
-            FragmentBottomSheetDialog.show<ReceiveActionDialog>(manager, bundleOf("file" to file))
+            FragmentBottomSheetDialog.show<ReceiveHolderActionDialog>(manager, bundleOf("file" to file))
             this.fileExportSuccessCallback = WeakReference(fileExportSuccessCallback)
             this.fileExportFailCallback = WeakReference(fileExportFailCallback)
             this.refreshFileListCallback = WeakReference(refreshFileListCallback)

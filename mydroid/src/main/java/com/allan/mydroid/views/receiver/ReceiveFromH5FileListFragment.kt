@@ -51,7 +51,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
             )
         )
     }) {
-        ReceiveActionDialog.pop(
+        ReceiveHolderActionDialog.pop(
             childFragmentManager,
             it,
             fileExportFailCallback = fileExportFailCallback,
