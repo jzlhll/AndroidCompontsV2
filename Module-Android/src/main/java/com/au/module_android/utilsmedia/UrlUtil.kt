@@ -11,13 +11,10 @@ import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.annotation.WorkerThread
-import androidx.core.net.toFile
 import com.au.module_android.Globals
 import com.au.module_android.utils.logt
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -91,8 +88,10 @@ private fun Uri.copyToCacheFileSchemeContent(cr: ContentResolver,
                                              subCacheDir:String,
                                              copyFilePrefix:String = "copy_",
                                              size:LongArray? = null) : File {
+    val parsedInfo = UriParserUtil(this).parse(cr)
+    val extension = parsedInfo.extension
+
     val cacheDir = Globals.goodCacheDir
-    val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(getUriMimeType(cr))?.lowercase()
     val isSourceHeic = extension == "heic"
     logt(tag = "picker") { "$this $param, extension: $extension"}
     val cvtExtension = targetFileExtensionName(extension, param, isSourceHeic)
@@ -129,29 +128,6 @@ private fun targetFileExtensionName(extension: String?, param: String?, isSource
         }
     }
     return cvtExtension
-}
-
-/**
- * 获取content uri的mimeType
- */
-fun Uri.getUriMimeType(cr: ContentResolver?) : String {
-    if (scheme == "file") {
-        val extension = this.toFile().extension.lowercase()
-        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
-    } else {
-        require(cr != null)
-        var mimeType = cr.getType(this)
-        if (mimeType == null) {
-            // 如果无法直接获取MIME类型，则从Uri中读取
-            cr.query(this, null, null, null, null)?.use { cursor->
-                val mimeTypeIndex = cursor.getColumnIndex("mime_type")
-                if (mimeTypeIndex != -1 && cursor.moveToFirst()) {
-                    mimeType = cursor.getString(mimeTypeIndex)
-                }
-            }
-        }
-        return mimeType ?: "*/*"
-    }
 }
 
 /**
@@ -220,6 +196,51 @@ private fun isSupportConvertImage(extension: String): Boolean {
     val imageExtensions = listOf("jpg", "jpeg", "png", "heic")
     return extension in imageExtensions
 }
+
+/**
+ * 将List<Uri>遍历识别，全部拷贝到本地cache；如果param有传参，则会进行转换拷贝。
+ *
+ * 不管是不是图片是不是进行转换，都会拷贝（file型的uri除外）。
+ *
+ * 本函数会耗时。自行放到scope中运行。
+ */
+@WorkerThread
+fun List<Uri>.copyToCacheConvert(cr:ContentResolver,
+                                 subCacheDir:String,
+                                 copyFilePrefix:String = "copy_",
+                                 param:String? = URI_COPY_PARAM_HEIC_TO_JPG) : List<Uri> {
+    return this.map { uri-> uri.copyToCacheConvert(cr, param, subCacheDir, copyFilePrefix) }
+}
+
+const val URI_COPY_PARAM_HEIC_TO_JPG = "only_heic_convert_to_jpg"
+const val URI_COPY_PARAM_HEIC_TO_PNG = "only_heic_convert_to_png"
+const val URI_COPY_PARAM_ANY_TO_JPG = "any_convert_to_jpg"
+
+@Throws(IOException::class)
+fun copyFile(
+    inputStream: InputStream,
+    out: OutputStream
+): Long {
+    var progress: Long = 0
+    val buffer = ByteArray(8192)
+
+    var t: Int
+    while ((inputStream.read(buffer).also { t = it }) != -1) {
+        out.write(buffer, 0, t)
+        progress += t.toLong()
+    }
+    return progress
+}
+
+//将图片转码
+@Throws(Exception::class)
+fun copyImageAndCvtTo(inputStream: InputStream, outputStream: FileOutputStream, fmt:String) {
+    val options = BitmapFactory.Options()
+    options.inJustDecodeBounds = false
+    val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
+    bitmap?.compress(if(fmt == "png") Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG, 100, outputStream)
+}
+
 
 /**
  * 获取Uri的文件大小
@@ -298,47 +319,35 @@ fun Uri.length(cr: ContentResolver, schemeForce:String? = null) : Long {
 }
 
 /**
- * 将List<Uri>遍历识别，全部拷贝到本地cache；如果param有传参，则会进行转换拷贝。
- *
- * 不管是不是图片是不是进行转换，都会拷贝（file型的uri除外）。
- *
- * 本函数会耗时。自行放到scope中运行。
+ * 判断 Uri 是否来源于当前应用
+ * - 对 `content://` 类型的 Uri，验证其 ContentProvider 的包名
+ * - 对 `file://` 类型的 Uri，验证文件路径是否位于应用私有目录
  */
-@WorkerThread
-fun List<Uri>.copyToCacheConvert(cr:ContentResolver,
-                                 subCacheDir:String,
-                                 copyFilePrefix:String = "copy_",
-                                 param:String? = URI_COPY_PARAM_HEIC_TO_JPG) : List<Uri> {
-    return this.map { uri-> uri.copyToCacheConvert(cr, param, subCacheDir, copyFilePrefix) }
-}
-
-const val URI_COPY_PARAM_HEIC_TO_JPG = "only_heic_convert_to_jpg"
-const val URI_COPY_PARAM_HEIC_TO_PNG = "only_heic_convert_to_png"
-const val URI_COPY_PARAM_ANY_TO_JPG = "any_convert_to_jpg"
-
-@Throws(IOException::class)
-fun copyFile(
-    inputStream: InputStream,
-    out: OutputStream
-): Long {
-    var progress: Long = 0
-    val buffer = ByteArray(8192)
-
-    var t: Int
-    while ((inputStream.read(buffer).also { t = it }) != -1) {
-        out.write(buffer, 0, t)
-        progress += t.toLong()
+fun Uri.isFromMyApp(context: Context): Boolean {
+    val packageName = context.packageName
+    return when (scheme) {
+        ContentResolver.SCHEME_CONTENT -> {
+            // 检查 ContentProvider 的包名
+            val auth = authority ?: return false
+            try {
+                val providerInfo = context.packageManager.resolveContentProvider(auth, 0)
+                providerInfo?.packageName == packageName
+            } catch (_: Exception) {
+                false
+            }
+        }
+        ContentResolver.SCHEME_FILE -> {
+            // 检查文件路径是否在应用私有目录中
+            val path = path ?: return false
+            val appDirs = listOfNotNull(
+                context.filesDir?.absolutePath,
+                context.cacheDir?.absolutePath,
+                context.externalCacheDir?.absolutePath
+            )
+            appDirs.any { path.startsWith(it) }
+        }
+        else -> false
     }
-    return progress
-}
-
-//将图片转码
-@Throws(Exception::class)
-fun copyImageAndCvtTo(inputStream: InputStream, outputStream: FileOutputStream, fmt:String) {
-    val options = BitmapFactory.Options()
-    options.inJustDecodeBounds = false
-    val bitmap = BitmapFactory.decodeStream(inputStream, null, options)
-    bitmap?.compress(if(fmt == "png") Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG, 100, outputStream)
 }
 
 //

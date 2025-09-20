@@ -12,7 +12,7 @@ import com.au.module_android.permissions.createActivityForResult
 import com.au.module_android.utils.iteratorPrint
 import com.au.module_android.utils.logd
 import com.au.module_imagecompressed.CropCircleImageFragment
-import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.photoPickerForResult
 import java.io.File
 
@@ -33,7 +33,7 @@ class CropEntryFragment : AbsNestedIndicatorFragment<Void, FragmentCropEntryBind
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
         contentViewBinding.button.onClick {
-            photoPickResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE, null) { uri ->
+            photoPickResult.launchOneByOne(PickerType.IMAGE, null) { uri ->
                 logd { "uri $uri" }
                 CropCircleImageFragment.startCropForResult(requireContext(), gotoUcropResult, uri.uri) {
                     val intent = it.data

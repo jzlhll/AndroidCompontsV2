@@ -14,6 +14,7 @@ import com.au.module_android.utils.logd
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
 import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
 import com.au.module_imagecompressed.UriWrap
 import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
@@ -48,13 +49,13 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.takeActionDialog1Btn.onClick {
-            cameraAndSelectHelper.showTakeActionDialog(1, MultiPhotoPickerContractResult.PickerType.IMAGE)
+            cameraAndSelectHelper.showTakeActionDialog(1, PickerType.IMAGE)
         }
         binding.takeActionDialog3Btn.onClick {
-            cameraAndSelectHelper.showTakeActionDialog(3, MultiPhotoPickerContractResult.PickerType.VIDEO)
+            cameraAndSelectHelper.showTakeActionDialog(3, PickerType.VIDEO)
         }
         binding.takeActionDialog5Btn.onClick {
-            cameraAndSelectHelper.showTakeActionDialog(5, MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO)
+            cameraAndSelectHelper.showTakeActionDialog(5, PickerType.IMAGE_AND_VIDEO)
         }
 
         binding.directTakePicBtn.onClick {
@@ -66,40 +67,40 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         }
 
         binding.singlePic.onClick {
-            singleResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE, null) { uri->
+            singleResult.launchOneByOne(PickerType.IMAGE, null) { uri->
                 logd { "uri: $uri" }
                 showPic(uri)
             }
         }
         binding.singleVideo.onClick {
-            singleResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.VIDEO, null) { uri->
+            singleResult.launchOneByOne(PickerType.VIDEO, null) { uri->
                 logd { "uri: $uri" }
                 showPic(uri)
             }
         }
         binding.singlePicAndVideo.onClick {
-            singleResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO, null) { uri->
+            singleResult.launchOneByOne(PickerType.IMAGE_AND_VIDEO, null) { uri->
                 logd { "uri: $uri" }
                 showPic(uri)
             }
         }
         binding.multiPic4.onClick {
             multiResult.setCurrentMaxItems(6)
-            multiResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE, null) {uri->
+            multiResult.launchOneByOne(PickerType.IMAGE, null) {uri->
                 logd { "uri: $uri" }
                 showPic(uri)
             }
         }
         binding.multiVideo3.onClick {
             multiResult.setCurrentMaxItems(3)
-            multiResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.VIDEO, null) {uri->
+            multiResult.launchOneByOne(PickerType.VIDEO, null) {uri->
                 logd { "uri: $uri" }
                 showPic(uri)
             }
         }
         binding.multiPicAndVideo5.onClick {
             multiResult.setCurrentMaxItems(9)
-            multiResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO, null) {uri->
+            multiResult.launchOneByOne(PickerType.IMAGE_AND_VIDEO, null) {uri->
                 logd { "uri: $uri" }
                 showPic(uri)
             }
@@ -107,7 +108,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
         binding.multiPicV2.onClick {
             multiResult.setCurrentMaxItems(6)
-            multiResult.launchByAll(MultiPhotoPickerContractResult.PickerType.IMAGE, null) {uris->
+            multiResult.launchByAll(PickerType.IMAGE, null) {uris->
                 for (uri in uris) {
                     logd { "uri: $uri" }
                     showPic(uri)
@@ -116,7 +117,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         }
         binding.multiVideoV2.onClick {
             multiResult.setCurrentMaxItems(3)
-            multiResult.launchByAll(MultiPhotoPickerContractResult.PickerType.VIDEO, null) {uris->
+            multiResult.launchByAll(PickerType.VIDEO, null) {uris->
                 for (uri in uris) {
                     logd { "uri: $uri" }
                     showPic(uri)
@@ -125,7 +126,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         }
         binding.multiPicAndVideoV2.onClick {
             multiResult.setCurrentMaxItems(9)
-            multiResult.launchByAll(MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO, null) {uris->
+            multiResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
                 for (uri in uris) {
                     logd { "uri: $uri" }
                     showPic(uri)

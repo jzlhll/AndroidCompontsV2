@@ -15,7 +15,7 @@
         android:layout_height="wrap_content">
 
         <com.au.module_android.widget.CustomFontText
-            style="@style/StyleFontMText"
+            style="@style/StyleAuBTextHeadline"
             app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="24dp"
             android:text="Audio Recorder and Player Demos"

@@ -20,7 +20,7 @@
         android:layout_height="30dp"/>
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"

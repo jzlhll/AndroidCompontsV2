@@ -14,6 +14,7 @@ import com.au.module_android.utils.logd
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
 import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
 import java.io.File
 
@@ -101,11 +102,11 @@ class WebUploadFragment : BindingFragment<ActivityJsHtmlBinding>(), TakePhotoAct
                 }
             }
 
-            var pickerType = MultiPhotoPickerContractResult.PickerType.IMAGE
+            var pickerType = PickerType.IMAGE
             if (hasImage && hasVideo) {
-                pickerType = MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO
+                pickerType = PickerType.IMAGE_AND_VIDEO
             } else if (hasVideo) {
-                pickerType = MultiPhotoPickerContractResult.PickerType.VIDEO
+                pickerType = PickerType.VIDEO
             }
 
             if (capture == true || true) {

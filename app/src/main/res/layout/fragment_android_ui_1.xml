@@ -15,9 +15,8 @@
         <com.au.module_android.widget.CustomFontText
             android:layout_marginTop="8dp"
             android:paddingHorizontal="@dimen/ui_padding_edge"
-            style="@style/StyleFontBText"
+            style="@style/StyleAuBTextTitle2"
             android:text="DarkMode and Locales Test"
-            android:textSize="24sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
@@ -94,18 +93,16 @@
         <com.au.module_android.widget.CustomFontText
             android:layout_marginTop="24dp"
             android:paddingHorizontal="@dimen/ui_padding_edge"
-            style="@style/StyleFontBText"
+            style="@style/StyleAuBTextTitle1"
             android:text="Android Title"
-            android:textSize="24sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
         <com.au.module_android.widget.CustomFontText
             android:paddingHorizontal="@dimen/ui_padding_edge"
-            style="@style/StyleFontTitleDescText"
+            style="@style/StyleAuTextNormalDesc"
             android:text="This is a desc for android components."
             android:layout_marginTop="4dp"
-            android:textSize="18sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
@@ -118,20 +115,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <com.au.module_android.widget.CustomFontText
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 android:text="normal text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
             <com.au.module_android.widget.CustomFontTextlink
-                style="@style/StyleFontMText"
+                style="@style/StyleAuTextThin"
                 android:text="this is a link"
                 android:textColor="@color/colorPrimary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
             <com.au.module_android.widget.CustomImageFontText
-                style="@style/StyleFontMText"
+                style="@style/StyleAuTextThin"
                 app:drawableStartCompat="@drawable/ic_successful"
                 app:drawableStartWidth="20dp"
                 app:drawableStartHeight="20dp"
@@ -142,13 +139,13 @@
                 android:layout_height="wrap_content"/>
 
             <com.au.module_android.widget.CustomWrapEnFontText
-                style="@style/StyleSmallText"
+                style="@style/StyleAuTextSmallDesc"
                 android:text="small text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
             <com.au.module_android.widget.CustomImageFontText
-                style="@style/StyleFontMText"
+                style="@style/StyleAuTextThin"
                 app:drawableStartCompat="@drawable/ic_warning"
                 app:drawableStartWidth="20dp"
                 app:drawableStartHeight="20dp"
@@ -162,7 +159,7 @@
                 android:layout_height="wrap_content"/>
 
             <com.au.module_android.widget.BgBuildCustomFontText
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
                 app:cornerRadius="4dp"
@@ -182,7 +179,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextHeadline"
             android:layout_marginTop="18dp"
             android:text="switchs"
             android:layout_width="wrap_content"
@@ -197,7 +194,7 @@
             <com.au.module_android.widget.CustomFontText
                 android:id="@+id/android_ui_switch_block_title1"
                 app:layout_constraintStart_toStartOf="parent"
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 android:text="enable setting1"
                 app:layout_constraintTop_toTopOf="@id/android_ui_switch_block1"
                 app:layout_constraintBottom_toBottomOf="@id/android_ui_switch_block1"
@@ -217,7 +214,7 @@
             <com.au.module_android.widget.CustomFontText
                 android:id="@+id/android_ui_switch_block_title2"
                 app:layout_constraintStart_toStartOf="parent"
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 android:text="enable setting1"
                 app:layout_constraintTop_toTopOf="@id/android_ui_switch_block2"
                 app:layout_constraintBottom_toBottomOf="@id/android_ui_switch_block2"
@@ -239,7 +236,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/android_ui_switch_layout"
                 app:layout_constraintBottom_toBottomOf="@id/android_ui_switch_layout"
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 android:text="enable setting2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
@@ -260,7 +257,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/android_ui_switch_btn_layout"
                 app:layout_constraintBottom_toBottomOf="@id/android_ui_switch_btn_layout"
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 android:text="enable setting3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
@@ -286,7 +283,7 @@
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="18dp"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:text="button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
@@ -371,7 +368,7 @@
             android:layout_height="0.5dp"/>
 
         <com.au.module_android.widget.CustomFontText
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextHeadline"
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="18dp"
             android:text="block background"

@@ -42,7 +42,8 @@
         app:layout_constraintTop_toBottomOf="@id/toolBar"
         android:id="@+id/title"
         android:layout_marginTop="12dp"
-        style="@style/StyleTitleBText"
+        style="@style/StyleAuTextNormal"
+        android:textStyle="bold"
         android:text="所有录制方案"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
@@ -58,10 +59,9 @@
         android:layout_height="0dp"/>
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:paddingHorizontal="@dimen/ui_padding_edge"
         android:text="尚未有任何录制的方案，点击添加按钮开始吧。"
-        android:textSize="18sp"
         android:id="@+id/emptyText"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"

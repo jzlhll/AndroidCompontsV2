@@ -36,7 +36,7 @@
         app:layout_constraintBottom_toBottomOf="@id/guide_1_3" />
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontSecondaryText"
+        style="@style/StyleAuTextNormalDesc"
         android:layout_marginBottom="32dp"
         android:gravity="center"
         android:text="请点击按钮跳转去辅助服务，找到应用「AShoot辅助点击方案」，并建议开启快捷开关。\n后续如果通过快捷开关开启，则在这里等待1秒，自动进入下一个页面。"

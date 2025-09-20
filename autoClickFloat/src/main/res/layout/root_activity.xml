@@ -9,7 +9,8 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/title"
-        style="@style/StyleTitleBText"
+        style="@style/StyleAuTextNormal"
+        android:textStyle="bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -20,7 +21,7 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/desc"
-        style="@style/StyleFontTitleDescText"
+        style="@style/StyleAuBTextHeadline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"

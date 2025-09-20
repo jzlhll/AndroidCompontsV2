@@ -19,7 +19,7 @@
 
             <com.au.module_android.widget.CustomFontText
                 android:layout_marginStart="@dimen/ui_padding_edge"
-                style="@style/StyleFontSecondTitleText"
+                style="@style/StyleAuBTextTitle2"
                 android:text="edit input"
                 android:layout_marginTop="36dp"
                 android:layout_width="wrap_content"
@@ -28,7 +28,7 @@
             <com.au.module_android.widget.CustomFontText
                 android:layout_marginStart="@dimen/ui_padding_edge"
                 android:id="@+id/infoText"
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 android:layout_marginTop="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
@@ -45,7 +45,7 @@
                     android:layout_width="300dp"
                     android:layout_height="52dp">
                     <com.au.module_android.widget.CustomFontText
-                        style="@style/StyleFontText"
+                        style="@style/StyleAuTextNormal"
                         android:layout_marginStart="12dp"
                         android:layout_gravity="center_vertical"
                         android:text="Fake text by edit_board_bg"

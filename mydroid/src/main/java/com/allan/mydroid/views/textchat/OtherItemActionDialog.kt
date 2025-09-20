@@ -10,8 +10,7 @@ import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.serializableCompat
-import com.au.module_android.utilsmedia.ContentUriRealPathType
-import com.au.module_android.utilsmedia.getRealPath
+import com.au.module_android.utilsmedia.UriParserUtil
 import com.au.module_android.utilsmedia.saveFileToPublicDirectory
 import com.au.module_androidui.dialogs.AbsActionDialogFragment
 import kotlinx.coroutines.delay
@@ -84,17 +83,18 @@ class OtherItemActionDialog(private var file: File? = null) : AbsActionDialogFra
             refreshFileListCallback?.get()?.invoke()
         }
 
-        val pair = uri?.getRealPath(Globals.app)
-        if (pair != null) {
-            val p = pair.first.replace("/storage/emulated/0/", "/sdcard/")
-            val firstStr = String.format(R.string.save_to_success.resStr(), pair.first)
-            when (pair.second) {
-                ContentUriRealPathType.RelativePath -> {
-                    fileExportSuccessCallback?.get()?.invoke(firstStr, "/sdcard/$p")
-                }
-                ContentUriRealPathType.FullPath -> {
-                    fileExportSuccessCallback?.get()?.invoke(firstStr, p)
-                }
+        val util = if(uri != null) UriParserUtil(uri) else null
+        util?.parseSuspend(Globals.app.contentResolver)
+        val parsedInfo = util?.parsedInfo
+        if (parsedInfo != null) {
+            val fullPath = parsedInfo.fullPath
+            val relativePath = parsedInfo.relativePath
+            if (!fullPath.isNullOrEmpty()) {
+                val firstStr = String.format(R.string.save_to_success.resStr(), fullPath)
+                fileExportSuccessCallback?.get()?.invoke(firstStr, fullPath.replace("/storage/emulated/0/", "/sdcard/"))
+            } else if (!relativePath.isNullOrEmpty()) {
+                val p = relativePath.replace("/storage/emulated/0/", "/sdcard/")
+                fileExportSuccessCallback?.get()?.invoke(relativePath, "/sdcard/$p")
             }
         } else {
             fileExportFailCallback?.get()?.invoke(R.string.save_failed.resStr())

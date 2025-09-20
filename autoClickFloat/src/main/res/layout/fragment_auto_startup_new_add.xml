@@ -48,12 +48,11 @@
 
                 <com.au.module_android.widget.CustomFontText
                     android:id="@+id/hourUnit"
-                    style="@style/StyleFontText"
+                    style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
                     android:textColor="@color/color_text_normal"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:textSize="16dp"
                     android:layout_marginTop="4dp"
                     app:layout_constraintStart_toStartOf="@id/hourPicker"
                     android:layout_marginStart="85dp"
@@ -62,7 +61,7 @@
 
                 <com.au.module_android.widget.CustomFontText
                     android:id="@+id/minuteUnit"
-                    style="@style/StyleFontText"
+                    style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
                     android:layout_marginTop="4dp"
                     android:layout_marginStart="85dp"
@@ -71,7 +70,6 @@
                     android:textColor="@color/color_text_normal"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:textSize="16dp"
                     android:text="分"/>
 
                 <com.au.module_android.widget.ViewStubPro

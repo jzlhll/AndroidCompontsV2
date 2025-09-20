@@ -1,8 +1,8 @@
 package com.au.module_imagecompressed
 
-import androidx.core.net.toFile
+import android.net.Uri
+import android.webkit.MimeTypeMap
 import com.au.module_android.Globals
-import com.au.module_android.utilsmedia.UriHelper
 import com.au.module_imagecompressed.CropCircleImageFragment.Companion.DIR_CROP
 import java.io.File
 
@@ -10,10 +10,17 @@ import java.io.File
  * 必须是：
  * 我的cacheDir或者fileDir下的文件来转成UriWrap。
  */
-fun UriHelper.imageFileConvertToUriWrap() : UriWrap {
-    assert(isFileScheme())
-    val file = uri.toFile()
-    return UriWrap(uri, 1, file.length(), isImage = true, beLimitedSize = false, beCopied = true, mimeType, file.name)
+fun File.imageFileConvertToUriWrap(uri: Uri) : UriWrap {
+    val extension = extension.lowercase()
+    val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
+    return UriWrap(uri,
+        1,
+        this.length(),
+        isImage = true,
+        beLimitedSize = false,
+        beCopied = true,
+        mimeType,
+        name)
 }
 
 private const val SUB_CACHE_DIR = "luban_disk_cache"

@@ -175,31 +175,29 @@
             android:layout_height="wrap_content">
             <com.au.module_android.widget.BgBuildCustomFontText
                 android:id="@+id/fileObBtn"
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 app:backgroundNormal="@color/color_edit_background"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:text="监控文件列表"
-                android:textSize="16dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
             <com.au.module_android.widget.BgBuildCustomFontText
                 android:id="@+id/deleteAllBtn"
-                style="@style/StyleFontText"
+                style="@style/StyleAuTextNormal"
                 app:backgroundNormal="@color/color_edit_background"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:layout_marginStart="24dp"
                 android:text="deleteAll"
-                android:textSize="16dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileObTextView"
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             android:layout_marginTop="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />

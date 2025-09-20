@@ -14,7 +14,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:id="@+id/android_ui_darkmode_title"
             android:text="dark mode"
             android:layout_marginTop="24dp"
@@ -67,7 +67,7 @@
             android:layout_height="0.5dp"/>
 
         <com.au.module_android.widget.CustomFontText
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="18dp"
             android:text="toast"
@@ -110,7 +110,7 @@
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="18dp"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:text="dialog"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
@@ -175,7 +175,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:layout_marginTop="18dp"
             android:text="select list"
             android:layout_width="wrap_content"

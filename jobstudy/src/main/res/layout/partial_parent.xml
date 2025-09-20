@@ -22,36 +22,36 @@
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/code1"
-            style="@style/StyleFakeEditText"
+            style="@style/StyleAuTextFakeEdit"
             android:layout_width="48dp"
             android:layout_height="48dp"/>
         <android.widget.Space android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/code2"
-            style="@style/StyleFakeEditText"
+            style="@style/StyleAuTextFakeEdit"
             android:layout_width="48dp"
             android:layout_height="48dp"/>
         <android.widget.Space android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/code3"
-            style="@style/StyleFakeEditText"
+            style="@style/StyleAuTextFakeEdit"
             android:layout_width="48dp"
             android:layout_height="48dp"/>
         <android.widget.Space android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/code4"
-            style="@style/StyleFakeEditText"
+            style="@style/StyleAuTextFakeEdit"
             android:layout_width="48dp"
             android:layout_height="48dp"/>
         <android.widget.Space android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/code5"
-            style="@style/StyleFakeEditText"
+            style="@style/StyleAuTextFakeEdit"
             android:layout_width="48dp"
             android:layout_height="48dp"/>
         <android.widget.Space android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"/>
         <com.au.module_android.widget.CustomFontText
-            style="@style/StyleFakeEditText"
+            style="@style/StyleAuTextFakeEdit"
             android:id="@+id/code6"
             android:layout_width="48dp"
             android:layout_height="48dp" />

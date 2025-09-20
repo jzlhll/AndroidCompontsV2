@@ -65,9 +65,9 @@ fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewC
     var fontName = ""
 
     if (attrs != null) {
-        cxt.withStyledAttributes(attrs, R.styleable.CustomTextView) {
-            fontName = getString(R.styleable.CustomTextView_customFontName) ?: ""
-            when (getString(R.styleable.CustomTextView_customFontMode)) {
+        cxt.withStyledAttributes(attrs, R.styleable.CustomFontText) {
+            fontName = getString(R.styleable.CustomFontText_customFontName) ?: ""
+            when (getString(R.styleable.CustomFontText_customFontMode)) {
                 FontMode.BOLD.mode -> fontMode = FontMode.BOLD
                 FontMode.MID.mode -> fontMode = FontMode.MID
                 null -> {
@@ -94,7 +94,7 @@ fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewC
                 }
             }
 
-            isNumber = getBoolean(R.styleable.CustomTextView_customFontIsNum, false)
+            isNumber = getBoolean(R.styleable.CustomFontText_customFontIsNum, false)
         }
     }
 

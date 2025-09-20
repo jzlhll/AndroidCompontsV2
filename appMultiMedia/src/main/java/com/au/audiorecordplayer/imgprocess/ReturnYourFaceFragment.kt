@@ -21,6 +21,7 @@ import com.au.module_android.widget.SuitScreenHelper
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_cached.delegate.AppDataStoreStringCache
 import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.UriStrWrap
 import com.au.module_imagecompressed.photoPickerForResult
 import java.io.File
@@ -242,7 +243,7 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.selectedImageButton.onClick {
-            singleResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE, null) { uri->
+            singleResult.launchOneByOne(PickerType.IMAGE, null) { uri->
                 val uriStr = uri.toUriStrWrap()
                 mLastFile = uriStr.toJsonString()
                 logdNoFile { "selectedImage: $uri" }

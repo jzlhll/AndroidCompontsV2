@@ -8,8 +8,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontBText"
-        android:textSize="18sp"
+        style="@style/StyleAuTextNormal"
+        android:textStyle="bold"
         android:background="@drawable/corner_btn_warn"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,7 +21,7 @@
         android:layout_height="33dp"/>
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         app:layout_constraintTop_toBottomOf="@id/stepIndex"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginTop="6dp"
@@ -50,7 +50,7 @@
         android:layout_height="0.5dp"/>
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         app:layout_constraintTop_toTopOf="@id/plusPaddingTime"
         app:layout_constraintBottom_toBottomOf="@id/plusPaddingTime"
         app:layout_constraintStart_toStartOf="parent"
@@ -61,7 +61,8 @@
         android:layout_height="wrap_content"/>
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontBText"
+        style="@style/StyleAuTextNormal"
+        android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@id/lineSplit"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="12dp"
@@ -73,13 +74,12 @@
         android:layout_height="30dp"/>
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontBText"
+        style="@style/StyleAuBTextHeadline"
         app:layout_constraintTop_toTopOf="@id/plusPaddingTime"
         app:layout_constraintBottom_toBottomOf="@id/plusPaddingTime"
         app:layout_constraintEnd_toStartOf="@id/plusPaddingTime"
         android:layout_marginEnd="6dp"
         android:id="@+id/minusPaddingTime"
-        android:textSize="20dp"
         android:text="—"
         android:gravity="center"
         android:layout_width="40dp"

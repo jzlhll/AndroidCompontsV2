@@ -17,13 +17,10 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utilsmedia.CopyMode
-import com.au.module_android.utilsmedia.MimeUtil
 import com.au.module_android.utilsmedia.URI_COPY_PARAM_ANY_TO_JPG
 import com.au.module_android.utilsmedia.URI_COPY_PARAM_HEIC_TO_JPG
-import com.au.module_android.utilsmedia.UriHelper
+import com.au.module_android.utilsmedia.UriParserUtil
 import com.au.module_android.utilsmedia.copyToCacheConvert
-import com.au.module_android.utilsmedia.getUriMimeType
-import com.au.module_android.utilsmedia.length
 import java.io.File
 
 /**
@@ -96,9 +93,7 @@ class MultiPhotoPickerContractResult(
                     uriWrap.fileSize = pathFile.length()
                     uriWrap.beLimitedSize = uriWrap.fileSize > mTargetImageSize
                     uriWrap.beCopied = true
-                    val pair = MimeUtil(uriWrap.uri.getUriMimeType(null)).goodMimeTypeAndFileName()
-                    uriWrap.mime = pair.first
-                    uriWrap.fileName = pair.second
+                    uriWrap.fileName = pathFile.name
 
                     if(BuildConfig.DEBUG) Log.d(logTag, "3>luban: $uriWrap")
                 }
@@ -123,13 +118,13 @@ class MultiPhotoPickerContractResult(
         totalNum: Int,
         cr: ContentResolver
     ): UriWrap {
-        val uriUtil = UriHelper(uri, cr)
-        val fileSize = uri.length(cr)
-        val isImage = uriUtil.isUriImage()
+        val util = UriParserUtil(uri)
+        val parsedInfo = util.parse(cr)
+        val fileSize = parsedInfo.fileLength
+        val isImage = util.isUriImage()
         val limitSize = if(isImage) mLimitImageSize.toLong() else mLimitVideoSize
-        val origMimeFileName = uriUtil.goodMimeTypeAndFileName()
-        val mime = origMimeFileName.first
-        val fileName = origMimeFileName.second
+        val mime = parsedInfo.mimeType
+        val fileName = parsedInfo.name
 
         if (fileSize > limitSize) {
             return UriWrap(
@@ -143,13 +138,17 @@ class MultiPhotoPickerContractResult(
             }
 
             CopyMode.COPY_NOTHING_BUT_CVT_HEIC -> {
-                if (uriUtil.isUriHeic()) {
+                if (util.isUriHeic()) {
                     val size = longArrayOf(-1L)
                     val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_HEIC_TO_JPG, subCacheDir, copyFilePrefix, size)
-                    val pair = MimeUtil(copyUri.getUriMimeType(null)).goodMimeTypeAndFileName()
                     UriWrap(
-                        copyUri, totalNum, if (size[0] == -1L) fileSize else size[0], isImage, beCopied = copyUri != uri,
-                        mime = pair.first, fileName = pair.second
+                        copyUri,
+                        totalNum,
+                        if (size[0] == -1L) fileSize else size[0],
+                        isImage,
+                        beCopied = copyUri != uri,
+                        mime = mime,
+                        fileName = fileName
                     )
                 } else {
                     UriWrap(uri, totalNum, fileSize, isImage, mime = mime, fileName = fileName)
@@ -160,10 +159,13 @@ class MultiPhotoPickerContractResult(
                 if (isImage) {
                     val size = longArrayOf(-1L)
                     val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_ANY_TO_JPG, subCacheDir, copyFilePrefix, size)
-                    val pair = MimeUtil(copyUri.getUriMimeType(null)).goodMimeTypeAndFileName()
                     UriWrap(
-                        copyUri, totalNum, if (size[0] == -1L) fileSize else size[0], isImage = true, beCopied = copyUri != uri,
-                        mime = pair.first, fileName = pair.second
+                        copyUri, totalNum,
+                        if (size[0] == -1L) fileSize else size[0],
+                        isImage = true,
+                        beCopied = copyUri != uri,
+                        mime = mime,
+                        fileName = fileName
                     )
                 } else {
                     UriWrap(uri, totalNum, fileSize, isImage = false, mime = mime, fileName = fileName)
@@ -173,10 +175,13 @@ class MultiPhotoPickerContractResult(
             CopyMode.COPY_ALWAYS -> {
                 val size = longArrayOf(-1L)
                 val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_HEIC_TO_JPG, subCacheDir, copyFilePrefix, size)
-                val pair = MimeUtil(copyUri.getUriMimeType(null)).goodMimeTypeAndFileName()
                 UriWrap(
-                    copyUri, totalNum, if (size[0] == -1L) fileSize else size[0], isImage = true, beCopied = copyUri != uri,
-                    mime = pair.first, fileName = pair.second
+                    copyUri, totalNum,
+                    if (size[0] == -1L) fileSize else size[0],
+                    isImage = true,
+                    beCopied = copyUri != uri,
+                    mime = mime,
+                    fileName = fileName
                 )
             }
         }

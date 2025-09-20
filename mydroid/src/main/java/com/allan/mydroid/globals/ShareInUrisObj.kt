@@ -73,9 +73,7 @@ object ShareInUrisObj {
         uris.forEach { uri->
             val found = oldUris.find { it.uri == uri }
             if (found == null) {
-                logdNoFile { "add new uri $uri" }
                 val infoEx = ShareInBean.to(uri)
-                logdNoFile { "add new infoex $infoEx" }
                 newUris.add(infoEx)
             }
         }

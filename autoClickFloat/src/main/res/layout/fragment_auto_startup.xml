@@ -7,7 +7,7 @@
     <com.au.module_android.widget.CustomFontText
         android:paddingHorizontal="@dimen/ui_padding_edge"
         android:id="@+id/currentTimeTv"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginTop="30dp"
@@ -46,12 +46,11 @@
 
                 <com.au.module_android.widget.CustomFontText
                     android:id="@+id/hourUnit"
-                    style="@style/StyleFontText"
+                    style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
                     android:textColor="@color/color_text_normal"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:textSize="16dp"
                     android:layout_marginTop="4dp"
                     app:layout_constraintStart_toStartOf="@id/hourPicker"
                     android:layout_marginStart="85dp"
@@ -60,7 +59,7 @@
 
                 <com.au.module_android.widget.CustomFontText
                     android:id="@+id/minuteUnit"
-                    style="@style/StyleFontText"
+                    style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
                     android:layout_marginTop="4dp"
                     android:layout_marginStart="85dp"
@@ -69,7 +68,6 @@
                     android:textColor="@color/color_text_normal"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:textSize="16dp"
                     android:text="分"/>
 
                 <com.au.module_android.widget.ViewStubPro
@@ -167,9 +165,8 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/fakeText"
-        android:textSize="20dp"
         android:visibility="gone"
-        style="@style/StyleFontText"
+        style="@style/StyleAuBTextHeadline"
         android:textColor="#0000ff"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

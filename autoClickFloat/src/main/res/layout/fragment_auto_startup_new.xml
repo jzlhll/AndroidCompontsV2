@@ -70,10 +70,9 @@
 
         <com.au.module_android.widget.CustomFontText
             android:paddingHorizontal="8dp"
-            style="@style/StyleFontTitleDescText"
+            style="@style/StyleAuTextSmallDesc"
             android:ellipsize="end"
             android:layout_weight="1"
-            android:textSize="13sp"
             android:text="请跳转到应用自启动管理界面，将本应用开启。该信息每7天会显示一次。点击这里去跳转。"
             android:layout_width="0dp"
             android:layout_height="wrap_content"/>

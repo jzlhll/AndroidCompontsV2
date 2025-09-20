@@ -15,7 +15,7 @@
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/text"
         android:paddingBottom="24dp"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>

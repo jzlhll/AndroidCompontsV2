@@ -21,7 +21,7 @@ class MyInitApplication : InitApplication() {
     override fun onCreate() {
         super.onCreate()
 
-        OkhttpGlobal.initParams(OkhttpInitParams().also {
+        OkhttpGlobal.initBeforeAnyRequest(OkhttpInitParams().also {
             it.okHttpCookieJar = object : AbsCookieJar() {
                 override fun saveToDisk(host: String, data: String) {
                     AppDataStore.save("okhttp_cookie_$host", data)

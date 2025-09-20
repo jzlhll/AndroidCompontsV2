@@ -13,7 +13,7 @@
         android:layout_height="wrap_content">
 
         <com.au.module_android.widget.CustomFontText
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle1"
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="18dp"
             android:text="progressBar"
@@ -68,7 +68,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:text="radio | check button"
             android:layout_marginTop="36dp"
             android:layout_width="wrap_content"
@@ -132,7 +132,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:text="seekBar | numberPicker"
             android:layout_marginTop="36dp"
             android:layout_width="wrap_content"
@@ -169,11 +169,10 @@
 
                     <com.au.module_android.widget.CustomFontText
                         android:id="@+id/hourUnit"
-                        style="@style/StyleFontText"
+                        style="@style/StyleAuTextThin"
                         android:textColor="@color/color_text_normal"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:textSize="16dp"
                         app:layout_constraintStart_toStartOf="@id/hourPicker"
                         android:layout_marginStart="85dp"
                         android:gravity="center_vertical"
@@ -181,14 +180,13 @@
 
                     <com.au.module_android.widget.CustomFontText
                         android:id="@+id/minuteUnit"
-                        style="@style/StyleFontText"
+                        style="@style/StyleAuTextThin"
                         android:layout_marginStart="85dp"
                         app:layout_constraintStart_toStartOf="@id/minutePicker"
                         android:gravity="center_vertical"
                         android:textColor="@color/color_text_normal"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:textSize="16dp"
                         android:text="分"/>
 
                     <com.au.module_android.widget.ViewStubPro
@@ -249,7 +247,7 @@
 
         <com.au.module_android.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
-            style="@style/StyleFontSecondTitleText"
+            style="@style/StyleAuBTextTitle2"
             android:text="edit input"
             android:layout_marginTop="36dp"
             android:layout_width="wrap_content"

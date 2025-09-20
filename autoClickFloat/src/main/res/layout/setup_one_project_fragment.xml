@@ -16,7 +16,8 @@
         android:layout_marginTop="24dp"
         android:layout_width="match_parent"
         android:text="保存点击方案%d"
-        style="@style/StyleTitleBText"
+        style="@style/StyleAuTextNormal"
+        android:textStyle="bold"
         android:layout_height="wrap_content" />
 
     <androidx.appcompat.widget.AppCompatTextView

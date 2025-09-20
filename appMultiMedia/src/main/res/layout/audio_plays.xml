@@ -150,14 +150,14 @@
             android:layout_height="1dp"/>
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/fileListTextView"
-            style="@style/StyleFontSecondaryText"
+            style="@style/StyleAuTextNormalDesc"
             android:layout_marginTop="18dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <com.au.module_android.widget.CustomFontText
             android:id="@+id/selectedFileTextView"
-            style="@style/StyleFontText"
+            style="@style/StyleAuTextNormal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 

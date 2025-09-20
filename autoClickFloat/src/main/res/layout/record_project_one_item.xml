@@ -17,7 +17,7 @@
 
     <com.au.module_android.widget.BgBuildCustomFontText
         android:id="@+id/stepIndex"
-        style="@style/StyleFontMText"
+        style="@style/StyleAuTextNormal"
         app:layout_constraintStart_toEndOf="@id/checkbox"
         app:layout_constraintTop_toTopOf="parent"
         app:backgroundNormal="#eeeeee"
@@ -32,7 +32,7 @@
         app:layout_constraintStart_toEndOf="@id/stepIndex"
         app:layout_constraintEnd_toEndOf="parent"
         android:id="@+id/text"
-        style="@style/StyleFontText"
+        style="@style/StyleAuTextNormal"
         android:gravity="center_vertical"
         tools:text="this is fd adjfakdsjf jasdfja kdfjk ajdsfkajdsk fjaksdfjk ajsdfkj kadjfkaj kfjaskdfj kadsjfkajsdfk"
         android:layout_marginStart="6dp"

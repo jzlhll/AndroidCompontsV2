@@ -35,21 +35,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content" />
 
-        <com.au.module_android.widget.CustomFontText
-            android:id="@+id/fileSizeAndMD5Tv"
-            android:layout_marginStart="10dp"
-            style="@style/StyleAuTextThinDesc"
-            android:layout_marginEnd="6dp"
-            android:layout_marginTop="2dp"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:maxLines="2"
-            app:layout_constraintEnd_toStartOf="@id/deleteBtn"
-            app:layout_constraintStart_toEndOf="@id/icon"
-            app:layout_constraintTop_toBottomOf="@id/fileNameTv"
-            app:layout_constraintVertical_chainStyle="packed"
-            tools:text="text ajdkfjfdkfaklfd jakfjkad f  f89fjkadsfjk " />
-
         <com.au.module_android.widget.BgBuildCustomFontText
             android:id="@+id/deleteBtn"
             style="@style/StyleAuTextSmallDesc"
@@ -59,13 +44,30 @@
             android:paddingHorizontal="24dp"
             android:paddingVertical="2dp"
             android:text="@string/delete"
+            android:layout_marginStart="10dp"
             android:layout_marginTop="2dp"
-            android:layout_marginEnd="10dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintTop_toBottomOf="@id/fileNameTv"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomFontText
+            android:id="@+id/fileSizeAndMD5Tv"
+            android:layout_marginStart="10dp"
+            style="@style/StyleAuTextThinDesc"
+            android:layout_marginEnd="10dp"
+            app:layout_goneMarginStart="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:maxLines="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/deleteBtn"
+            app:layout_constraintTop_toBottomOf="@id/fileNameTv"
+            app:layout_constraintVertical_chainStyle="packed"
+            tools:text="text ajdkfjfdkfaklfd jakfjkad f  f89fjkadsfjk " />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

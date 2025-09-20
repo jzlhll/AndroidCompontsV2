@@ -20,7 +20,8 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/title"
-        style="@style/StyleTitleBText"
+        style="@style/StyleAuTextNormal"
+        app:customFontMode="mid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -32,7 +33,7 @@
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/desc"
-        style="@style/StyleFontSecondTitleText"
+        style="@style/StyleAuBTextHeadline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
@@ -44,7 +45,8 @@
     <com.au.module_android.widget.CustomFontText
         app:layout_constraintTop_toBottomOf="@id/desc"
         android:layout_marginTop="75dp"
-        style="@style/StyleFontBText"
+        style="@style/StyleAuTextNormal"
+        app:customFontMode="mid"
         android:id="@+id/saveText"
         android:text="已经保存的点："
         android:textSize="20sp"
@@ -87,9 +89,8 @@
         android:layout_height="54dp"/>
 
     <com.au.module_android.widget.CustomFontText
-        style="@style/StyleFontSecondaryText"
+        style="@style/StyleAuTextNormalDesc"
         android:id="@+id/msText"
-        android:textSize="18sp"
         app:layout_constraintTop_toTopOf="@id/inputMs"
         app:layout_constraintBottom_toBottomOf="@id/inputMs"
         android:text="毫秒"

@@ -14,7 +14,6 @@ import com.au.module_android.permissions.permission.IOnePermissionResult
 import com.au.module_android.permissions.systemTakePictureForResult
 import com.au.module_android.sp.SharedPrefUtil
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utilsmedia.UriHelper
 import com.au.module_androidui.toast.ToastBuilder
 import java.io.File
 
@@ -148,7 +147,7 @@ class CameraPermissionHelp {
                         if (afterCompressPath != null) {
                             ignoreError {
                                 val afterCompressFile = File(afterCompressPath)
-                                val cvtUri = UriHelper(afterCompressFile.toUri(), Globals.app.contentResolver).imageFileConvertToUriWrap()
+                                val cvtUri = afterCompressFile.imageFileConvertToUriWrap(afterCompressFile.toUri())
                                 callback("takePicResultLubanCompressed", cvtUri)
                             }
                         } else {
@@ -157,7 +156,7 @@ class CameraPermissionHelp {
                     }.compress(context, createdTmpUri) //必须是file的scheme。那个FileProvider提供的则不行。
                 } else {
                     //不压缩
-                    val cvtUri = UriHelper(createdTmpUri, Globals.app.contentResolver).imageFileConvertToUriWrap()
+                    val cvtUri = createdTmpFile.imageFileConvertToUriWrap(createdTmpUri)
                     callback("takePicResultDirect", cvtUri)
                 }
             } else {
