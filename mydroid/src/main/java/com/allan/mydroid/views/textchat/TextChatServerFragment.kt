@@ -4,7 +4,7 @@ import android.os.Bundle
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.WSChatMessageBean
-import com.allan.mydroid.beansinner.UriRealInfoEx
+import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.MyDroidConstServer
@@ -90,7 +90,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
 
     override fun isAutoHideIme() = true
 
-    override fun onItemClick(bean: UriRealInfoEx) {
+    override fun onItemClick(bean: ShareInBean) {
         common.buttonSend(common.createBean(WSChatMessageBean.Content("", bean.copyToHtml())))
     }
 }

@@ -1,15 +1,18 @@
 package com.allan.mydroid.views.send
 
+import android.content.Context
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.R
-import com.allan.mydroid.beansinner.UriRealInfoEx
+import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.ActivityMyDroidSendlistBinding
-import com.allan.mydroid.globals.KEY_AUTO_ENTER_SEND_VIEW
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
@@ -22,6 +25,7 @@ import com.au.module_android.utils.NotificationUtil
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.isPhotoPickerAvailable
+import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
@@ -29,32 +33,61 @@ import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
-import com.au.module_imagecompressed.MultiPhotoPickerContractResult
-import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
+import com.au.module_imagecompressed.PickerType
+import com.au.module_imagecompressed.compatMultiUriPickerForResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>() {
-    override fun isPaddingStatusBar() = false
+    companion object {
+        const val KEY_AUTO_ENTER_SEND_VIEW = "key_auto_import"
+        const val KEY_START_TYPE = "entry_start_type"
+        const val MY_DROID_SHARE_IMPORT_URIS = "myDroidShareReceiverUris"
 
-    private val common = object : SendListSelectorCommon(this, false) {
-        override fun rcv() = binding.rcv
+        fun start(context: Context, autoEnterSendView: Boolean) {
+            Globals.finishFragment(SendListSelectorFragment::class.java)
+            FragmentShellActivity.start(
+                context, SendListSelectorFragment::class.java,
+                bundleOf(KEY_AUTO_ENTER_SEND_VIEW to autoEnterSendView)
+            )
+        }
 
-        override fun empty() = binding.empty
-
-        override fun itemClick(bean: UriRealInfoEx?, mode:String) {
-            if (mode == "delete" && bean != null) {
-                val data = MyDroidConst.sendUriMap.realValue
-                data?.remove(bean.uriUuid)
-                MyDroidConst.updateSendUriMap(data)
+        fun parseShareImportIntent(fragment: Fragment) {
+            val isFromNewShareImportUris = fragment.arguments?.getString(MY_DROID_SHARE_IMPORT_URIS)
+            fragment.arguments?.remove(MY_DROID_SHARE_IMPORT_URIS)
+            logdNoFile { "parse ShareImport Intent $isFromNewShareImportUris" }
+            if (isFromNewShareImportUris == MY_DROID_SHARE_IMPORT_URIS) {
+                fragment.lifecycleScope.launch {
+                    delay(100)
+                    FragmentShellActivity.start(fragment.requireActivity(), SendListSelectorFragment::class.java)
+                }
             }
         }
     }
 
+    override fun isPaddingStatusBar() = false
+
+    private val common = object : SendListSelectorCommon(this, true) {
+        override fun rcv() = binding.rcv
+
+        override fun empty() = binding.empty
+
+        override fun onHolderClick(bean: ShareInBean?, mode:String) {
+            if (mode == "delete" && bean != null) {
+                deleteBean(bean)
+            }
+        }
+    }
+
+    private fun deleteBean(bean: ShareInBean) {
+        ShareInUrisObj.deleteUris(listOf(bean.uriUuid))
+        common.reload()
+    }
+
     private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
 
-    val pickerResult = compatMultiPhotoPickerForResult(9)
+    val pickerResult = compatMultiUriPickerForResult(9)
     val documentResult = getContentForResult()
 
     private var mAutoNextJob: Job? = null
@@ -82,13 +115,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
             when (menuItem.itemId) {
                 R.id.next -> {
                     when (common.isEmpty()) {
-                        2 -> {
-                            ToastBuilder().setOnActivity(requireActivity()).setMessage(
-                                getString(R.string.select_files_hint)
-                            ).setIcon("info").toast()
-                        }
-
-                        1 -> {
+                        true -> {
                             jumpIntoMyDroidSend()
                         }
 
@@ -106,23 +133,27 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
         mDelayCancelDialog?.dismissAllowingStateLoss()
         mDelayCancelDialog = null
 
-        val helper = PermissionStorageHelper()
-        if(helper.ifGotoMgrAll {
-            ConfirmCenterDialog.Companion.show(childFragmentManager,
-                getString(R.string.app_management_permission),
-                getString(R.string.global_permission_prompt),
-                "OK") {
-                helper.gotoMgrAll(requireActivity())
-                it.dismissAllowingStateLoss()
-            }
-        }) {
-            FragmentShellActivity.Companion.start(requireActivity(), MyDroidSendFragment::class.java)
+        if (true) {
+            FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
+        } else {
+            val helper = PermissionStorageHelper()
+            if(helper.ifGotoMgrAll {
+                    ConfirmCenterDialog.show(childFragmentManager,
+                        getString(R.string.app_management_permission),
+                        getString(R.string.global_permission_prompt),
+                        "OK") {
+                        helper.gotoMgrAll(requireActivity())
+                        it.dismissAllowingStateLoss()
+                    }
+                }) {
+                FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
 
 //            permissionResult.safeRun({
 //                FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
 //            }, notGivePermissionBlock = {
 //                ToastBuilder().setMessage("请授权媒体权限，否则，无法访问文件。").setIcon("warn").setOnTop().toast()
 //            })
+            }
         }
     }
 
@@ -141,8 +172,13 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
         } else {
             val selectGalleryRun:(view: View)->Unit  = {
                 pickerResult.setCurrentMaxItems(9)
-                pickerResult.launchOneByOne(MultiPhotoPickerContractResult.PickerType.IMAGE_AND_VIDEO, null) {uri->
-                    logd { "file uri: $uri" }
+                pickerResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
+                    logd { "file uri: $uris" }
+                    val urisList = ArrayList<Uri>()
+                    for (uri in uris) {
+                        urisList.add(uri)
+                    }
+                    onUrisBack(urisList)
                 }
             }
 
@@ -152,13 +188,18 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
 
         val documentRun:(view: View)->Unit = {
             documentResult.start("*/*") { uris->
-                uris.forEach {uri->
-                    logdNoFile { "get documents $uri" }
-                }
+                onUrisBack(uris)
             }
         }
         binding.selectDocumentBtn.onClick(documentRun)
         binding.selectDocumentText.onClick(documentRun)
+    }
+
+    private fun onUrisBack(uris: List<Uri>) {
+        lifecycleScope.launchOnThread {
+            ShareInUrisObj.addNewUris(uris)
+            common.reload()
+        }
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
@@ -200,7 +241,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
 
     override fun onStart() {
         super.onStart()
-        common.onStart()
+        common.reload()
     }
 
     private fun autoImportAction() {
@@ -219,7 +260,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
                 mDelayCancelDialog?.changeContent(dialogContent())
             }
             //自动跳入
-            if (common.isEmpty() == 1) {
+            if (!common.isEmpty()) {
                 jumpIntoMyDroidSend()
             }
         }

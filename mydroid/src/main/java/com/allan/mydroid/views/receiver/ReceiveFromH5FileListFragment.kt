@@ -2,7 +2,6 @@ package com.allan.mydroid.views.receiver
 
 import android.os.Bundle
 import android.widget.TextView
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -11,21 +10,21 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidReceiveListBinding
-import com.allan.mydroid.globals.KEY_AUTO_ENTER_SEND_VIEW
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.click.onClick
 import com.au.module_android.simpleflow.collectStatusState
-import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.utils.HtmlPart
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_android.utils.useSimpleHtmlText
 import com.au.module_android.utils.visible
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_nested.decoration.VertPaddingItemDecoration
@@ -73,10 +72,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     val importSendCallback:()->Unit = {
         activity?.let { a->
             a.finishAfterTransition()
-            FragmentShellActivity.Companion.start(
-                a, SendListSelectorFragment::class.java,
-                bundleOf(KEY_AUTO_ENTER_SEND_VIEW to true)
-            )
+            SendListSelectorFragment.start(a, true)
         }
     }
 
@@ -120,8 +116,13 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mViewModel.historyState.collectStatusState(
                     success = {
-                        val history = R.string.keep_recent_records.resStr() + "\n\n" + it
-                        binding.exportHistoryTv.text = history
+                        val colorNormal = getString(com.au.module_androidcolor.R.string.color_text_normal_str)
+                        val colorGray = getString(com.au.module_androidcolor.R.string.color_text_desc_str)
+
+                        binding.exportHistoryTv.useSimpleHtmlText(
+                            HtmlPart(R.string.keep_recent_records.resStr() + "\n\n", colorGray),
+                                    HtmlPart(it, colorNormal)
+                        )
                         updateTabsTitle(false)
                     },
                     error = {
@@ -134,8 +135,8 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                 mViewModel.fileListState.collectStatusState(
                     success = { fileList->
                         mAdapter.submitList(fileList, false)
-                        changeRcvEmptyTextVisible()
                         updateTabsTitle(true)
+                        changeRcvEmptyTextVisible()
                     },
                     error = {
                     }
@@ -167,24 +168,24 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     }
 
     private fun initTabs() {
-        val transferFileList = binding.tabLayout.newTextTab(getString(R.string.transfer_list), true, 18f)
+        val transferFileList = binding.tabLayout.newTextTab(getString(R.string.transfer_list), true, 16.5f)
         transferFileList.view.onClick {
-            changeRcvEmptyTextVisible()
             binding.receiveRcv.visible()
             binding.exportHistoryHost.gone()
             receivedFileListTab.customView.asOrNull<TextView>()?.let { tabTv ->
                 tabTv.text = getString(R.string.transfer_list)
             }
+            changeRcvEmptyTextVisible()
         }
         receivedFileListTab = transferFileList
-        val exportHistory = binding.tabLayout.newTextTab(getString(R.string.export_history), false, 18f)
+        val exportHistory = binding.tabLayout.newTextTab(getString(R.string.export_history), false, 16.5f)
         exportHistory.view.onClick {
-            changeRcvEmptyTextVisible()
             binding.receiveRcv.gone()
             binding.exportHistoryHost.visible()
             exportHistoryTab.customView.asOrNull<TextView>()?.let { tabTv ->
                 tabTv.text = getString(R.string.export_history)
             }
+            changeRcvEmptyTextVisible()
         }
         exportHistoryTab = exportHistory
         binding.tabLayout.addTab(transferFileList)
@@ -203,8 +204,8 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
 
     fun changeRcvEmptyTextVisible() {
         binding.apply {
-            val isRcvVisible = receiveRcv.isVisible
-            if (isRcvVisible) {
+            val isCurrentHistoryTabShown = binding.exportHistoryHost.isVisible
+            if (!isCurrentHistoryTabShown) {
                 if (mAdapter.datas.isEmpty()) {
                     receiveRcvEmptyTv.visible()
                 } else {

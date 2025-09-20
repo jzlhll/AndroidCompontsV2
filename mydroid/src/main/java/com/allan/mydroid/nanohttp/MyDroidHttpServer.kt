@@ -5,22 +5,25 @@ import com.allan.mydroid.api.ABORT_UPLOAD_CHUNKS
 import com.allan.mydroid.api.MERGE_CHUNKS
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.api.READ_WEBSOCKET_IP_PORT
+import com.allan.mydroid.api.REQUEST_FILE_LIST
 import com.allan.mydroid.api.TEXT_CHAT_READ_WEBSOCKET_IP_PORT
 import com.allan.mydroid.api.UPLOAD_CHUNK
 import com.allan.mydroid.beans.httpdata.IpPortResult
 import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.MyDroidConstServer
+import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.api.ResultBean
+import com.au.module_android.json.toJsonString
 import com.au.module_android.utils.logdNoFile
 import com.modulenative.AppNative
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
-import java.io.FileInputStream
+import kotlinx.coroutines.runBlocking
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URLEncoder
@@ -124,22 +127,19 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
 
     fun fileDownload(uriUuid:String) : NanoHTTPD.Response {
         try {
-            val info = MyDroidConst.sendUriMap.value?.get(uriUuid)
-            val realPath = info?.realPath
-            if (realPath.isNullOrEmpty()) {
-                return fileNotFoundResponse()
-            }
+            val info = ShareInUrisObj.sendUriMap.get(uriUuid)
+            val uri = info?.uri ?: return fileNotFoundResponse()
             val fileSize = info.fileSize ?: 0
             if (fileSize <= 0) {
                 return fileSizeIs0Response()
             }
 
-            logdNoFile { "handle Get Request fileDownload:$realPath size:$fileSize" }
-            val filename = info.goodName() ?: "file"
-            val fileInputStream = FileInputStream(realPath)
+            logdNoFile { "handle Get Request fileDownload:$uri size:$fileSize" }
+            val filename = info.name ?: "file"
+            val inputStream = Globals.app.contentResolver.openInputStream(uri)
             // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
             val response = newFixedLengthResponse(Status.OK,
-                "application/octet-stream", fileInputStream, fileSize)
+                "application/octet-stream", inputStream, fileSize)
 
             // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
             // 使用 "attachment" 表示希望浏览器将响应体保存为文件
@@ -184,7 +184,20 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             ABORT_UPLOAD_CHUNKS -> chunksMgr.handleAbortChunk(session)
             READ_WEBSOCKET_IP_PORT -> getWebsocketIpPort()
             TEXT_CHAT_READ_WEBSOCKET_IP_PORT -> getWebsocketIpPortWrap()
+            REQUEST_FILE_LIST -> getFileList()
             else -> newFixedLengthResponse(R.string.invalid_request_from_appserver.resStr()) // 或者其他默认响应
+        }
+    }
+
+    private fun getFileList() : Response {
+        return runBlocking {
+            val beans= ShareInUrisObj.loadShareInAndReceiveBeans()
+            val json = beans.toJsonString()
+            if (json.isNotEmpty()) {
+                ResultBean(CODE_SUC, "Success!", json).okJsonResponse()
+            } else {
+                newFixedLengthResponse(R.string.invalid_request_from_appserver.resStr()) // 或者其他默认响应
+            }
         }
     }
 

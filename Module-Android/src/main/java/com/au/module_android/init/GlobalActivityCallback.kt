@@ -4,9 +4,6 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.au.module_android.Globals.activityList
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.logdNoFile
 
 /**
  * @author au

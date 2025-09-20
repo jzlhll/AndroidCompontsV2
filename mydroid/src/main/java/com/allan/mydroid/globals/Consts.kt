@@ -20,9 +20,6 @@ const val DEBUG_SLOW_RECEIVER_TRANSFER = false
  */
 const val DEBUG_SLOW_SEND_TRANSFER = false
 
-const val KEY_AUTO_ENTER_SEND_VIEW = "key_auto_import"
-const val KEY_START_TYPE = "entry_start_type"
-const val MY_DROID_SHARE_IMPORT_URIS = "myDroidShareReceiverUris"
 
 const val CACHE_IMPORT_COPY_DIR = "nanoImport"
 fun cacheImportCopyDir() = Globals.goodCacheDir.absolutePath + File.separatorChar + CACHE_IMPORT_COPY_DIR

@@ -5,7 +5,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.allan.mydroid.api.WSApisConst;
-import com.allan.mydroid.beansinner.UriRealInfoHtml;
+import com.allan.mydroid.beansinner.ShareInHtml;
 
 import java.util.UUID;
 
@@ -42,14 +42,14 @@ public class WSChatMessageBean {
     }
 
     public static class Content {
-        public Content(@NonNull String text, @Nullable UriRealInfoHtml file) {
+        public Content(@NonNull String text, @Nullable ShareInHtml file) {
             this.text = text;
             this.file = file;
         }
         @NonNull
         public final String text;
         @Nullable
-        public UriRealInfoHtml file;
+        public ShareInHtml file;
 
         @NonNull
         @Override

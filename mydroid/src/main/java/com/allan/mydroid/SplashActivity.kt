@@ -2,8 +2,8 @@ package com.allan.mydroid
 
 import android.content.Intent
 import androidx.core.os.bundleOf
-import com.allan.mydroid.globals.KEY_START_TYPE
 import com.allan.mydroid.views.MyDroidAllFragment
+import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
 import com.au.module_android.init.AbsSplashActivity
 import com.au.module_android.ui.FragmentShellActivity
 

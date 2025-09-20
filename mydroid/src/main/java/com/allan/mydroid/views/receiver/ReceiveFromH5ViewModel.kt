@@ -3,7 +3,7 @@ package com.allan.mydroid.views.receiver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.allan.mydroid.beansinner.MergedFileInfo
-import com.allan.mydroid.globals.MyDroidMess
+import com.allan.mydroid.globals.ShareInUrisObj
 import com.au.module_android.simpleflow.ActionDispatcherImpl
 import com.au.module_android.simpleflow.IActionDispatcher
 import com.au.module_android.simpleflow.IStateAction
@@ -35,14 +35,14 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
             }
             reduce(WriteHistoryAction::class.java) { action->
                 viewModelScope.launchOnThread {
-                    MyDroidMess().writeNewExportHistory(action.newHistoryItem)
+                    ShareInUrisObj.writeNewExportHistory(action.newHistoryItem)
                     delay(100)
                     loadHistory()
                 }
             }
             reduce(LoadFileListAction::class.java) { action ->
                 viewModelScope.launchOnThread {
-                    val fileList = MyDroidMess().loadFileList()
+                    val fileList = ShareInUrisObj.loadFileList()
                     logd { "load file list: $fileList" }
                     delay(100)
                     _fileListState.value = StatusState.Success(fileList)
@@ -52,7 +52,7 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
     }
 
     private suspend fun loadHistory() {
-        val history = MyDroidMess().loadExportHistory()
+        val history = ShareInUrisObj.loadExportHistory()
         _historyState.value = StatusState.Success(history)
     }
 

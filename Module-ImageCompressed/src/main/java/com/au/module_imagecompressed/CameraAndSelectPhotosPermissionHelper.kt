@@ -7,7 +7,7 @@ import androidx.fragment.app.Fragment
  * 都必须有回调，因此这里添加一个统一回调
  */
 class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
-                                            var pickerType : MultiPhotoPickerContractResult.PickerType = MultiPhotoPickerContractResult.PickerType.IMAGE,
+                                            var pickerType : PickerType = PickerType.IMAGE,
                                             supplier: CameraPermissionHelp.Supplier) {
 
     var takePhotoCallback: TakePhotoActionDialog.ITakePhotoActionDialogCallback? = null
@@ -21,7 +21,7 @@ class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
      * 调用本函数，将会触发弹出界面。然后Dialog的回调会触发Fragment的onClickTakePic/onClickSelectPhoto
      *
      */
-    fun showTakeActionDialog(maxNum:Int, pickerType: MultiPhotoPickerContractResult.PickerType) {
+    fun showTakeActionDialog(maxNum:Int, pickerType: PickerType) {
         this.pickerType = pickerType
         multiResult.setCurrentMaxItems(maxNum)
         TakePhotoActionDialog.pop(f, takePhotoCallback)

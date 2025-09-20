@@ -4,64 +4,38 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
-import androidx.core.os.bundleOf
 import androidx.lifecycle.lifecycleScope
-import com.allan.mydroid.beansinner.UriRealInfoEx
 import com.allan.mydroid.databinding.ActivityImportBinding
-import com.allan.mydroid.globals.CACHE_IMPORT_COPY_DIR
-import com.allan.mydroid.globals.KEY_AUTO_ENTER_SEND_VIEW
-import com.allan.mydroid.globals.KEY_START_TYPE
-import com.allan.mydroid.globals.MY_DROID_SHARE_IMPORT_URIS
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
+import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
+import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.MY_DROID_SHARE_IMPORT_URIS
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
-import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingActivity
 import com.au.module_android.utils.findCustomFragmentGetActivity
 import com.au.module_android.utils.findLaunchActivity
-import com.au.module_android.utils.launchOnIOThread
+import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logdNoFile
-import com.au.module_android.utils.logt
 import com.au.module_android.utils.parcelableArrayListExtraCompat
 import com.au.module_android.utils.parcelableExtraCompat
 import com.au.module_android.utils.startActivityFix
-import com.au.module_android.utils.visible
-import com.au.module_android.utilsmedia.copyToCacheConvert
-import com.au.module_android.utilsmedia.getRealInfo
 import com.au.module_android.utilsmedia.isFromMyApp
+import kotlinx.coroutines.launch
 
 class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
-    companion object {
-        fun parseImportList(uris: List<Uri>, newImportList:MutableList<UriRealInfoEx>) : Boolean{
-            val map = MyDroidConst.sendUriMap.realValue ?: hashMapOf()
-            val oldList = map.values.toList()
-
-            var hasNoPath = false
-            uris.forEach { uri->
-                if (oldList.find { it.uri == uri } == null) {
-                    val real = uri.getRealInfo(Globals.app)
-                    if (real.goodPath() == null) {
-                        hasNoPath = true
-                    }
-                    val bean = UriRealInfoEx.copyFrom(real)
-                    newImportList.add(bean)
-                }
-            }
-
-            return hasNoPath
-        }
-
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-
         MyDroidKeepLiveService.Companion.stopMyDroidAlive()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dealWithIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
         dealWithIntent(intent)
     }
 
@@ -81,13 +55,8 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
                 }
             }
         }
-        handleIncreaseUris(sharedImportUris)
         intent?.removeExtra(Intent.EXTRA_STREAM)
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        dealWithIntent(intent)
+        handleIncreaseUris(sharedImportUris)
     }
 
     private fun ifUrisFromMyApp(sharedImportUris: List<Uri>) : Boolean{
@@ -109,54 +78,26 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
             finish()
             return
         }
-        import(uris)
-    }
 
-    fun import(uris: List<Uri>) {
-        val newImportList = mutableListOf<UriRealInfoEx>()
-        val hasNoPath = parseImportList(uris, newImportList)
+        Globals.mainScope.launchOnThread {
+            ShareInUrisObj.addNewUris(uris)
 
-        if (!hasNoPath) { //不需要等待，直接信息转换，存入并结束本activity
-            importMapAndJumpFinish(newImportList)
-        } else { //需要转圈等待拷贝，转成本地cache，uri。再finish
-            binding.progressBar.visible()
-            lifecycleScope.launchOnIOThread {
-                val newImportCacheList = mutableListOf<UriRealInfoEx>()
-                for (bean in newImportList) {
-                    val copiedFileUri = bean.uri.copyToCacheConvert(contentResolver, null, CACHE_IMPORT_COPY_DIR)
-                    val info = copiedFileUri.getRealInfo(this@ShareImportActivity)
-                    newImportCacheList.add(UriRealInfoEx.copyFrom(info))
-                }
-                logt { "newImportCacheList $newImportCacheList" }
-                importMapAndJumpFinish(newImportCacheList)
+            lifecycleScope.launch {
+                jumpNext()
+                finish()
             }
         }
     }
 
-    private fun importMapAndJumpFinish(newImportList: MutableList<UriRealInfoEx>) {
-        val map = MyDroidConst.sendUriMap.realValue ?: hashMapOf()
-        map.putAll(newImportList.map { it.uriUuid to it })
-        MyDroidConst.updateSendUriMap(map)
-        jumpNext()
-        finish()
-    }
-
     private fun jumpNext() {
         val found = findCustomFragmentGetActivity(MyDroidAllFragment::class.java) != null
-        //清理掉自己
-        val foundShellActivity = findCustomFragmentGetActivity(SendListSelectorFragment::class.java)
-        foundShellActivity?.finish()
-
         if (!found) { //说明app没有启动过。需要先启动下首页，借过一下。
             val intent = findLaunchActivity(Globals.app).first
             intent.putExtra(KEY_START_TYPE, MY_DROID_SHARE_IMPORT_URIS)
             logdNoFile { "start entry activity " + intent.extras }
             startActivityFix(intent)
         } else { //app启动过了。有主界面，则直接跳入到ShareFragment
-            FragmentShellActivity.Companion.start(
-                this, SendListSelectorFragment::class.java,
-                bundleOf(KEY_AUTO_ENTER_SEND_VIEW to true)
-            )
+            SendListSelectorFragment.start(this, true)
         }
     }
 }

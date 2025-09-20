@@ -9,7 +9,6 @@
 
     window.READ_WEBSOCKET_IP_PORT = "/read-websocket-ip-port";
 
-    window.API_WS_SEND_FILE_LIST = "s_sendFileList";
     window.API_WS_LEFT_SPACE = "s_leftSpace";
     window.API_WS_CLIENT_INIT_CALLBACK = "s_clientInitBack";
 

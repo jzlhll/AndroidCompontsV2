@@ -6,7 +6,6 @@ import com.allan.mydroid.beansinner.WebSocketClientInfo
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.MyDroidConstServer
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
-import com.allan.mydroid.nanohttp.wsmsger.WebsocketSendModeMessenger
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
 import com.au.module_android.json.toJsonString
 import com.au.module_android.utils.isMainThread
@@ -85,7 +84,7 @@ class WebsocketServer(port:Int) : NanoWSD(port) {
         val parser = when (MyDroidConst.currentDroidMode) {
             MyDroidMode.Receiver -> WebsocketNoneModeMessenger(client) //接受文件，都走http而非ws。所以给空实现即可。
             MyDroidMode.TextChat -> WebsocketTextChatModeMessenger(client)
-            MyDroidMode.Send -> WebsocketSendModeMessenger(client)
+            MyDroidMode.Send,
             MyDroidMode.Middle,
             MyDroidMode.None,
             MyDroidMode.Image,

@@ -3,16 +3,11 @@ package com.au.module_android.utilsmedia
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
-import androidx.annotation.WorkerThread
 import androidx.core.net.toFile
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.logd
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 
 /**
  * @author allan
@@ -74,14 +69,18 @@ enum class ContentUriRealPathType {
    // OnlyName
 }
 
-open class UriRealInfo(val uri: Uri, val name:String? = null, val realPath:String? = null, val relativePath:String? = null) {
+open class UriRealInfo(val uri: Uri, val realPath:String? = null, val relativePath:String? = null) {
     fun goodName() : String? {
-        val n = realPath ?: (relativePath ?: name)
-        return n?.substring(n.lastIndexOf("/") + 1)
+        val n = relativePath ?: realPath
+        return n?.substring(n.lastIndexOf("/") + 1) ?: run {
+            val uriStr = uri.toString()
+            val last = uriStr.lastIndexOf("/")
+            uriStr.substring(last + 1)
+        }
     }
 
     fun goodPath() : String? {
-        return realPath ?: relativePath
+        return relativePath ?: realPath
     }
 }
 
@@ -93,13 +92,10 @@ fun Uri.getRealInfo(context: Context): UriRealInfo {
     if (pair == null) {
         return UriRealInfo(this, null, null)
     }
-    if (pair.second == ContentUriRealPathType.FullPath) {
-        return UriRealInfo(this, realPath = pair.first)
-    }
     if (pair.second == ContentUriRealPathType.RelativePath) {
         return UriRealInfo(this, relativePath = pair.first)
     }
-    return UriRealInfo(this, name = pair.first)
+    return UriRealInfo(this, realPath = pair.first)
 }
 
 /**

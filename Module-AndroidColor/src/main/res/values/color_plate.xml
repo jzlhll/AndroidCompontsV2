@@ -19,6 +19,7 @@
     <color name="color_text_normal_press">#dd222222</color>
     <string name="color_text_normal_str" translatable="false">"#111111"</string>
     <color name="color_text_desc">#888888</color>
+    <string name="color_text_desc_str" translatable="false">"#888888"</string>
 
     <color name="color_text_reverse">#ffffff</color>
     <color name="color_text_reverse_press">#ccffffff</color>

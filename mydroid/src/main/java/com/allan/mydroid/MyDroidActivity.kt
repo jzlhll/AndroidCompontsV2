@@ -8,9 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.os.bundleOf
-import com.allan.mydroid.globals.KEY_START_TYPE
 import com.allan.mydroid.ui.theme.AndroidCompontsTheme
 import com.allan.mydroid.views.MyDroidAllFragment
+import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
 import com.au.module_android.ui.FragmentShellActivity
 
 class MyDroidActivity : ComponentActivity() {

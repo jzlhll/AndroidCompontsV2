@@ -10,7 +10,9 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import com.au.module_android.simplelivedata.NoStickLiveData
+import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.utils.loge
 import com.au.module_android.utils.unsafeLazy
 //import com.github.gzuliyujiang.oaid.DeviceIdentifier
@@ -78,6 +80,28 @@ object Globals {
     //内部参数
     lateinit var internalApp: Application
     private val internalActivityList = ArrayList<Activity>(8)
+
+    /**
+     * 退出某个activity
+     */
+    fun finishActivity(clz:Class<out Activity>) {
+        activityList.forEach {
+            if (it.javaClass == clz) {
+                it.finish()
+            }
+        }
+    }
+
+    /**
+     * 退出某个fragment承载的activity
+     */
+    fun finishFragment(clz: Class<out Fragment>) {
+        activityList.forEach {
+            if (it is FragmentShellActivity && it.fragmentClass == clz) {
+                it.finish()
+            }
+        }
+    }
 
     private fun createBackgroundHandler() : Handler {
         val handlerThread = HandlerThread("app-major-bg-thread")

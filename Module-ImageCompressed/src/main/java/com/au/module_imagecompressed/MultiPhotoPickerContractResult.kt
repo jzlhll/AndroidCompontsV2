@@ -36,11 +36,6 @@ class MultiPhotoPickerContractResult(
     var max:Int,
     resultContract: ActivityResultContract<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>)
     : IContractResult<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>(fragment, resultContract) {
-    enum class PickerType {
-        IMAGE,
-        VIDEO,
-        IMAGE_AND_VIDEO,
-    }
 
     private var mCopyMode: CopyMode = CopyMode.COPY_CVT_IMAGE_TO_JPG
 

@@ -3,17 +3,20 @@ package com.allan.mydroid.views.send
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
+import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.api.MyDroidMode
-import com.allan.mydroid.beansinner.UriRealInfoEx
+import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentMyDroidSendBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
+import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.visible
@@ -22,7 +25,7 @@ import com.au.module_androidcolor.R
 class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
     override fun isPaddingStatusBar() = false
 
-    private lateinit var entryFileList: List<UriRealInfoEx>
+    private lateinit var entryFileList: List<ShareInBean>
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
@@ -59,7 +62,6 @@ class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
                 }
             }
         }
-
     }
 
     private fun clientLiveDataInit() {
@@ -87,8 +89,8 @@ class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
 //            }
         }
 
-        MyDroidConst.sendUriMap.observe(this) { //监听没问题
-            parseEntryFileList()
+        lifecycleScope.launchOnThread {
+            parseEntryFileList(ShareInUrisObj.loadShareInAndReceiveBeans())
         }
     }
 
@@ -97,15 +99,11 @@ class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
         super.onStart()
     }
 
-    fun parseEntryFileList() {
-        val entryList = MyDroidConst.sendUriMap.realValue?.values?.filter { it.isChecked }
-        entryFileList = entryList?.map {
-            UriRealInfoEx.Companion.copyFrom(it)
-        } ?: listOf()
-
+    fun parseEntryFileList(entryList: List<ShareInBean>) {
+        entryFileList = entryList
         val sb = StringBuilder()
         entryFileList.forEach {
-            sb.append(it.goodName()).append("(").append(it.fileSizeStr).append(")").append("\n")
+            sb.append(it.name).append("(").append(it.fileSizeStr).append(")").append("\n")
         }
         binding.transferInfo.text = sb
     }

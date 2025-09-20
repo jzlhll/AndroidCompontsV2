@@ -23,6 +23,7 @@ import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
 import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
 import com.au.module_imagecompressed.UriWrap
 import kotlinx.coroutines.launch
@@ -53,7 +54,7 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
         //todo file
     }
 
-    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, MultiPhotoPickerContractResult.PickerType.IMAGE,
+    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, PickerType.IMAGE,
         object : CameraPermissionHelp.Supplier {
             override fun createFileProvider(): Pair<File, Uri> {
                 return createFileProviderMine()
@@ -100,7 +101,7 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
         initRcv()
 
         binding.selectImagesBtn.onClick {
-            cameraAndSelectHelper.showTakeActionDialog(1, MultiPhotoPickerContractResult.PickerType.IMAGE)
+            cameraAndSelectHelper.showTakeActionDialog(1, PickerType.IMAGE)
         }
 
         binding.sendListBtn.onClick {
