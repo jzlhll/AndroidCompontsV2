@@ -87,7 +87,7 @@ object OkhttpGlobal {
     /**
      * 添加证书相关设置
      */
-    internal fun createCertOkHttpBuilder(params: OkhttpInitParams? = null) : OkHttpClient.Builder {
+    fun createCertOkHttpBuilder(params: OkhttpInitParams? = null) : OkHttpClient.Builder {
         val builder: OkHttpClient.Builder = OkHttpClient.Builder()
         val okHttpEnableTrustAllCertificates = params?.okHttpEnableTrustAllCertificates ?: mParams.okHttpEnableTrustAllCertificates
         val okHttpCacheSize = params?.okHttpCacheSize ?: mParams.okHttpCacheSize

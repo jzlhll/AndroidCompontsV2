@@ -2,14 +2,12 @@ package com.allan.mydroid.views.receiver
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.allan.mydroid.beansinner.MergedFileInfo
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.au.module_android.simpleflow.ActionDispatcherImpl
 import com.au.module_android.simpleflow.IActionDispatcher
 import com.au.module_android.simpleflow.IStateAction
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logd
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,9 +20,6 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
 
     private val _historyState = MutableStateFlow<StatusState<String>>(StatusState.Loading)
     val historyState: StateFlow<StatusState<String>> = _historyState.asStateFlow()
-
-    private val _fileListState = MutableStateFlow<StatusState<List<MergedFileInfo>>>(StatusState.Loading)
-    val fileListState: StateFlow<StatusState<List<MergedFileInfo>>> = _fileListState.asStateFlow()
 
     init {
         getActionStore().apply {
@@ -42,10 +37,7 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
             }
             reduce(LoadFileListAction::class.java) { action ->
                 viewModelScope.launchOnThread {
-                    val fileList = ShareInUrisObj.loadFileList()
-                    logd { "load file list: $fileList" }
-                    delay(100)
-                    _fileListState.value = StatusState.Success(fileList)
+                    ShareInUrisObj.loadFileList()
                 }
             }
         }

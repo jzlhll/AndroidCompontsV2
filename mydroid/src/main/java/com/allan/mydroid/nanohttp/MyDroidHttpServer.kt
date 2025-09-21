@@ -125,22 +125,29 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
         return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, error)
     }
 
+
     fun fileDownload(uriUuid:String) : NanoHTTPD.Response {
         try {
-            val info = ShareInUrisObj.sendUriMap.get(uriUuid)
-            val uri = info?.uri ?: return fileNotFoundResponse()
+            val info = ShareInUrisObj.shareInAndReceiveBeans?.find { it.uriUuid == uriUuid }  ?: return fileNotFoundResponse()
             val fileSize = info.fileSize ?: 0
             if (fileSize <= 0) {
                 return fileSizeIs0Response()
             }
-
-            logdNoFile { "handle Get Request fileDownload:$uri size:$fileSize" }
+            val uri = info.uri
             val filename = info.name ?: "file"
+            logdNoFile { "file Download1 $uri size:$fileSize" }
+
+            if (!ShareInUrisObj.isHostThisUri(uri)) {
+                logdNoFile { "file Download this uri is donot has permission." }
+                return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "No permission yet todo translate.")
+            }
+            //Globals.app.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
             val inputStream = Globals.app.contentResolver.openInputStream(uri)
+            logdNoFile { "file Download2 $uri ${inputStream?.available()}" }
             // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
             val response = newFixedLengthResponse(Status.OK,
                 "application/octet-stream", inputStream, fileSize)
-
+            logdNoFile { "file response1111" }
             // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
             // 使用 "attachment" 表示希望浏览器将响应体保存为文件
             // filename 指定建议的文件名，浏览器可能会使用它作为默认保存名
@@ -162,10 +169,16 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             return response
         } catch (e: FileNotFoundException) {
             e.printStackTrace()
+            logdNoFile { "file Download error1" }
             return fileNotFoundResponse()
         } catch (e: IOException) {
             e.printStackTrace()
+            logdNoFile { "file Download error2" }
             return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file.")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            logdNoFile { "file Download error3" }
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 2.")
         }
     }
 

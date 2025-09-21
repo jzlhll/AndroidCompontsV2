@@ -158,6 +158,14 @@ class MediaHelper {
         return duration
     }
 
+    fun getDurationNormally(path: String?, mimeType: String) : Long {
+        return if (MimeUtil(mimeType).isUriVideo()) {
+            MediaHelper().getDurationNormally(path)
+        } else {
+            0
+        }
+    }
+
     /**
      * 使用mediaPlayer准备的方式，来获取时长，据说更加精准。
      * @return 时长，毫秒

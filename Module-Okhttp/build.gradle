@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -36,6 +37,6 @@ dependencies {
     implementation libs.androidx.core.ktx
     implementation libs.androidx.lifecycle.viewmodel.ktx
     implementation libs.androidx.appcompat
-
+    ksp libs.glideKsp
     implementation project(":Module-Android")
 }

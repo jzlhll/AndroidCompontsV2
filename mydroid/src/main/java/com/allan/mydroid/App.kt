@@ -3,6 +3,7 @@ package com.allan.mydroid
 import com.allan.mydroid.api.Api
 import com.allan.mydroid.globals.MyDroidConstServer
 import com.allan.mydroid.globals.MyDroidNetworkObserver
+import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.globals.cacheImportCopyDir
 import com.au.logsystem.DefaultActivitiesFollowCallback
 import com.au.module_android.Globals
@@ -78,6 +79,8 @@ class App : InitApplication() {
         Globals.mainScope.launchOnIOThread {
             AppNative.strEk(this@App)
             clearDirOldFiles(cacheImportCopyDir(), 0)
+
+            ShareInUrisObj.loadFileList()
             //AppNative.astf(this@App, "device_test.zip", Globals.goodCacheDir.absolutePath + "/cached.zip")
         }
     }

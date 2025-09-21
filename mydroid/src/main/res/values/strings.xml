@@ -59,7 +59,7 @@
     <string name="global_permission_prompt">This feature requires system settings permission. Redirecting to enable it.</string>
     <string name="disclaimer_title">Disclaimer</string>
     <string name="how_to_select_files">How to select files</string>
-    <string name="disclaimer_content">Files from system gallery/file manager are only parsed for name/size without copying. Files from other apps are temporarily cached and deleted after use.\nYou need to re-share imports when app restarts.</string>
+    <string name="disclaimer_content">Files from system gallery/file manager are only parsed for name/size without copying.</string>
     <string name="action_confirm">Got it</string>
     <string name="action_auto_next">Auto Next</string>
     <string name="exit_with_wifi_reminder">Click to exit. Please connect to WI-FI or enable hotspot, then enter again.</string>

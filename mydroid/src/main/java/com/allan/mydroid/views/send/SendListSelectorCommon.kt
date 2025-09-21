@@ -15,15 +15,15 @@ import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.globals.ShareInUrisObj
 
-abstract class SendListSelectorCommon(val f : Fragment, hasDeleteBtn: Boolean) {
-    private val mAdapter = SendListAdapter(hasDeleteBtn) {it, mode->
-        onHolderClick(it, mode)
+abstract class SendListSelectorCommon(val f : Fragment, val isNoDeleteBtn: Boolean) {
+    private val mAdapter = SendListAdapter {it, mode->
+        onItemClick(it, mode)
     }
 
     abstract fun rcv(): RecyclerView
     abstract fun empty(): TextView
 
-    abstract fun onHolderClick(bean: ShareInBean?, mode:String)
+    abstract fun onItemClick(bean: ShareInBean?, mode:String)
 
     fun onCreated() {
         val rcv = rcv()
@@ -46,12 +46,18 @@ abstract class SendListSelectorCommon(val f : Fragment, hasDeleteBtn: Boolean) {
         val shareInList = sendUriList.filter { !it.isLocalReceiver }
         if (shareInList.isNotEmpty()) {
             newList.add(IconTitle(R.drawable.ic_share, Globals.getString(R.string.share_in)))
+            for (bean in shareInList) {
+                bean.isNoDeleteBtn = isNoDeleteBtn
+            }
             newList.addAll(shareInList)
         }
 
         val receiverList = sendUriList.filter { it.isLocalReceiver }
         if (receiverList.isNotEmpty()) {
             newList.add(IconTitle(R.drawable.ic_receivered, Globals.getString(R.string.transfer_list).trim()))
+            for (bean in receiverList) {
+                bean.isNoDeleteBtn = isNoDeleteBtn
+            }
             newList.addAll(receiverList)
         }
 

@@ -12,7 +12,6 @@ import java.io.File
 
 class UriParserUtil(private val uri: Uri) {
     lateinit var parsedInfo : UriParsedInfo
-    private lateinit var mimeUtil : MimeUtil
 
     fun isFullPath() : Boolean = parsedInfo.fullPath != null
 
@@ -41,7 +40,6 @@ class UriParserUtil(private val uri: Uri) {
         } else {
             parseAsContent(cr)
         }
-        mimeUtil = MimeUtil(parsedInfo.mimeType, parsedInfo.name)
         return parsedInfo
     }
 
@@ -49,6 +47,7 @@ class UriParserUtil(private val uri: Uri) {
         val extension = file.extension.lowercase()
         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
         val fileLength = file.length()
+        val videoDuration = MediaHelper().getDurationNormally(file.absolutePath, mimeType)
 
         parsedInfo = UriParsedInfo(uri,
             file.name,
@@ -56,7 +55,8 @@ class UriParserUtil(private val uri: Uri) {
             extension,
             mimeType,
             file.absolutePath,
-            null)
+            null,
+            videoDuration)
         logdNoFile { "parseAsFile parsed Info: $parsedInfo" } //todo 是否考虑fileDescriptor
         return parsedInfo.fileLength > 0
     }
@@ -67,6 +67,7 @@ class UriParserUtil(private val uri: Uri) {
         var fullPath:String? = null
         var fileLength = 0L
         var name = ""
+        var videoDuration:Long? = null
         ignoreError {
             cr.query(uri, null, null, null, null)?.use { cursor->
                 if (cursor.moveToFirst()) {
@@ -91,6 +92,10 @@ class UriParserUtil(private val uri: Uri) {
                     //解析name
                     val displayNameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
                     name = if (displayNameIndex == -1) "" else cursor.getString(displayNameIndex)
+
+                    //解析video duration
+                    val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                    videoDuration = if (durationIndex == -1) 0L else cursor.getLong(durationIndex)
                 }
             }
         }
@@ -118,7 +123,8 @@ class UriParserUtil(private val uri: Uri) {
             extension,
             mimeType,
             fullPath,
-            relativePath)
+            relativePath,
+            videoDuration)
 
         logdNoFile { "parseAsContent parsed Info: $parsedInfo" }
     }

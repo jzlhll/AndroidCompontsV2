@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidReceiveListBinding
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
@@ -106,7 +107,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                 .setMessage(String.format(strFmt, file.name))
                 .setIcon("success").toast()
 
-            mViewModel.dispatch(ReceiveFromH5ViewModel.LoadFileListAction())
+            refreshFileListCallback()
         }
 
         initTabs()
@@ -132,7 +133,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mViewModel.fileListState.collectStatusState(
+                ShareInUrisObj.fileListState.collectStatusState(
                     success = { fileList->
                         mAdapter.submitList(fileList, false)
                         updateTabsTitle(true)
@@ -144,7 +145,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
             }
         }
 
-        mViewModel.dispatch(ReceiveFromH5ViewModel.LoadFileListAction())
+        refreshFileListCallback()
         mViewModel.dispatch(ReceiveFromH5ViewModel.LoadHistoryAction())
     }
 

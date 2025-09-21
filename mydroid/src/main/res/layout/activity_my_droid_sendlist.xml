@@ -103,7 +103,7 @@
         android:id="@+id/adHost"
         android:layout_marginVertical="4dp"
         app:layout_constraintTop_toBottomOf="@id/rcvGuideLine"
-        app:layout_constraintBottom_toTopOf="@id/helpText"
+        app:layout_constraintBottom_toTopOf="@id/infoText"
         android:layout_width="match_parent"
         android:layout_height="0dp" />
 
@@ -131,26 +131,49 @@
             android:layout_height="wrap_content"/>
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/helpText"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/infoText"
-        android:layout_marginBottom="6dp"
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/leftGuideLine"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/rightGuideLine"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <eightbitlab.com.blurview.BlurView
+        android:id="@+id/blurView"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/actionListHost"
+        app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="match_parent"
-        android:gravity="center_horizontal"
-        android:layout_height="wrap_content">
-        <androidx.appcompat.widget.AppCompatImageView
-            android:src="@drawable/ic_small_quest"
-            android:tint="@color/color_text_desc"
-            android:layout_gravity="center_vertical"
-            android:layout_width="16dp"
-            android:layout_height="16dp"/>
-        <com.au.module_android.widget.CustomFontTextlink
-            style="@style/StyleAuTextSmallDesc"
-            android:layout_marginStart="6dp"
-            android:text="@string/how_to_select_files"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-    </LinearLayout>
+        android:layout_height="0dp">
+    </eightbitlab.com.blurview.BlurView>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bigImage"
+        app:layout_constraintStart_toStartOf="@id/leftGuideLine"
+        app:layout_constraintEnd_toEndOf="@id/rightGuideLine"
+        app:layout_constraintTop_toBottomOf="@id/actionListHost"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="48dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iconPlay"
+        android:visibility="gone"
+        android:src="@drawable/ic_play_in_big"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:tint="@color/white"
+        android:layout_width="40dp"
+        android:layout_height="40dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

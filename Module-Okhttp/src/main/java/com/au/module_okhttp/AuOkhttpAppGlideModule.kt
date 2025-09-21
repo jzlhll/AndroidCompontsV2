@@ -21,8 +21,8 @@ import java.io.InputStream
 
 @GlideModule
 @Excludes(OkHttpLibraryGlideModule::class)
-class OkHttpGlideModule : AppGlideModule() {
-    companion object {
+class AuOkhttpAppGlideModule : AppGlideModule() {
+    companion object Companion {
         private const val NO_SSL_CHECK = true
         private var _okhttpClient : OkHttpClient? = null
         private fun okHttpClient() : OkHttpClient {

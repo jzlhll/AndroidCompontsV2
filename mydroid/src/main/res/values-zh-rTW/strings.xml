@@ -59,7 +59,7 @@
     <string name="global_permission_prompt">此功能需要全域設定權限，即將跳轉開啟該功能。</string>
     <string name="disclaimer_title">免責聲明</string>
     <string name="how_to_select_files">如何選擇檔案</string>
-    <string name="disclaimer_content">從系統相簿、檔案管理員匯入的檔案，僅解析檔名和大小，不會複製。從其他應用匯入的會暫存於快取，使用後自動刪除。\n下次啟動應用時需重新分享匯入。</string>
+    <string name="disclaimer_content">從系統相簿、檔案管理員匯入的檔案，僅解析檔名和大小，不會複製。</string>
     <string name="action_confirm">知道了</string>
     <string name="action_auto_next">自動下一步</string>
     <string name="exit_with_wifi_reminder">點擊退出，請連接WI-FI或開啟熱點，然後重新進入。</string>

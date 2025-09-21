@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import com.allan.mydroid.R
 import com.allan.mydroid.utils.JsonUriAdapter
 import com.au.module_android.Globals
+import com.au.module_android.utilsmedia.MediaHelper
 import com.au.module_android.utilsmedia.UriParsedInfo
 import com.au.module_android.utilsmedia.UriParserUtil
 import com.au.module_android.utilsmedia.formatBytes
@@ -17,21 +18,28 @@ import java.util.UUID
 data class ShareInBean(val uriUuid:String,
                          @JsonAdapter(JsonUriAdapter::class)
                          val uri: Uri,
+                         val mimeType:String,
                          val name:String? = null,
                          val fileSize:Long?,
-                         val fileSizeStr:String) {
+                         val fileSizeStr:String,
+                         val videoDuration:Long?) {
 
     /**
      * 是不是本地接收的文件
      */
     @Transient var isLocalReceiver = false
+    @Transient var isNoDeleteBtn = false
 
     companion object {
-        fun to(info: MergedFileInfo) : ShareInBean {
+        suspend fun to(info: MergedFileInfo) : ShareInBean {
+            delay(0)
             val fileSize = info.file.length()
             val fileLen = formatBytes(fileSize)
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
-            return ShareInBean(uriUuid, info.file.toUri(), info.file.name, fileSize, fileLen)
+            val mimeType = MediaHelper.getMimeTypePath(info.file.absolutePath)
+            val videoDuration = MediaHelper().getDurationNormally(info.file.absolutePath, mimeType)
+            return ShareInBean(uriUuid, info.file.toUri(), mimeType, info.file.name,
+                fileSize, fileLen, videoDuration)
         }
 
         suspend fun to(uri: Uri) : ShareInBean {
@@ -47,14 +55,19 @@ data class ShareInBean(val uriUuid:String,
             val fileSizeStr = if(fileSize > 0) formatBytes(fileSize) else Globals.getString(R.string.unknown_size)
             return ShareInBean(uriUuid,
                 info.uri,
+                info.mimeType,
                 info.name,
                 fileSize,
-                fileSizeStr)
+                fileSizeStr,
+                info.videoDuration)
         }
 
         fun copyFrom(info: ShareInBean) : ShareInBean {
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
-            return ShareInBean(uriUuid, info.uri, info.name, info.fileSize, info.fileSizeStr)
+            return ShareInBean(uriUuid, info.uri,
+                info.mimeType, info.name,
+                info.fileSize, info.fileSizeStr,
+                info.videoDuration)
         }
     }
 

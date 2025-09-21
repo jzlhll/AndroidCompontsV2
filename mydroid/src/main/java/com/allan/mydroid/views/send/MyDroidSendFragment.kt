@@ -21,6 +21,8 @@ import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.visible
 import com.au.module_androidcolor.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
     override fun isPaddingStatusBar() = false
@@ -29,6 +31,7 @@ class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
+
         binding.adHost.setColor(Globals.getColor(R.color.color_normal_block0))
         binding.adHost.startAnimation()
 
@@ -90,7 +93,10 @@ class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
         }
 
         lifecycleScope.launchOnThread {
-            parseEntryFileList(ShareInUrisObj.loadShareInAndReceiveBeans())
+            val list = ShareInUrisObj.loadShareInAndReceiveBeans()
+            withContext(Dispatchers.Main) {
+                parseEntryFileList(list)
+            }
         }
     }
 

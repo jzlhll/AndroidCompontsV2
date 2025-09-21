@@ -11,12 +11,13 @@ class SendListSelectorDialog : BindingFragment<DialogMyDroidSendlistBinding>() {
         fun onItemClick(bean: ShareInBean)
     }
 
-    private val common = object : SendListSelectorCommon(this, false) {
+    private val common = object : SendListSelectorCommon(this, true) {
         override fun rcv() = binding.rcv
         override fun empty() = binding.empty
 
-        override fun onHolderClick(bean: ShareInBean?, mode:String) {
+        override fun onItemClick(bean: ShareInBean?, mode:String) {
             bean ?: return
+            if (mode != CLICK_MODE_ROOT) return
             var parent = parentFragment as? ISelectItemClick
             if (parent == null) {
                 parent = parentFragment?.parentFragment as? ISelectItemClick

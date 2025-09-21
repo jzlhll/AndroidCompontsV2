@@ -8,4 +8,5 @@ data class UriParsedInfo(val uri: Uri,
                          val extension:String,
                          val mimeType:String = "",
                          val fullPath:String? = null,
-                         val relativePath:String? = null,)
+                         val relativePath:String? = null,
+                         val videoDuration:Long? = null)

@@ -1,5 +1,8 @@
 package com.au.jobstudy.utils
 
+import java.util.Locale
+import kotlin.math.min
+
 /**
  * 秒数int值，转成00:00:00格式
  */
@@ -23,3 +26,4 @@ fun secondToTimeMS(second: Int): String {
         "00:00"
     }
 }
+

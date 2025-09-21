@@ -18,6 +18,7 @@ import com.bumptech.glide.load.resource.bitmap.VideoDecoder
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import androidx.core.graphics.drawable.toDrawable
 
 /**
  * 清除或者取消加载
@@ -75,7 +76,7 @@ fun ImageView.glideSetAny(
     optionsTransform: ((RequestOptions)-> RequestOptions)? = null
 ) {
     load ?: return
-    if (load is String && load.toString().isEmpty()) return
+    if (load is String && load.isEmpty()) return
     //对于String的形式，会定制cache key。
     val convertLoad = if (load is String) LimitTimeGlideUrl(load) else load
     val manager = Glide.with(this)
@@ -89,7 +90,7 @@ fun ImageView.glideSetAnyWithDefault(
     @ColorInt colorGray:Int? = null
 ) {
     val c = colorGray ?: Globals.getColor(com.au.module_androidcolor.R.color.color_glide_gray_default)
-    val resInt = ColorDrawable(c)
+    val resInt = c.toDrawable()
     if (load == null) {
         setImageDrawable(resInt)
         return

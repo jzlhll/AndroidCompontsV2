@@ -1,16 +1,21 @@
 package com.allan.mydroid.globals
 
+import android.content.Intent
 import android.net.Uri
 import com.allan.mydroid.beansinner.MergedFileInfo
 import com.allan.mydroid.beansinner.ShareInBean
 import com.au.module_android.Globals
 import com.au.module_android.json.fromJson
 import com.au.module_android.json.toJsonString
+import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.getFileMD5
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logdNoFile
 import com.au.module_cached.AppDataStore
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -19,11 +24,30 @@ import kotlin.collections.forEach
 
 object ShareInUrisObj {
     /**
+     * 已经loaded beans。用于透传给后续显示
+     */
+    var shareInAndReceiveBeans : List<ShareInBean>? = null
+
+    /**
      * 这个就全局存活。不重启app不做处理。
      * 从shareReceiver activity处接收数据
      * key是uriUuid
      */
-    var sendUriMap: HashMap<String, ShareInBean> = loadCacheSendUriMap()
+    private var mSendUriMap: HashMap<String, ShareInBean>?= null
+    private val sendUriMap : HashMap<String, ShareInBean>
+        get() {
+            val m = mSendUriMap
+            if (m == null) {
+                val map = loadCacheSendUriMap()
+                mSendUriMap = map
+                return map
+            } else {
+                return m
+            }
+        }
+
+    private val _fileListState = MutableStateFlow<StatusState<List<MergedFileInfo>>>(StatusState.Loading)
+    val fileListState: StateFlow<StatusState<List<MergedFileInfo>>> = _fileListState.asStateFlow()
 
     private fun loadCacheSendUriMap() : HashMap<String, ShareInBean> {
         var time = System.currentTimeMillis()
@@ -44,7 +68,7 @@ object ShareInUrisObj {
 
     private fun updateSendUriMap(map: HashMap<String, ShareInBean>?) {
         val fixMap = map ?: hashMapOf()
-        sendUriMap = fixMap
+        mSendUriMap = fixMap
         Globals.mainScope.launchOnThread {
             AppDataStore.save("mydroid_sendUriMap", fixMap.toJsonString())
         }
@@ -54,18 +78,22 @@ object ShareInUrisObj {
      * 点击移除
      */
     fun deleteUris(uuids : List<String>) {
+        val sendMap = sendUriMap
         uuids.forEach {
-            sendUriMap.remove(it)
+            sendMap.remove(it)
         }
-        updateSendUriMap(sendUriMap)
+        updateSendUriMap(sendMap)
     }
 
     /**
      * 当接收列表，添加新的uri
      */
-    suspend fun addNewUris(uris:List<Uri>) {
+    suspend fun addShareInUris(uris:List<Uri>) {
+        uris.forEach {
+            Globals.app.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        
         val newUris = mutableListOf<ShareInBean>()
-
         val oldUris = sendUriMap.values
         oldUris.forEach {
             newUris.add(it)
@@ -98,7 +126,8 @@ object ShareInUrisObj {
             bean.isLocalReceiver = true
             bean
         }
-        return receivedShareInBeans.plus(shareInBeans)
+        shareInAndReceiveBeans = receivedShareInBeans.plus(shareInBeans)
+        return shareInAndReceiveBeans!!
     }
 
     private const val KEY_EXPORT_HISTORY = "my_droid_export_history_list"
@@ -151,6 +180,25 @@ object ShareInUrisObj {
             }
         }
         fileList.sortByDescending { it.file.lastModified() }
+        delay(100)
+        _fileListState.value = StatusState.Success(fileList)
         return fileList
+    }
+
+    /**
+     * 是不是有这个的权限呢
+     */
+    fun isHostThisUri(uri: Uri) : Boolean {
+        if (true) {
+            return true
+        }
+
+        val list = Globals.app.contentResolver.persistedUriPermissions
+        for (item in list) {
+            if (item.uri == uri) {
+                return true
+            }
+        }
+        return false
     }
 }

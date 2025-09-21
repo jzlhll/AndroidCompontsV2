@@ -59,7 +59,7 @@
     <string name="global_permission_prompt">该功能需要全局设置权限，即将跳转，打开该功能。</string>
     <string name="disclaimer_title">免责申明</string>
     <string name="how_to_select_files">如何选择文件</string>
-    <string name="disclaimer_content">从系统相册，文件管理器导入的文件，仅仅做文件名和大小解析，不会复制。从其他应用导入的会临时保存在缓存中，用完也会删除。</string>
+    <string name="disclaimer_content">从系统相册，文件管理器分享过来的文件，仅仅做文件名和大小解析，不会复制。</string>
     <string name="action_confirm">知道了</string>
     <string name="action_auto_next">自动下一步</string>
     <string name="exit_with_wifi_reminder">点击退出，请连接WI-FI或者开启热点，然后重新进入。</string>

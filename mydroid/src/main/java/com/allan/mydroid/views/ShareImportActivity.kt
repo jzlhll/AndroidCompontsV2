@@ -80,7 +80,7 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
         }
 
         Globals.mainScope.launchOnThread {
-            ShareInUrisObj.addNewUris(uris)
+            ShareInUrisObj.addShareInUris(uris)
 
             lifecycleScope.launch {
                 jumpNext()

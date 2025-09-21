@@ -13,9 +13,11 @@ import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.ActivityMyDroidSendlistBinding
 import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
+import com.au.module_android.glide.glideSetAny
 import com.au.module_android.permissions.PermissionStorageHelper
 import com.au.module_android.permissions.getContentForResult
 import com.au.module_android.ui.FragmentShellActivity
@@ -30,11 +32,14 @@ import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_android.utils.visible
+import com.au.module_android.utilsmedia.MimeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.compatMultiUriPickerForResult
+import com.bumptech.glide.request.target.Target
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -68,14 +73,22 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
 
     override fun isPaddingStatusBar() = false
 
-    private val common = object : SendListSelectorCommon(this, true) {
+    private val common = object : SendListSelectorCommon(this, false) {
         override fun rcv() = binding.rcv
 
         override fun empty() = binding.empty
 
-        override fun onHolderClick(bean: ShareInBean?, mode:String) {
-            if (mode == "delete" && bean != null) {
+        override fun onItemClick(bean: ShareInBean?, mode:String) {
+            if (mode == CLICK_MODE_DELETE && bean != null) {
                 deleteBean(bean)
+            } else if (mode == CLICK_MODE_ICON && bean != null) {
+                logd { "click on icon $bean" }
+                val mimeUtil = MimeUtil(bean.mimeType)
+                val isImg = mimeUtil.isUriImage()
+                val isVideo = mimeUtil.isUriVideo()
+                if (isImg || isVideo) {
+                    showBigIcon(bean, isVideo)
+                }
             }
         }
     }
@@ -83,6 +96,33 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
     private fun deleteBean(bean: ShareInBean) {
         ShareInUrisObj.deleteUris(listOf(bean.uriUuid))
         common.reload()
+    }
+
+    private var hasSetBigImageClick = false
+
+    private fun showBigIcon(bean: ShareInBean, isVideo: Boolean) {
+        if (!hasSetBigImageClick) {
+            hasSetBigImageClick = true
+            binding.blurView.onClick {
+                binding.blurView.gone()
+                binding.bigImage.gone()
+                binding.iconPlay.gone()
+            }
+            binding.bigImage.setImageDrawable(null)
+            BlurViewEx(binding.blurView, 0).setBlur(binding.root, 96f)
+        }
+
+        binding.blurView.visible()
+        binding.bigImage.visible()
+        if (isVideo) {
+            binding.iconPlay.visible()
+        } else {
+            binding.iconPlay.gone()
+        }
+
+        binding.bigImage.glideSetAny(bean.uri) {
+            it.override(Target.SIZE_ORIGINAL)
+        }
     }
 
     private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
@@ -93,13 +133,6 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
     private var mAutoNextJob: Job? = null
     private var mDelayCancelDialog: ConfirmBottomSingleDialog? = null
     private var mDelayTime = 3
-
-    //todo 有manageAll，则无需本地
-//    private val permissionResult = createStoragePermissionForResult(
-//            arrayOf(PermissionStorageHelper.MediaType.AUDIO,
-//                PermissionStorageHelper.MediaType.IMAGE,
-//                PermissionStorageHelper.MediaType.VIDEO,)
-//        )
 
     private fun dialogContent() : String{
         val fmt = getString(R.string.auto_proceed_fmt)
@@ -115,10 +148,9 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
             when (menuItem.itemId) {
                 R.id.next -> {
                     when (common.isEmpty()) {
-                        true -> {
+                        false -> {
                             jumpIntoMyDroidSend()
                         }
-
                         else -> {
                             ToastBuilder().setOnActivity(requireActivity()).setMessage(
                                 getString(R.string.empty_file_prompt)).setIcon("info").toast()
@@ -147,12 +179,6 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
                     }
                 }) {
                 FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
-
-//            permissionResult.safeRun({
-//                FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
-//            }, notGivePermissionBlock = {
-//                ToastBuilder().setMessage("请授权媒体权限，否则，无法访问文件。").setIcon("warn").setOnTop().toast()
-//            })
             }
         }
     }
@@ -197,7 +223,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
 
     private fun onUrisBack(uris: List<Uri>) {
         lifecycleScope.launchOnThread {
-            ShareInUrisObj.addNewUris(uris)
+            ShareInUrisObj.addShareInUris(uris)
             common.reload()
         }
     }

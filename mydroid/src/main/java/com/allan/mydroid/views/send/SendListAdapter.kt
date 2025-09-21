@@ -10,10 +10,12 @@ class IconTitle(@DrawableRes val icon:Int, val title:String)
 
 private const val VIEW_TYPE_ICON_TEXT = 1
 private const val VIEW_TYPE_URI_INFO = 2
-private const val VIEW_TYPE_URI_INFO_NO_BTN = 3
 
-class SendListAdapter(val hasDeleteBtn: Boolean,
-                      val click: (ShareInBean?, mode:String) -> Unit)
+const val CLICK_MODE_ICON = "icon"
+const val CLICK_MODE_DELETE = "delete"
+const val CLICK_MODE_ROOT = "root"
+
+class SendListAdapter(val click: (ShareInBean?, mode:String) -> Unit)
         : BindRcvAdapter<Any, BindViewHolder<Any, *>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindViewHolder<Any, *> {
@@ -23,11 +25,13 @@ class SendListAdapter(val hasDeleteBtn: Boolean,
             }
 
             VIEW_TYPE_URI_INFO -> {
-                SendHolder(create(parent), click)
-            }
-
-            VIEW_TYPE_URI_INFO_NO_BTN -> {
-                SendNoBtnHolder(create(parent), click)
+                SendHolder(create(parent), rootClick = {
+                    click(it, CLICK_MODE_ROOT)
+                }, iconClick = {
+                    click(it, CLICK_MODE_ICON)
+                }, deleteClick = {
+                    click(it, CLICK_MODE_DELETE)
+                })
             }
 
             else -> throw IllegalArgumentException("unknown type")
@@ -38,7 +42,7 @@ class SendListAdapter(val hasDeleteBtn: Boolean,
         val data = this.datas[position]
         return when (data) {
             is IconTitle -> VIEW_TYPE_ICON_TEXT
-            is ShareInBean -> if(hasDeleteBtn && !data.isLocalReceiver) VIEW_TYPE_URI_INFO else VIEW_TYPE_URI_INFO_NO_BTN
+            is ShareInBean -> VIEW_TYPE_URI_INFO
             else -> throw IllegalArgumentException("unknown type")
         }
     }

@@ -7,27 +7,7 @@ import android.webkit.MimeTypeMap
  * @date :2024/10/24 15:41
  * @description: file和content的Uri形式的获取。
  */
-class MimeUtil(val mimeType: String,
-               val name:String? = null) {
-    /**
-     * 根据类型和Id，给出一个不错的名字。
-     * @return 第一个参数是mimeType，第二个参数是fileName
-     */
-    fun goodMimeTypeAndFileName() : Pair<String, String> {
-        if (name.isNullOrEmpty()) {
-            val namePart = "" + System.currentTimeMillis() + "_" + (Math.random() * 100).toInt()
-            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)?.lowercase()
-            if (extension != null && mimeType.startsWith("video")) {
-                return mimeType to "video_$namePart.$extension"
-            }
-            if (extension != null && mimeType.startsWith("image")) {
-                return mimeType to "pic_$namePart.$extension"
-            }
-            return mimeType to "media_$namePart"
-        }
-        return mimeType to name
-    }
-
+class MimeUtil(val mimeType: String) {
     fun isUriHeic() : Boolean{
         val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
         return extension?.lowercase() == "heic"

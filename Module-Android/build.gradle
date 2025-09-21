@@ -93,9 +93,8 @@ dependencies {
     // define any required OkHttp artifacts without version
     api libs.okhttp
 
-    api libs.glide
     implementation libs.androidx.lifecycle.process
-    ksp libs.glideKsp
+    api libs.glide
     api libs.okhttp3.integration
 
     //implementation libs.mmkv.static
