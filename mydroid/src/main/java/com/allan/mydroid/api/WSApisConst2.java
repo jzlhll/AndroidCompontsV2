@@ -1,7 +1,6 @@
 package com.allan.mydroid.api;
 
 import sp.EncryptString;
-import sp.StringEncrypt;
 
 @EncryptString
 public class WSApisConst2 {

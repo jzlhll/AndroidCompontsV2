@@ -277,7 +277,6 @@ tasks.register("preSourceStringRestore") {
 
         for (def file : allAnnotationFiles) {
             def allLines = Files.readAllLines(file.toPath())
-            def count = allLines.size()
             def isChanged = false
 
             for (int i = 0; i < allLines.size(); i++) {

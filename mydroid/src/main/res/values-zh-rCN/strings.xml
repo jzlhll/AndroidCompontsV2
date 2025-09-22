@@ -6,6 +6,7 @@
     <string name="export_history">"导出历史 "</string>
     <string name="export_history_2">"导出历史*"</string>
     <string name="transfer_list">"接收列表 "</string>
+    <string name="my_transfer_list">"我的接收列表"</string>
     <string name="transfer_list_2">"接收列表*"</string>
     <string name="not_close_window">不退出，不熄屏 %s</string>
     <string name="no_received_files">暂无接收到的文件</string>

@@ -6,6 +6,7 @@
     <string name="export_history">Export History</string>
     <string name="export_history_2">Export History*</string>
     <string name="transfer_list">Receive List</string>
+    <string name="my_transfer_list">My receive list</string>
     <string name="transfer_list_2">Receive List*</string>
     <string name="not_close_window">Do not exit or turn off screen: %s</string>
     <string name="no_received_files">No files received</string>

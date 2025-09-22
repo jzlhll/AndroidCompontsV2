@@ -37,7 +37,7 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
             }
             reduce(LoadFileListAction::class.java) { action ->
                 viewModelScope.launchOnThread {
-                    ShareInUrisObj.loadFileList()
+                    ShareInUrisObj.reloadFileList()
                 }
             }
         }

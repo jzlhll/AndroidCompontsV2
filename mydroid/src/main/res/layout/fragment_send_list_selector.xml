@@ -155,6 +155,8 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/bigImage"
+        android:visibility="gone"
+        android:background="@color/color_normal_block"
         app:layout_constraintStart_toStartOf="@id/leftGuideLine"
         app:layout_constraintEnd_toEndOf="@id/rightGuideLine"
         app:layout_constraintTop_toBottomOf="@id/actionListHost"

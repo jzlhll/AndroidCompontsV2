@@ -13,6 +13,7 @@ import com.au.module_android.Globals
 import com.au.module_android.json.fromJson
 import com.au.module_android.json.toJsonString
 import com.au.module_android.simpleflow.StatusState
+import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.getFileMD5
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logdNoFile
@@ -21,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -43,7 +45,7 @@ object ShareInUrisObj {
         get() {
             val m = mSendUriMap
             if (m == null) {
-                val map = loadCacheSendUriMap()
+                val map = initCacheSendUriMap()
                 mSendUriMap = map
                 return map
             } else {
@@ -51,10 +53,10 @@ object ShareInUrisObj {
             }
         }
 
-    private val _fileListState = MutableStateFlow<StatusState<List<MergedFileInfo>>>(StatusState.Loading)
+    private val _fileListState = MutableStateFlow<StatusState<List<MergedFileInfo>>>(initLoadFileListState())
     val fileListState: StateFlow<StatusState<List<MergedFileInfo>>> = _fileListState.asStateFlow()
 
-    private fun loadCacheSendUriMap() : HashMap<String, ShareInBean> {
+    private fun initCacheSendUriMap() : HashMap<String, ShareInBean> {
         var time = System.currentTimeMillis()
         try {
             val json = AppDataStore.readBlocked("mydroid_sendUriMap", "")
@@ -84,6 +86,8 @@ object ShareInUrisObj {
             logdNoFile{"load cache sendUri Map time: $time"}
         }
     }
+
+    private fun initLoadFileListState() = StatusState.Success(runBlocking { loadFileListInner() })
 
     private fun updateSendUriMap(map: HashMap<String, ShareInBean>?) {
         val fixMap = map ?: hashMapOf()
@@ -134,9 +138,9 @@ object ShareInUrisObj {
     suspend fun loadShareInAndReceiveBeans() : List<ShareInBean> {
         //导入的文件
         val shareInBeans = sendUriMap.values
-
         //本地接收的文件，默认不勾选，不允许操作
-        val receivedShareInBeans = loadFileList().map {
+        val files = fileListState.value.asOrNull<StatusState.Success<List<MergedFileInfo>>>()?.data ?: mutableListOf()
+        val receivedShareInBeans = files.map {
             val bean = ShareInBean.convert(it, FROM_LOCAL)
             bean.isLocalReceiver = true
             bean
@@ -185,8 +189,7 @@ object ShareInUrisObj {
         return "%.2f %s".format(size, units[unitIndex])
     }
 
-    suspend fun loadFileList() : List<MergedFileInfo> {
-        delay(0)
+    private fun loadFileListInner(): ArrayList<MergedFileInfo> {
         val nanoMergedDir = File(nanoTempCacheMergedDir())
         val fileList = ArrayList<MergedFileInfo>()
         if (nanoMergedDir.exists()) {
@@ -195,9 +198,16 @@ object ShareInUrisObj {
             }
         }
         fileList.sortByDescending { it.file.lastModified() }
+        return fileList
+    }
+
+    /**
+     * 真正需要更新的时候，更新即可。
+     */
+    suspend fun reloadFileList() {
+        val fileList = loadFileListInner()
         delay(100)
         _fileListState.value = StatusState.Success(fileList)
-        return fileList
     }
 
     /**

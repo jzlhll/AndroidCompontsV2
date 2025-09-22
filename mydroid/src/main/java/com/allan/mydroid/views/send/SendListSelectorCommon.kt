@@ -21,7 +21,7 @@ abstract class SendListSelectorCommon(val f : Fragment, val isNoDeleteBtn: Boole
     }
 
     abstract fun rcv(): RecyclerView
-    abstract fun empty(): TextView
+    abstract fun empty(): TextView?
 
     abstract fun onItemClick(bean: ShareInBean?, mode:String)
 
@@ -54,7 +54,7 @@ abstract class SendListSelectorCommon(val f : Fragment, val isNoDeleteBtn: Boole
 
         val receiverList = sendUriList.filter { it.isLocalReceiver }
         if (receiverList.isNotEmpty()) {
-            newList.add(IconTitle(R.drawable.ic_receivered, Globals.getString(R.string.transfer_list).trim()))
+            newList.add(IconTitle(R.drawable.ic_receivered, Globals.getString(R.string.my_transfer_list).trim()))
             for (bean in receiverList) {
                 bean.isNoDeleteBtn = isNoDeleteBtn
             }
@@ -63,9 +63,9 @@ abstract class SendListSelectorCommon(val f : Fragment, val isNoDeleteBtn: Boole
 
         mAdapter.submitList(newList, false)
         if (newList.isEmpty()) {
-            empty().visible()
+            empty()?.visible()
         } else {
-            empty().gone()
+            empty()?.gone()
         }
     }
 

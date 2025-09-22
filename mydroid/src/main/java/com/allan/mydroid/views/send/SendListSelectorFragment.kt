@@ -13,7 +13,7 @@ import com.allan.mydroid.PICKER_NEED_PERMISSION
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.ShareInBean
-import com.allan.mydroid.databinding.ActivityMyDroidSendlistBinding
+import com.allan.mydroid.databinding.FragmentSendListSelectorBinding
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.MyDroidKeepLiveService
@@ -44,7 +44,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>() {
+class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding>() {
     companion object {
         const val KEY_AUTO_ENTER_SEND_VIEW = "key_auto_import"
         const val KEY_START_TYPE = "entry_start_type"
@@ -81,7 +81,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
         override fun onItemClick(bean: ShareInBean?, mode:String) {
             if (mode == CLICK_MODE_DELETE && bean != null) {
                 deleteBean(bean)
-            } else if (mode == CLICK_MODE_ICON && bean != null) {
+            } else if (mode == CLICK_MODE_ROOT && bean != null) {
                 logd { "click on icon $bean" }
                 val mimeUtil = MimeUtil(bean.mimeType)
                 val isImg = mimeUtil.isUriImage()
@@ -164,14 +164,13 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
     private fun jumpIntoMyDroidSend() {
         mDelayCancelDialog?.dismissAllowingStateLoss()
         mDelayCancelDialog = null
-        FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
+        FragmentShellActivity.start(requireActivity(), SendListFilesFragment::class.java)
     }
 
     val permissionUtil = NotificationUtil.Companion.createPostNotificationPermissionResult(this)
 
     override fun onDestroy() {
         super.onDestroy()
-
         MyDroidKeepLiveService.Companion.stopMyDroidAlive()
     }
 

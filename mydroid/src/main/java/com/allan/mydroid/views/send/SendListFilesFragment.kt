@@ -3,31 +3,76 @@ package com.allan.mydroid.views.send
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
-import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beansinner.ShareInBean
-import com.allan.mydroid.databinding.FragmentMyDroidSendBinding
+import com.allan.mydroid.databinding.FragmentSendFilesBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
+import com.au.module_android.click.onClick
+import com.au.module_android.glide.glideSetAny
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.launchOnThread
+import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
+import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
+import com.au.module_android.utilsmedia.MimeUtil
 import com.au.module_androidcolor.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.bumptech.glide.request.target.Target
 
-class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
+class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     override fun isPaddingStatusBar() = false
 
-    private lateinit var entryFileList: List<ShareInBean>
+    private val common by unsafeLazy {
+        object : SendListSelectorCommon(this, true) {
+            override fun rcv() = binding.rcv
+            override fun empty() = null
+            override fun onItemClick(bean: ShareInBean?, mode: String) {
+                if (mode == CLICK_MODE_ROOT && bean != null) {
+                    logd { "click on icon $bean" }
+                    val mimeUtil = MimeUtil(bean.mimeType)
+                    val isImg = mimeUtil.isUriImage()
+                    val isVideo = mimeUtil.isUriVideo()
+                    if (isImg || isVideo) {
+                        showBigIcon(bean, isVideo)
+                    }
+                }
+            }
+        }
+    }
+
+    private var hasSetBigImageClick = false
+
+    private fun showBigIcon(bean: ShareInBean, isVideo: Boolean) {
+        if (!hasSetBigImageClick) {
+            hasSetBigImageClick = true
+            binding.blurView.onClick {
+                binding.blurView.gone()
+                binding.bigImage.gone()
+                binding.iconPlay.gone()
+            }
+            binding.bigImage.setImageDrawable(null)
+            BlurViewEx(binding.blurView, 0).setBlur(binding.root, 96f)
+        }
+
+        binding.blurView.visible()
+        binding.bigImage.visible()
+        if (isVideo) {
+            binding.iconPlay.visible()
+        } else {
+            binding.iconPlay.gone()
+        }
+
+        binding.bigImage.glideSetAny(bean.uri) {
+            it.override(Target.SIZE_ORIGINAL)
+        }
+    }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
@@ -54,17 +99,20 @@ class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
 
         MyDroidConst.ipPortData.observe(this) { info->
             if (info == null || info.ip.isEmpty()) {
-                binding.title.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
+                binding.descTitle.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
             } else {
+                val fmt = getString(com.allan.mydroid.R.string.not_close_window)
                 if (info.httpPort == null) {
-                    binding.title.text = info.ip
+                    binding.descTitle.text = info.ip
                 } else if (MyDroidConst.serverIsOpen) {
-                    binding.title.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), info.ip, "" + info.httpPort)
+                    binding.descTitle.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), info.ip, "" + info.httpPort)
                 } else {
-                    binding.title.text = info.ip + ":" + info.httpPort
+                    binding.descTitle.text = String.format(fmt, info.ip + ":" + info.httpPort)
                 }
             }
         }
+
+        common.onCreated()
     }
 
     private fun clientLiveDataInit() {
@@ -86,32 +134,14 @@ class MyDroidSendFragment : AbsLiveFragment<FragmentMyDroidSendBinding>() {
                 }
                 item.root.visible()
             }
-
-//            sendClientBindings.forEachIndexed { index, binding ->
-//                binding.check.isChecked = index == 0
-//            }
-        }
-
-        lifecycleScope.launchOnThread {
-            val list = ShareInUrisObj.loadShareInAndReceiveBeans()
-            withContext(Dispatchers.Main) {
-                parseEntryFileList(list)
-            }
         }
     }
 
     override fun onStart() {
         MyDroidConst.currentDroidMode = MyDroidMode.Send
         super.onStart()
-    }
 
-    fun parseEntryFileList(entryList: List<ShareInBean>) {
-        entryFileList = entryList
-        val sb = StringBuilder()
-        entryFileList.forEach {
-            sb.append(it.name).append("(").append(it.fileSizeStr).append(")").append("\n")
-        }
-        binding.transferInfo.text = sb
+        common.reload()
     }
 
     private val sendClientBindings = mutableListOf<MydroidSendClientBinding>()
