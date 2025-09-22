@@ -63,6 +63,20 @@ object ShareInUrisObj {
                 return hashMapOf()
             }
             val map: HashMap<String, ShareInBean>? = json.fromJson()
+            val hostUris = appHostPermissions()
+            val needDeleteKeys = mutableListOf<String>()
+            map?.forEach { k, v->
+                if (v.from == FROM_PICKER) {
+                    val found = hostUris.find { it == v.uri }
+                    if (found == null) {
+                        needDeleteKeys.add(k)
+                    }
+                }
+            }
+            needDeleteKeys.forEach {
+                map?.remove(it)
+            }
+
             logdNoFile{"load cache sendUri Map json2: $map"}
             return map ?: hashMapOf()
         } finally {
