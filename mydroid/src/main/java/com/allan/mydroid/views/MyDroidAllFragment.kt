@@ -2,6 +2,7 @@ package com.allan.mydroid.views
 
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
+import com.allan.mydroid.CHECK_NEED_ALL_MANAGER
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidAllBinding
 import com.allan.mydroid.globals.MyDroidConst
@@ -60,8 +61,25 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
             }
         }
         binding.sendFileLogicBtn.onClick {
-            runCheckIp {
-                SendListSelectorFragment.start(requireActivity(), false)
+            if (CHECK_NEED_ALL_MANAGER) {
+                val helper = PermissionStorageHelper()
+                if (helper.ifGotoMgrAll {
+                        ConfirmCenterDialog.Companion.show(childFragmentManager,
+                            getString(R.string.app_management_permission),
+                            getString(R.string.global_permission_prompt),
+                            "OK") {
+                            helper.gotoMgrAll(requireActivity())
+                            it.dismissAllowingStateLoss()
+                        }
+                    }) {
+                    runCheckIp {
+                        SendListSelectorFragment.start(requireActivity(), false)
+                    }
+                }
+            } else {
+                runCheckIp {
+                    SendListSelectorFragment.start(requireActivity(), false)
+                }
             }
         }
         binding.middleLogicBtn.onClick {
@@ -69,17 +87,6 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
                 FragmentShellActivity.start(requireActivity(), MyDroidTransferServerFragment::class.java)
             }
         }
-
-//        val helper = PermissionStorageHelper()
-//        helper.ifGotoMgrAll {
-//            ConfirmCenterDialog.Companion.show(childFragmentManager,
-//                getString(R.string.app_management_permission),
-//                getString(R.string.global_permission_prompt),
-//                "OK") {
-//                helper.gotoMgrAll(requireActivity())
-//                it.dismissAllowingStateLoss()
-//            }
-//        }
     }
 
     override fun onResume() {

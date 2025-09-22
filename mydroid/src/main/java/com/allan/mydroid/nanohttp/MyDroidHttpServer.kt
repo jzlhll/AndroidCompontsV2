@@ -137,11 +137,10 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
             val filename = info.name ?: "file"
             logdNoFile { "file Download1 $uri size:$fileSize" }
 
-            if (!ShareInUrisObj.isHostThisUri(uri)) {
+            if (!ShareInUrisObj.isHostThisUri(info)) {
                 logdNoFile { "file Download this uri is donot has permission." }
                 return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "No permission yet todo translate.")
             }
-            //Globals.app.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
             val inputStream = Globals.app.contentResolver.openInputStream(uri)
             logdNoFile { "file Download2 $uri ${inputStream?.available()}" }
             // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
@@ -170,15 +169,15 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
         } catch (e: FileNotFoundException) {
             e.printStackTrace()
             logdNoFile { "file Download error1" }
-            return fileNotFoundResponse()
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 1.")
         } catch (e: IOException) {
             e.printStackTrace()
             logdNoFile { "file Download error2" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file.")
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 2.")
         } catch (e: Exception) {
             e.printStackTrace()
             logdNoFile { "file Download error3" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 2.")
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 3.")
         }
     }
 

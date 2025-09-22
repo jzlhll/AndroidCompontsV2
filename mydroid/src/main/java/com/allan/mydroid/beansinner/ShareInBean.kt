@@ -14,10 +14,15 @@ import com.google.gson.annotations.JsonAdapter
 import kotlinx.coroutines.delay
 import java.util.UUID
 
+const val FROM_LOCAL = "local"
+const val FROM_SHARE_IN = "share_in"
+const val FROM_PICKER = "picker"
+
 @Keep
 data class ShareInBean(val uriUuid:String,
                          @JsonAdapter(JsonUriAdapter::class)
                          val uri: Uri,
+                         val from:String,
                          val mimeType:String,
                          val name:String? = null,
                          val fileSize:Long?,
@@ -31,30 +36,37 @@ data class ShareInBean(val uriUuid:String,
     @Transient var isNoDeleteBtn = false
 
     companion object {
-        suspend fun to(info: MergedFileInfo) : ShareInBean {
+        suspend fun convert(info: MergedFileInfo, from:String) : ShareInBean {
             delay(0)
             val fileSize = info.file.length()
             val fileLen = formatBytes(fileSize)
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
             val mimeType = MediaHelper.getMimeTypePath(info.file.absolutePath)
             val videoDuration = MediaHelper().getDurationNormally(info.file.absolutePath, mimeType)
-            return ShareInBean(uriUuid, info.file.toUri(), mimeType, info.file.name,
-                fileSize, fileLen, videoDuration)
+            return ShareInBean(uriUuid,
+                info.file.toUri(),
+                from,
+                mimeType,
+                info.file.name,
+                fileSize,
+                fileLen,
+                videoDuration)
         }
 
-        suspend fun to(uri: Uri) : ShareInBean {
+        suspend fun convert(uri: Uri, from:String) : ShareInBean {
             delay(0)
             val parsedInfo = UriParserUtil(uri).parseSuspend(Globals.app.contentResolver)
-            return copyFrom(parsedInfo)
+            return copyFrom(parsedInfo, from)
         }
 
-        private suspend fun copyFrom(info: UriParsedInfo) : ShareInBean {
+        private suspend fun copyFrom(info: UriParsedInfo, from:String) : ShareInBean {
             delay(0)
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
             val fileSize = info.fileLength
             val fileSizeStr = if(fileSize > 0) formatBytes(fileSize) else Globals.getString(R.string.unknown_size)
             return ShareInBean(uriUuid,
                 info.uri,
+                from,
                 info.mimeType,
                 info.name,
                 fileSize,
@@ -65,8 +77,11 @@ data class ShareInBean(val uriUuid:String,
         fun copyFrom(info: ShareInBean) : ShareInBean {
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
             return ShareInBean(uriUuid, info.uri,
-                info.mimeType, info.name,
-                info.fileSize, info.fileSizeStr,
+                info.from,
+                info.mimeType,
+                info.name,
+                info.fileSize,
+                info.fileSizeStr,
                 info.videoDuration)
         }
     }

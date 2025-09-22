@@ -9,7 +9,9 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.allan.mydroid.PICKER_NEED_PERMISSION
 import com.allan.mydroid.R
+import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.ActivityMyDroidSendlistBinding
 import com.allan.mydroid.globals.ShareInUrisObj
@@ -18,7 +20,6 @@ import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.permissions.PermissionStorageHelper
 import com.au.module_android.permissions.getContentForResult
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.ToolbarMenuManager
@@ -35,7 +36,6 @@ import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.MimeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
-import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.compatMultiUriPickerForResult
@@ -164,23 +164,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
     private fun jumpIntoMyDroidSend() {
         mDelayCancelDialog?.dismissAllowingStateLoss()
         mDelayCancelDialog = null
-
-        if (true) {
-            FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
-        } else {
-            val helper = PermissionStorageHelper()
-            if(helper.ifGotoMgrAll {
-                    ConfirmCenterDialog.show(childFragmentManager,
-                        getString(R.string.app_management_permission),
-                        getString(R.string.global_permission_prompt),
-                        "OK") {
-                        helper.gotoMgrAll(requireActivity())
-                        it.dismissAllowingStateLoss()
-                    }
-                }) {
-                FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
-            }
-        }
+        FragmentShellActivity.start(requireActivity(), MyDroidSendFragment::class.java)
     }
 
     val permissionUtil = NotificationUtil.Companion.createPostNotificationPermissionResult(this)
@@ -204,7 +188,7 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
                     for (uri in uris) {
                         urisList.add(uri)
                     }
-                    onUrisBack(urisList)
+                    onUrisBack(urisList, true)
                 }
             }
 
@@ -213,17 +197,23 @@ class SendListSelectorFragment : BindingFragment<ActivityMyDroidSendlistBinding>
         }
 
         val documentRun:(view: View)->Unit = {
-            documentResult.start("*/*") { uris->
-                onUrisBack(uris)
+            documentResult.start(arrayOf("*/*")) { uris->
+                onUrisBack(uris, PICKER_NEED_PERMISSION)
             }
         }
         binding.selectDocumentBtn.onClick(documentRun)
         binding.selectDocumentText.onClick(documentRun)
     }
 
-    private fun onUrisBack(uris: List<Uri>) {
+    private fun onUrisBack(uris: List<Uri>, needCheckPermission: Boolean) {
+        if (needCheckPermission) {
+            for (uri in uris) {
+                ShareInUrisObj.takeHostPermission(uri)
+            }
+        }
+
         lifecycleScope.launchOnThread {
-            ShareInUrisObj.addShareInUris(uris)
+            ShareInUrisObj.addShareInUris(uris, FROM_PICKER)
             common.reload()
         }
     }

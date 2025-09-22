@@ -2,6 +2,11 @@ package com.allan.mydroid.globals
 
 import android.content.Intent
 import android.net.Uri
+import com.allan.mydroid.CHECK_URI_PERMISSION
+import com.allan.mydroid.PICKER_NEED_PERMISSION
+import com.allan.mydroid.beansinner.FROM_LOCAL
+import com.allan.mydroid.beansinner.FROM_PICKER
+import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.beansinner.MergedFileInfo
 import com.allan.mydroid.beansinner.ShareInBean
 import com.au.module_android.Globals
@@ -57,9 +62,9 @@ object ShareInUrisObj {
             if (json.isEmpty()) {
                 return hashMapOf()
             }
-            val list: HashMap<String, ShareInBean>? = json.fromJson()
-            logdNoFile{"load cache sendUri Map json2: $list"}
-            return list ?: hashMapOf()
+            val map: HashMap<String, ShareInBean>? = json.fromJson()
+            logdNoFile{"load cache sendUri Map json2: $map"}
+            return map ?: hashMapOf()
         } finally {
             time = System.currentTimeMillis() - time
             logdNoFile{"load cache sendUri Map time: $time"}
@@ -88,11 +93,7 @@ object ShareInUrisObj {
     /**
      * 当接收列表，添加新的uri
      */
-    suspend fun addShareInUris(uris:List<Uri>) {
-        uris.forEach {
-            Globals.app.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        
+    suspend fun addShareInUris(uris:List<Uri>, from:String) {
         val newUris = mutableListOf<ShareInBean>()
         val oldUris = sendUriMap.values
         oldUris.forEach {
@@ -101,7 +102,7 @@ object ShareInUrisObj {
         uris.forEach { uri->
             val found = oldUris.find { it.uri == uri }
             if (found == null) {
-                val infoEx = ShareInBean.to(uri)
+                val infoEx = ShareInBean.convert(uri, from)
                 newUris.add(infoEx)
             }
         }
@@ -122,7 +123,7 @@ object ShareInUrisObj {
 
         //本地接收的文件，默认不勾选，不允许操作
         val receivedShareInBeans = loadFileList().map {
-            val bean = ShareInBean.to(it)
+            val bean = ShareInBean.convert(it, FROM_LOCAL)
             bean.isLocalReceiver = true
             bean
         }
@@ -188,17 +189,35 @@ object ShareInUrisObj {
     /**
      * 是不是有这个的权限呢
      */
-    fun isHostThisUri(uri: Uri) : Boolean {
-        if (true) {
+    fun isHostThisUri(shareInBean: ShareInBean) : Boolean {
+        if (!CHECK_URI_PERMISSION) {
             return true
         }
 
-        val list = Globals.app.contentResolver.persistedUriPermissions
-        for (item in list) {
-            if (item.uri == uri) {
+        if (shareInBean.from == FROM_LOCAL || shareInBean.from == FROM_SHARE_IN) {
+            return true
+        }
+
+        if (shareInBean.from == FROM_PICKER && !PICKER_NEED_PERMISSION) {
+            return true
+        }
+
+        appHostPermissions().forEach { uri->
+            if (uri == shareInBean.uri) {
                 return true
             }
         }
         return false
+    }
+
+    private fun appHostPermissions() : List<Uri> {
+        val list = Globals.app.contentResolver.persistedUriPermissions
+        return list.map { it.uri }
+    }
+
+    fun takeHostPermission(uri: Uri) {
+        if (CHECK_URI_PERMISSION) {
+            Globals.app.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
     }
 }

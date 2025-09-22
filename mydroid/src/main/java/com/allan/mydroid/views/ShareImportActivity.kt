@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.databinding.ActivityImportBinding
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
@@ -80,7 +81,7 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
         }
 
         Globals.mainScope.launchOnThread {
-            ShareInUrisObj.addShareInUris(uris)
+            ShareInUrisObj.addShareInUris(uris, FROM_SHARE_IN)
 
             lifecycleScope.launch {
                 jumpNext()
