@@ -48,7 +48,7 @@ class LogSystemFragment : BindingFragment<FragmentLogSystemBinding>(), LogViewAc
             binding.progressPercentText.text = "" + it.progress + "%"
             binding.progressText.text = it.info
             if (it.progress == 100 && it.file != null) {
-                shareFile(requireContext(), it.file)
+                shareFile(requireContext(), it.file, "Share file")
             }
         }
 

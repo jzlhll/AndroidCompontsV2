@@ -38,6 +38,8 @@
     <string name="mydroid_running_only_for_alive">快鴿傳輸-僅作為保活進程運行</string>
     <string name="import_to_send_list_hint">請點擊\"匯入到發送列表\"而非\"分享\"！</string>
     <string name="share">分享</string>
+    <string name="open">打開</string>
+    <string name="open_with">用以下方式開啟</string>
     <string name="share_in">分享匯入</string>
     <string name="download">下載</string>
     <string name="delete">刪除</string>

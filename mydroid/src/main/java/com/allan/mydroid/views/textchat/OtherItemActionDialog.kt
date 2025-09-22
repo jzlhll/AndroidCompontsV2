@@ -1,7 +1,6 @@
 package com.allan.mydroid.views.textchat
 
 import android.annotation.SuppressLint
-import android.content.res.ColorStateList
 import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.R
 import com.au.module_android.Globals
@@ -44,8 +43,6 @@ class OtherItemActionDialog(private var file: File? = null) : AbsActionDialogFra
 
         private const val TAG_DOWNLAOD = "download"
     }
-
-    val normalColor = ColorStateList.valueOf(Globals.getColor(com.au.module_androidcolor.R.color.color_text_normal))
 
     val mItems = listOf(
         ItemBean(TAG_DOWNLAOD, R.string.download.resStr(), R.drawable.ic_download, normalColor)

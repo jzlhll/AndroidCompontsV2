@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.Space
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.views.ViewFragment
 import com.au.module_android.utils.asOrNull
@@ -27,6 +28,8 @@ abstract class AbsActionDialogFragment : ViewFragment() {
     fun itemHeight(fragment: Fragment) : Float {
         return fragment.resources.getDimension(com.au.module_androidui.R.dimen.action_dialog_item_height)
     }
+
+    val normalColor = ColorStateList.valueOf(Globals.getColor(com.au.module_androidcolor.R.color.color_text_normal))
 
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return LinearLayout(inflater.context).also {
@@ -56,7 +59,7 @@ abstract class AbsActionDialogFragment : ViewFragment() {
                 it.tv.text = bean.text
                 it.root.tag = bean.tag
                 it.icon.setImageResource(bean.drawRes)
-                if(bean.imageTintList != null) it.icon.imageTintList = bean.imageTintList
+                it.icon.imageTintList = bean.imageTintList ?: normalColor
                 it.root.onClick { v->
                     notify(v.tag)
                     dismiss()
