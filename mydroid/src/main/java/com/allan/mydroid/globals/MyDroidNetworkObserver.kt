@@ -12,8 +12,9 @@ import com.au.module_android.utils.logd
 import com.au.module_android.utils.logt
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import javax.inject.Inject
 
-class MyDroidNetworkObserver {
+class MyDroidNetworkObserver @Inject constructor() {
     private val onChanged:((ip:String?)->Unit) = { ip->
         if (ip.isNullOrEmpty()) {
             MyDroidConst.ipPortData.setValueSafe(null)

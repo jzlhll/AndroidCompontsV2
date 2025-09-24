@@ -3,6 +3,7 @@ package com.allan.mydroid.views.send
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
+import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendFilesBinding
@@ -17,6 +18,7 @@ import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
+import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
@@ -30,7 +32,7 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     override fun isPaddingStatusBar() = false
 
     private val common by unsafeLazy {
-        object : SendListSelectorCommon(this, true) {
+        object : SendListSelectorCommon(true) {
             override fun rcv() = binding.rcv
             override fun empty() = null
             override fun onItemClick(bean: ShareInBean?, mode: String) {
@@ -140,8 +142,9 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     override fun onStart() {
         MyDroidConst.currentDroidMode = MyDroidMode.Send
         super.onStart()
-
-        common.reload()
+        lifecycleScope.launchOnThread {
+            common.reload()
+        }
     }
 
     private val sendClientBindings = mutableListOf<MydroidSendClientBinding>()

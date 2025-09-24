@@ -1,17 +1,19 @@
 package com.allan.mydroid.views.send
 
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.DialogMyDroidSendlistBinding
 import com.au.module_android.ui.base.findDialog
 import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.utils.launchOnThread
 
 class SendListSelectorDialog : BindingFragment<DialogMyDroidSendlistBinding>() {
     interface ISelectItemClick {
         fun onItemClick(bean: ShareInBean)
     }
 
-    private val common = object : SendListSelectorCommon(this, true) {
+    private val common = object : SendListSelectorCommon(true) {
         override fun rcv() = binding.rcv
         override fun empty() = binding.empty
 
@@ -36,6 +38,8 @@ class SendListSelectorDialog : BindingFragment<DialogMyDroidSendlistBinding>() {
 
     override fun onStart() {
         super.onStart()
-        common.reload()
+        lifecycleScope.launchOnThread {
+            common.reload()
+        }
     }
 }

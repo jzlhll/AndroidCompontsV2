@@ -19,17 +19,21 @@ import com.au.module_okhttp.creator.AbsCookieJar
 import com.au.module_okhttp.interceptors.PretreatmentInterceptor
 import com.au.module_okhttp.interceptors.SimpleRetryInterceptor
 import com.modulenative.AppNative
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * @author allan
  * @date :2024/9/29 16:42
  * @description:
  */
+@HiltAndroidApp
 class App : InitApplication() {
     override fun initBeforeAttachBaseContext() {
     }
 
-    private val networkObserver = MyDroidNetworkObserver()
+    @Inject
+    lateinit var networkObserver:MyDroidNetworkObserver
 
     override fun onCreate() {
         super.onCreate()

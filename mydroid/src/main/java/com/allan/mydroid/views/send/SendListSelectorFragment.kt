@@ -73,7 +73,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     override fun isPaddingStatusBar() = false
 
-    private val common = object : SendListSelectorCommon(this, false) {
+    private val common = object : SendListSelectorCommon(false) {
         override fun rcv() = binding.rcv
 
         override fun empty() = binding.empty
@@ -95,7 +95,9 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     private fun deleteBean(bean: ShareInBean) {
         ShareInUrisObj.deleteUris(listOf(bean.uriUuid))
-        common.reload()
+        lifecycleScope.launchOnThread {
+            common.reload()
+        }
     }
 
     private var hasSetBigImageClick = false
@@ -256,7 +258,9 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     override fun onStart() {
         super.onStart()
-        common.reload()
+        lifecycleScope.launchOnThread {
+            common.reload()
+        }
     }
 
     private fun autoImportAction() {

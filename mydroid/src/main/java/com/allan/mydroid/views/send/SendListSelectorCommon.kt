@@ -1,13 +1,11 @@
 package com.allan.mydroid.views.send
 
 import android.widget.TextView
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.annotation.WorkerThread
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.au.module_android.Globals
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.visible
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,7 +13,7 @@ import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.globals.ShareInUrisObj
 
-abstract class SendListSelectorCommon(val f : Fragment, val isNoDeleteBtn: Boolean) {
+abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) {
     private val mAdapter = SendListAdapter {it, mode->
         onItemClick(it, mode)
     }
@@ -32,12 +30,11 @@ abstract class SendListSelectorCommon(val f : Fragment, val isNoDeleteBtn: Boole
         rcv.setHasFixedSize(true)
     }
 
-    fun reload() {
-        f.lifecycleScope.launchOnIOThread {
-            val scanList = ShareInUrisObj.loadShareInAndReceiveBeans()
-            withContext(Dispatchers.Main) {
-                updateList(scanList)
-            }
+    @WorkerThread
+    suspend fun reload() {
+        val scanList = ShareInUrisObj.loadShareInAndReceiveBeans()
+        withContext(Dispatchers.Main) {
+            updateList(scanList)
         }
     }
 
