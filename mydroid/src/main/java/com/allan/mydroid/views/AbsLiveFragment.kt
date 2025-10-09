@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
 import com.allan.mydroid.R
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.au.module_android.Globals
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
@@ -53,7 +54,8 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
         }
 
         if (whenIpNullShowExitDialog) {
-            MyDroidConst.ipPortData.observe(this) { ipInfo->
+            MyDroidConst.networkStatusData.observe(viewLifecycleOwner) { networkStatus ->
+                val ipInfo = networkStatus.asOrNull<NetworkObserverObj.NetworkStatus.Connected>()?.ipInfo
                 if (ipInfo?.ip.isNullOrEmpty()) {
                     if (waitDialog == null) {
                         ConfirmBottomSingleDialog.show(childFragmentManager, getString(R.string.tips),

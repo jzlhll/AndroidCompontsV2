@@ -3,7 +3,6 @@ package com.allan.mydroid.globals
 import android.app.Activity
 import android.os.SystemClock
 import androidx.annotation.MainThread
-import com.allan.mydroid.beansinner.IpInfo
 import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
 import com.allan.mydroid.views.AbsLiveFragment
@@ -17,6 +16,8 @@ import com.au.module_android.utils.loge
 import com.au.module_android.utils.logt
 import com.au.module_androidui.toast.ToastBuilder
 import fi.iki.elonen.NanoHTTPD
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.net.ServerSocket
@@ -30,6 +31,16 @@ object MyDroidConstServer : InterestActivityCallbacks() {
 
     private const val ALIVE_DEAD_TIME = 5 * 60 * 1000L //N分钟不活跃主动关闭服务
     private const val ALIVE_TS_TOO_FAST = 6 * 1000L //n秒内的更新，只干一次就好。很严谨来讲需要考虑再次post，但是由于相去很远忽略这几秒。
+
+    /**
+     * 端口信息：左值httpPort，右值websocketPort
+     * 状态容器（重放最新状态）
+     */
+    val portsFlow = MutableSharedFlow<Pair<Int, Int>>(
+        replay = 1, // 新订阅者立即获得最新状态
+        extraBufferCapacity = 0,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST // 确保缓冲区始终只有最新的一个状态
+    )
 
     /**
      * 如果很久没有从html端请求接口，则主动关闭服务
@@ -102,11 +113,8 @@ object MyDroidConstServer : InterestActivityCallbacks() {
             websocketServer?.start(WebsocketServer.WEBSOCKET_READ_TIMEOUT.toInt(), false)
 
             MyDroidConst.serverIsOpen = true
-            val realValue = MyDroidConst.ipPortData.realValue ?: IpInfo("", null, null)
-            realValue.httpPort = p
-            realValue.webSocketPort = wsPort
-            logt { "start server and websocket success and setPort $realValue" }
-            MyDroidConst.ipPortData.setValueSafe(realValue)
+            logt { "start server and websocket success and setPort $p to $wsPort" }
+            portsFlow.tryEmit( p to wsPort)
 
             //检查并清理过期temp文件
             Globals.mainScope.launchOnIOThread {
@@ -134,12 +142,17 @@ object MyDroidConstServer : InterestActivityCallbacks() {
             return
         }
         isObserverIpChanged = true
-        MyDroidConst.ipPortData.observeForever {
-            val ip = it?.ip
-            if (ip.isNullOrEmpty()) {
-                stopServer()
-            } else {
-                startServerWrap()
+        MyDroidConst.networkStatusData.observeForever { netSt->
+            when (netSt) {
+                is NetworkObserverObj.NetworkStatus.Connected -> {
+                    logd { "network status change to connected." }
+                    startServerWrap()
+                }
+
+                NetworkObserverObj.NetworkStatus.Disconnected,
+                NetworkObserverObj.NetworkStatus.Uninitialized -> {
+                    stopServer()
+                }
             }
         }
     }

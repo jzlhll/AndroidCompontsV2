@@ -6,6 +6,7 @@ import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.databinding.FragmentMyDroidTransferServerBinding
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.json.toJsonString
@@ -33,10 +34,11 @@ class MyDroidTransferServerFragment : AbsLiveFragment<FragmentMyDroidTransferSer
         binding.adHost.setColor(Globals.getColor(com.au.module_androidcolor.R.color.color_normal_block0))
         binding.adHost.startAnimation()
 
-        MyDroidConst.ipPortData.observe(this) { info->
-            if (info == null || info.ip.isEmpty()) {
+        MyDroidConst.networkStatusData.observe(this) { netSt->
+            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
                 binding.title.setText(R.string.connect_wifi_or_hotspot)
             } else {
+                val info = netSt.ipInfo
                 if (info.httpPort == null) {
                     binding.title.text = info.ip
                 } else if (MyDroidConst.serverIsOpen) {

@@ -5,6 +5,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.databinding.FragmentMyDroidSimpleTextBinding
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.utils.asOrNull
@@ -36,10 +37,11 @@ class MyDroidSimpleTextFragment : AbsLiveFragment<FragmentMyDroidSimpleTextBindi
         val fmt = getString(com.allan.mydroid.R.string.not_close_window)
         binding.descTitle.text = String.format(fmt, "")
 
-        MyDroidConst.ipPortData.observe(this) { info->
-            if (info == null || info.ip.isEmpty()) {
+        MyDroidConst.networkStatusData.observe(this) { netSt->
+            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
                 binding.title.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
             } else {
+                val info = netSt.ipInfo
                 if (info.httpPort == null) {
                     binding.title.text = info.ip
                 } else if (MyDroidConst.serverIsOpen) {

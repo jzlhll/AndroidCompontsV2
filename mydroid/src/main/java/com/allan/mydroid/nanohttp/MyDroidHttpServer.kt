@@ -12,6 +12,7 @@ import com.allan.mydroid.beans.httpdata.IpPortResult
 import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.MyDroidConstServer
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
@@ -223,12 +224,18 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
     }
 
     private fun getWebsocketIpPort() : Response{
-        val data = MyDroidConst.ipPortData
-        val ip = data.value?.ip
-        val wsPort = data.value?.webSocketPort
-        val httpPort = data.value?.httpPort
+        val data = MyDroidConst.networkStatusData.value!!
+        if (data !is NetworkObserverObj.NetworkStatus.Connected) {
+            val error = Globals.getString(R.string.invalid_request_from_appserver)
+            return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, error)
+        }
 
-        return if (ip != null && wsPort != null && httpPort != null) {
+        val v = data.ipInfo
+        val ip = v.ip
+        val wsPort = v.webSocketPort
+        val httpPort = v.httpPort
+
+        return if (wsPort != null && httpPort != null) {
             val info = IpPortResult(ip, wsPort, httpPort)
             logdNoFile { "get websocket ipPort $info" }
             ResultBean(CODE_SUC, "Success!", info).okJsonResponse()

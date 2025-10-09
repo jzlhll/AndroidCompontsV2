@@ -83,6 +83,7 @@
     <string name="inactivity_message">長時間未操作，App已經主動退出。</string>
 
     <string name="server">伺服器</string>
+    <string name="server_m">伺服器：%s</string>
     <string name="select_images">選擇圖片</string>
     <string name="gallery">相冊</string>
     <string name="select_videos">選擇影片</string>

@@ -35,9 +35,15 @@ object Globals {
      */
     val mainScope by lazy { MainScope().also {
         it.plus(CoroutineExceptionHandler { coroutineContext, throwable->
-            loge { "throwable" }
+            loge(throwable) { "Globals mainScope error ->" }
         })
     } }
+
+    val backgroundScope by lazy { MainScope() +
+            Dispatchers.Default + SupervisorJob() +
+            CoroutineExceptionHandler { coroutineContext, throwable->
+                loge(throwable) { "Globals backgroundScope error ->" }
+            }}
 
     /**
      * 主线程的Handler

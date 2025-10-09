@@ -6,6 +6,7 @@ import com.allan.mydroid.CHECK_NEED_ALL_MANAGER
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidAllBinding
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.receiver.ReceiveFromH5Fragment
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.parseShareImportIntent
@@ -16,6 +17,7 @@ import com.au.module_android.permissions.PermissionStorageHelper
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
 import kotlinx.coroutines.launch
@@ -45,8 +47,9 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        MyDroidConst.ipPortData.observe(viewLifecycleOwner) {
-            mIp = it?.ip
+        MyDroidConst.networkStatusData.observe(viewLifecycleOwner) { networkStatus ->
+            val ipInfo = networkStatus.asOrNull<NetworkObserverObj.NetworkStatus.Connected>()?.ipInfo
+            mIp = ipInfo?.ip
             uploadMyIp()
         }
 

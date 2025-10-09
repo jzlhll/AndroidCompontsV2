@@ -8,6 +8,7 @@ import com.allan.mydroid.R
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.databinding.FragmentReceiveFromH5Binding
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.json.toJsonString
@@ -64,16 +65,17 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         val leftStr = getString(R.string.storage_remaining)
         binding.descTitle.text = String.format(fmt, leftStr + getExternalFreeSpace(requireActivity()))
 
-        MyDroidConst.ipPortData.observe(this) { info->
-            if (info == null || info.ip.isEmpty()) {
+        MyDroidConst.networkStatusData.observe(this) { netSt->
+            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
                 binding.title.setText(R.string.connect_wifi_or_hotspot)
             } else {
-                if (info.httpPort == null) {
-                    binding.title.text = info.ip
+                val ipInfo = netSt.ipInfo
+                if (ipInfo.httpPort == null) {
+                    binding.title.text = ipInfo.ip
                 } else if (MyDroidConst.serverIsOpen) {
-                    binding.title.text = String.format(getString(R.string.lan_access_fmt), info.ip, "" + info.httpPort)
+                    binding.title.text = String.format(getString(R.string.lan_access_fmt), ipInfo.ip, "" + ipInfo.httpPort)
                 } else {
-                    binding.title.text = info.ip + ":" + info.httpPort
+                    binding.title.text = ipInfo.ip + ":" + ipInfo.httpPort
                 }
             }
         }

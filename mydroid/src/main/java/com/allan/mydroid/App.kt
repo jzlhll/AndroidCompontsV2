@@ -2,15 +2,13 @@ package com.allan.mydroid
 
 import com.allan.mydroid.api.Api
 import com.allan.mydroid.globals.MyDroidConstServer
-import com.allan.mydroid.globals.MyDroidNetworkObserver
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.globals.cacheImportCopyDir
 import com.au.logsystem.DefaultActivitiesFollowCallback
 import com.au.module_android.Globals
 import com.au.module_android.InitApplication
-import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
-import com.au.module_android.utils.logdNoFile
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_cached.AppDataStore
 import com.au.module_okhttp.OkhttpGlobal
@@ -20,7 +18,6 @@ import com.au.module_okhttp.interceptors.PretreatmentInterceptor
 import com.au.module_okhttp.interceptors.SimpleRetryInterceptor
 import com.modulenative.AppNative
 import dagger.hilt.android.HiltAndroidApp
-import javax.inject.Inject
 
 /**
  * @author allan
@@ -31,9 +28,6 @@ import javax.inject.Inject
 class App : InitApplication() {
     override fun initBeforeAttachBaseContext() {
     }
-
-    @Inject
-    lateinit var networkObserver:MyDroidNetworkObserver
 
     override fun onCreate() {
         super.onCreate()
@@ -66,17 +60,10 @@ class App : InitApplication() {
             }
         })
 
-        GlobalBackgroundCallback.addListener { isBackground ->
-            logdNoFile { "app is in background $isBackground" }
-            if (isBackground) {
-                networkObserver.netUnregister()
-            } else {
-                networkObserver.netRegister()
-            }
-        }
-
         registerActivityLifecycleCallbacks(MyDroidConstServer)
         registerActivityLifecycleCallbacks(DefaultActivitiesFollowCallback())
+
+        NetworkObserverObj.initial()
 
         //一上来直接强制移除所有临时import的文件。
         Globals.mainScope.launchOnIOThread {

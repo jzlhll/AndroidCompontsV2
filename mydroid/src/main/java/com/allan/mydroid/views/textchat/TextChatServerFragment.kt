@@ -8,6 +8,7 @@ import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.MyDroidConstServer
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.allan.mydroid.views.send.SendListSelectorDialog
 import com.allan.mydroid.views.textchat.uibean.NormalItem
@@ -22,7 +23,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
         object : TextChatCommon(this, binding) {
             override fun createBean(content: WSChatMessageBean.Content): WSChatMessageBean {
                 val sender = WSChatMessageBean.Sender().apply {
-                    name = MyDroidConst.serverName
+                    name = NetworkObserverObj.getServerName()
                     color = Globals.getString(com.au.module_androidcolor.R.string.color_text_normal_str)
                     isServer = true
                     platform = "androidApp" //todo 增加服务平台
@@ -74,12 +75,13 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
 
     private fun initIpShow() {
         //必须通过监听来显示。开启server后，才会变更参数。
-        MyDroidConst.ipPortData.observe(this) { ipInfo->
-            if (ipInfo == null || ipInfo.ip.isEmpty()) {
+        MyDroidConst.networkStatusData.observe(this) { netSt->
+            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
                 binding.descTitle.setText(R.string.connect_wifi_or_hotspot)
             } else {
                 if (MyDroidConst.serverIsOpen) {
                     val fmt = getString(R.string.not_close_window)
+                    val ipInfo = netSt.ipInfo
                     binding.descTitle.text = String.format(fmt, ipInfo.ip + ":" + ipInfo.httpPort)
                 } else {
                     binding.descTitle.setText(R.string.something_error)

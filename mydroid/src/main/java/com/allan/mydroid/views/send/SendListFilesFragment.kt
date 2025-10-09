@@ -9,6 +9,7 @@ import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendFilesBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
@@ -99,11 +100,12 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
         val fmt = getString(com.allan.mydroid.R.string.not_close_window)
         binding.descTitle.text = String.format(fmt, "")
 
-        MyDroidConst.ipPortData.observe(this) { info->
-            if (info == null || info.ip.isEmpty()) {
+        MyDroidConst.networkStatusData.observe(this) { netSt->
+            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
                 binding.descTitle.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
             } else {
                 val fmt = getString(com.allan.mydroid.R.string.not_close_window)
+                val info = netSt.ipInfo
                 if (info.httpPort == null) {
                     binding.descTitle.text = info.ip
                 } else if (MyDroidConst.serverIsOpen) {

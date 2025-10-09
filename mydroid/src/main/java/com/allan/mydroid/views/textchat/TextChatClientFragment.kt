@@ -8,10 +8,12 @@ import com.allan.mydroid.R
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.textchat.uibean.NormalItem
 import com.au.module_android.json.toJsonString
 import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
@@ -94,8 +96,8 @@ class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
         val fmt = getString(R.string.not_close_window)
         binding.descTitle.text = String.format(fmt, "")
 
-        MyDroidConst.ipPortData.observe(viewLifecycleOwner) {
-            mIp = it?.ip
+        MyDroidConst.networkStatusData.observe(viewLifecycleOwner) {
+            mIp = it.asOrNull<NetworkObserverObj.NetworkStatus.Connected>()?.ipInfo?.ip
             uploadMyIp()
         }
     }

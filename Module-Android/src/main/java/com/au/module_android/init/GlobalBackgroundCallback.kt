@@ -20,7 +20,8 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
         get() = isInBackground
 
     //是否后台运行
-    private var isInBackground = false //如果有推送拉起的application，并没有拉起应用也会触发onStop变成true。所以这里默认无所谓。
+    //如果有推送拉起的application，并没有拉起应用也会触发onStop变成true。所以这里默认无所谓。
+    private var isInBackground = false
 
     private val listeners by lazy {
         CopyOnWriteArrayList<(Boolean)->Unit>()
@@ -42,7 +43,8 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        isInBackground = activityList.isNotEmpty() //ProcessLifecycleOwner.get().lifecycle监听的结果，onStop就代表进入了后台。如果应用还活着就会回调。
+        //ProcessLifecycleOwner.get().lifecycle监听的结果，onStop就代表进入了后台。如果应用还活着就会回调。
+        isInBackground = activityList.isNotEmpty()
         if (isInBackground) {
             notifyListener()
         }

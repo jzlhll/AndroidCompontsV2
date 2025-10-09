@@ -83,6 +83,7 @@
     <string name="inactivity_message">The app has automatically exited due to inactivity.</string>
 
     <string name="server">Server</string>
+    <string name="server_m">"Server:%s"</string>
     <string name="select_images">Select Images</string>
     <string name="gallery">Gallery</string>
     <string name="select_videos">Select Videos</string>
