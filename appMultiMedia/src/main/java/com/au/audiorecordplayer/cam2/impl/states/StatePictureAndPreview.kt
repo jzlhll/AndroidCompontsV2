@@ -11,7 +11,7 @@ import com.au.audiorecordplayer.cam2.base.IActionTakePicture
 import com.au.audiorecordplayer.cam2.bean.TakePictureCallbackWrap
 import com.au.audiorecordplayer.cam2.impl.IStatePreviewCallback
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
-import com.au.audiorecordplayer.cam2.impl.PreviewSizeUtil
+import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.cam2.impl.picture.TakePictureWorker
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
@@ -24,10 +24,9 @@ open class StatePictureAndPreview(mgr: MyCamManager) : StatePreview(mgr), IActio
     init {
         val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         //由于super中有添加了preview的surface。这里处理拍照即可
-        val needSize = PreviewSizeUtil().needSize(
-            "StatePictureAndPreview",
-            ImageFormat.JPEG, systemCameraManager, "" + cameraManager.cameraId, 1920, 1080
-        )
+        val needSize = NeedSizeUtil
+            .getByFmt(ImageFormat.JPEG, systemCameraManager, "" + cameraManager.cameraId, 1920, 1080)
+            .needSize("StatePictureAndPreview")
         MyLog.d("StatePictureAndPreview needSize " + needSize.width + " * " + needSize.height)
 
         mTakePic = TakePictureWorker(this, cameraManager, needSize.width, needSize.height)

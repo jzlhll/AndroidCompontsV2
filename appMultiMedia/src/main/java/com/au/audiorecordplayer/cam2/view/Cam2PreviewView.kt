@@ -13,11 +13,17 @@ import kotlin.math.roundToInt
 
 
 class Cam2PreviewView : FrameLayout {
+    enum class PreviewMode {
+        SURFACE_VIEW,
+        TEXTURE_VIEW,
+        GL_SURFACE_VIEW
+    }
+
     companion object {
         /**
          * 暂时采用静态变量来标记；可以改成attr。懒得做了。
          */
-        var isSurfaceView = true
+        var previewMode = PreviewMode.SURFACE_VIEW
         const val TAG = "Cam2PreviewView"
     }
 
@@ -41,18 +47,24 @@ class Cam2PreviewView : FrameLayout {
         if (isInEditMode) return
 
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-        if (isSurfaceView) {
-            addView(CamSurfaceView(context).also {
-                mRealView = it
-                it.layoutParams = lp
-                it.setCallback(mCallback)
-            })
-        } else {
-            addView(CamTextureView(context).also {
-                mRealView = it
-                it.layoutParams = lp
-                it.setCallback(mCallback)
-            })
+        when (previewMode) {
+            PreviewMode.SURFACE_VIEW -> {
+                addView(CamSurfaceView(context).also {
+                    mRealView = it
+                    it.layoutParams = lp
+                    it.setCallback(mCallback)
+                })
+            }
+            PreviewMode.TEXTURE_VIEW -> {
+                addView(CamTextureView(context).also {
+                    mRealView = it
+                    it.layoutParams = lp
+                    it.setCallback(mCallback)
+                })
+            }
+            else -> {
+                //todo
+            }
         }
 
         addView(DrawFrameLayout(context))

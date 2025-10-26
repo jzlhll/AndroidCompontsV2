@@ -4,15 +4,11 @@ import android.Manifest
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
-import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Size
 import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.SurfaceView
-import android.view.TextureView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -26,7 +22,7 @@ import com.au.audiorecordplayer.cam2.impl.MyCamManager
 import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PICTURE_PREVIEW
 import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PREVIEW
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
-import com.au.audiorecordplayer.cam2.impl.PreviewSizeUtil
+import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.cam2.view.Cam2PreviewView
 import com.au.audiorecordplayer.cam2.view.IViewStatusChangeCallback
 import com.au.audiorecordplayer.databinding.FragmentCamera2Binding
@@ -100,7 +96,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
      */
     fun changePreviewNeedSize(ac: FragmentActivity) {
         orientation = ac.resources.configuration.orientation
-        val clz = if (Cam2PreviewView.isSurfaceView) SurfaceHolder::class.java else SurfaceTexture::class.java
+        val clz = NeedSizeUtil.needSizeFmtClass(Cam2PreviewView.previewMode)
         val pair = ac.getScreenFullSize()
         var wishW: Int = pair.first
         var wishH: Int = pair.second
@@ -111,7 +107,9 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         }
         MyLog.d("wishSize $wishW*$wishH")
         val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        previewNeedSize = PreviewSizeUtil().needSize("<State Preview>", clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
+        previewNeedSize = NeedSizeUtil
+            .getByClz(clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
+            .needSize("<State Preview>")
         MyLog.d("needSize " + previewNeedSize.width + " * " + previewNeedSize.height)
     }
 

@@ -15,7 +15,7 @@ import android.view.Surface
 import com.au.audiorecordplayer.cam2.base.IActionRecord
 import com.au.audiorecordplayer.cam2.impl.IStateTakePictureRecordCallback
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
-import com.au.audiorecordplayer.cam2.impl.PreviewSizeUtil
+import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.util.FileUtil
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
@@ -56,11 +56,10 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
                     wishWidth = 720
                 }
                 val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                val needSize = PreviewSizeUtil().needSize(
-                    "StatePictureAndRecordAndPreview",
-                    MediaRecorder::class.java, systemCameraManager, "" + cameraManager.cameraId, wishWidth, wishHeight
-                )
-                it.setVideoSize(needSize.getWidth(), needSize.getHeight())
+                val needSize = NeedSizeUtil
+                    .getByClz(MediaRecorder::class.java, systemCameraManager, "" + cameraManager.cameraId, wishWidth, wishHeight)
+                    .needSize("StatePictureAndRecordAndPreview")
+                it.setVideoSize(needSize.width, needSize.height)
                 it.setVideoEncoder(MediaRecorder.VideoEncoder.H264)
                 val camPro = CamcorderProfile.get(
                     cameraManager.cameraId,
