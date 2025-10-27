@@ -1,16 +1,18 @@
-package com.au.audiorecordplayer.cam2.view
+package com.au.audiorecordplayer.cam2.view.cam
 
 import android.content.Context
 import android.graphics.SurfaceTexture
 import android.util.AttributeSet
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
+import com.au.audiorecordplayer.cam2.view.ICamView
+import com.au.audiorecordplayer.cam2.view.IViewStatusChangeCallback
 import com.au.audiorecordplayer.util.MyLog
 
-class CamTextureView : TextureView, SurfaceTextureListener {
+class CamTextureView : TextureView, SurfaceTextureListener, ICamView {
     private var mCallback: IViewStatusChangeCallback? = null
 
-    fun setCallback(mCallback: IViewStatusChangeCallback?) {
+    override fun setCallback(mCallback: IViewStatusChangeCallback) {
         this.mCallback = mCallback
     }
 

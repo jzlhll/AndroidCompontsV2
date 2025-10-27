@@ -1,15 +1,17 @@
-package com.au.audiorecordplayer.cam2.view
+package com.au.audiorecordplayer.cam2.view.cam
 
 import android.content.Context
 import android.util.AttributeSet
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import com.au.audiorecordplayer.cam2.view.ICamView
+import com.au.audiorecordplayer.cam2.view.IViewStatusChangeCallback
 import com.au.audiorecordplayer.util.MyLog
 
-class CamSurfaceView : SurfaceView, SurfaceHolder.Callback {
+class CamSurfaceView : SurfaceView, SurfaceHolder.Callback, ICamView {
     private var mCallback: IViewStatusChangeCallback? = null
 
-    fun setCallback(mCallback: IViewStatusChangeCallback?) {
+    override fun setCallback(mCallback: IViewStatusChangeCallback) {
         this.mCallback = mCallback
     }
 
@@ -30,7 +32,7 @@ class CamSurfaceView : SurfaceView, SurfaceHolder.Callback {
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        MyLog.d("SurfaceCreated")
+        MyLog.d("CamSurfaceView SurfaceCreated")
         mCallback?.onSurfaceCreated()
     }
 

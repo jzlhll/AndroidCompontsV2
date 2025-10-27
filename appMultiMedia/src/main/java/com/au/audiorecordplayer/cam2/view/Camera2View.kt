@@ -8,11 +8,15 @@ import android.view.SurfaceView
 import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
+import com.au.audiorecordplayer.cam2.gl.CameraRenderer
+import com.au.audiorecordplayer.cam2.view.cam.CamGLSurfaceView
+import com.au.audiorecordplayer.cam2.view.cam.CamSurfaceView
+import com.au.audiorecordplayer.cam2.view.cam.CamTextureView
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.logdNoFile
 import kotlin.math.roundToInt
 
-
-class Cam2PreviewView : FrameLayout {
+class Camera2View : FrameLayout, ICamView {
     enum class PreviewMode {
         SURFACE_VIEW,
         TEXTURE_VIEW,
@@ -23,7 +27,7 @@ class Cam2PreviewView : FrameLayout {
         /**
          * 暂时采用静态变量来标记；可以改成attr。懒得做了。
          */
-        var previewMode = PreviewMode.SURFACE_VIEW
+        var previewMode = PreviewMode.TEXTURE_VIEW
         const val TAG = "Cam2PreviewView"
     }
 
@@ -33,8 +37,8 @@ class Cam2PreviewView : FrameLayout {
     val realView: View?
         get() = mRealView
 
-    fun setCallback(mCallback: IViewStatusChangeCallback?) {
-        this.mCallback = mCallback
+    override fun setCallback(cb: IViewStatusChangeCallback) {
+        this.mCallback = cb
     }
 
     constructor(context: Context) : super(context)
@@ -43,32 +47,35 @@ class Cam2PreviewView : FrameLayout {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        addRealView()
+    }
+
+    private fun addRealView() {
         if (mIsInit) return
         if (isInEditMode) return
 
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-        when (previewMode) {
+        logdNoFile { "add real view--& set callback" }
+        val camView:View = when (previewMode) {
             PreviewMode.SURFACE_VIEW -> {
-                addView(CamSurfaceView(context).also {
-                    mRealView = it
-                    it.layoutParams = lp
-                    it.setCallback(mCallback)
-                })
+                CamSurfaceView(context)
             }
             PreviewMode.TEXTURE_VIEW -> {
-                addView(CamTextureView(context).also {
-                    mRealView = it
-                    it.layoutParams = lp
-                    it.setCallback(mCallback)
-                })
+                CamTextureView(context)
             }
-            else -> {
-                //todo
+            PreviewMode.GL_SURFACE_VIEW -> {
+                CamGLSurfaceView(context).also {
+                    it.initGL(CameraRenderer(it), 3)
+                }
             }
         }
 
-        addView(DrawFrameLayout(context))
-
+        mRealView = camView
+        camView.layoutParams = lp
+        mCallback?.let { camView.asOrNull<ICamView>()?.setCallback(it) }
+        addView(camView)
+        //调试追加操作界面
+        if(false) addView(DrawFrameLayout(context))
         mIsInit = true
     }
 
@@ -81,11 +88,18 @@ class Cam2PreviewView : FrameLayout {
                 return surface
             }
 
-            val v = mRealView
-            val newSurface = if (v is TextureView) {
-                Surface(v.surfaceTexture)
-            } else {
-                (v as SurfaceView).holder.surface
+            val newSurface = when (val v = mRealView) {
+                is TextureView -> {
+                    Surface(v.surfaceTexture)
+                }
+
+                is CamGLSurfaceView -> {
+                    Surface(v.getSurfaceTextureForce())
+                }
+
+                else -> {
+                    (v as SurfaceView).holder.surface
+                }
             }
             mSurface = newSurface
             return newSurface
@@ -107,6 +121,7 @@ class Cam2PreviewView : FrameLayout {
 
         realView?.asOrNull<SurfaceView>()?.holder?.setFixedSize(width, height)
         realView?.asOrNull<TextureView>()?.surfaceTexture?.setDefaultBufferSize(width, height)
+        realView?.asOrNull<CamGLSurfaceView>()?.getSurfaceTextureForce()?.setDefaultBufferSize(width, height)
         requestLayout()
     }
 

@@ -23,7 +23,7 @@ import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MOD
 import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PREVIEW
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
-import com.au.audiorecordplayer.cam2.view.Cam2PreviewView
+import com.au.audiorecordplayer.cam2.view.Camera2View
 import com.au.audiorecordplayer.cam2.view.IViewStatusChangeCallback
 import com.au.audiorecordplayer.databinding.FragmentCamera2Binding
 import com.au.audiorecordplayer.util.FileUtil
@@ -40,6 +40,7 @@ import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.gone
+import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import kotlinx.coroutines.Job
@@ -59,6 +60,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
     var previewNeedSize = Size(0, 0)
 
     fun openCameraSafety(surface: Surface) {
+        logdNoFile { "open camera safety" }
         permissionHelper.safeRun({
             viewModel.camManager.openCamera(surface)
         }, notGivePermissionBlock = {
@@ -68,7 +70,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     val previewViewCallback = object : IViewStatusChangeCallback {
         override fun onSurfaceCreated() {
-            MyLog.d("onSurface Created")
+            MyLog.d("camera2Fragment onSurface Created")
             onSurfaceCreatedInit()
         }
 
@@ -82,7 +84,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     private fun onSurfaceCreatedInit() {
         val needSize = previewNeedSize
-        MyLog.d("previewView ${binding.previewView.width} * ${binding.previewView.height}")
+        MyLog.d("onSurfaceCreatedInit previewView ${binding.previewView.width} * ${binding.previewView.height}")
         if (orientation != Configuration.ORIENTATION_LANDSCAPE) {
             binding.previewView.setAspectRatio(needSize.width, needSize.height)
         } else {
@@ -96,7 +98,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
      */
     fun changePreviewNeedSize(ac: FragmentActivity) {
         orientation = ac.resources.configuration.orientation
-        val clz = NeedSizeUtil.needSizeFmtClass(Cam2PreviewView.previewMode)
+        val clz = NeedSizeUtil.needSizeFmtClass(Camera2View.previewMode)
         val pair = ac.getScreenFullSize()
         var wishW: Int = pair.first
         var wishH: Int = pair.second
@@ -115,7 +117,6 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         viewModel.camManager.attachContext(requireActivity())
-
         changePreviewNeedSize(requireActivity())
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

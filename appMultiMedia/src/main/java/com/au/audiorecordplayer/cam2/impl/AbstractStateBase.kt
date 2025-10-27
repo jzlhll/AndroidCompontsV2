@@ -11,6 +11,7 @@ import android.view.Surface
 import androidx.annotation.RequiresApi
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.utils.HandlerExecutor
+import com.au.module_android.utils.logdNoFile
 import java.util.concurrent.Executor
 
 
@@ -81,6 +82,7 @@ abstract class AbstractStateBase protected constructor(protected var cameraManag
     }
 
     private fun createSessionOld(cameraDevice: CameraDevice) {
+        logdNoFile { "read all surfaces!" }
         cameraDevice.createCaptureSession(
             allIncludePictureSurfaces(),
             s1_createCaptureSessionStateCallback(cameraDevice), cameraManager
