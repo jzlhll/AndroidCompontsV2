@@ -9,6 +9,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.au.audiorecordplayer.bt.BleTestFragment
 import com.au.audiorecordplayer.cam1.Camera1Fragment
 import com.au.audiorecordplayer.cam2.Camera2Fragment
+import com.au.audiorecordplayer.camgl.CameraGLFragment
 import com.au.audiorecordplayer.camx.CameraXFragment
 import com.au.audiorecordplayer.draws.DrawTestFragment
 import com.au.audiorecordplayer.imgprocess.ReturnYourFaceFragment
@@ -49,6 +50,9 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.camerax).onClick {
             FragmentShellActivity.start(this@MainActivity, CameraXFragment::class.java)
+        }
+        findViewById<View>(R.id.cameraGL).onClick {
+            FragmentShellActivity.start(this@MainActivity, CameraGLFragment::class.java)
         }
         findViewById<View>(R.id.drawView).onClick {
             FragmentShellActivity.start(this@MainActivity, DrawTestFragment::class.java)

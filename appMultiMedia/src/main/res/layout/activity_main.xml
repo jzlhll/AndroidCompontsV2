@@ -104,6 +104,15 @@
             android:layout_height="wrap_content"/>
 
         <com.au.module_android.widget.CustomButton
+            android:id="@+id/cameraGL"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:layout_marginTop="18dp"
+            android:text="camera GL"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
             android:id="@+id/uvcCamera"
             style="@style/StyleButtonPrimary"
             android:layout_marginBottom="0dp"

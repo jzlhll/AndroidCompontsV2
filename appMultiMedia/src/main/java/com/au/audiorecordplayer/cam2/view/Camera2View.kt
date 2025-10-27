@@ -27,7 +27,7 @@ class Camera2View : FrameLayout, ICamView {
         /**
          * 暂时采用静态变量来标记；可以改成attr。懒得做了。
          */
-        var previewMode = PreviewMode.TEXTURE_VIEW
+        var previewMode = PreviewMode.SURFACE_VIEW
         const val TAG = "Cam2PreviewView"
     }
 
