@@ -28,7 +28,7 @@ class CameraGLFragment : ViewFragment() {
         if (!cam.openCamera()) {
             return LinearLayout(activity)
         }
-        glSurfaceView.init(cam, false, activity)
+        glSurfaceView.init(cam, false)
         return glSurfaceView
     }
 

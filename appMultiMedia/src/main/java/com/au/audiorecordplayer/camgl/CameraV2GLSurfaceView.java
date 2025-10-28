@@ -10,10 +10,10 @@ import android.opengl.GLSurfaceView;
 public class CameraV2GLSurfaceView extends GLSurfaceView {
     public static final String TAG = "Filter_CameraV2GLSurfaceView";
 
-    public void init(CameraV2 camera, boolean isPreviewStarted, Context context) {
+    public void init(CameraV2 camera, boolean isPreviewStarted) {
         setEGLContextClientVersion(2);
 
-        var mCameraV2Renderer = new CameraV2Renderer(this, camera, isPreviewStarted, context);
+        var mCameraV2Renderer = new CameraV2Renderer(this, camera, isPreviewStarted);
         setRenderer(mCameraV2Renderer);
     }
 

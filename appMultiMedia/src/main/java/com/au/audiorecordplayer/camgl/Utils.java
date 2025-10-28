@@ -27,6 +27,21 @@ public class Utils {
         return tex[0];
     }
 
+    /**
+     * 标准不做任何修改。
+     */
+    public static final String BASE_FRAGMENT_ORIGINAL_SHADER =
+            """
+            #extension GL_OES_EGL_image_external : require
+            precision mediump float;
+            uniform samplerExternalOES uTextureSampler;
+            varying vec2 vTextureCoord;
+            void main()
+            {
+              gl_FragColor = texture2D(uTextureSampler, vTextureCoord);
+            }
+            """;
+
     public static final String BASE_FRAGMENT_SHADER =
         """
         #extension GL_OES_EGL_image_external : require

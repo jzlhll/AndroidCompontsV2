@@ -1,6 +1,5 @@
 package com.au.audiorecordplayer.camgl;
 
-import android.content.Context;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 
@@ -40,7 +39,7 @@ public class FilterEngine {
 
     private int mShaderProgram = -1;
 
-    public FilterEngine(int OESTextureId, Context context) {
+    public FilterEngine(int OESTextureId) {
         mOESTextureId = OESTextureId;
         mBuffer = createBuffer(vertexData);
         int vertexShader = loadShader(GL_VERTEX_SHADER, Utils.BASE_VERTEX_SHADER);
