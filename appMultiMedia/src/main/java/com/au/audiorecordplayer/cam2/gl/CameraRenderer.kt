@@ -84,7 +84,7 @@ class CameraRenderer(val glSurfaceView: CamGLSurfaceView) : GLSurfaceView.Render
             .put(texCoords)
         texCoordBuffer!!.position(0)
 
-        glSurfaceView.getCallback()?.onSurfaceCreated()
+        glSurfaceView.getCallback()?.onSurfaceCreated(glSurfaceView.getSurfaceTextureForce())
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {

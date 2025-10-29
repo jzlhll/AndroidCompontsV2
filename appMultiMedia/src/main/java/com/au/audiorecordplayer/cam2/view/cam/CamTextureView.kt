@@ -5,15 +5,15 @@ import android.graphics.SurfaceTexture
 import android.util.AttributeSet
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
-import com.au.audiorecordplayer.cam2.view.ICamView
-import com.au.audiorecordplayer.cam2.view.IViewStatusChangeCallback
+import com.au.audiorecordplayer.cam2.view.ICamRealView
+import com.au.audiorecordplayer.cam2.view.IViewOnSurfaceCallback
 import com.au.audiorecordplayer.util.MyLog
 
-class CamTextureView : TextureView, SurfaceTextureListener, ICamView {
-    private var mCallback: IViewStatusChangeCallback? = null
+class CamTextureView : TextureView, SurfaceTextureListener, ICamRealView<SurfaceTexture> {
+    private var mCallback: IViewOnSurfaceCallback<SurfaceTexture>? = null
 
-    override fun setCallback(mCallback: IViewStatusChangeCallback) {
-        this.mCallback = mCallback
+    override fun setCallback(cb: IViewOnSurfaceCallback<SurfaceTexture>) {
+        this.mCallback = cb
     }
 
     constructor(context: Context) : super(context) {
@@ -34,7 +34,7 @@ class CamTextureView : TextureView, SurfaceTextureListener, ICamView {
 
     override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
         MyLog.d("SurfaceCreated")
-        mCallback?.onSurfaceCreated()
+        mCallback?.onSurfaceCreated(surface)
     }
 
     override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {

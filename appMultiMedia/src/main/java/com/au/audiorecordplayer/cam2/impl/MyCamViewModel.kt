@@ -15,8 +15,7 @@ class MyCamViewModel : ViewModel() {
         camManager = MyCamManager(looper = subThread.looper)
     }
 
-    override fun onCleared() {
-        super.onCleared()
+    fun close() {
         camManager.detachContext()
         camManager.closeCameraDirectly(true)
         mSubThread?.quitSafely()

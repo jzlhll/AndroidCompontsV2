@@ -1,6 +1,7 @@
 package com.au.audiorecordplayer.cam2.view
 
 import android.content.Context
+import android.graphics.SurfaceTexture
 import android.util.AttributeSet
 import android.util.Log
 import android.view.Surface
@@ -8,38 +9,39 @@ import android.view.SurfaceView
 import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
-import com.au.audiorecordplayer.cam2.gl.CameraRenderer
 import com.au.audiorecordplayer.cam2.view.cam.CamGLSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamTextureView
+import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.logdNoFile
 import kotlin.math.roundToInt
 
-class Camera2View : FrameLayout, ICamView {
-    enum class PreviewMode {
-        SURFACE_VIEW,
-        TEXTURE_VIEW,
-        GL_SURFACE_VIEW
-    }
-
+class Camera2View : FrameLayout, ICamFunction{
     companion object {
         /**
          * 暂时采用静态变量来标记；可以改成attr。懒得做了。
          */
-        var previewMode = PreviewMode.SURFACE_VIEW
+        var previewMode = PreviewMode.TEXTURE_VIEW
         const val TAG = "Cam2PreviewView"
     }
 
     private var mIsInit = false
-    private var mCallback: IViewStatusChangeCallback? = null
     private var mRealView: View? = null
     val realView: View?
         get() = mRealView
 
-    override fun setCallback(cb: IViewStatusChangeCallback) {
-        this.mCallback = cb
-    }
+    ///////////////////参数设定
+    /**
+     * 创建相机函数
+     */
+    override lateinit var openCameraFunc:(surface:Surface)->Unit
+    /**
+     * 关闭相机函数
+     */
+    override lateinit var closeCameraFunc:()->Unit
+
+    ///////////////////
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -56,55 +58,71 @@ class Camera2View : FrameLayout, ICamView {
 
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         logdNoFile { "add real view--& set callback" }
-        val camView:View = when (previewMode) {
+        val camView = when (previewMode) {
             PreviewMode.SURFACE_VIEW -> {
-                CamSurfaceView(context)
+                CamSurfaceView(context).also {
+                    it.setCallback(object : IViewOnSurfaceCallback<Surface> {
+                        override fun onSurfaceCreated(surfaceTextureOr: Surface) {
+                            mSurface = surfaceTextureOr
+                            openCameraFunc(surfaceTextureOr)
+                        }
+
+                        override fun onSurfaceDestroyed() {
+                            closeCameraFunc()
+                        }
+
+                        override fun onSurfaceChanged() {
+                        }
+                    })
+                }
             }
             PreviewMode.TEXTURE_VIEW -> {
-                CamTextureView(context)
+                CamTextureView(context).also {
+                    it.setCallback(object : IViewOnSurfaceCallback<SurfaceTexture> {
+                        override fun onSurfaceCreated(surfaceTextureOr: SurfaceTexture) {
+                            openCameraFunc(Surface(surfaceTextureOr).also { s->
+                                mSurface = s
+                            })
+                        }
+
+                        override fun onSurfaceDestroyed() {
+                            closeCameraFunc()
+                        }
+
+                        override fun onSurfaceChanged() {
+                        }
+                    })
+                }
             }
             PreviewMode.GL_SURFACE_VIEW -> {
                 CamGLSurfaceView(context).also {
-                    it.initGL(CameraRenderer(it), 3)
+                    it.setCallback(object : IViewOnSurfaceCallback<SurfaceTexture> {
+                        override fun onSurfaceCreated(surfaceTextureOr: SurfaceTexture) {
+                            openCameraFunc(Surface(surfaceTextureOr).also { s->
+                                mSurface = s
+                            })
+                        }
+
+                        override fun onSurfaceDestroyed() {
+                            closeCameraFunc()
+                        }
+
+                        override fun onSurfaceChanged() {
+                        }
+                    })
                 }
             }
         }
 
         mRealView = camView
         camView.layoutParams = lp
-        mCallback?.let { camView.asOrNull<ICamView>()?.setCallback(it) }
         addView(camView)
         //调试追加操作界面
         if(false) addView(DrawFrameLayout(context))
         mIsInit = true
     }
 
-    private var mSurface: Surface? = null
-
-    val surface: Surface
-        get() {
-            val surface = mSurface
-            if (surface != null) {
-                return surface
-            }
-
-            val newSurface = when (val v = mRealView) {
-                is TextureView -> {
-                    Surface(v.surfaceTexture)
-                }
-
-                is CamGLSurfaceView -> {
-                    Surface(v.getSurfaceTextureForce())
-                }
-
-                else -> {
-                    (v as SurfaceView).holder.surface
-                }
-            }
-            mSurface = newSurface
-            return newSurface
-        }
-
+    var mSurface: Surface? = null
     private var aspectRatio = 0f
 
     /**
@@ -135,7 +153,6 @@ class Camera2View : FrameLayout, ICamView {
         if (aspectRatio == 0f) {
             setMeasuredDimension(width, height)
         } else {
-
             // Performs center-crop transformation of the camera frames
             val newWidth: Int
             val newHeight: Int

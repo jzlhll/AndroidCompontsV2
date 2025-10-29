@@ -6,15 +6,14 @@ import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.SurfaceHolder
 import com.au.audiorecordplayer.cam2.gl.CameraRenderer
-import com.au.audiorecordplayer.cam2.view.ICamView
-import com.au.audiorecordplayer.cam2.view.IViewStatusChangeCallback
+import com.au.audiorecordplayer.cam2.view.ICamRealView
+import com.au.audiorecordplayer.cam2.view.IViewOnSurfaceCallback
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.utils.logdNoFile
 
-class CamGLSurfaceView : GLSurfaceView, SurfaceHolder.Callback, ICamView {
-    private var mCallback: IViewStatusChangeCallback? = null
+class CamGLSurfaceView : GLSurfaceView, SurfaceHolder.Callback, ICamRealView<SurfaceTexture> {
+    private var mCallback: IViewOnSurfaceCallback<SurfaceTexture>? = null
     private var mCamRenderer:CameraRenderer? = null
-
 
     //接收相机数据的纹理
     val textureIds = intArrayOf(0)
@@ -42,11 +41,11 @@ class CamGLSurfaceView : GLSurfaceView, SurfaceHolder.Callback, ICamView {
         renderMode = RENDERMODE_WHEN_DIRTY //必须在设置renderer之后
     }
 
-    override fun setCallback(cb: IViewStatusChangeCallback) {
+    override fun setCallback(cb: IViewOnSurfaceCallback<SurfaceTexture>) {
         this.mCallback = cb
     }
 
-    fun getCallback(): IViewStatusChangeCallback? {
+    fun getCallback(): IViewOnSurfaceCallback<SurfaceTexture>? {
         return mCallback
     }
 

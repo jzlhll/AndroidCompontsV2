@@ -6,6 +6,7 @@ import android.hardware.camera2.CameraManager
 import android.util.Size
 import android.view.SurfaceHolder
 import com.au.audiorecordplayer.cam2.view.Camera2View
+import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
 import com.au.audiorecordplayer.util.MyLog
 import java.lang.Long
 import kotlin.Array
@@ -36,11 +37,11 @@ abstract class NeedSizeUtil(cameraManager: CameraManager,
             return ClzNeedSizeUtil(clz, cameraManager, cameraIdStr, wishWidth, wishHeight)
         }
 
-        fun needSizeFmtClass(previewMode: Camera2View.PreviewMode) : Class<*> {
+        fun needSizeFmtClass(previewMode: PreviewMode) : Class<*> {
             return when(previewMode) {
-                Camera2View.PreviewMode.SURFACE_VIEW -> SurfaceHolder::class.java
-                Camera2View.PreviewMode.TEXTURE_VIEW -> SurfaceTexture::class.java
-                Camera2View.PreviewMode.GL_SURFACE_VIEW -> SurfaceTexture::class.java
+                PreviewMode.SURFACE_VIEW -> SurfaceHolder::class.java
+                PreviewMode.TEXTURE_VIEW -> SurfaceTexture::class.java
+                PreviewMode.GL_SURFACE_VIEW -> SurfaceTexture::class.java
             }
         }
     }

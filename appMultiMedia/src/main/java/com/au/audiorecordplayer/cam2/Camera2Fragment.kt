@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.Size
 import android.view.Surface
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.FragmentActivity
@@ -24,7 +23,6 @@ import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MOD
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.cam2.view.Camera2View
-import com.au.audiorecordplayer.cam2.view.IViewStatusChangeCallback
 import com.au.audiorecordplayer.databinding.FragmentCamera2Binding
 import com.au.audiorecordplayer.util.FileUtil
 import com.au.audiorecordplayer.util.MainUIManager
@@ -56,10 +54,11 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
     private val permissionHelper = createMultiPermissionForResult(permissions)
 
     private val viewModel by unsafeLazy { ViewModelProvider(requireActivity())[MyCamViewModel::class.java] }
-    private var orientation = -1
-    var previewNeedSize = Size(0, 0)
 
-    fun openCameraSafety(surface: Surface) {
+    fun openCameraSafety(surface: Surface?) {
+        surface ?: return
+        changePreviewNeedSize(requireActivity())
+
         logdNoFile { "open camera safety" }
         permissionHelper.safeRun({
             viewModel.camManager.openCamera(surface)
@@ -68,36 +67,12 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         })
     }
 
-    val previewViewCallback = object : IViewStatusChangeCallback {
-        override fun onSurfaceCreated() {
-            MyLog.d("camera2Fragment onSurface Created")
-            onSurfaceCreatedInit()
-        }
-
-        override fun onSurfaceDestroyed() {
-            viewModel.camManager.closeSession()
-        }
-
-        override fun onSurfaceChanged() {
-        }
-    }
-
-    private fun onSurfaceCreatedInit() {
-        val needSize = previewNeedSize
-        MyLog.d("onSurfaceCreatedInit previewView ${binding.previewView.width} * ${binding.previewView.height}")
-        if (orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            binding.previewView.setAspectRatio(needSize.width, needSize.height)
-        } else {
-            binding.previewView.setAspectRatio(needSize.height, needSize.width)
-        }
-        openCameraSafety(binding.previewView.surface)
-    }
-
     /**
      * 因为是ViewModel中，不得将ac持有和用在lambda和回调中。
      */
     fun changePreviewNeedSize(ac: FragmentActivity) {
-        orientation = ac.resources.configuration.orientation
+        //第一步：获取新的preview size
+        val orientation = ac.resources.configuration.orientation
         val clz = NeedSizeUtil.needSizeFmtClass(Camera2View.previewMode)
         val pair = ac.getScreenFullSize()
         var wishW: Int = pair.first
@@ -109,15 +84,23 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         }
         MyLog.d("wishSize $wishW*$wishH")
         val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        previewNeedSize = NeedSizeUtil
+        val previewNeedSize = NeedSizeUtil
             .getByClz(clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
             .needSize("<State Preview>")
         MyLog.d("needSize " + previewNeedSize.width + " * " + previewNeedSize.height)
+
+        //第二步：设置宽高比
+        val needSize = previewNeedSize
+        MyLog.d("onSurfaceCreatedInit previewView ${binding.previewView.width} * ${binding.previewView.height}")
+        if (orientation != Configuration.ORIENTATION_LANDSCAPE) {
+            binding.previewView.setAspectRatio(needSize.width, needSize.height)
+        } else {
+            binding.previewView.setAspectRatio(needSize.height, needSize.width)
+        }
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         viewModel.camManager.attachContext(requireActivity())
-        changePreviewNeedSize(requireActivity())
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 //2. 收集到了用户的 数据
@@ -171,7 +154,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                             }
                         } else if (needSwitchToCamIdBean != null) {
                             toastOnText("切换摄像头...")
-                            onSurfaceCreatedInit()
+                            openCameraSafety(binding.previewView.mSurface)
                         }
                     },
                     error = { exMsg->
@@ -190,7 +173,12 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
             }
         }
 
-        binding.previewView.setCallback(previewViewCallback)
+        binding.previewView.openCameraFunc = {
+            openCameraSafety(it)
+        }
+        binding.previewView.closeCameraFunc = {
+            viewModel.close()
+        }
 
         binding.takePicBtn.onClick {
             viewModel.camManager.takePicture(
