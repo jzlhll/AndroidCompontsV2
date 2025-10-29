@@ -39,7 +39,6 @@ public class CameraV2 {
     private CameraDevice mCameraDevice;
     private String mCameraId;
     private Size mPreviewSize;
-    private HandlerThread mCameraThread;
     private Handler mCameraHandler;
     private SurfaceTexture mSurfaceTexture;
     private CaptureRequest.Builder mCaptureRequestBuilder;
@@ -71,7 +70,7 @@ public class CameraV2 {
     }
 
     public void startCameraThread() {
-        mCameraThread = new HandlerThread("CameraThread");
+        HandlerThread mCameraThread = new HandlerThread("CameraThread");
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
     }
