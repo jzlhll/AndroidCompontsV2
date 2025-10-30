@@ -5,37 +5,33 @@ import android.graphics.SurfaceTexture
 import android.util.AttributeSet
 import android.util.Log
 import android.view.Surface
-import android.view.SurfaceView
-import android.view.TextureView
-import android.view.View
+import android.view.SurfaceHolder
 import android.widget.FrameLayout
-import com.au.audiorecordplayer.cam2.view.cam.CamGLSurfaceView
+import com.au.audiorecordplayer.cam2.view.gl.CamGLSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamTextureView
 import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
-import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.logdNoFile
 import kotlin.math.roundToInt
 
-class Camera2View : FrameLayout, ICamFunction{
+class Camera2View : FrameLayout, Camera2ViewBase{
     companion object {
         /**
          * 暂时采用静态变量来标记；可以改成attr。懒得做了。
          */
-        var previewMode = PreviewMode.TEXTURE_VIEW
+        var previewMode = PreviewMode.GL_SURFACE_VIEW
         const val TAG = "Cam2PreviewView"
     }
 
     private var mIsInit = false
-    private var mRealView: View? = null
-    val realView: View?
-        get() = mRealView
+
+    var surfaceFixSizeUnion: SurfaceFixSizeUnion? = null
 
     ///////////////////参数设定
     /**
      * 创建相机函数
      */
-    override lateinit var openCameraFunc:(surface:Surface)->Unit
+    override lateinit var openCameraFunc:()->Unit
     /**
      * 关闭相机函数
      */
@@ -61,10 +57,11 @@ class Camera2View : FrameLayout, ICamFunction{
         val camView = when (previewMode) {
             PreviewMode.SURFACE_VIEW -> {
                 CamSurfaceView(context).also {
-                    it.setCallback(object : IViewOnSurfaceCallback<Surface> {
-                        override fun onSurfaceCreated(surfaceTextureOr: Surface) {
-                            mSurface = surfaceTextureOr
-                            openCameraFunc(surfaceTextureOr)
+                    it.setCallback(object : IViewOnSurfaceCallback {
+                        override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
+                            val sh = surfaceHolderOrSurfaceTexture as SurfaceHolder
+                            surfaceFixSizeUnion = SurfaceFixSizeUnion(surfaceHolder = sh, shownSurface = sh.surface)
+                            openCameraFunc()
                         }
 
                         override fun onSurfaceDestroyed() {
@@ -78,11 +75,12 @@ class Camera2View : FrameLayout, ICamFunction{
             }
             PreviewMode.TEXTURE_VIEW -> {
                 CamTextureView(context).also {
-                    it.setCallback(object : IViewOnSurfaceCallback<SurfaceTexture> {
-                        override fun onSurfaceCreated(surfaceTextureOr: SurfaceTexture) {
-                            openCameraFunc(Surface(surfaceTextureOr).also { s->
-                                mSurface = s
-                            })
+                    it.setCallback(object : IViewOnSurfaceCallback {
+                        override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
+                            val st = surfaceHolderOrSurfaceTexture as SurfaceTexture
+                            val surface = Surface(st)
+                            surfaceFixSizeUnion = SurfaceFixSizeUnion(surfaceTexture = st, shownSurface = surface)
+                            openCameraFunc()
                         }
 
                         override fun onSurfaceDestroyed() {
@@ -96,11 +94,17 @@ class Camera2View : FrameLayout, ICamFunction{
             }
             PreviewMode.GL_SURFACE_VIEW -> {
                 CamGLSurfaceView(context).also {
-                    it.setCallback(object : IViewOnSurfaceCallback<SurfaceTexture> {
-                        override fun onSurfaceCreated(surfaceTextureOr: SurfaceTexture) {
-                            openCameraFunc(Surface(surfaceTextureOr).also { s->
-                                mSurface = s
-                            })
+                    it.setCallback(object : IViewOnSurfaceCallback {
+                        override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
+                            val st = surfaceHolderOrSurfaceTexture as SurfaceTexture
+                            val surface = Surface(st)
+                            surfaceFixSizeUnion = SurfaceFixSizeUnion(surfaceTexture = st, shownSurface = surface)
+
+                            post {
+                                if (isAttachedToWindow) {
+                                    openCameraFunc()
+                                }
+                            }
                         }
 
                         override fun onSurfaceDestroyed() {
@@ -114,7 +118,6 @@ class Camera2View : FrameLayout, ICamFunction{
             }
         }
 
-        mRealView = camView
         camView.layoutParams = lp
         addView(camView)
         //调试追加操作界面
@@ -122,7 +125,6 @@ class Camera2View : FrameLayout, ICamFunction{
         mIsInit = true
     }
 
-    var mSurface: Surface? = null
     private var aspectRatio = 0f
 
     /**
@@ -133,13 +135,13 @@ class Camera2View : FrameLayout, ICamFunction{
      * @param height Camera resolution vertical size
      */
     fun setAspectRatio(width: Int, height: Int) {
-        Log.d(TAG, "setAspectRatio : $width x $height")
+        Log.d(TAG, "setAspect Ratio : $width x $height")
         require(width > 0 && height > 0) { "Size cannot be negative" }
         aspectRatio = width.toFloat() / height.toFloat()
 
-        realView?.asOrNull<SurfaceView>()?.holder?.setFixedSize(width, height)
-        realView?.asOrNull<TextureView>()?.surfaceTexture?.setDefaultBufferSize(width, height)
-        realView?.asOrNull<CamGLSurfaceView>()?.getSurfaceTextureForce()?.setDefaultBufferSize(width, height)
+        surfaceFixSizeUnion?.surfaceHolder?.setFixedSize(width, height)
+        surfaceFixSizeUnion?.surfaceTexture?.setDefaultBufferSize(width, height)
+
         requestLayout()
     }
 

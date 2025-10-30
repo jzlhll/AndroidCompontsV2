@@ -23,6 +23,7 @@ import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MOD
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.cam2.view.Camera2View
+import com.au.audiorecordplayer.cam2.view.SurfaceFixSizeUnion
 import com.au.audiorecordplayer.databinding.FragmentCamera2Binding
 import com.au.audiorecordplayer.util.FileUtil
 import com.au.audiorecordplayer.util.MainUIManager
@@ -55,13 +56,13 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     private val viewModel by unsafeLazy { ViewModelProvider(requireActivity())[MyCamViewModel::class.java] }
 
-    fun openCameraSafety(surface: Surface?) {
+    fun openCameraSafety(surface: SurfaceFixSizeUnion?) {
         surface ?: return
         changePreviewNeedSize(requireActivity())
 
         logdNoFile { "open camera safety" }
         permissionHelper.safeRun({
-            viewModel.camManager.openCamera(surface)
+            viewModel.camManager.openCamera(surface.shownSurface)
         }, notGivePermissionBlock = {
             MainUIManager.get().toastSnackbar(view, "请授予相机和录音权限。")
         })
@@ -154,7 +155,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                             }
                         } else if (needSwitchToCamIdBean != null) {
                             toastOnText("切换摄像头...")
-                            openCameraSafety(binding.previewView.mSurface)
+                            openCameraSafety(binding.previewView.surfaceFixSizeUnion)
                         }
                     },
                     error = { exMsg->
@@ -174,7 +175,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         }
 
         binding.previewView.openCameraFunc = {
-            openCameraSafety(it)
+            openCameraSafety(binding.previewView.surfaceFixSizeUnion)
         }
         binding.previewView.closeCameraFunc = {
             viewModel.close()

@@ -1,4 +1,4 @@
-package com.au.audiorecordplayer.camgl
+package com.au.audiorecordplayer.cam2.view.gl
 
 import android.opengl.GLES11Ext
 import android.opengl.GLES20

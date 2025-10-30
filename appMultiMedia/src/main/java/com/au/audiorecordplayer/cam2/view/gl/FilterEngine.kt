@@ -1,4 +1,4 @@
-package com.au.audiorecordplayer.camgl
+package com.au.audiorecordplayer.cam2.view.gl
 
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
@@ -33,7 +33,7 @@ class FilterEngine(val oESTextureId: Int) {
 
     init {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, Utils.BASE_VERTEX_SHADER)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, Utils.BASE_FRAGMENT_SHADER)
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, Utils.BASE_FRAGMENT_ORIGINAL_SHADER)
         this.shaderProgram = linkProgram(vertexShader, fragmentShader)
     }
 

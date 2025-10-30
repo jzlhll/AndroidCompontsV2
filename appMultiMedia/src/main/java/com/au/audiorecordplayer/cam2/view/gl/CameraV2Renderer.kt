@@ -1,4 +1,4 @@
-package com.au.audiorecordplayer.camgl
+package com.au.audiorecordplayer.cam2.view.gl
 
 import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
@@ -12,11 +12,9 @@ import javax.microedition.khronos.opengles.GL10
 /**
  * Created by lb6905 on 2017/7/19.
  */
-class CameraV2Renderer(
-    val mCameraV2GLSurfaceView: CameraV2GLSurfaceView?,
-    val mCamera: CameraV2?,
-    var bIsPreviewStarted: Boolean,
-) : GLSurfaceView.Renderer {
+class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
+    private val TAG = "CameraV2Renderer"
+
     private var mOESTextureId = -1
     private var mSurfaceTexture: SurfaceTexture? = null
     private val transformMatrix = FloatArray(16)
@@ -27,16 +25,25 @@ class CameraV2Renderer(
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         mOESTextureId = Utils.createOESTextureObject()
         val mFilterEngine = FilterEngine(mOESTextureId)
+        val st = SurfaceTexture(mOESTextureId)
+        mSurfaceTexture = st
+        st.setOnFrameAvailableListener { _: SurfaceTexture? ->
+            mGLView.requestRender()
+        }
+        
         mDataBuffer = mFilterEngine.buffer
         mShaderProgram = mFilterEngine.shaderProgram
         GLES20.glGenFramebuffers(1, mFBOIds, 0)
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFBOIds[0])
         Log.i(TAG, "onSurfaceCreated: mFBOId: " + mFBOIds[0])
+        
+        mGLView.getCallback()?.onSurfaceCreated(st)
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
         Log.i(TAG, "onSurfaceChanged: $width, $height")
+        mGLView.getCallback()?.onSurfaceChanged()
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -46,19 +53,13 @@ class CameraV2Renderer(
             mSurfaceTexture!!.getTransformMatrix(transformMatrix)
         }
 
-        if (!bIsPreviewStarted) {
-            bIsPreviewStarted = initSurfaceTexture()
-            bIsPreviewStarted = true
-            return
-        }
-
         //glClear(GL_COLOR_BUFFER_BIT);
         GLES20.glClearColor(1.0f, 0.0f, 0.0f, 0.0f)
 
-        val aPositionLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.POSITION_ATTRIBUTE)
-        val aTextureCoordLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.TEXTURE_COORD_ATTRIBUTE)
-        val uTextureMatrixLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.TEXTURE_MATRIX_UNIFORM)
-        val uTextureSamplerLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.TEXTURE_SAMPLER_UNIFORM)
+        val aPositionLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.Companion.POSITION_ATTRIBUTE)
+        val aTextureCoordLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.Companion.TEXTURE_COORD_ATTRIBUTE)
+        val uTextureMatrixLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.Companion.TEXTURE_MATRIX_UNIFORM)
+        val uTextureSamplerLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.Companion.TEXTURE_SAMPLER_UNIFORM)
 
         GLES20.glActiveTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mOESTextureId)
@@ -83,25 +84,5 @@ class CameraV2Renderer(
         val t2 = System.currentTimeMillis()
         val t = t2 - t1
         Log.i(TAG, "onDrawFrame: time: $t")
-    }
-
-    private fun initSurfaceTexture(): Boolean {
-        if (mCamera == null || mCameraV2GLSurfaceView == null) {
-            Log.i(TAG, "mCamera or mGLSurfaceView is null!")
-            return false
-        }
-        SurfaceTexture(mOESTextureId).also {
-            mSurfaceTexture = it
-            it.setOnFrameAvailableListener { _: SurfaceTexture? ->
-                mCameraV2GLSurfaceView.requestRender()
-            }
-        }
-        mCamera.setPreviewTexture(mSurfaceTexture)
-        mCamera.startPreview()
-        return true
-    }
-
-    companion object {
-        const val TAG: String = "Filter_CameraV2Renderer"
     }
 }

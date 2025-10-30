@@ -9,10 +9,10 @@ import com.au.audiorecordplayer.cam2.view.ICamRealView
 import com.au.audiorecordplayer.cam2.view.IViewOnSurfaceCallback
 import com.au.audiorecordplayer.util.MyLog
 
-class CamTextureView : TextureView, SurfaceTextureListener, ICamRealView<SurfaceTexture> {
-    private var mCallback: IViewOnSurfaceCallback<SurfaceTexture>? = null
+class CamTextureView : TextureView, SurfaceTextureListener, ICamRealView {
+    private var mCallback: IViewOnSurfaceCallback? = null
 
-    override fun setCallback(cb: IViewOnSurfaceCallback<SurfaceTexture>) {
+    override fun setCallback(cb: IViewOnSurfaceCallback) {
         this.mCallback = cb
     }
 
