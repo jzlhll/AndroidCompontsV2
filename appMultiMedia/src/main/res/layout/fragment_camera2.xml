@@ -5,6 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    tools:background="#333333"
     tools:context=".MainActivity">
 
     <com.au.audiorecordplayer.cam2.view.Camera2View
@@ -14,7 +15,7 @@
 
     <com.au.module_android.widget.BgBuildCustomFontText
         android:id="@+id/modeTv"
-        style="@style/StyleAuTextNormal"
+        style="@style/StyleAuTextThinDp"
         android:paddingHorizontal="8dp"
         android:paddingVertical="4dp"
         app:backgroundNormal="#22f0f0f0"
@@ -25,6 +26,16 @@
         app:layout_constraintStart_toStartOf="parent"
         android:text="StateDied"
         app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/settingBtn"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="@dimen/ui_padding_edge"
+        android:src="@drawable/ic_cam_setting"
+        android:tint="@color/white"
+        android:layout_width="33dp"
+        android:layout_height="33dp"/>
 
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/timeTv"
@@ -37,45 +48,45 @@
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/modeTv"/>
 
-    <com.au.module_android.widget.CustomButton
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/recordBtn"
-        style="@style/StyleButtonPrimary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="8dp"
-        android:scaleType="fitCenter"
-        android:text="start record"
+        android:layout_width="39dp"
+        android:layout_height="39dp"
+        android:tint="@color/white"
+        android:src="@drawable/ic_cam_take_record"
+        android:contentDescription="start record"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintEnd_toStartOf="@id/takePicBtn"
         app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="@dimen/btn_margin_bottom"
         android:elevation="2dp" />
 
-    <com.au.module_android.widget.CustomButton
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/takePicBtn"
-        android:paddingHorizontal="8dp"
-        style="@style/StyleButtonPrimary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:scaleType="fitCenter"
-        android:text="picture"
-        android:layout_marginHorizontal="8dp"
+        android:layout_width="46dp"
+        android:layout_height="42dp"
+        android:tint="@color/white"
+        android:src="@drawable/ic_cam_take_pic"
+        android:contentDescription="take picture"
+        android:layout_marginHorizontal="33dp"
         app:layout_constraintStart_toEndOf="@id/recordBtn"
         app:layout_constraintEnd_toStartOf="@id/switchCamBtn"
         app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="@dimen/btn_margin_bottom"
         android:elevation="2dp" />
 
-    <com.au.module_android.widget.CustomButton
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/switchCamBtn"
-        android:paddingHorizontal="8dp"
-        style="@style/StyleButtonPrimary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:scaleType="fitCenter"
-        android:text="front-back"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:src="@drawable/ic_cam_switch"
+        android:tint="@color/white"
+        android:text="front-back switch"
         app:layout_constraintStart_toEndOf="@id/takePicBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="@dimen/btn_margin_bottom"
         android:elevation="2dp" />
 
     <com.au.module_android.widget.BgBuildCustomFontText

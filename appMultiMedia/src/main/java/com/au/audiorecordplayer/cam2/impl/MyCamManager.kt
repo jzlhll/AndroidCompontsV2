@@ -22,7 +22,6 @@ import com.au.audiorecordplayer.cam2.bean.UiToastBean
 import com.au.audiorecordplayer.cam2.impl.states.StateDied
 import com.au.audiorecordplayer.cam2.impl.states.StatePictureAndPreview
 import com.au.audiorecordplayer.cam2.impl.states.StatePictureAndRecordAndPreview
-import com.au.audiorecordplayer.cam2.impl.states.StatePreview
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 import com.au.module_android.simpleflow.StatusState
@@ -34,7 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
+class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
                    looper: Looper) : Handler(looper), ICameraMgr, ITakePictureCallback {
 
     companion object {
@@ -42,7 +41,7 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
 
         const val constStateNone = "StateCameraClosed"
         const val constStateDied = "StateCameraOpened"
-        const val constStatePreview = "StatePreview"
+        //const val constStatePreview = "StatePreview"
         const val constStatePictureAndPreview = "StatePictureAndPreview"
         const val constStatePictureAndRecordAndPreview = "StatePictureAndRecordAndPreview"
 
@@ -51,9 +50,11 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
 
         const val ACTION_CLOSE_SESSION: Int = 13
 
-        const val TRANSMIT_TO_MODE_PREVIEW: Int = 101
+        //const val TRANSMIT_TO_MODE_PREVIEW: Int = 101
         const val TRANSMIT_TO_MODE_PICTURE_PREVIEW: Int = 102
         const val TRANSMIT_TO_MODE_RECORD_PICTURE_PREVIEW: Int = 103 //其实就是将其他状态升级到录制状态去
+
+        private const val DEFAULT_MODE = TRANSMIT_TO_MODE_PICTURE_PREVIEW
     }
 
     private val _uiState = MutableStateFlow<StatusState<UiStateBean>>(StatusState.Loading)
@@ -86,7 +87,7 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
     }
 
     override fun showPreview() {
-        sendEmptyMessage(TRANSMIT_TO_MODE_PREVIEW)
+        sendEmptyMessage(DEFAULT_MODE)
     }
 
     override fun closeSession() {
@@ -202,41 +203,41 @@ class MyCamManager(var mDefaultTransmitIndex:Int = TRANSMIT_TO_MODE_PREVIEW,
                 _uiState.value = StatusState.Success(UiStateBean("$cameraId", constStateDied))
             }
 
-            TRANSMIT_TO_MODE_PREVIEW -> {
-                if (curSt == null) {
-                    MyLog.d("Goto TRANSMIT_2_MODE_PREVIEW mode error cause it's deed")
-                    ifCurrentStNullOpenCameraFirst(msg)
-                    return
-                }
-
-                if (curSt is IActionRecord) {
-                    curSt.stopRecord()
-                }
-
-                if (curSt.javaClass.simpleName == constStatePreview) {
-                    _toastState.tryEmit(UiToastBean("当前模式已处于预览模式"))
-                    return
-                }
-
-                curSt.closeSession() //关闭session
-                val newState = StatePreview(this)
-                currentState = newState
-                try {
-                    newState.createSession(object : IStatePreviewCallback {
-                        override fun onPreviewSucceeded() {
-                            MyLog.d("onPreview Succeeded in myCam Manager")
-                        }
-
-                        override fun onPreviewFailed() {
-                            MyLog.d("onPreview Failed in myCam Manager")
-                        }
-                    })
-                    _uiState.value = StatusState.Success(UiStateBean("$cameraId", constStatePreview))
-                } catch (e: Exception) {
-                    MyLog.e("start preview err0")
-                    e.printStackTrace()
-                }
-            }
+//            TRANSMIT_TO_MODE_PREVIEW -> {
+//                if (curSt == null) {
+//                    MyLog.d("Goto TRANSMIT_2_MODE_PREVIEW mode error cause it's deed")
+//                    ifCurrentStNullOpenCameraFirst(msg)
+//                    return
+//                }
+//
+//                if (curSt is IActionRecord) {
+//                    curSt.stopRecord()
+//                }
+//
+//                if (curSt.javaClass.simpleName == constStatePreview) {
+//                    _toastState.tryEmit(UiToastBean("当前模式已处于预览模式"))
+//                    return
+//                }
+//
+//                curSt.closeSession() //关闭session
+//                val newState = StatePreview(this)
+//                currentState = newState
+//                try {
+//                    newState.createSession(object : IStatePreviewCallback {
+//                        override fun onPreviewSucceeded() {
+//                            MyLog.d("onPreview Succeeded in myCam Manager")
+//                        }
+//
+//                        override fun onPreviewFailed() {
+//                            MyLog.d("onPreview Failed in myCam Manager")
+//                        }
+//                    })
+//                    _uiState.value = StatusState.Success(UiStateBean("$cameraId", constStatePreview))
+//                } catch (e: Exception) {
+//                    MyLog.e("start preview err0")
+//                    e.printStackTrace()
+//                }
+//            }
 
             TRANSMIT_TO_MODE_PICTURE_PREVIEW -> {
                 if (curSt == null) {

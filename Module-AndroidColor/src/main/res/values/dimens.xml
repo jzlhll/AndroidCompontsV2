@@ -17,7 +17,7 @@
 
     <dimen name="switch_block_padding">2dp</dimen>
 
-    <dimen name="ui_padding_edge">20dp</dimen>
+    <dimen name="ui_padding_edge">18dp</dimen>
 
     <!-- 禁用M3的难看进度条效果 -->
     <dimen name="m3_comp_progress_indicator_active_indicator_track_space" tools:override="true">0dp</dimen>

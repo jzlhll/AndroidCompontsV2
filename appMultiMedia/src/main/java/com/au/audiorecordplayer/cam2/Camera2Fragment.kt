@@ -2,12 +2,12 @@ package com.au.audiorecordplayer.cam2
 
 import android.Manifest
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.Surface
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -18,8 +18,7 @@ import com.au.audiorecordplayer.cam2.bean.UiPictureBean
 import com.au.audiorecordplayer.cam2.bean.UiRecordBean
 import com.au.audiorecordplayer.cam2.bean.UiStateBean
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
-import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PICTURE_PREVIEW
-import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PREVIEW
+//import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PREVIEW
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.cam2.view.Camera2View
@@ -34,12 +33,15 @@ import com.au.module_android.permissions.createMultiPermissionForResult
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.utils.ViewVisibilityDebounce
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.gone
+import com.au.module_android.utils.invisible
 import com.au.module_android.utils.logdNoFile
+import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import kotlinx.coroutines.Job
@@ -56,51 +58,13 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     private val viewModel by unsafeLazy { ViewModelProvider(requireActivity())[MyCamViewModel::class.java] }
 
-    fun openCameraSafety(surface: SurfaceFixSizeUnion?) {
-        surface ?: return
-        changePreviewNeedSize(requireActivity())
-
-        logdNoFile { "open camera safety" }
-        permissionHelper.safeRun({
-            viewModel.camManager.openCamera(surface.shownSurface)
-        }, notGivePermissionBlock = {
-            MainUIManager.get().toastSnackbar(view, "请授予相机和录音权限。")
-        })
-    }
-
-    /**
-     * 因为是ViewModel中，不得将ac持有和用在lambda和回调中。
-     */
-    fun changePreviewNeedSize(ac: FragmentActivity) {
-        //第一步：获取新的preview size
-        val orientation = ac.resources.configuration.orientation
-        val clz = NeedSizeUtil.needSizeFmtClass(Camera2View.previewMode)
-        val pair = ac.getScreenFullSize()
-        var wishW: Int = pair.first
-        var wishH: Int = pair.second
-        if (wishW < wishH) {
-            val h = wishW
-            wishW = wishH
-            wishH = h
-        }
-        MyLog.d("wishSize $wishW*$wishH")
-        val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        val previewNeedSize = NeedSizeUtil
-            .getByClz(clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
-            .needSize("<State Preview>")
-        MyLog.d("needSize " + previewNeedSize.width + " * " + previewNeedSize.height)
-
-        //第二步：设置宽高比
-        val needSize = previewNeedSize
-        MyLog.d("onSurfaceCreatedInit previewView ${binding.previewView.width} * ${binding.previewView.height}")
-        if (orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            binding.previewView.setAspectRatio(needSize.width, needSize.height)
-        } else {
-            binding.previewView.setAspectRatio(needSize.height, needSize.width)
-        }
-    }
+    private lateinit var recordBtnDebounce: ViewVisibilityDebounce
+    private lateinit var takePicBtnDebounce: ViewVisibilityDebounce
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        recordBtnDebounce = ViewVisibilityDebounce(lifecycleScope, binding.recordBtn)
+        takePicBtnDebounce = ViewVisibilityDebounce(lifecycleScope, binding.takePicBtn)
+
         viewModel.camManager.attachContext(requireActivity())
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -113,6 +77,23 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                         val needSwitchToCamIdBean = bean.needSwitchToCamIdBean
 
                         binding.modeTv.text = bean.currentMode
+
+                        when (bean.currentMode) {
+                            MyCamManager.constStateNone,
+                            MyCamManager.constStateDied -> {
+                                recordBtnDebounce.invisible()
+                                takePicBtnDebounce.invisible()
+                            }
+//                            MyCamManager.constStatePreview -> {
+//                                recordBtnDebounce.visible()
+//                                takePicBtnDebounce.invisible()
+//                            }
+                            MyCamManager.constStatePictureAndRecordAndPreview,
+                            MyCamManager.constStatePictureAndPreview -> {
+                                recordBtnDebounce.visible()
+                                takePicBtnDebounce.visible()
+                            }
+                        }
 
                         if (picture != null) {
                             when (picture) {
@@ -130,8 +111,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                                     toastOnText("视频保存在：${record.path}", 6000)
                                     binding.timeTv.handler.removeCallbacks(mTimeUpdateRunnable)
                                     mTimeSec = 0
-                                    binding.recordBtn.text = "start record"
-                                    binding.recordBtn.setTextColor(Color.WHITE)
+                                    binding.recordBtn.imageTintList = ColorStateList.valueOf(Color.WHITE)
                                     binding.timeTv.gone()
                                 }
                                 is UiRecordBean.RecordStart -> {
@@ -140,8 +120,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                                         isRecording = true
                                         mRunnableLastTime = 0
                                         mRunnableIndex = 0
-                                        binding.recordBtn.text = "stop record"
-                                        binding.recordBtn.setTextColor(Color.RED)
+                                        binding.recordBtn.imageTintList = ColorStateList.valueOf(Color.RED)
                                         binding.timeTv.visible()
                                         binding.timeTv.handler.post(mTimeUpdateRunnable)
                                     } else {
@@ -200,7 +179,8 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
             val currentMode = viewModel.camManager.uiState.value.asOrNull<StatusState.Success<UiStateBean>>()?.data
             when (currentMode?.currentMode) {
                 MyCamManager.constStatePictureAndPreview,
-                MyCamManager.constStatePreview -> {
+//                MyCamManager.constStatePreview
+                    -> {
                     viewModel.camManager.switchFontBackCam()
                 }
                 else -> {
@@ -208,28 +188,76 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                 }
             }
         }
-
-        binding.modeTv.onClick {
-            val currentMode = viewModel.camManager.uiState.value.asOrNull<StatusState.Success<UiStateBean>>()?.data
-            when (currentMode?.currentMode) {
-                 MyCamManager.constStatePreview -> {
-                     viewModel.camManager.sendEmptyMessage(TRANSMIT_TO_MODE_PICTURE_PREVIEW)
-                }
-                MyCamManager.constStatePictureAndPreview -> {
-                    viewModel.camManager.sendEmptyMessage(TRANSMIT_TO_MODE_PREVIEW)
-                }
-                else -> {
-                    toastOnText("当前模式不支持切换")
-                }
-            }
-        }
+//        binding.modeTv.onClick {
+//            val currentMode = viewModel.camManager.uiState.value.asOrNull<StatusState.Success<UiStateBean>>()?.data
+//            when (currentMode?.currentMode) {
+//                 MyCamManager.constStatePreview -> {
+//                     viewModel.camManager.sendEmptyMessage(TRANSMIT_TO_MODE_PICTURE_PREVIEW)
+//                }
+//                MyCamManager.constStatePictureAndPreview -> {
+//                    viewModel.camManager.sendEmptyMessage(TRANSMIT_TO_MODE_PREVIEW)
+//                }
+//                else -> {
+//                    toastOnText("当前模式不支持切换")
+//                }
+//            }
+//        }
         binding.modeTv.post {
             requireActivity().currentStatusBarAndNavBarHeight().also { bars->
                 binding.modeTv.layoutParams = (binding.modeTv.layoutParams as ConstraintLayout.LayoutParams).also {
                     it.topMargin = (bars?.first ?: 32.dp) + 4.dp
                 }
+                binding.settingBtn.layoutParams = (binding.settingBtn.layoutParams as ConstraintLayout.LayoutParams).also {
+                    it.topMargin = (bars?.first ?: 32.dp) + 4.dp
+                }
             }
         }
+    }
+
+    fun openCameraSafety(surface: SurfaceFixSizeUnion?) {
+        surface ?: return
+        changePreviewNeedSize(requireActivity())
+
+        logdNoFile { "open camera safety" }
+        permissionHelper.safeRun({
+            viewModel.camManager.openCamera(surface.shownSurface)
+        }, notGivePermissionBlock = {
+            MainUIManager.get().toastSnackbar(view, "请授予相机和录音权限。")
+        })
+    }
+
+    /**
+     * 因为是ViewModel中，不得将ac持有和用在lambda和回调中。
+     */
+    fun changePreviewNeedSize(ac: FragmentActivity) {
+        //第一步：获取新的preview size
+        val orientation = ac.resources.configuration.orientation
+        val clz = NeedSizeUtil.needSizeFmtClass(Camera2View.previewMode)
+        val pair = ac.getScreenFullSize()
+        var wishW: Int = pair.first
+        var wishH: Int = pair.second
+        if (wishW < wishH) {
+            val h = wishW
+            wishW = wishH
+            wishH = h
+        }
+        MyLog.d("wishSize $wishW*$wishH")
+        val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val previewNeedSize = NeedSizeUtil
+            .getByClz(clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
+            .needSize("<State Preview>")
+        MyLog.d("needSize " + previewNeedSize.width + " * " + previewNeedSize.height)
+
+        //第二步：设置宽高比
+        val needSize = previewNeedSize
+        MyLog.d("onSurfaceCreatedInit previewView ${binding.previewView.width} * ${binding.previewView.height}")
+        if (orientation != Configuration.ORIENTATION_LANDSCAPE) {
+            binding.previewView.setAspectRatio(needSize.width, needSize.height)
+        } else {
+            binding.previewView.setAspectRatio(needSize.height, needSize.width)
+        }
+
+        requireActivity().transparentStatusBar(statusBarTextDark = false)
     }
 
     /////////////////////////recording

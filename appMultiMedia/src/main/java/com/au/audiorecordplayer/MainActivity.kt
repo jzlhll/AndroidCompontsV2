@@ -50,8 +50,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.camerax).onClick {
             FragmentShellActivity.start(this@MainActivity, CameraXFragment::class.java)
         }
-        findViewById<View>(R.id.cameraGL).onClick {
-        }
         findViewById<View>(R.id.drawView).onClick {
             FragmentShellActivity.start(this@MainActivity, DrawTestFragment::class.java)
         }

@@ -9,6 +9,7 @@ import android.hardware.camera2.CaptureRequest
 import android.view.Surface
 import com.au.audiorecordplayer.cam2.base.IActionTakePicture
 import com.au.audiorecordplayer.cam2.bean.TakePictureCallbackWrap
+import com.au.audiorecordplayer.cam2.impl.AbstractStateBase
 import com.au.audiorecordplayer.cam2.impl.IStatePreviewCallback
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
@@ -16,7 +17,7 @@ import com.au.audiorecordplayer.cam2.impl.picture.TakePictureWorker
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 
-open class StatePictureAndPreview(mgr: MyCamManager) : StatePreview(mgr), IActionTakePicture {
+open class StatePictureAndPreview(mgr: MyCamManager) : AbstractStateBase(mgr), IActionTakePicture {
     var mTakePic: TakePictureWorker? = null
 
     fun getCameraSession() = camSession
