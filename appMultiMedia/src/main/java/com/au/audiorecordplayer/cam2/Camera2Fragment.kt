@@ -115,6 +115,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                 binding.settingBtn.layoutParams = (binding.settingBtn.layoutParams as ConstraintLayout.LayoutParams).also {
                     it.topMargin = (bars?.first ?: 32.dp) + 4.dp
                 }
+                binding.timeTv
             }
         }
     }

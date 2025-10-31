@@ -23,6 +23,7 @@ import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.ignoreError
+import com.au.module_android.utils.logdNoFile
 
 class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPreview(mgr), MediaRecorder.OnErrorListener, MediaRecorder.OnInfoListener, IActionRecord {
     private var mMediaRecorder: MediaRecorder? = null
@@ -31,20 +32,23 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
 
     override fun allIncludePictureSurfaces(): List<Surface> {
         if (mMediaRecorder == null) {
+            logdNoFile { "all include pic surfaces media record is null" }
             return super.allIncludePictureSurfaces()
         }
+        logdNoFile { "all include pic surfaces $mMediaRecorder" }
         return listOf(mTakePic!!.surface, DataRepository.surface!!, mMediaRecorder?.surface!!)
     }
 
     init {
+        logdNoFile { "init" }
         try {
-            val mMediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            mMediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 MediaRecorder(Globals.topActivity.asOrNull<Activity>() ?: Globals.app) //later: 这里这样传递context其实不太好。
             } else {
                 MediaRecorder()
             }
 
-            mMediaRecorder.also {
+            mMediaRecorder?.also {
                 it.setOnErrorListener(this)
                 it.setOnInfoListener(this)
                 it.setAudioSource(MediaRecorder.AudioSource.DEFAULT)
@@ -85,16 +89,22 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
             }
         } catch (e: Exception) {
             MyLog.ex(e)
+            logdNoFile { "media record is null err" }
             mMediaRecorder?.release()
             mMediaRecorder = null
         }
     }
 
     override fun createCaptureBuilder(cameraDevice: CameraDevice): CaptureRequest.Builder {
+        logdNoFile{"000"}
         val captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+        logdNoFile{"111"}
         captureRequestBuilder.addTarget(DataRepository.surface!!)
+        logdNoFile{"222 " + mMediaRecorder}
         captureRequestBuilder.addTarget(mMediaRecorder!!.surface)
+        logdNoFile{"333"}
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+        logdNoFile{"444"}
         return captureRequestBuilder
     }
 

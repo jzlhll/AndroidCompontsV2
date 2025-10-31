@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import com.au.module_android.utils.gone
+import com.au.module_android.utils.invisible
 import com.au.module_android.utils.visible
 
 class Camera2FragmentRecord(private val f: Fragment,
@@ -24,14 +25,15 @@ class Camera2FragmentRecord(private val f: Fragment,
     fun onRecordEnd() {
         recordBtn.imageTintList = ColorStateList.valueOf(Color.WHITE)
         isRecording = false
-        recordBtn.gone()
+        timeTv.text = ""
+        timeTv.gone()
         handler.removeCallbacks(timeUpdateRunnable)
         mTimeSec = 0
     }
 
     fun onRecordStart() {
         recordBtn.imageTintList = ColorStateList.valueOf(Color.RED)
-        recordBtn.visible()
+        timeTv.visible()
         isRecording = true
         mRunnableLastTime = 0
         mRunnableIndex = 0
