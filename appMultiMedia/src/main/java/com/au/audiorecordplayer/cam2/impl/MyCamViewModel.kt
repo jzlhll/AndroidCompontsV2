@@ -2,6 +2,7 @@ package com.au.audiorecordplayer.cam2.impl
 
 import android.os.HandlerThread
 import androidx.lifecycle.ViewModel
+import com.au.module_android.utils.logdNoFile
 
 class MyCamViewModel : ViewModel() {
     val camManager:MyCamManager
@@ -16,7 +17,7 @@ class MyCamViewModel : ViewModel() {
     }
 
     fun close() {
-        camManager.detachContext()
+        logdNoFile { "MyCam ViewModel close" }
         camManager.closeCameraDirectly(true)
         mSubThread?.quitSafely()
     }

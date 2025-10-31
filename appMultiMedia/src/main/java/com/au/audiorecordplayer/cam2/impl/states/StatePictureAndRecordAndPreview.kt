@@ -1,5 +1,6 @@
 package com.au.audiorecordplayer.cam2.impl.states
 
+import android.app.Activity
 import android.content.Context
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
@@ -13,6 +14,7 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.view.Surface
 import com.au.audiorecordplayer.cam2.base.IActionRecord
+import com.au.audiorecordplayer.cam2.impl.DataRepository
 import com.au.audiorecordplayer.cam2.impl.IStateTakePictureRecordCallback
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
@@ -31,13 +33,13 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
         if (mMediaRecorder == null) {
             return super.allIncludePictureSurfaces()
         }
-        return listOf(mTakePic!!.surface, cameraManager.surface!!, mMediaRecorder?.surface!!)
+        return listOf(mTakePic!!.surface, DataRepository.surface!!, mMediaRecorder?.surface!!)
     }
 
     init {
         try {
             val mMediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(mgr.context!!)
+                MediaRecorder(Globals.topActivity.asOrNull<Activity>() ?: Globals.app) //later: 这里这样传递context其实不太好。
             } else {
                 MediaRecorder()
             }
@@ -51,19 +53,20 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
 
                 var wishWidth = 1920
                 var wishHeight = 1080
-                if (cameraManager.cameraId == CameraCharacteristics.LENS_FACING_FRONT) {
+                val cameraId = DataRepository.cameraId
+                if (cameraId == CameraCharacteristics.LENS_FACING_FRONT) {
                     wishHeight = 1280
                     wishWidth = 720
                 }
                 val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
                 val needSize = NeedSizeUtil
-                    .getByClz(MediaRecorder::class.java, systemCameraManager, "" + cameraManager.cameraId, wishWidth, wishHeight)
+                    .getByClz(MediaRecorder::class.java, systemCameraManager, "" + cameraId, wishWidth, wishHeight)
                     .needSize("StatePictureAndRecordAndPreview")
                 it.setVideoSize(needSize.width, needSize.height)
                 it.setVideoEncoder(MediaRecorder.VideoEncoder.H264)
                 val camPro = CamcorderProfile.get(
-                    cameraManager.cameraId,
-                    if (cameraManager.cameraId == CameraCharacteristics.LENS_FACING_FRONT) CamcorderProfile.QUALITY_1080P else CamcorderProfile.QUALITY_720P
+                    cameraId,
+                    if (cameraId == CameraCharacteristics.LENS_FACING_FRONT) CamcorderProfile.QUALITY_1080P else CamcorderProfile.QUALITY_720P
                 )
                 it.setAudioEncoder(camPro.audioCodec)
                 it.setAudioChannels(camPro.audioChannels)
@@ -89,7 +92,7 @@ class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPrevie
 
     override fun createCaptureBuilder(cameraDevice: CameraDevice): CaptureRequest.Builder {
         val captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
-        captureRequestBuilder.addTarget(cameraManager.surface!!)
+        captureRequestBuilder.addTarget(DataRepository.surface!!)
         captureRequestBuilder.addTarget(mMediaRecorder!!.surface)
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
         return captureRequestBuilder

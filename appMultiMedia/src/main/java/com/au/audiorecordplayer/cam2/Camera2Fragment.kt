@@ -17,11 +17,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.au.audiorecordplayer.cam2.bean.UiPictureBean
 import com.au.audiorecordplayer.cam2.bean.UiRecordBean
 import com.au.audiorecordplayer.cam2.bean.UiStateBean
+import com.au.audiorecordplayer.cam2.impl.DataRepository
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
 //import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PREVIEW
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
-import com.au.audiorecordplayer.cam2.view.Camera2View
 import com.au.audiorecordplayer.cam2.view.SurfaceFixSizeUnion
 import com.au.audiorecordplayer.databinding.FragmentCamera2Binding
 import com.au.audiorecordplayer.util.FileUtil
@@ -39,7 +39,6 @@ import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.invisible
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
@@ -65,7 +64,6 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         recordBtnDebounce = ViewVisibilityDebounce(lifecycleScope, binding.recordBtn)
         takePicBtnDebounce = ViewVisibilityDebounce(lifecycleScope, binding.takePicBtn)
 
-        viewModel.camManager.attachContext(requireActivity())
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 //2. 收集到了用户的 数据
@@ -216,11 +214,12 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     fun openCameraSafety(surface: SurfaceFixSizeUnion?) {
         surface ?: return
+        DataRepository.surface = surface.shownSurface
         changePreviewNeedSize(requireActivity())
 
         logdNoFile { "open camera safety" }
         permissionHelper.safeRun({
-            viewModel.camManager.openCamera(surface.shownSurface)
+            viewModel.camManager.openCamera()
         }, notGivePermissionBlock = {
             MainUIManager.get().toastSnackbar(view, "请授予相机和录音权限。")
         })
@@ -232,7 +231,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
     fun changePreviewNeedSize(ac: FragmentActivity) {
         //第一步：获取新的preview size
         val orientation = ac.resources.configuration.orientation
-        val clz = NeedSizeUtil.needSizeFmtClass(Camera2View.previewMode)
+        val clz = NeedSizeUtil.needSizeFmtClass(DataRepository.previewMode)
         val pair = ac.getScreenFullSize()
         var wishW: Int = pair.first
         var wishH: Int = pair.second
@@ -244,7 +243,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         MyLog.d("wishSize $wishW*$wishH")
         val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         val previewNeedSize = NeedSizeUtil
-            .getByClz(clz, systemCameraManager, "" + viewModel.camManager.cameraId, wishW, wishH)
+            .getByClz(clz, systemCameraManager, "" + DataRepository.cameraId, wishW, wishH)
             .needSize("<State Preview>")
         MyLog.d("needSize " + previewNeedSize.width + " * " + previewNeedSize.height)
 
@@ -308,5 +307,10 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
             binding.toastInfo.gone()
             mToastJob = null
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        DataRepository.surface = null
     }
 }

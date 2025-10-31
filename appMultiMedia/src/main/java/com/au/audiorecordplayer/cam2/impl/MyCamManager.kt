@@ -8,7 +8,6 @@ import android.hardware.camera2.CameraManager
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
-import android.view.Surface
 import com.au.audiorecordplayer.cam2.base.IActionRecord
 import com.au.audiorecordplayer.cam2.base.IActionTakePicture
 import com.au.audiorecordplayer.cam2.base.ICameraMgr
@@ -26,7 +25,7 @@ import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.asOrNull
-import com.au.module_cached.delegate.AppDataStoreIntCache
+import com.au.module_android.utils.logdNoFile
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +36,6 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
                    looper: Looper) : Handler(looper), ICameraMgr, ITakePictureCallback {
 
     companion object {
-        const val KEY_CAMERA_ID_SAVED = "camera2Demo_cameraId"
 
         const val constStateNone = "StateCameraClosed"
         const val constStateDied = "StateCameraOpened"
@@ -54,6 +52,17 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
         const val TRANSMIT_TO_MODE_PICTURE_PREVIEW: Int = 102
         const val TRANSMIT_TO_MODE_RECORD_PICTURE_PREVIEW: Int = 103 //其实就是将其他状态升级到录制状态去
 
+        fun msgToStr(msg: Message): String {
+            return when (msg.what) {
+                ACTION_CAMERA_OPEN -> "ACTION_CAMERA_OPEN"
+                ACTION_CAMERA_CLOSE -> "ACTION_CAMERA_CLOSE"
+                ACTION_CLOSE_SESSION -> "ACTION_CLOSE_SESSION"
+                TRANSMIT_TO_MODE_PICTURE_PREVIEW -> "TRANSMIT_TO_MODE_PICTURE_PREVIEW"
+                TRANSMIT_TO_MODE_RECORD_PICTURE_PREVIEW -> "TRANSMIT_TO_MODE_RECORD_PICTURE_PREVIEW"
+                else -> "else"
+            }
+        }
+
         private const val DEFAULT_MODE = TRANSMIT_TO_MODE_PICTURE_PREVIEW
     }
 
@@ -66,23 +75,8 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
     var currentState: AbstractStateBase? = null //当前preview的状态
     var cameraDevice: CameraDevice? = null //camera device
 
-    var cameraId by AppDataStoreIntCache(KEY_CAMERA_ID_SAVED, CameraCharacteristics.LENS_FACING_BACK)
-
-    var surface : Surface? = null
-
-    var context: Context? = null
-
-    override fun attachContext(context: Context) {
-        this.context = context
-    }
-
-    override fun detachContext() {
-        context = null
-    }
-
-    override fun openCamera(surface: Surface) {
+    override fun openCamera() {
         MyLog.d("open Camera in manage!");
-        this.surface = surface
         sendEmptyMessage(ACTION_CAMERA_OPEN)
     }
 
@@ -128,7 +122,10 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
 
     override fun switchFontBackCam() {
         sendMessage(obtainMessage(ACTION_CAMERA_CLOSE, "switchFontBackCam"))
-        cameraId = if (cameraId == CameraCharacteristics.LENS_FACING_FRONT) CameraCharacteristics.LENS_FACING_BACK else CameraCharacteristics.LENS_FACING_FRONT
+        DataRepository.cameraId = if (DataRepository.cameraId == CameraCharacteristics.LENS_FACING_FRONT)
+                    CameraCharacteristics.LENS_FACING_BACK
+                else
+                    CameraCharacteristics.LENS_FACING_FRONT
     }
 
     //Camera打开回调
@@ -158,7 +155,7 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
 
     override fun handleMessage(msg: Message) {
         val curSt = currentState
-
+        logdNoFile { "msg what: ${msgToStr(msg)}" }
         when (msg.what) {
             ACTION_CAMERA_OPEN -> {
                 val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
@@ -171,7 +168,7 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
                 } catch (e: CameraAccessException) {
                     e.printStackTrace()
                 }
-                val cameraIdStr = "$cameraId"
+                val cameraIdStr = "${DataRepository.cameraId}"
                 MyLog.d("ACTION Camera OPEN $cameraIdStr")
                 currentState = StateDied(this)
 
@@ -190,6 +187,7 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
             ACTION_CAMERA_CLOSE -> {
                 val isSwitchFrontAndBack = msg.obj == "switchFontBackCam"
                 closeCameraDirectly(!isSwitchFrontAndBack)
+                val cameraId = DataRepository.cameraId
                 if (isSwitchFrontAndBack) {
                     _uiState.value = StatusState.Success(UiStateBean("$cameraId", constStateNone,
                         needSwitchToCamIdBean = UiNeedSwitchToCamIdBean(cameraIdStr = "$cameraId")))
@@ -200,6 +198,7 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
                 MyLog.d("close Camera in ACTION_CAMERA _CLOSE!")
                 currentState?.closeSession()
                 currentState = StateDied(this)
+                val cameraId = DataRepository.cameraId
                 _uiState.value = StatusState.Success(UiStateBean("$cameraId", constStateDied))
             }
 
@@ -268,6 +267,8 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
                             MyLog.d("onPreview Failed in myCam Manager")
                         }
                     })
+
+                    val cameraId = DataRepository.cameraId
                     _uiState.value = StatusState.Success(UiStateBean("$cameraId", constStatePictureAndPreview))
                 } catch (e: Exception) {
                     MyLog.e("start preview err0")
@@ -332,6 +333,8 @@ class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
                             MyLog.d("rec:onPreviewFailed in myacmera")
                         }
                     })
+
+                    val cameraId = DataRepository.cameraId
                     _uiState.value = StatusState.Success(UiStateBean("$cameraId", constStatePictureAndRecordAndPreview))
                 } catch (e: Exception) {
                     MyLog.e("rec:start preview err0")

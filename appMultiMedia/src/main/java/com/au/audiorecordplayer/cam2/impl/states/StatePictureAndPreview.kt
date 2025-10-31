@@ -10,6 +10,7 @@ import android.view.Surface
 import com.au.audiorecordplayer.cam2.base.IActionTakePicture
 import com.au.audiorecordplayer.cam2.bean.TakePictureCallbackWrap
 import com.au.audiorecordplayer.cam2.impl.AbstractStateBase
+import com.au.audiorecordplayer.cam2.impl.DataRepository
 import com.au.audiorecordplayer.cam2.impl.IStatePreviewCallback
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
@@ -26,7 +27,7 @@ open class StatePictureAndPreview(mgr: MyCamManager) : AbstractStateBase(mgr), I
         val systemCameraManager = Globals.app.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         //由于super中有添加了preview的surface。这里处理拍照即可
         val needSize = NeedSizeUtil
-            .getByFmt(ImageFormat.JPEG, systemCameraManager, "" + cameraManager.cameraId, 1920, 1080)
+            .getByFmt(ImageFormat.JPEG, systemCameraManager, "" + DataRepository.cameraId, 1920, 1080)
             .needSize("StatePictureAndPreview")
         MyLog.d("StatePictureAndPreview needSize " + needSize.width + " * " + needSize.height)
 
@@ -34,7 +35,7 @@ open class StatePictureAndPreview(mgr: MyCamManager) : AbstractStateBase(mgr), I
     }
 
     override fun allIncludePictureSurfaces(): List<Surface> {
-        return listOf(mTakePic!!.surface, cameraManager.surface!!)
+        return listOf(mTakePic!!.surface, DataRepository.surface!!)
     }
 
     override fun closeSession() {
@@ -48,7 +49,7 @@ open class StatePictureAndPreview(mgr: MyCamManager) : AbstractStateBase(mgr), I
 
     override fun createCaptureBuilder(cameraDevice: CameraDevice): CaptureRequest.Builder {
         val captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-        captureRequestBuilder.addTarget(cameraManager.surface!!)
+        captureRequestBuilder.addTarget(DataRepository.surface!!)
         captureRequestBuilder.set(
             CaptureRequest.CONTROL_AF_MODE,
             CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE

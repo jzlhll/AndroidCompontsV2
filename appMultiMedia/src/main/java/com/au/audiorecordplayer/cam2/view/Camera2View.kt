@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.widget.FrameLayout
+import com.au.audiorecordplayer.cam2.impl.DataRepository
 import com.au.audiorecordplayer.cam2.view.gl.CamGLSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamTextureView
@@ -16,10 +17,6 @@ import kotlin.math.roundToInt
 
 class Camera2View : FrameLayout, Camera2ViewBase{
     companion object {
-        /**
-         * 暂时采用静态变量来标记；可以改成attr。懒得做了。
-         */
-        var previewMode = PreviewMode.GL_SURFACE_VIEW
         const val TAG = "Cam2PreviewView"
     }
 
@@ -54,7 +51,7 @@ class Camera2View : FrameLayout, Camera2ViewBase{
 
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         logdNoFile { "add real view--& set callback" }
-        val camView = when (previewMode) {
+        val camView = when (DataRepository.previewMode) {
             PreviewMode.SURFACE_VIEW -> {
                 CamSurfaceView(context).also {
                     it.setCallback(object : IViewOnSurfaceCallback {
