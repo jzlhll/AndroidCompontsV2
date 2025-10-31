@@ -19,7 +19,18 @@ object DataRepository {
 
     private val defaultPreviewMode = PreviewMode.SURFACE_VIEW
 
-    var previewModeStr by AppDataStoreStringCache(KEY_CAMERA_PREVIEW_MODE, defaultPreviewMode.value)
-    val previewMode : PreviewMode
-        get() = PreviewMode.entries.firstOrNull { it.value == previewModeStr } ?: defaultPreviewMode
+    private var previewModeStr by AppDataStoreStringCache(KEY_CAMERA_PREVIEW_MODE, defaultPreviewMode.value)
+    private var _previewMode: PreviewMode? = null
+
+    var previewMode : PreviewMode
+        get() {
+            if (_previewMode == null) {
+                _previewMode = PreviewMode.entries.firstOrNull { it.value == previewModeStr } ?: defaultPreviewMode
+            }
+            return _previewMode!!
+        }
+        set(value) {
+            _previewMode = value
+            previewModeStr = value.value
+        }
 }

@@ -2,24 +2,22 @@ package com.au.audiorecordplayer.cam2
 
 import android.Manifest
 import android.content.Context
-import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Color
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
-import android.os.SystemClock
+import android.os.Looper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.au.audiorecordplayer.Camera2FragmentSettings
 import com.au.audiorecordplayer.cam2.bean.UiPictureBean
 import com.au.audiorecordplayer.cam2.bean.UiRecordBean
 import com.au.audiorecordplayer.cam2.bean.UiStateBean
 import com.au.audiorecordplayer.cam2.impl.DataRepository
 import com.au.audiorecordplayer.cam2.impl.MyCamManager
-//import com.au.audiorecordplayer.cam2.impl.MyCamManager.Companion.TRANSMIT_TO_MODE_PREVIEW
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.cam2.view.SurfaceFixSizeUnion
@@ -59,11 +57,69 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     private lateinit var recordBtnDebounce: ViewVisibilityDebounce
     private lateinit var takePicBtnDebounce: ViewVisibilityDebounce
+    private lateinit var recordHelper : Camera2FragmentRecord
+    private lateinit var settingsHelper : Camera2FragmentSettings
+
+    private var mToastJob : Job? = null
+    fun toastOnText(string:String, duration:Long = 3000) {
+        val job = mToastJob
+        if (job != null) {
+            binding.toastInfo.text = binding.toastInfo.text.toString() + "\n" + string
+            binding.toastInfo.visible()
+            job.cancel()
+        } else {
+            binding.toastInfo.text = string
+            binding.toastInfo.visible()
+        }
+
+        mToastJob = lifecycleScope.launch {
+            delay(duration)
+            binding.toastInfo.text = ""
+            binding.toastInfo.gone()
+            mToastJob = null
+        }
+    }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        //初始化按钮显示防抖
         recordBtnDebounce = ViewVisibilityDebounce(lifecycleScope, binding.recordBtn)
         takePicBtnDebounce = ViewVisibilityDebounce(lifecycleScope, binding.takePicBtn)
+        recordHelper = Camera2FragmentRecord(this, binding.timeTv, binding.recordBtn)
+        settingsHelper = Camera2FragmentSettings(this)
 
+        //预览的函数体初始化
+        binding.previewView.openCameraFunc = {
+            openCameraSafety(binding.previewView.surfaceFixSizeUnion)
+        }
+        binding.previewView.closeCameraFunc = {
+            viewModel.camManager.closeCameraDirectly(true)
+        }
+
+        initFlows()
+        initClicks()
+        initLayoutParams()
+
+        initLater()
+    }
+
+    private fun initLater() {
+        Looper.myQueue().addIdleHandler {
+            settingsHelper.initUis()
+            false
+        }
+    }
+
+    private fun initLayoutParams() {
+        binding.settingBtn.post {
+            requireActivity().currentStatusBarAndNavBarHeight().also { bars->
+                binding.settingBtn.layoutParams = (binding.settingBtn.layoutParams as ConstraintLayout.LayoutParams).also {
+                    it.topMargin = (bars?.first ?: 32.dp) + 4.dp
+                }
+            }
+        }
+    }
+
+    private fun initFlows() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 //2. 收集到了用户的 数据
@@ -73,8 +129,6 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                         val picture = bean.pictureTokenBean
                         val record = bean.recordBean
                         val needSwitchToCamIdBean = bean.needSwitchToCamIdBean
-
-                        binding.modeTv.text = bean.currentMode
 
                         when (bean.currentMode) {
                             MyCamManager.constStateNone,
@@ -105,24 +159,16 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                         } else if (record != null) {
                             when (record) {
                                 is UiRecordBean.RecordEnd -> {
-                                    isRecording = false
                                     toastOnText("视频保存在：${record.path}", 6000)
-                                    binding.timeTv.handler.removeCallbacks(mTimeUpdateRunnable)
-                                    mTimeSec = 0
-                                    binding.recordBtn.imageTintList = ColorStateList.valueOf(Color.WHITE)
-                                    binding.timeTv.gone()
+                                    recordHelper.onRecordEnd()
                                 }
+
                                 is UiRecordBean.RecordStart -> {
                                     toastOnText("录制开始...")
                                     if (record.suc) {
-                                        isRecording = true
-                                        mRunnableLastTime = 0
-                                        mRunnableIndex = 0
-                                        binding.recordBtn.imageTintList = ColorStateList.valueOf(Color.RED)
-                                        binding.timeTv.visible()
-                                        binding.timeTv.handler.post(mTimeUpdateRunnable)
+                                        recordHelper.onRecordStart()
                                     } else {
-                                        isRecording = false
+                                        recordHelper.onRecordEnd()
                                         toastOnText("录制出现异常")
                                     }
                                 }
@@ -150,12 +196,11 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                 }
             }
         }
+    }
 
-        binding.previewView.openCameraFunc = {
-            openCameraSafety(binding.previewView.surfaceFixSizeUnion)
-        }
-        binding.previewView.closeCameraFunc = {
-            viewModel.close()
+    private fun initClicks() {
+        binding.settingBtn.onClick {
+            binding.expandSettings.toggle()
         }
 
         binding.takePicBtn.onClick {
@@ -164,8 +209,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         }
 
         binding.recordBtn.onClick {
-            if (!isRecording) {
-                isRecording = true
+            if (!recordHelper.isRecording) {
                 viewModel.camManager.startRecord()
             } else {
                 viewModel.camManager.stopRecord()
@@ -200,16 +244,6 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 //                }
 //            }
 //        }
-        binding.modeTv.post {
-            requireActivity().currentStatusBarAndNavBarHeight().also { bars->
-                binding.modeTv.layoutParams = (binding.modeTv.layoutParams as ConstraintLayout.LayoutParams).also {
-                    it.topMargin = (bars?.first ?: 32.dp) + 4.dp
-                }
-                binding.settingBtn.layoutParams = (binding.settingBtn.layoutParams as ConstraintLayout.LayoutParams).also {
-                    it.topMargin = (bars?.first ?: 32.dp) + 4.dp
-                }
-            }
-        }
     }
 
     fun openCameraSafety(surface: SurfaceFixSizeUnion?) {
@@ -256,61 +290,14 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
             binding.previewView.setAspectRatio(needSize.height, needSize.width)
         }
 
+        toastOnText("previewMode is: " + binding.previewView.previewModeTag)
+
         requireActivity().transparentStatusBar(statusBarTextDark = false)
-    }
-
-    /////////////////////////recording
-
-    var isRecording: Boolean = false
-    private var mTimeSec = 0
-    private var mRunnableIndex = 0
-    private var mRunnableLastTime = 0L
-    private val mTimeUpdateRunnable: Runnable = object : Runnable {
-        override fun run() {
-            if (!isResumed) {
-                return
-            }
-
-            if (mRunnableLastTime == 0L) {
-                mRunnableLastTime = SystemClock.elapsedRealtime()
-            }
-            binding.timeTv.text = String.format("· %d", mTimeSec++)
-            var delayTime: Long = 1000
-            if (mRunnableIndex++ == 10) {
-                mRunnableIndex = 0 //每10s 修正delay的时间
-                val cur = SystemClock.elapsedRealtime()
-                delayTime = 1000 - (cur - 10000 - mRunnableLastTime)
-                if (delayTime < 0) {
-                    delayTime = 0
-                }
-                mRunnableLastTime = cur
-            }
-            binding.timeTv.postDelayed(mTimeUpdateRunnable, delayTime)
-        }
-    }
-
-    private var mToastJob : Job? = null
-    private fun toastOnText(string:String, duration:Long = 3000) {
-        val job = mToastJob
-        if (job != null) {
-            binding.toastInfo.text = binding.toastInfo.text.toString() + "\n" + string
-            binding.toastInfo.visible()
-            job.cancel()
-        } else {
-            binding.toastInfo.text = string
-            binding.toastInfo.visible()
-        }
-
-        mToastJob = lifecycleScope.launch {
-            delay(duration)
-            binding.toastInfo.text = ""
-            binding.toastInfo.gone()
-            mToastJob = null
-        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        viewModel.close()
         DataRepository.surface = null
     }
 }

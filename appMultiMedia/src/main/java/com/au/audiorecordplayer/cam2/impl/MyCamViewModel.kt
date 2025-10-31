@@ -10,6 +10,7 @@ class MyCamViewModel : ViewModel() {
     private var mSubThread: HandlerThread? = null
 
     init {
+        logdNoFile { "MyCam ViewModel init" }
         val subThread = HandlerThread("Camera-thread")
         mSubThread = subThread
         subThread.start()

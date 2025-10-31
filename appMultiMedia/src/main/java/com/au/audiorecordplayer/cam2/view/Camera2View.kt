@@ -25,6 +25,8 @@ class Camera2View : FrameLayout, Camera2ViewBase{
     var surfaceFixSizeUnion: SurfaceFixSizeUnion? = null
 
     ///////////////////参数设定
+    var previewModeTag = ""
+
     /**
      * 创建相机函数
      */
@@ -54,6 +56,7 @@ class Camera2View : FrameLayout, Camera2ViewBase{
         val camView = when (DataRepository.previewMode) {
             PreviewMode.SURFACE_VIEW -> {
                 CamSurfaceView(context).also {
+                    previewModeTag = "SurfaceView"
                     it.setCallback(object : IViewOnSurfaceCallback {
                         override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
                             val sh = surfaceHolderOrSurfaceTexture as SurfaceHolder
@@ -72,6 +75,7 @@ class Camera2View : FrameLayout, Camera2ViewBase{
             }
             PreviewMode.TEXTURE_VIEW -> {
                 CamTextureView(context).also {
+                    previewModeTag = "TextureView"
                     it.setCallback(object : IViewOnSurfaceCallback {
                         override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
                             val st = surfaceHolderOrSurfaceTexture as SurfaceTexture
@@ -91,6 +95,7 @@ class Camera2View : FrameLayout, Camera2ViewBase{
             }
             PreviewMode.GL_SURFACE_VIEW -> {
                 CamGLSurfaceView(context).also {
+                    previewModeTag = "GLSurfaceView"
                     it.setCallback(object : IViewOnSurfaceCallback {
                         override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
                             val st = surfaceHolderOrSurfaceTexture as SurfaceTexture
@@ -116,6 +121,7 @@ class Camera2View : FrameLayout, Camera2ViewBase{
         }
 
         camView.layoutParams = lp
+        logdNoFile { "added view $camView" }
         addView(camView)
         //调试追加操作界面
         if(false) addView(DrawFrameLayout(context))
