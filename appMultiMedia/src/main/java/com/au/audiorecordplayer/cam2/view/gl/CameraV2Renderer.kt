@@ -21,18 +21,23 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
     private var mDataBuffer: FloatBuffer? = null
     private var mShaderProgram = -1
     private val mFBOIds = IntArray(1)
+    
+    // FilterEngine引用，用于动态切换滤镜
+    private var mFilterEngine: FilterEngine? = null
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        mOESTextureId = Utils.createOESTextureObject()
-        val mFilterEngine = FilterEngine(mOESTextureId)
+        mOESTextureId = createOESTextureObject()
+        // 创建FilterEngine并保存引用
+        val filterEngine = FilterEngine(mOESTextureId)
+        mFilterEngine = filterEngine
         val st = SurfaceTexture(mOESTextureId)
         mSurfaceTexture = st
         st.setOnFrameAvailableListener { _: SurfaceTexture? ->
             mGLView.requestRender()
         }
         
-        mDataBuffer = mFilterEngine.buffer
-        mShaderProgram = mFilterEngine.shaderProgram
+        mDataBuffer = filterEngine.buffer
+        mShaderProgram = filterEngine.shaderProgram
         GLES20.glGenFramebuffers(1, mFBOIds, 0)
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFBOIds[0])
         Log.i(TAG, "onSurfaceCreated: mFBOId: " + mFBOIds[0])
@@ -48,18 +53,18 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(gl: GL10?) {
         val t1 = System.currentTimeMillis()
-        if (mSurfaceTexture != null) {
-            mSurfaceTexture!!.updateTexImage()
-            mSurfaceTexture!!.getTransformMatrix(transformMatrix)
+        mSurfaceTexture?.let { st->
+            st.updateTexImage()
+            st.getTransformMatrix(transformMatrix)
         }
 
         //glClear(GL_COLOR_BUFFER_BIT);
         GLES20.glClearColor(1.0f, 0.0f, 0.0f, 0.0f)
 
-        val aPositionLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.Companion.POSITION_ATTRIBUTE)
-        val aTextureCoordLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.Companion.TEXTURE_COORD_ATTRIBUTE)
-        val uTextureMatrixLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.Companion.TEXTURE_MATRIX_UNIFORM)
-        val uTextureSamplerLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.Companion.TEXTURE_SAMPLER_UNIFORM)
+        val aPositionLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.POSITION_ATTRIBUTE)
+        val aTextureCoordLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.TEXTURE_COORD_ATTRIBUTE)
+        val uTextureMatrixLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.TEXTURE_MATRIX_UNIFORM)
+        val uTextureSamplerLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.TEXTURE_SAMPLER_UNIFORM)
 
         GLES20.glActiveTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mOESTextureId)
@@ -84,5 +89,42 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
         val t2 = System.currentTimeMillis()
         val t = t2 - t1
         Log.i(TAG, "onDrawFrame: time: $t")
+    }
+
+    fun createOESTextureObject(): Int {
+        val tex = IntArray(1)
+        GLES20.glGenTextures(1, tex, 0)
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, tex[0])
+        GLES20.glTexParameterf(
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+            GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST.toFloat()
+        )
+        GLES20.glTexParameterf(
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+            GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR.toFloat()
+        )
+        GLES20.glTexParameterf(
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+            GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE.toFloat()
+        )
+        GLES20.glTexParameterf(
+            GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+            GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE.toFloat()
+        )
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0)
+        return tex[0]
+    }
+    
+    /**
+     * 切换滤镜效果
+     * @param filterType 滤镜类型
+     */
+    fun changeFilter(filterType: FilterType) {
+        // 确保在GL线程中执行
+        mGLView.queueEvent {
+            mFilterEngine?.updateFilter(filterType)
+            mShaderProgram = mFilterEngine?.shaderProgram ?: -1
+            Log.d(TAG, "Filter changed to: $filterType")
+        }
     }
 }

@@ -9,7 +9,8 @@ import java.nio.FloatBuffer
 /**
  * Created by lb6905 on 2017/6/12.
  */
-class FilterEngine(val oESTextureId: Int) {
+class FilterEngine(val oESTextureId: Int,
+                   initialFilterType: FilterType = FilterType.ORIGINAL) {
     companion object {
         private val vertexData = floatArrayOf(
             1f, 1f, 1f, 1f,
@@ -30,11 +31,35 @@ class FilterEngine(val oESTextureId: Int) {
 
     var shaderProgram: Int = -1
         private set
+    
+    // 当前使用的滤镜类型
+    var currentFilterType: FilterType = initialFilterType
+        private set
 
     init {
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, Utils.BASE_VERTEX_SHADER)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, Utils.BASE_FRAGMENT_ORIGINAL_SHADER)
-        this.shaderProgram = linkProgram(vertexShader, fragmentShader)
+        // 使用指定的滤镜类型初始化
+        updateFilter(currentFilterType)
+    }
+    
+    /**
+     * 更新当前使用的滤镜
+     * @param filterType 要切换到的滤镜类型
+     */
+    fun updateFilter(filterType: FilterType) {
+        // 保存新的滤镜类型
+        currentFilterType = filterType
+        
+        // 如果之前已经有着色器程序，需要先释放
+        if (shaderProgram != -1) {
+            GLES20.glDeleteProgram(shaderProgram)
+        }
+        
+        // 加载顶点着色器
+        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, GLConsts.BASE_VERTEX_SHADER)
+        // 根据滤镜类型加载对应的片段着色器
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, GLConsts.getFragmentShaderByType(filterType))
+        // 链接并使用新的着色器程序
+        shaderProgram = linkProgram(vertexShader, fragmentShader)
     }
 
     fun createBuffer(vertexData: FloatArray): FloatBuffer {

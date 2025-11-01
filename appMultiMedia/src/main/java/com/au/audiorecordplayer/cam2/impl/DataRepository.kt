@@ -33,4 +33,6 @@ object DataRepository {
             _previewMode = value
             previewModeStr = value.value
         }
+
+
 }
