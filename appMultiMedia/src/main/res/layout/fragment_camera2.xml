@@ -35,7 +35,7 @@
         android:layout_height="wrap_content">
 
         <com.au.module_android.widget.BgBuildLinearLayout
-            app:backgroundNormal="#4f333333"
+            app:backgroundNormal="#8f333333"
             android:orientation="vertical"
             android:padding="8dp"
             app:cornerRadius="8dp"
@@ -45,7 +45,9 @@
 
             <com.au.module_android.widget.BgBuildLinearLayout
                 android:orientation="horizontal"
-                app:backgroundNormal="#4f333333"
+                app:backgroundNormal="#8f333333"
+                android:padding="6dp"
+                app:cornerRadius="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
                 <com.au.module_android.widget.BgBuildCustomFontText
@@ -85,8 +87,58 @@
 
             <com.au.module_android.widget.BgBuildLinearLayout
                 android:orientation="horizontal"
+                app:backgroundNormal="#4f333333"
+                android:padding="6dp"
+                app:cornerRadius="8dp"
+                android:layout_marginTop="12dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content">
+
+                <com.au.module_android.widget.BgBuildCustomFontText
+                    android:id="@+id/shaderOriginal"
+                    style="@style/StyleAuTextThinDp"
+                    android:text="无滤镜"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="3dp"
+                    android:gravity="center"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_height="wrap_content" />
+                <com.au.module_android.widget.BgBuildCustomFontText
+                    android:id="@+id/shaderGray"
+                    style="@style/StyleAuTextThinDp"
+                    android:paddingHorizontal="6dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:paddingVertical="3dp"
+                    android:gravity="center"
+                    android:text="灰色"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" />
+                <com.au.module_android.widget.BgBuildCustomFontText
+                    android:id="@+id/shaderInvert"
+                    style="@style/StyleAuTextThinDp"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="3dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:gravity="center"
+                    android:text="底片"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" />
+                <com.au.module_android.widget.BgBuildCustomFontText
+                    android:id="@+id/shaderSepia"
+                    style="@style/StyleAuTextThinDp"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="3dp"
+                    android:layout_marginHorizontal="4dp"
+                    android:gravity="center"
+                    android:text="怀旧"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content" />
+            </com.au.module_android.widget.BgBuildLinearLayout>
 
         </com.au.module_android.widget.BgBuildLinearLayout>
 

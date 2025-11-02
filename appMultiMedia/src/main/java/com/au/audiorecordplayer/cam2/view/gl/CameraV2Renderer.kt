@@ -5,6 +5,7 @@ import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Log
+import com.au.audiorecordplayer.cam2.impl.DataRepository
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -28,7 +29,7 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         mOESTextureId = createOESTextureObject()
         // 创建FilterEngine并保存引用
-        val filterEngine = FilterEngine(mOESTextureId)
+        val filterEngine = FilterEngine(mOESTextureId, initialFilterType = DataRepository.shaderModeFlow.value)
         mFilterEngine = filterEngine
         val st = SurfaceTexture(mOESTextureId)
         mSurfaceTexture = st
@@ -120,10 +121,11 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
      * @param filterType 滤镜类型
      */
     fun changeFilter(filterType: FilterType) {
+        val fe = mFilterEngine ?: return
         // 确保在GL线程中执行
         mGLView.queueEvent {
-            mFilterEngine?.updateFilter(filterType)
-            mShaderProgram = mFilterEngine?.shaderProgram ?: -1
+            fe.updateFilter(filterType)
+            mShaderProgram = fe.shaderProgram
             Log.d(TAG, "Filter changed to: $filterType")
         }
     }

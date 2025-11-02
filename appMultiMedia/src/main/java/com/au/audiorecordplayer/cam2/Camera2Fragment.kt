@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.res.Configuration
 import android.hardware.camera2.CameraManager
+import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.os.Looper
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -12,7 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.au.audiorecordplayer.Camera2FragmentSettings
+import com.au.audiorecordplayer.cam2.Camera2FragmentSettings
 import com.au.audiorecordplayer.cam2.bean.UiPictureBean
 import com.au.audiorecordplayer.cam2.bean.UiRecordBean
 import com.au.audiorecordplayer.cam2.bean.UiStateBean
@@ -21,6 +22,8 @@ import com.au.audiorecordplayer.cam2.impl.MyCamManager
 import com.au.audiorecordplayer.cam2.impl.MyCamViewModel
 import com.au.audiorecordplayer.cam2.impl.NeedSizeUtil
 import com.au.audiorecordplayer.cam2.view.SurfaceFixSizeUnion
+import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
+import com.au.audiorecordplayer.cam2.view.gl.CamGLSurfaceView
 import com.au.audiorecordplayer.databinding.FragmentCamera2Binding
 import com.au.audiorecordplayer.util.FileUtil
 import com.au.audiorecordplayer.util.MainUIManager
@@ -115,7 +118,6 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                 binding.settingBtn.layoutParams = (binding.settingBtn.layoutParams as ConstraintLayout.LayoutParams).also {
                     it.topMargin = (bars?.first ?: 32.dp) + 4.dp
                 }
-                binding.timeTv
             }
         }
     }
@@ -194,6 +196,14 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                 viewModel.camManager.toastState.collect {
                     MyLog.d("toast state collected! $it")
                     toastOnText(it.msg)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            DataRepository.shaderModeFlow.collect { filterType ->
+                if (DataRepository.previewMode == PreviewMode.GL_SURFACE_VIEW) {
+                    binding.previewView.realView.asOrNull<CamGLSurfaceView>()?.camRenderer?.changeFilter(filterType)
                 }
             }
         }
@@ -291,7 +301,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
             binding.previewView.setAspectRatio(needSize.height, needSize.width)
         }
 
-        toastOnText("previewMode is: " + binding.previewView.previewModeTag)
+        toastOnText("previewMode is: " + DataRepository.previewMode)
 
         requireActivity().transparentStatusBar(statusBarTextDark = false)
     }

@@ -8,3 +8,28 @@ enum class FilterType {
     SHARPEN,
     BRIGHTNESS
 }
+
+fun String.toType(): FilterType {
+    return when (this) {
+        "original" -> FilterType.ORIGINAL
+        "gray" -> FilterType.GRAY
+        "invert" -> FilterType.INVERT
+        "sepia" -> FilterType.SEPIA
+        "gaussian" -> FilterType.GAUSSIAN
+        "sharpen" -> FilterType.SHARPEN
+        "brightness" -> FilterType.BRIGHTNESS
+        else -> FilterType.ORIGINAL
+    }
+}
+
+fun FilterType.toName(): String {
+    return when (this) {
+        FilterType.ORIGINAL -> "original"
+        FilterType.GRAY -> "gray"
+        FilterType.INVERT -> "invert"
+        FilterType.SEPIA -> "sepia"
+        FilterType.GAUSSIAN -> "gaussian"
+        FilterType.SHARPEN -> "sharpen"
+        FilterType.BRIGHTNESS -> "brightness"
+    }
+}

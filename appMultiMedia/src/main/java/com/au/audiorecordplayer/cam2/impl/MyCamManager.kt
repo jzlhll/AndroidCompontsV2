@@ -26,13 +26,16 @@ import com.au.module_android.Globals
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.logdNoFile
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class MyCamManager(var mDefaultTransmitIndex:Int = DEFAULT_MODE,
+class MyCamManager(
+    val scope: CoroutineScope,
+    var mDefaultTransmitIndex:Int = DEFAULT_MODE,
                    looper: Looper) : Handler(looper), ICameraMgr, ITakePictureCallback {
 
     companion object {

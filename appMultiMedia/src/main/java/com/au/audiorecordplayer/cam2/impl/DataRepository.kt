@@ -3,12 +3,18 @@ package com.au.audiorecordplayer.cam2.impl
 import android.hardware.camera2.CameraCharacteristics
 import android.view.Surface
 import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
+import com.au.audiorecordplayer.cam2.view.gl.FilterType
+import com.au.audiorecordplayer.cam2.view.gl.toName
+import com.au.audiorecordplayer.cam2.view.gl.toType
 import com.au.module_cached.delegate.AppDataStoreIntCache
 import com.au.module_cached.delegate.AppDataStoreStringCache
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object DataRepository {
     const val KEY_CAMERA_ID_SAVED = "camera2Demo_cameraId"
     const val KEY_CAMERA_PREVIEW_MODE = "camera2Demo_previewMode"
+    const val KEY_SHADER_MODE = "camera2Demo_shaderMode"
 
     /**
      * 放在全局
@@ -34,5 +40,12 @@ object DataRepository {
             previewModeStr = value.value
         }
 
+    private var shaderModeStr by AppDataStoreStringCache(KEY_SHADER_MODE, FilterType.ORIGINAL.toName())
+    private val _shaderModeFlow = MutableStateFlow(shaderModeStr.toType())
+    val shaderModeFlow = _shaderModeFlow.asStateFlow()
 
+    fun updateShaderMode(value: FilterType) {
+        shaderModeStr = value.toName()
+        _shaderModeFlow.value = value
+    }
 }

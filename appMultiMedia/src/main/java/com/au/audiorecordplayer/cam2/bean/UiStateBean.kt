@@ -3,4 +3,4 @@ data class UiStateBean(val cameraIdStr:String,
                        val currentMode:String,
                        val needSwitchToCamIdBean: UiNeedSwitchToCamIdBean? = null,
                        val recordBean: UiRecordBean? = null,
-                       val pictureTokenBean: UiPictureBean? = null)
+                       val pictureTokenBean: UiPictureBean? = null,)

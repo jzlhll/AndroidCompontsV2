@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
+import android.view.View
 import android.widget.FrameLayout
 import com.au.audiorecordplayer.cam2.impl.DataRepository
 import com.au.audiorecordplayer.cam2.view.gl.CamGLSurfaceView
@@ -25,8 +26,9 @@ class Camera2View : FrameLayout, Camera2ViewBase{
     var surfaceFixSizeUnion: SurfaceFixSizeUnion? = null
 
     ///////////////////参数设定
-    var previewModeTag = ""
 
+    override var realView: View? = null
+    
     /**
      * 创建相机函数
      */
@@ -53,10 +55,9 @@ class Camera2View : FrameLayout, Camera2ViewBase{
 
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         logdNoFile { "add real view--& set callback" }
-        val camView = when (DataRepository.previewMode) {
+        val realView = when (DataRepository.previewMode) {
             PreviewMode.SURFACE_VIEW -> {
                 CamSurfaceView(context).also {
-                    previewModeTag = "SurfaceView"
                     it.setCallback(object : IViewOnSurfaceCallback {
                         override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
                             val sh = surfaceHolderOrSurfaceTexture as SurfaceHolder
@@ -75,7 +76,6 @@ class Camera2View : FrameLayout, Camera2ViewBase{
             }
             PreviewMode.TEXTURE_VIEW -> {
                 CamTextureView(context).also {
-                    previewModeTag = "TextureView"
                     it.setCallback(object : IViewOnSurfaceCallback {
                         override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
                             val st = surfaceHolderOrSurfaceTexture as SurfaceTexture
@@ -95,7 +95,6 @@ class Camera2View : FrameLayout, Camera2ViewBase{
             }
             PreviewMode.GL_SURFACE_VIEW -> {
                 CamGLSurfaceView(context).also {
-                    previewModeTag = "GLSurfaceView"
                     it.setCallback(object : IViewOnSurfaceCallback {
                         override fun onSurfaceCreated(surfaceHolderOrSurfaceTexture: Any) {
                             val st = surfaceHolderOrSurfaceTexture as SurfaceTexture
@@ -120,9 +119,10 @@ class Camera2View : FrameLayout, Camera2ViewBase{
             }
         }
 
-        camView.layoutParams = lp
-        logdNoFile { "added view $camView" }
-        addView(camView)
+        realView.layoutParams = lp
+        logdNoFile { "added view $realView" }
+        addView(realView)
+        this.realView = realView
         //调试追加操作界面
         if(false) addView(DrawFrameLayout(context))
         mIsInit = true

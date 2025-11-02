@@ -2,6 +2,7 @@ package com.au.audiorecordplayer.cam2.impl
 
 import android.os.HandlerThread
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.au.module_android.utils.logdNoFile
 
 class MyCamViewModel : ViewModel() {
@@ -14,7 +15,7 @@ class MyCamViewModel : ViewModel() {
         val subThread = HandlerThread("Camera-thread")
         mSubThread = subThread
         subThread.start()
-        camManager = MyCamManager(looper = subThread.looper)
+        camManager = MyCamManager(viewModelScope, looper = subThread.looper)
     }
 
     fun close() {
