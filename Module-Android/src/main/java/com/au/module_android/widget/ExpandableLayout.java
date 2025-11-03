@@ -31,6 +31,11 @@ import com.au.module_android.R;
  * 修改：去除原本动画算法，使用系统的线性算法，更为流畅
  */
 public class ExpandableLayout extends FrameLayout {
+    public static final int COLLAPSED = 0;
+    public static final int COLLAPSING = 1;
+    public static final int EXPANDING = 2;
+    public static final int EXPANDED = 3;
+    
     public static final String KEY_SUPER_STATE = "super_state";
     public static final String KEY_EXPANSION = "expansion";
 
@@ -64,7 +69,7 @@ public class ExpandableLayout extends FrameLayout {
                 parallax = a.getFloat(R.styleable.ExpandableLayout_el_parallax, 1);
             }
 
-            state = expansion == 0 ? ExpandableLayoutState.COLLAPSED : ExpandableLayoutState.EXPANDED;
+            state = expansion == 0 ? COLLAPSED : EXPANDED;
             setParallax(parallax);
         }
     }
@@ -86,7 +91,7 @@ public class ExpandableLayout extends FrameLayout {
     protected void onRestoreInstanceState(Parcelable parcelable) {
         Bundle bundle = (Bundle) parcelable;
         expansion = bundle.getFloat(KEY_EXPANSION);
-        state = expansion == 1 ? ExpandableLayoutState.EXPANDED : ExpandableLayoutState.COLLAPSED;
+        state = expansion == 1 ? EXPANDED : COLLAPSED;
         Parcelable superState = bundle.getParcelable(KEY_SUPER_STATE);
 
         super.onRestoreInstanceState(superState);
@@ -104,7 +109,7 @@ public class ExpandableLayout extends FrameLayout {
         setVisibility(expansion == 0 && size == 0 ? GONE : VISIBLE);
 
         int expansionDelta = size - Math.round(size * expansion);
-        if (parallax > 0) {
+        if (parallax > 0 && false) {
             float parallaxDelta = expansionDelta * parallax;
             for (int i = 0; i < getChildCount(); i++) {
                 View child = getChildAt(i);
@@ -137,15 +142,13 @@ public class ExpandableLayout extends FrameLayout {
 
     /**
      * Get expansion state
-     *
-     * @return one of {@link ExpandableLayoutState}
      */
     public int getState() {
         return state;
     }
 
     public boolean isExpanded() {
-        return state == ExpandableLayoutState.EXPANDING || state == ExpandableLayoutState.EXPANDED;
+        return state == EXPANDING || state == EXPANDED;
     }
 
     public void toggle() {
@@ -216,16 +219,16 @@ public class ExpandableLayout extends FrameLayout {
         // Infer state from previous value
         float delta = expansion - this.expansion;
         if (expansion == 0) {
-            state = ExpandableLayoutState.COLLAPSED;
+            state = COLLAPSED;
         } else if (expansion == 1) {
-            state = ExpandableLayoutState.EXPANDED;
+            state = EXPANDED;
         } else if (delta < 0) {
-            state = ExpandableLayoutState.COLLAPSING;
+            state = COLLAPSING;
         } else if (delta > 0) {
-            state = ExpandableLayoutState.EXPANDING;
+            state = EXPANDING;
         }
 
-        setVisibility(state == ExpandableLayoutState.COLLAPSED ? GONE : VISIBLE);
+        setVisibility(state == COLLAPSED ? GONE : VISIBLE);
         this.expansion = expansion;
         requestLayout();
 
@@ -295,7 +298,7 @@ public class ExpandableLayout extends FrameLayout {
          * Callback for expansion updates
          *
          * @param expansionFraction Value between 0 (collapsed) and 1 (expanded) representing the the expansion progress
-         * @param state             One of {@link ExpandableLayoutState} repesenting the current expansion state
+         * @param state             One of {@link } repesenting the current expansion state
          */
         void onExpansionUpdate(float expansionFraction, int state);
     }
@@ -310,13 +313,13 @@ public class ExpandableLayout extends FrameLayout {
 
         @Override
         public void onAnimationStart(@NonNull Animator animation) {
-            state = targetExpansion == 0 ? ExpandableLayoutState.COLLAPSING : ExpandableLayoutState.EXPANDING;
+            state = targetExpansion == 0 ? COLLAPSING : EXPANDING;
         }
 
         @Override
         public void onAnimationEnd(@NonNull Animator animation) {
             if (!canceled) {
-                state = targetExpansion == 0 ? ExpandableLayoutState.COLLAPSED : ExpandableLayoutState.EXPANDED;
+                state = targetExpansion == 0 ? COLLAPSED : EXPANDED;
                 setExpansion(targetExpansion);
             }
         }
@@ -331,11 +334,5 @@ public class ExpandableLayout extends FrameLayout {
             //do nothing.
         }
     }
-}
 
-interface ExpandableLayoutState {
-    int COLLAPSED = 0;
-    int COLLAPSING = 1;
-    int EXPANDING = 2;
-    int EXPANDED = 3;
 }

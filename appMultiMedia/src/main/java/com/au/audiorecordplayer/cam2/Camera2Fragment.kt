@@ -211,7 +211,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
     private fun initClicks() {
         binding.settingBtn.onClick {
-            binding.expandSettings.toggle()
+            settingsHelper.toggle()
         }
 
         binding.takePicBtn.onClick {

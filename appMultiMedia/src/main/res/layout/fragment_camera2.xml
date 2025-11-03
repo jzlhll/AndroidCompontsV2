@@ -26,11 +26,11 @@
 
     <com.au.module_android.widget.ExpandableLayout
         android:id="@+id/expandSettings"
-        app:layout_constraintTop_toBottomOf="@id/settingBtn"
-        android:orientation="vertical"
         app:el_duration="200"
         app:el_expanded="false"
-        app:el_parallax="0.2"
+        app:el_parallax="0"
+        app:layout_constraintTop_toBottomOf="@id/settingBtn"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -43,13 +43,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+
             <com.au.module_android.widget.BgBuildLinearLayout
                 android:orientation="horizontal"
                 app:backgroundNormal="#8f333333"
-                android:padding="6dp"
+                android:padding="4dp"
                 app:cornerRadius="8dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="42dp">
                 <com.au.module_android.widget.BgBuildCustomFontText
                     android:id="@+id/previewViewSurface"
                     style="@style/StyleAuTextThinDp"
@@ -60,7 +61,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_marginHorizontal="4dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="match_parent" />
                 <com.au.module_android.widget.BgBuildCustomFontText
                     android:id="@+id/previewViewTexture"
                     style="@style/StyleAuTextThinDp"
@@ -71,7 +72,7 @@
                     android:text="Texture"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="match_parent" />
                 <com.au.module_android.widget.BgBuildCustomFontText
                     android:id="@+id/previewViewGL"
                     style="@style/StyleAuTextThinDp"
@@ -82,17 +83,17 @@
                     android:text="GLSurface"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="match_parent" />
             </com.au.module_android.widget.BgBuildLinearLayout>
 
             <com.au.module_android.widget.BgBuildLinearLayout
                 android:orientation="horizontal"
-                app:backgroundNormal="#4f333333"
-                android:padding="6dp"
+                app:backgroundNormal="#8f333333"
+                android:padding="4dp"
                 app:cornerRadius="8dp"
                 android:layout_marginTop="12dp"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="42dp">
 
                 <com.au.module_android.widget.BgBuildCustomFontText
                     android:id="@+id/shaderOriginal"
@@ -104,7 +105,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_marginHorizontal="4dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="match_parent" />
                 <com.au.module_android.widget.BgBuildCustomFontText
                     android:id="@+id/shaderGray"
                     style="@style/StyleAuTextThinDp"
@@ -115,7 +116,7 @@
                     android:text="灰色"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="match_parent" />
                 <com.au.module_android.widget.BgBuildCustomFontText
                     android:id="@+id/shaderInvert"
                     style="@style/StyleAuTextThinDp"
@@ -126,7 +127,7 @@
                     android:text="底片"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="match_parent" />
                 <com.au.module_android.widget.BgBuildCustomFontText
                     android:id="@+id/shaderSepia"
                     style="@style/StyleAuTextThinDp"
@@ -137,8 +138,9 @@
                     android:text="怀旧"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="match_parent" />
             </com.au.module_android.widget.BgBuildLinearLayout>
+
 
         </com.au.module_android.widget.BgBuildLinearLayout>
 
