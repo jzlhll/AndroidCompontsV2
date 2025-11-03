@@ -1,6 +1,7 @@
 package com.au.audiorecordplayer.cam2
 
 import android.graphics.drawable.Drawable
+import android.view.View
 import androidx.core.graphics.toColorInt
 import com.au.audiorecordplayer.cam2.impl.DataRepository
 import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
@@ -31,7 +32,7 @@ class Camera2FragmentSettings(private val f: Camera2Fragment) {
 
     fun initUis() {
         f.binding.expandSettings.setOnExpansionUpdateListener { d, expansion ->
-            changeToNullBgs()
+            //changeToNullBgs()
             logdNoFile{"d: $d, expansion $expansion"}
             if (expansion == 3 || expansion == 0) {
                 f.binding.expandSettings.post {
@@ -49,20 +50,48 @@ class Camera2FragmentSettings(private val f: Camera2Fragment) {
 
     private fun initShaders() {
         f.binding.shaderOriginal.onClick {
-            if (DataRepository.shaderModeFlow.value != FilterType.ORIGINAL) DataRepository.updateShaderMode(FilterType.ORIGINAL)
-            changeShadersBackground()
+            if (DataRepository.shaderModeFlow.value != FilterType.ORIGINAL) {
+                DataRepository.updateShaderMode(FilterType.ORIGINAL)
+                changeShadersBackground()
+            }
         }
         f.binding.shaderSepia.onClick {
-            if(DataRepository.shaderModeFlow.value != FilterType.SEPIA) DataRepository.updateShaderMode(FilterType.SEPIA)
-            changeShadersBackground()
+            if(DataRepository.shaderModeFlow.value != FilterType.SEPIA) {
+                DataRepository.updateShaderMode(FilterType.SEPIA)
+                changeShadersBackground()
+            }
         }
         f.binding.shaderInvert.onClick {
-            if (DataRepository.shaderModeFlow.value != FilterType.INVERT) DataRepository.updateShaderMode(FilterType.INVERT)
-            changeShadersBackground()
+            if (DataRepository.shaderModeFlow.value != FilterType.INVERT) {
+                DataRepository.updateShaderMode(FilterType.INVERT)
+                changeShadersBackground()
+            }
         }
         f.binding.shaderGray.onClick {
-            if (DataRepository.shaderModeFlow.value != FilterType.GRAY) DataRepository.updateShaderMode(FilterType.GRAY)
-            changeShadersBackground()
+            if (DataRepository.shaderModeFlow.value != FilterType.GRAY) {
+                DataRepository.updateShaderMode(FilterType.GRAY)
+                changeShadersBackground()
+            }
+        }
+        f.binding.shaderBrightness.onClick {
+            if (DataRepository.shaderModeFlow.value != FilterType.BRIGHTNESS) {
+                DataRepository.updateShaderMode(FilterType.BRIGHTNESS)
+                changeShadersBackground()
+            }
+        }
+
+        f.binding.shaderSharpen.onClick {
+            if (DataRepository.shaderModeFlow.value != FilterType.SHARPEN) {
+                DataRepository.updateShaderMode(FilterType.SHARPEN)
+                changeShadersBackground()
+            }
+        }
+
+        f.binding.shaderGaussian.onClick {
+            if (DataRepository.shaderModeFlow.value != FilterType.GAUSSIAN) {
+                DataRepository.updateShaderMode(FilterType.GAUSSIAN)
+                changeShadersBackground()
+            }
         }
     }
 
@@ -77,35 +106,24 @@ class Camera2FragmentSettings(private val f: Camera2Fragment) {
     }
 
     private fun changeShadersBackground() {
+        val currentView = when(DataRepository.shaderModeFlow.value) {
+            FilterType.ORIGINAL -> f.binding.shaderOriginal
+            FilterType.SEPIA -> f.binding.shaderSepia
+            FilterType.GRAY -> f.binding.shaderGray
+            FilterType.INVERT -> f.binding.shaderInvert
+            FilterType.BRIGHTNESS -> f.binding.shaderBrightness
+            FilterType.SHARPEN -> f.binding.shaderSharpen
+            FilterType.GAUSSIAN -> f.binding.shaderGaussian
+        }
+
         val nbg = normalPreviewBg
         val cbg = currentPreviewBg
-        when(DataRepository.shaderModeFlow.value) {
-            FilterType.ORIGINAL -> {
-                f.binding.shaderOriginal.background = cbg
-                f.binding.shaderInvert.background = nbg
-                f.binding.shaderGray.background = nbg
-                f.binding.shaderSepia.background = nbg
-            }
-            FilterType.SEPIA -> {
-                f.binding.shaderOriginal.background = nbg
-                f.binding.shaderInvert.background = nbg
-                f.binding.shaderGray.background = nbg
-                f.binding.shaderSepia.background = cbg
-            }
-            FilterType.GRAY -> {
-                f.binding.shaderOriginal.background = nbg
-                f.binding.shaderInvert.background = nbg
-                f.binding.shaderGray.background = cbg
-                f.binding.shaderSepia.background = nbg
-            }
-            FilterType.INVERT -> {
-                f.binding.shaderOriginal.background = nbg
-                f.binding.shaderInvert.background = cbg
-                f.binding.shaderGray.background = nbg
-                f.binding.shaderSepia.background = nbg
-            }
-            else -> {}
+        val list = listOf<View>(f.binding.shaderSharpen, f.binding.shaderGaussian, f.binding.shaderBrightness,
+            f.binding.shaderGray, f.binding.shaderInvert, f.binding.shaderOriginal, f.binding.shaderSepia)
+        list.filter { it != currentView }.forEach {
+            it.background = nbg
         }
+        currentView.background = cbg
     }
 
     fun toggle() {
@@ -114,20 +132,26 @@ class Camera2FragmentSettings(private val f: Camera2Fragment) {
 
     private fun initPreviewModes() {
         f.binding.previewViewSurface.onClick {
-            if (DataRepository.previewMode != PreviewMode.SURFACE_VIEW) DataRepository.previewMode = PreviewMode.SURFACE_VIEW
-            changePreviewModesBackground()
+            if (DataRepository.previewMode != PreviewMode.SURFACE_VIEW) {
+                DataRepository.previewMode = PreviewMode.SURFACE_VIEW
+                changePreviewModesBackground()
+            }
             f.toastOnText("切换预览为SurfaceView，下次启动生效")
             toggle()
         }
         f.binding.previewViewTexture.onClick {
-            if (DataRepository.previewMode != PreviewMode.TEXTURE_VIEW) DataRepository.previewMode = PreviewMode.TEXTURE_VIEW
-            changePreviewModesBackground()
+            if (DataRepository.previewMode != PreviewMode.TEXTURE_VIEW) {
+                DataRepository.previewMode = PreviewMode.TEXTURE_VIEW
+                changePreviewModesBackground()
+            }
             f.toastOnText("切换预览为TextureView，下次启动生效")
             toggle()
         }
         f.binding.previewViewGL.onClick {
-            if (DataRepository.previewMode != PreviewMode.GL_SURFACE_VIEW) DataRepository.previewMode = PreviewMode.GL_SURFACE_VIEW
-            changePreviewModesBackground()
+            if (DataRepository.previewMode != PreviewMode.GL_SURFACE_VIEW) {
+                DataRepository.previewMode = PreviewMode.GL_SURFACE_VIEW
+                changePreviewModesBackground()
+            }
             f.toastOnText("切换预览为GLSurfaceView，下次启动生效")
             toggle()
         }
