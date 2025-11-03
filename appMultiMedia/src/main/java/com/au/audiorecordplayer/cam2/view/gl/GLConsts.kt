@@ -1,6 +1,5 @@
 package com.au.audiorecordplayer.cam2.view.gl
 
-
 /**
  * Created by lb6905 on 2017/6/28.
  */
@@ -81,15 +80,15 @@ class GLConsts {
         """.trimIndent()
 
         /**
-         * 高斯模糊 todo error
+         * 高斯模糊基础着色器代码
          */
         @JvmField
-        val GAUSSIAN_FRAGMENT_SHADER: String = """
+        val GAUSSIAN_FRAGMENT_SHADER_FMT: String = """
             #extension GL_OES_EGL_image_external : require
             precision mediump float;
             uniform samplerExternalOES uTextureSampler;
             varying vec2 vTextureCoord;
-            uniform vec2 uTexelSize; // 纹理尺寸的倒数 (1.0/width, 1.0/height)
+            uniform vec2 uTexelSize = %1s; // 纹理尺寸的倒数 (1.0/width, 1.0/height)
             void main()
             {
               vec4 sum = vec4(0.0);
@@ -107,12 +106,12 @@ class GLConsts {
          * 锐化滤镜 error
          */
         @JvmField
-        val SHARPEN_FRAGMENT_SHADER: String = """
+        val SHARPEN_FRAGMENT_SHADER_FMT: String = """
             #extension GL_OES_EGL_image_external : require
             precision mediump float;
             uniform samplerExternalOES uTextureSampler;
             varying vec2 vTextureCoord;
-            uniform vec2 uTexelSize;
+            uniform vec2 uTexelSize = %1s;
             void main()
             {
               vec4 center = texture2D(uTextureSampler, vTextureCoord);
@@ -125,15 +124,15 @@ class GLConsts {
            """.trimIndent()
 
         /**
-         * 曝光度滤镜 todo error
+         * 曝光度滤镜
          */
         @JvmField
-        val BRIGHTNESS_FRAGMENT_SHADER: String = """
+        val BRIGHTNESS_FRAGMENT_SHADER_FMT: String = """
             #extension GL_OES_EGL_image_external : require
             precision mediump float;
             uniform samplerExternalOES uTextureSampler;
             varying vec2 vTextureCoord;
-            uniform float uExposure; // 曝光度参数，建议范围0.5-2.0
+            uniform float uExposure = %1s; // 曝光度参数，建议范围0.5-2.0
             void main()
             {
               vec4 vCameraColor = texture2D(uTextureSampler, vTextureCoord);
@@ -143,16 +142,73 @@ class GLConsts {
         
         // 根据滤镜类型获取对应的着色器代码
         @JvmStatic
-        fun getFragmentShaderByType(type: FilterType): String {
+        fun getFragmentShaderByType(type: FilterType, config: FilterExtraConfig) : String {
             return when (type) {
                 FilterType.ORIGINAL -> BASE_FRAGMENT_ORIGINAL_SHADER
                 FilterType.GRAY -> GRAY_FRAGMENT_SHADER
                 FilterType.INVERT -> INVERT_FRAGMENT_SHADER
                 FilterType.SEPIA -> SEPIA_FRAGMENT_SHADER
-                FilterType.GAUSSIAN -> GAUSSIAN_FRAGMENT_SHADER
-                FilterType.SHARPEN -> SHARPEN_FRAGMENT_SHADER
-                FilterType.BRIGHTNESS -> BRIGHTNESS_FRAGMENT_SHADER
+                FilterType.GAUSSIAN -> run {
+                    val cfg = config as FilterExtraSizeConfig
+                    getGaussianFragmentShaderWithTexelSize(cfg.width, cfg.height)
+                }
+                FilterType.SHARPEN -> run {
+                    val cfg = config as FilterExtraSizeConfig
+                    getSharpenFragmentShaderWithTexelSize(cfg.width, cfg.height)
+                }
+                FilterType.BRIGHTNESS -> run {
+                    val cfg = config as FilterExtraExposureConfig
+                    getBrightnessFragmentShaderWithExposure(cfg.exposure)
+                }
             }
+        }
+        
+        /**
+         * 获取带有参数的高斯模糊着色器代码
+         * @param width 纹理宽度
+         * @param height 纹理高度
+         * @return 包含uTexelSize参数的高斯模糊着色器代码
+         */
+        @JvmStatic
+        private fun getGaussianFragmentShaderWithTexelSize(width: Int, height: Int): String {
+            // 生成带uTexelSize默认值的着色器代码，避免运行时必须设置uniform变量
+            val texelSizeX = 1.0f / width
+            val texelSizeY = 1.0f / height
+            return GAUSSIAN_FRAGMENT_SHADER_FMT.replace(
+                "%1s",
+                "vec2($texelSizeX, $texelSizeY)"
+            )
+        }
+        
+        /**
+         * 获取带有参数的锐化着色器代码
+         * @param width 纹理宽度
+         * @param height 纹理高度
+         * @return 包含uTexelSize参数的锐化着色器代码
+         */
+        @JvmStatic
+        private fun getSharpenFragmentShaderWithTexelSize(width: Int, height: Int): String {
+            // 生成带uTexelSize默认值的着色器代码
+            val texelSizeX = 1.0f / width
+            val texelSizeY = 1.0f / height
+            return SHARPEN_FRAGMENT_SHADER_FMT.replace(
+                "%1s",
+                "vec2($texelSizeX, $texelSizeY)"
+            )
+        }
+        
+        /**
+         * 获取带有参数的曝光度着色器代码
+         * @param exposure 曝光度参数，默认1.0（正常）
+         * @return 包含uExposure参数的曝光度着色器代码
+         */
+        @JvmStatic
+        private fun getBrightnessFragmentShaderWithExposure(exposure: Float = 1.0f): String {
+            // 生成带uExposure默认值的着色器代码
+            return BRIGHTNESS_FRAGMENT_SHADER_FMT.replace(
+                "%1s",
+                "$exposure"
+            )
         }
 
         @JvmField

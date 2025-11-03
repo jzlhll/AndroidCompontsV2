@@ -33,3 +33,18 @@ fun FilterType.toName(): String {
         FilterType.BRIGHTNESS -> "brightness"
     }
 }
+
+fun FilterType.needSize(): Boolean {
+    return when (this) {
+        FilterType.SHARPEN -> true
+        FilterType.GAUSSIAN -> true
+        else -> false
+    }
+}
+
+fun FilterType.needBrightness(): Boolean {
+    return when (this) {
+        FilterType.BRIGHTNESS -> true
+        else -> false
+    }
+}

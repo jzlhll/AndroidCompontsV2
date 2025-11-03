@@ -6,6 +6,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Log
 import com.au.audiorecordplayer.cam2.impl.DataRepository
+import com.au.module_android.utils.logdNoFile
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -20,9 +21,8 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
     private var mSurfaceTexture: SurfaceTexture? = null
     private val transformMatrix = FloatArray(16)
     private var mDataBuffer: FloatBuffer? = null
-    private var mShaderProgram = -1
     private val mFBOIds = IntArray(1)
-    
+
     // FilterEngine引用，用于动态切换滤镜
     private var mFilterEngine: FilterEngine? = null
 
@@ -38,7 +38,6 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
         }
         
         mDataBuffer = filterEngine.buffer
-        mShaderProgram = filterEngine.shaderProgram
         GLES20.glGenFramebuffers(1, mFBOIds, 0)
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFBOIds[0])
         Log.i(TAG, "onSurfaceCreated: mFBOId: " + mFBOIds[0])
@@ -49,7 +48,17 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
         Log.i(TAG, "onSurfaceChanged: $width, $height")
+        // 保存宽高信息，用于后续滤镜切换
+        DataRepository.currentWidth = width
+        DataRepository.currentHeight = height
         mGLView.getCallback()?.onSurfaceChanged()
+        
+        // 如果当前正在使用需要尺寸参数的滤镜，重新应用滤镜以更新参数
+        mFilterEngine?.let { filterEngine->
+            if (filterEngine.currentFilterType.needSize()) {
+                filterEngine.updateFilter(filterEngine.currentFilterType)
+            }
+        }
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -62,10 +71,11 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
         //glClear(GL_COLOR_BUFFER_BIT);
         GLES20.glClearColor(1.0f, 0.0f, 0.0f, 0.0f)
 
-        val aPositionLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.POSITION_ATTRIBUTE)
-        val aTextureCoordLocation = GLES20.glGetAttribLocation(mShaderProgram, FilterEngine.TEXTURE_COORD_ATTRIBUTE)
-        val uTextureMatrixLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.TEXTURE_MATRIX_UNIFORM)
-        val uTextureSamplerLocation = GLES20.glGetUniformLocation(mShaderProgram, FilterEngine.TEXTURE_SAMPLER_UNIFORM)
+        val sp = mFilterEngine?.shaderProgram ?: -1
+        val aPositionLocation = GLES20.glGetAttribLocation(sp, FilterEngine.POSITION_ATTRIBUTE)
+        val aTextureCoordLocation = GLES20.glGetAttribLocation(sp, FilterEngine.TEXTURE_COORD_ATTRIBUTE)
+        val uTextureMatrixLocation = GLES20.glGetUniformLocation(sp, FilterEngine.TEXTURE_MATRIX_UNIFORM)
+        val uTextureSamplerLocation = GLES20.glGetUniformLocation(sp, FilterEngine.TEXTURE_SAMPLER_UNIFORM)
 
         GLES20.glActiveTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mOESTextureId)
@@ -89,7 +99,9 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
         val t2 = System.currentTimeMillis()
         val t = t2 - t1
-        Log.i(TAG, "onDrawFrame: time: $t")
+        logdNoFile {
+            "onDrawFrame: time: $t"
+        }
     }
 
     fun createOESTextureObject(): Int {
@@ -125,7 +137,6 @@ class CameraV2Renderer(val mGLView: CamGLSurfaceView) : GLSurfaceView.Renderer {
         // 确保在GL线程中执行
         mGLView.queueEvent {
             fe.updateFilter(filterType)
-            mShaderProgram = fe.shaderProgram
             Log.d(TAG, "Filter changed to: $filterType")
         }
     }

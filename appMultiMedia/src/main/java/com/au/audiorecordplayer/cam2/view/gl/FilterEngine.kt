@@ -2,6 +2,8 @@ package com.au.audiorecordplayer.cam2.view.gl
 
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
+import com.au.audiorecordplayer.cam2.impl.DataRepository
+import com.au.module_android.utils.logdNoFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -42,10 +44,11 @@ class FilterEngine(val oESTextureId: Int,
     }
     
     /**
-     * 更新当前使用的滤镜
+     * 更新当前使用的滤镜，并传入纹理尺寸参数（用于需要uTexelSize的滤镜）
      * @param filterType 要切换到的滤镜类型
      */
     fun updateFilter(filterType: FilterType) {
+        logdNoFile {"update filter $filterType"}
         // 保存新的滤镜类型
         currentFilterType = filterType
         
@@ -56,8 +59,15 @@ class FilterEngine(val oESTextureId: Int,
         
         // 加载顶点着色器
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, GLConsts.BASE_VERTEX_SHADER)
-        // 根据滤镜类型加载对应的片段着色器
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, GLConsts.getFragmentShaderByType(filterType))
+
+        // 根据滤镜类型加载对应的片段着色器，对于需要参数的滤镜，使用带参数的方法
+        val cfg = when {
+            filterType.needSize() -> FilterExtraSizeConfig(DataRepository.currentWidth, DataRepository.currentHeight)
+            filterType.needBrightness() -> FilterExtraExposureConfig(DataRepository.currentExposure)
+            else -> FilterExtraConfig()
+        }
+        val fragmentShaderSource = GLConsts.getFragmentShaderByType(filterType, cfg)
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource)
         // 链接并使用新的着色器程序
         shaderProgram = linkProgram(vertexShader, fragmentShader)
     }

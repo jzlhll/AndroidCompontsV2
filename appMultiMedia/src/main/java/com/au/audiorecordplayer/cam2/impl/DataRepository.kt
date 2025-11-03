@@ -6,6 +6,7 @@ import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
 import com.au.audiorecordplayer.cam2.view.gl.FilterType
 import com.au.audiorecordplayer.cam2.view.gl.toName
 import com.au.audiorecordplayer.cam2.view.gl.toType
+import com.au.module_cached.delegate.AppDataStoreFloatCache
 import com.au.module_cached.delegate.AppDataStoreIntCache
 import com.au.module_cached.delegate.AppDataStoreStringCache
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,4 +49,8 @@ object DataRepository {
         shaderModeStr = value.toName()
         _shaderModeFlow.value = value
     }
+
+    var currentWidth: Int by AppDataStoreIntCache("camera2Demo_currentWidth", 0)
+    var currentHeight: Int by AppDataStoreIntCache("camera2Demo_currentHeight", 0)
+    var currentExposure: Float by AppDataStoreFloatCache("camera2Demo_currentExposure", 1.0f)
 }
