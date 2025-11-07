@@ -2,14 +2,18 @@ package com.au.audiorecordplayer.particle
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.RuntimeShader
 import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.RequiresApi
 
+/**
+ * 固定一个颜色，固定区域，不动的效果很不错的全屏边缘特效
+ */
 class ScreenEffectView3 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -25,60 +29,55 @@ class ScreenEffectView3 @JvmOverloads constructor(
         private const val EDGE_COLOR_A = 1.0f
 
         // 尺寸配置
-        private const val RECT_SIZE_RATIO = 0.72f  // 矩形相对于屏幕的大小比例，
-        private const val CORNER_RADIUS = 6f     // 圆角半径
+        private const val RECT_SIZE_RATIO_VERTICAL = 0.88f
+        private const val RECT_SIZE_RATIO_HORIZONTAL = 0.8f
+        private const val CORNER_RADIUS = 16f
 
         // 着色器配置
-        private const val MAX_GRADIENT_DISTANCE_FACTOR = 0.3f  // 最大渐变距离因子
+        private const val MAX_GRADIENT_DISTANCE_FACTOR = 0.09f
 
-        // 修正的 AGSL 着色器代码 - 从屏幕边缘到圆角矩形的渐变
+        // 修正的 AGSL 着色器代码
+        // 修改后的着色器代码 - 更精确地控制混合
         private val shaderSource = """
-        uniform float2 resolution;   // 屏幕分辨率
-        uniform float4 edgeColor;    // 边缘颜色
-        uniform float4 rectProps;    // 圆角矩形参数: x, y, width, height
-        uniform float radius;        // 圆角半径
-        
-        // 圆角矩形 SDF 函数
-        float roundedBoxSDF(vec2 p, vec2 b, float r) {
-            vec2 d = abs(p) - b;
-            return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
-        }
-        
-        vec4 main(vec2 fragCoord) {
-            // 计算圆角矩形的中心点和半尺寸
-            vec2 rectCenter = vec2(rectProps.x + rectProps.z * 0.5, rectProps.y + rectProps.w * 0.5);
-            vec2 rectHalfSize = vec2(rectProps.z * 0.5, rectProps.w * 0.5);
+            uniform float2 resolution;
+            uniform float4 edgeColor;
+            uniform float4 rectProps;
+            uniform float radius;
             
-            // 计算当前像素相对于圆角矩形中心的坐标
-            vec2 relativePos = fragCoord - rectCenter;
-            
-            // 计算到圆角矩形的距离（正数表示在矩形外部，负数表示在内部）
-            float distanceToRect = roundedBoxSDF(relativePos, rectHalfSize, radius);
-            
-            // 关键修改：从屏幕边缘到圆角矩形边缘的渐变
-            // 当 distanceToRect > 0 时，我们在圆角矩形外部
-            // 我们想要的效果：在圆角矩形外部有颜色，渐变到圆角矩形边缘时变为透明
-            
-            // 计算渐变因子：0在圆角矩形边缘，1在屏幕最远处
-            float gradient = 0.0;
-            
-            if (distanceToRect > 0.0) {
-                // 在圆角矩形外部，计算渐变
-                // 使用平滑的渐变，基于到圆角矩形的距离
-                float maxGradientDistance = length(resolution) * $MAX_GRADIENT_DISTANCE_FACTOR; // 最大渐变距离
-                gradient = smoothstep(0.0, maxGradientDistance, distanceToRect);
+            float roundedBoxSDF(vec2 p, vec2 b, float r) {
+                vec2 d = abs(p) - b;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
             }
             
-            // 应用渐变：在圆角矩形内部完全透明，外部根据距离渐变
-            float alpha = gradient;
-            
-            // 返回颜色，alpha 通道根据渐变变化
-            return vec4(edgeColor.rgb, edgeColor.a * alpha);
-        }
-    """.trimIndent()
+            vec4 main(vec2 fragCoord) {
+                vec2 rectCenter = vec2(rectProps.x + rectProps.z * 0.5, rectProps.y + rectProps.w * 0.5);
+                vec2 rectHalfSize = vec2(rectProps.z * 0.5, rectProps.w * 0.5);
+                
+                vec2 relativePos = fragCoord - rectCenter;
+                float distanceToRect = roundedBoxSDF(relativePos, rectHalfSize, radius);
+                
+                // 完全透明的内部区域
+                if (distanceToRect <= 0.0) {
+                    return vec4(0.0, 0.0, 0.0, 0.0);
+                }
+                
+                // 边缘渐变区域
+                float maxGradientDistance = length(resolution) * $MAX_GRADIENT_DISTANCE_FACTOR;
+                float gradient = smoothstep(0.0, maxGradientDistance, distanceToRect);
+                
+                // 只在不完全透明的地方应用颜色
+                if (gradient > 0.01) {
+                    return vec4(edgeColor.rgb, edgeColor.a * gradient);
+                } else {
+                    return vec4(0.0, 0.0, 0.0, 0.0);
+                }
+            }
+        """.trimIndent()
     }
 
-    private val mPaint: Paint = Paint()
+    private val mPaint: Paint = Paint().apply {
+        isAntiAlias = true
+    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -95,23 +94,35 @@ class ScreenEffectView3 @JvmOverloads constructor(
         shader.setFloatUniform("edgeColor", edgeColorArray)
 
         // 设置圆角矩形参数 (x, y, width, height)
-        // 使用常量配置矩形大小
-        val rectWidth = w * RECT_SIZE_RATIO
-        val rectHeight = h * RECT_SIZE_RATIO
-        val rectX = (w - rectWidth) * 0.5f  // 居中计算
-        val rectY = (h - rectHeight) * 0.5f // 居中计算
+        val rectWidth = w * RECT_SIZE_RATIO_HORIZONTAL
+        val rectHeight = h * RECT_SIZE_RATIO_VERTICAL
+        val rectX = (w - rectWidth) / 2f
+        val rectY = (h - rectHeight) / 2f
         shader.setFloatUniform("rectProps", rectX, rectY, rectWidth, rectHeight)
 
-        // 设置圆角半径（使用常量）
+        // 设置圆角半径
         shader.setFloatUniform("radius", CORNER_RADIUS.dpToPx())
 
         // 应用着色器到 Paint
         mPaint.shader = shader
     }
 
+    private val MODE_DEBUG = false
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), mPaint)
+        if (MODE_DEBUG) {
+            // 方法2：使用离屏缓冲和正确的混合模式
+            val saved = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), null)
+            // 先绘制下层内容（这里实际上不会绘制，只是保留）
+            // 然后使用 DST_OVER 模式绘制我们的效果
+            mPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OVER)
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), mPaint)
+            mPaint.xfermode = null
+            canvas.restoreToCount(saved)
+        } else {
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), mPaint)
+        }
     }
 
     private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
