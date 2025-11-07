@@ -12,8 +12,10 @@ import com.au.audiorecordplayer.cam2.Camera2Fragment
 import com.au.audiorecordplayer.camx.CameraXFragment
 import com.au.audiorecordplayer.draws.DrawTestFragment
 import com.au.audiorecordplayer.imgprocess.ReturnYourFaceFragment
+import com.au.audiorecordplayer.particle.TransparentParticleFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.FragmentShellActivity
+import com.au.module_android.ui.FragmentShellTranslucentActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,6 +57,9 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.returnFaceBtn).onClick {
             FragmentShellActivity.start(this@MainActivity, ReturnYourFaceFragment::class.java)
+        }
+        findViewById<View>(R.id.translateParticle).onClick {
+            FragmentShellTranslucentActivity.start(this@MainActivity, TransparentParticleFragment::class.java)
         }
     }
 }

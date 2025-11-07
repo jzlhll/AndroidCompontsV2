@@ -16,9 +16,24 @@ app:strokeWidth -->
 
     <style name="TranslucentActivityTheme" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:forceDarkAllowed" tools:targetApi="q">true</item>
-        <item name="android:windowFullscreen">false</item>
-        <item name="android:windowTranslucentStatus">true</item>
+<!--        <item name="android:windowTranslucentStatus">false</item> 不能加，加了systemUI有问题 -->
         <item name="android:background">@null</item>
+
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+
+        <!-- 追加window淡入淡出-->
+        <item name="android:windowAnimationStyle">@style/activity_fade_in_out</item>
+    </style>
+
+    <style name="TransparentThemeOld" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowDisablePreview">true</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
