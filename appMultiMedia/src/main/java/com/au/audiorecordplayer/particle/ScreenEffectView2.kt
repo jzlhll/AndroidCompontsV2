@@ -11,7 +11,7 @@ import android.util.AttributeSet
 import android.view.View
 import kotlin.math.hypot
 
-class RoundedCornerGradientOverlayViewV2 @JvmOverloads constructor(
+class ScreenEffectView2 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0

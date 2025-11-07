@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
@@ -12,7 +11,7 @@ import android.util.AttributeSet
 import android.view.View
 import kotlin.math.hypot
 
-class RoundedCornerGradientOverlayView @JvmOverloads constructor(
+class ScreenEffectView1 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
