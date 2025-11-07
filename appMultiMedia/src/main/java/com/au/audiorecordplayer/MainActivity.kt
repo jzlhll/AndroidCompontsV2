@@ -58,8 +58,11 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.returnFaceBtn).onClick {
             FragmentShellActivity.start(this@MainActivity, ReturnYourFaceFragment::class.java)
         }
-        findViewById<View>(R.id.translateParticle).onClick {
+        findViewById<View>(R.id.translateParticleFull).onClick {
             FragmentShellTranslucentActivity.start(this@MainActivity, TransparentParticleFragment::class.java)
+        }
+        findViewById<View>(R.id.translateParticleActivity).onClick {
+            FragmentShellActivity.start(this@MainActivity, TransparentParticleFragment::class.java)
         }
     }
 }

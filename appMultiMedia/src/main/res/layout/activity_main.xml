@@ -112,10 +112,18 @@
             android:layout_height="wrap_content"/>
 
         <com.au.module_android.widget.CustomButton
-            android:id="@+id/translateParticle"
+            android:id="@+id/translateParticleFull"
             style="@style/StyleButtonPrimary"
             android:layout_marginBottom="0dp"
-            android:text="粒子特效"
+            android:text="粒子特效-全屏透明"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <com.au.module_android.widget.CustomButton
+            android:id="@+id/translateParticleActivity"
+            style="@style/StyleButtonPrimary"
+            android:layout_marginBottom="0dp"
+            android:text="粒子特效-activity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </com.au.module_android.widget.FlowLayout>

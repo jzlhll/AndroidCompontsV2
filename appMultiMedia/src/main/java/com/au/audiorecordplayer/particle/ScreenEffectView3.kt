@@ -2,6 +2,7 @@ package com.au.audiorecordplayer.particle
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RuntimeShader
 import android.os.Build
@@ -10,13 +11,28 @@ import android.view.View
 import androidx.annotation.RequiresApi
 
 class ScreenEffectView3 @JvmOverloads constructor(
-context: Context,
-attrs: AttributeSet? = null,
-defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    // 修正的 AGSL 着色器代码 - 从屏幕边缘到圆角矩形的渐变
-    private val shaderSource = """
+    // 配置常量
+    companion object {
+        // 颜色配置
+        private const val EDGE_COLOR_R = 0.0f
+        private const val EDGE_COLOR_G = 0.0f
+        private const val EDGE_COLOR_B = 1.0f
+        private const val EDGE_COLOR_A = 1.0f
+
+        // 尺寸配置
+        private const val RECT_SIZE_RATIO = 0.72f  // 矩形相对于屏幕的大小比例，
+        private const val CORNER_RADIUS = 6f     // 圆角半径
+
+        // 着色器配置
+        private const val MAX_GRADIENT_DISTANCE_FACTOR = 0.3f  // 最大渐变距离因子
+
+        // 修正的 AGSL 着色器代码 - 从屏幕边缘到圆角矩形的渐变
+        private val shaderSource = """
         uniform float2 resolution;   // 屏幕分辨率
         uniform float4 edgeColor;    // 边缘颜色
         uniform float4 rectProps;    // 圆角矩形参数: x, y, width, height
@@ -49,7 +65,7 @@ defStyleAttr: Int = 0
             if (distanceToRect > 0.0) {
                 // 在圆角矩形外部，计算渐变
                 // 使用平滑的渐变，基于到圆角矩形的距离
-                float maxGradientDistance = length(resolution) * 0.5; // 最大渐变距离
+                float maxGradientDistance = length(resolution) * $MAX_GRADIENT_DISTANCE_FACTOR; // 最大渐变距离
                 gradient = smoothstep(0.0, maxGradientDistance, distanceToRect);
             }
             
@@ -60,6 +76,7 @@ defStyleAttr: Int = 0
             return vec4(edgeColor.rgb, edgeColor.a * alpha);
         }
     """.trimIndent()
+    }
 
     private val mPaint: Paint = Paint()
 
@@ -73,20 +90,20 @@ defStyleAttr: Int = 0
         // 配置着色器参数
         shader.setFloatUniform("resolution", w.toFloat(), h.toFloat())
 
-        // 设置边缘颜色（使用 float array）
-        val edgeColorArray = floatArrayOf(0.0f, 0.0f, 1.0f, 1.0f) // 蓝色
+        // 设置边缘颜色（使用常量）
+        val edgeColorArray = floatArrayOf(EDGE_COLOR_R, EDGE_COLOR_G, EDGE_COLOR_B, EDGE_COLOR_A)
         shader.setFloatUniform("edgeColor", edgeColorArray)
 
         // 设置圆角矩形参数 (x, y, width, height)
-        // 矩形居中，大小为屏幕的 60%
-        val rectWidth = w * 0.6f
-        val rectHeight = h * 0.6f
-        val rectX = (w - rectWidth) * 0.5f
-        val rectY = (h - rectHeight) * 0.5f
+        // 使用常量配置矩形大小
+        val rectWidth = w * RECT_SIZE_RATIO
+        val rectHeight = h * RECT_SIZE_RATIO
+        val rectX = (w - rectWidth) * 0.5f  // 居中计算
+        val rectY = (h - rectHeight) * 0.5f // 居中计算
         shader.setFloatUniform("rectProps", rectX, rectY, rectWidth, rectHeight)
 
-        // 设置圆角半径
-        shader.setFloatUniform("radius", 40f)
+        // 设置圆角半径（使用常量）
+        shader.setFloatUniform("radius", CORNER_RADIUS.dpToPx())
 
         // 应用着色器到 Paint
         mPaint.shader = shader
@@ -96,4 +113,6 @@ defStyleAttr: Int = 0
         super.onDraw(canvas)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), mPaint)
     }
+
+    private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
 }
