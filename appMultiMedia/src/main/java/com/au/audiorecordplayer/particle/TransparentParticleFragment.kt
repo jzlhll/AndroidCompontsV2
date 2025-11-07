@@ -15,12 +15,22 @@ class TransparentParticleFragment : ViewFragment() {
         savedInstanceState: Bundle?
     ): View {
         return FrameLayout(inflater.context).apply {
-            addView(ScreenEffectView3(inflater.context).also {
-                it.layoutParams = FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            })
+            //如果大于等于13才显示
+            if (true) {
+                addView(ScreenEffectView2(inflater.context).also {
+                    it.layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                })
+            } else {
+                addView(ScreenEffectViewLower(inflater.context).also {
+                    it.layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                })
+            }
         }
     }
 
