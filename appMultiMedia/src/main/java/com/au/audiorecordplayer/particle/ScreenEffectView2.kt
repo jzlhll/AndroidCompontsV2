@@ -29,19 +29,19 @@ class ScreenEffectView2 @JvmOverloads constructor(
         private val COLOR_3 = floatArrayOf(0.6f, 0.0f, 1.0f, 1.0f) // #ff9900ff
 
         // 尺寸配置
-        private const val RECT_SIZE_RATIO_WIDTH = 0.75f
-        private const val RECT_SIZE_RATIO = 0.88f
+        private const val RECT_SIZE_RATIO_H = 0.82f
+        private const val RECT_SIZE_RATIO_V = 0.9f
         private const val DEFAULT_CORNER_RADIUS = 16f        // 默认圆角半径
         private const val CORNER_RADIUS_FIX_RATIO = 0.4f
 
-        private const val MAX_GRADIENT_DISTANCE_FACTOR = 0.1f
+        private const val MAX_GRADIENT_DISTANCE_FACTOR = 0.08f
 
         // 动画配置
         private const val ANIMATION_DURATION = 6000L // 动画周期5秒
         private const val COLOR_CHANGE_SPEED = 1.5f // 颜色变化速度
     }
 
-    // 添加了时间uniform的AGSL着色器代码
+    // 修正后的AGSL着色器代码
     private val shaderSource = """
         uniform float2 resolution;   // 屏幕分辨率
         uniform float4 color1;   // 边缘颜色1
@@ -57,9 +57,9 @@ class ScreenEffectView2 @JvmOverloads constructor(
             return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
         }
         
-        // 颜色混合函数 - 使用时间进行动态混合
+        // 修正的颜色混合函数 - 保持整体亮度一致
         vec4 mixColors(float time) {
-            // 使用三角函数创建循环的颜色过渡
+            // 使用三角函数创建循环的颜色过渡，但保持整体亮度稳定
             float factor1 = (sin(time * $COLOR_CHANGE_SPEED) + 1.0) * 0.5;
             float factor2 = (sin(time * $COLOR_CHANGE_SPEED + 2.094) + 1.0) * 0.5; // 2.094 = 2π/3
             float factor3 = (sin(time * $COLOR_CHANGE_SPEED + 4.188) + 1.0) * 0.5; // 4.188 = 4π/3
@@ -71,7 +71,24 @@ class ScreenEffectView2 @JvmOverloads constructor(
             factor3 /= sum;
             
             // 混合三种颜色
-            return color1 * factor1 + color2 * factor2 + color3 * factor3;
+            vec4 mixedColor = color1 * factor1 + color2 * factor2 + color3 * factor3;
+            
+            // 关键修正：保持整体亮度稳定，防止视觉上的边距抖动
+            // 计算当前混合颜色的亮度
+            float mixedBrightness = 0.299 * mixedColor.r + 0.587 * mixedColor.g + 0.114 * mixedColor.b;
+            
+            // 计算目标亮度（使用三种颜色的平均亮度作为基准）
+            float targetBrightness = 0.299 * (color1.r + color2.r + color3.r)/3.0 + 
+                                   0.587 * (color1.g + color2.g + color3.g)/3.0 + 
+                                   0.114 * (color1.b + color2.b + color3.b)/3.0;
+            
+            // 调整颜色以保持亮度一致
+            if (mixedBrightness > 0.0) {
+                float brightnessRatio = targetBrightness / mixedBrightness;
+                mixedColor.rgb *= brightnessRatio;
+            }
+            
+            return mixedColor;
         }
         
         vec4 main(vec2 fragCoord) {
@@ -134,8 +151,8 @@ class ScreenEffectView2 @JvmOverloads constructor(
             shader.setFloatUniform("color3", COLOR_3)
 
             // 设置圆角矩形参数
-            val rectWidth = w * RECT_SIZE_RATIO_WIDTH
-            val rectHeight = h * RECT_SIZE_RATIO
+            val rectWidth = w * RECT_SIZE_RATIO_H
+            val rectHeight = h * RECT_SIZE_RATIO_V
             val rectX = (w - rectWidth) * 0.5f
             val rectY = (h - rectHeight) * 0.5f
             shader.setFloatUniform("rectProps", rectX, rectY, rectWidth, rectHeight)
@@ -156,7 +173,7 @@ class ScreenEffectView2 @JvmOverloads constructor(
         // 停止之前的动画
         valueAnimator?.cancel()
 
-        // 创建ValueAnimator，从0到2π循环[citation:1][citation:4]
+        // 创建ValueAnimator，从0到2π循环
         valueAnimator = ValueAnimator.ofFloat(0f, 6.283185f) // 2π ≈ 6.283185
         valueAnimator?.apply {
             duration = ANIMATION_DURATION
