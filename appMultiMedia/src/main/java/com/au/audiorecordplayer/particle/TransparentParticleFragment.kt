@@ -17,7 +17,7 @@ class TransparentParticleFragment : ViewFragment() {
         return FrameLayout(inflater.context).apply {
             //如果大于等于13才显示
             if (true) {
-                addView(ScreenEffectView2(inflater.context).also {
+                addView(ScreenEffectView3(inflater.context).also {
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
