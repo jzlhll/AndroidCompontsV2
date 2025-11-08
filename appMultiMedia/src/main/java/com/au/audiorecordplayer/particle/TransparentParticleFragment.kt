@@ -1,30 +1,29 @@
 package com.au.audiorecordplayer.particle
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.au.audiorecordplayer.databinding.FragmentFloatParticleBinding
 import com.au.audiorecordplayer.recorder.ISimpleRecord
-import com.au.audiorecordplayer.recorder.a2AudioRecord.SimpleWavAudioRecord
 import com.au.audiorecordplayer.recorder.a2AudioRecord.WavePcmAudioRecord
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.click.onClick
 import com.au.module_android.permissions.createPermissionForResult
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ViewFragment
 import com.au.module_android.utils.ALogJ
 
 class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding>() {
-
     val permissionHelper = createPermissionForResult(android.Manifest.permission.RECORD_AUDIO)
 
     var mRecord: ISimpleRecord? = null
+
+    private var mScreenEffectView : ScreenEffectView3? = null
+
     private fun startRecord() {
         permissionHelper.safeRun({
             runCatching {
                 mRecord?.start()
+                mScreenEffectView?.onVoiceStarted()
             }.onFailure {
                 MainUIManager.get().toastSnackbar(binding.btn, "开始失败-" + it.message)
             }
@@ -38,6 +37,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
             mRecord = it
             it.setWaveDetectCallback { rms, db->
                 ALogJ.t("wave rms: $rms db: $db")
+                mScreenEffectView?.onRmsUpdated(rms)
             }
             startRecord()
         }
@@ -46,6 +46,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
     private fun stopRecord() {
         mRecord?.stop()
         mRecord = null
+        mScreenEffectView?.onVoiceStopped()
         MainUIManager.get().toastSnackbar(binding.btn, "录制已经停止")
     }
 
@@ -65,13 +66,14 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
             //如果大于等于13才显示
             if (true) {
                 addView(ScreenEffectView3(context).also {
+                    mScreenEffectView = it
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
                 })
             } else {
-                addView(ScreenEffectViewLower(context).also {
+                addView(ScreenEffectLowView(context).also {
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT

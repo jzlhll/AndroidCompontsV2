@@ -11,7 +11,7 @@ import android.util.AttributeSet
 import android.view.View
 import kotlin.math.hypot
 
-class ScreenEffectViewLower @JvmOverloads constructor(
+class ScreenEffectLowView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -83,9 +83,15 @@ class ScreenEffectViewLower @JvmOverloads constructor(
         canvas.drawRect(outerRectF, paint)
     }
 
-    override fun updateWave(db: Float) {
-    }
-
     // dp转px的扩展函数
     private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
+
+    override fun onVoiceStarted() {
+    }
+
+    override fun onVoiceStopped() {
+    }
+
+    override fun onRmsUpdated(rms: Double) {
+    }
 }

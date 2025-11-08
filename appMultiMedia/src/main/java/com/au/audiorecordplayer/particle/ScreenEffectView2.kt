@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.RequiresApi
+import com.au.audiorecordplayer.recorder.WaveUtils
 
 /**
  * 带圆角矩形和渐变效果的边缘氛围光效
@@ -23,7 +24,7 @@ open class ScreenEffectView2 @JvmOverloads constructor(
     // 配置常量
     companion object {
         // 尺寸配置
-        private const val RECT_RATIO_HORZ = 0.82f
+        private const val RECT_RATIO_HORZ = 0.88f
         private const val RECT_RATIO_VERT = 0.9f
         private const val RECT_RATIO_VERT_T = 0.45f //top的占比
 
@@ -42,6 +43,8 @@ open class ScreenEffectView2 @JvmOverloads constructor(
     protected val color2 = floatArrayOf(0.0f, 0.8f, 1.0f, 1.0f) // 更亮的青色
     protected val color3 = floatArrayOf(0.7f, 0.2f, 1.0f, 1.0f) // 更亮的蓝紫色
 
+    protected var waveRatio = 1f
+
     // 修正后的AGSL着色器代码 - 针对深色模式优化
     private val shaderSource = """
         uniform float2 resolution;   // 屏幕分辨率
@@ -51,6 +54,7 @@ open class ScreenEffectView2 @JvmOverloads constructor(
         uniform float4 rectProps;    // 圆角矩形参数: x, y, width, height
         uniform float radius;        // 圆角半径
         uniform float iTime;         // 时间变量，用于动画
+        uniform float waveRatio;   //用来动态控制渐变距离
         
         // 圆角矩形 SDF 函数
         float roundedBoxSDF(vec2 p, vec2 b, float r) {
@@ -102,7 +106,7 @@ open class ScreenEffectView2 @JvmOverloads constructor(
             }
             
             // 修正：使用常量控制渐变距离
-            float maxGradientDistance = length(resolution) * $MAX_GRADIENT_DISTANCE_FACTOR;
+            float maxGradientDistance = length(resolution) * $MAX_GRADIENT_DISTANCE_FACTOR * waveRatio;
             
             // 使用更平滑的渐变函数
             float gradient = smoothstep(0.0, maxGradientDistance, distanceToRect);
@@ -158,6 +162,7 @@ open class ScreenEffectView2 @JvmOverloads constructor(
             setFloatUniform("color1", color1)
             setFloatUniform("color2", color2)
             setFloatUniform("color3", color3)
+            setFloatUniform("waveRatio", waveRatio)
 
             // 设置圆角矩形参数
             rectWidth = w * RECT_RATIO_HORZ
@@ -217,7 +222,39 @@ open class ScreenEffectView2 @JvmOverloads constructor(
         valueAnimator?.cancel()
     }
 
-    override fun updateWave(db: Float) {
+    ////////////实现跟随变更
+    protected enum class WaveState {
+        STARTED,
+        STARTED_LONG,
+        STOPPED
+    }
 
+    protected var mWaveState = WaveState.STOPPED
+    private val mWaveRunnable: Runnable = Runnable {
+        mWaveState = WaveState.STARTED_LONG
+    }
+
+    override fun onVoiceStarted() {
+        mWaveState = WaveState.STARTED
+        removeCallbacks(mWaveRunnable)
+        changeWaveRatio(WaveUtils.MAX_OUTPUT)
+        postDelayed(mWaveRunnable, 2000)
+    }
+
+    override fun onVoiceStopped() {
+        mWaveState = WaveState.STOPPED
+        removeCallbacks(mWaveRunnable)
+        changeWaveRatio(WaveUtils.MIN_OUTPUT)
+    }
+
+    override fun onRmsUpdated(rms: Double) {
+        if (mWaveState == WaveState.STARTED_LONG) {
+            changeWaveRatio(WaveUtils.mapRmsToRange(rms))
+        }
+    }
+
+    private fun changeWaveRatio(ratio: Float) {
+        waveRatio = ratio
+        shader?.setFloatUniform("waveRatio", ratio)
     }
 }

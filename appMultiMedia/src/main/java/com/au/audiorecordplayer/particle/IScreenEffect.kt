@@ -1,5 +1,7 @@
 package com.au.audiorecordplayer.particle
 
 interface IScreenEffect {
-    fun updateWave(db: Float)
+    fun onVoiceStarted()
+    fun onVoiceStopped()
+    fun onRmsUpdated(rms: Double)
 }
