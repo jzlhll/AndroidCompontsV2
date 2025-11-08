@@ -7,6 +7,7 @@ import android.media.MediaRecorder;
 
 import androidx.annotation.RequiresPermission;
 
+import com.au.audiorecordplayer.recorder.WaveUtils;
 import com.au.audiorecordplayer.recorder.ISimpleRecord;
 import com.au.audiorecordplayer.util.CacheFileGenerator;
 import com.au.audiorecordplayer.util.MyLog;
@@ -49,6 +50,11 @@ public class SimplePCMAudioRecord implements ISimpleRecord {
         return mAudioRecord != null;
     }
 
+    /**
+     * 录音数据处理
+     */
+    public void processAudioData(byte[] data, int length) {}
+
     @Override
     public void start() {
         ThreadPoolUtils.getThreadPollProxy().execute(new Runnable() {
@@ -85,6 +91,8 @@ public class SimplePCMAudioRecord implements ISimpleRecord {
                 if (null != fos) {
                     while (mIsRecording) {
                         int read = mAudioRecord.read(mData, 0, mMinBufferSize);
+                        processAudioData(mData, read);
+
                         // 如果读取音频数据没有出现错误，就将数据写入到文件
                         if (AudioRecord.ERROR_INVALID_OPERATION != read) {
                             try {

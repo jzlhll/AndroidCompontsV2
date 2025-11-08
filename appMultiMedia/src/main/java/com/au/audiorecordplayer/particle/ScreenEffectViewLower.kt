@@ -15,11 +15,10 @@ class ScreenEffectViewLower @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : View(context, attrs, defStyleAttr) {
+) : View(context, attrs, defStyleAttr), IScreenEffect {
 
     // 配置参数
     private var innerMargin = 48f.dpToPx() // 内部圆角矩形距离边距
-    private var cornerRadius = 32f.dpToPx() // 圆角半径
     private var startColor = Color.TRANSPARENT // 渐变起始颜色（内部）
     private var endColor = Color.parseColor("#80ff0000") // 渐变结束颜色（外部边缘）
 
@@ -84,38 +83,7 @@ class ScreenEffectViewLower @JvmOverloads constructor(
         canvas.drawRect(outerRectF, paint)
     }
 
-    // 公共方法，允许动态更新参数
-    fun updateGradient(
-        newInnerMargin: Float? = null,
-        newCornerRadius: Float? = null,
-        newStartColor: Int? = null,
-        newEndColor: Int? = null
-    ) {
-        newInnerMargin?.let {
-            innerMargin = it.dpToPx()
-            innerRectF.set(
-                innerMargin,
-                innerMargin,
-                width - innerMargin,
-                height - innerMargin
-            )
-        }
-
-        newCornerRadius?.let {
-            cornerRadius = it.dpToPx()
-        }
-
-        newStartColor?.let {
-            startColor = it
-            updateGradientShader()
-        }
-
-        newEndColor?.let {
-            endColor = it
-            updateGradientShader()
-        }
-
-        invalidate()
+    override fun updateWave(db: Float) {
     }
 
     // dp转px的扩展函数

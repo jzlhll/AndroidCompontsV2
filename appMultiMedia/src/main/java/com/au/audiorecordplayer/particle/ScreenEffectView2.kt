@@ -10,19 +10,22 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.RequiresApi
 
+/**
+ * 带圆角矩形和渐变效果的边缘氛围光效
+ */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 open class ScreenEffectView2 @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : View(context, attrs, defStyleAttr) {
+) : View(context, attrs, defStyleAttr), IScreenEffect {
 
     // 配置常量
     companion object {
         // 尺寸配置
-        private const val RECT_SIZE_RATIO_H = 0.82f
-        private const val RECT_SIZE_RATIO_V = 0.9f
-        private const val RECT_SIZE_RATIO_V_TOP = 0.45f
+        private const val RECT_RATIO_HORZ = 0.82f
+        private const val RECT_RATIO_VERT = 0.9f
+        private const val RECT_RATIO_VERT_T = 0.45f //top的占比
 
         private const val DEFAULT_CORNER_RADIUS = 16f        // 默认圆角半径
         private const val CORNER_RADIUS_FIX_RATIO = 0.4f
@@ -147,30 +150,28 @@ open class ScreenEffectView2 @JvmOverloads constructor(
     }
 
     private fun setupShader(w: Int, h: Int) {
-        shader?.let { shader ->
+        shader?.apply {
             // 配置着色器参数
-            shader.setFloatUniform("resolution", w.toFloat(), h.toFloat())
+            setFloatUniform("resolution", w.toFloat(), h.toFloat())
 
             // 设置三种边缘颜色
-            shader.setFloatUniform("color1", color1)
-            shader.setFloatUniform("color2", color2)
-            shader.setFloatUniform("color3", color3)
+            setFloatUniform("color1", color1)
+            setFloatUniform("color2", color2)
+            setFloatUniform("color3", color3)
 
             // 设置圆角矩形参数
-            rectWidth = w * RECT_SIZE_RATIO_H
-            rectHeight = h * RECT_SIZE_RATIO_V
+            rectWidth = w * RECT_RATIO_HORZ
+            rectHeight = h * RECT_RATIO_VERT
             rectX = (w - rectWidth) * 0.5f
-            rectY = (h - rectHeight) * RECT_SIZE_RATIO_V_TOP
-            shader.setFloatUniform("rectProps", rectX, rectY, rectWidth, rectHeight)
-
+            rectY = (h - rectHeight) * RECT_RATIO_VERT_T
+            setFloatUniform("rectProps", rectX, rectY, rectWidth, rectHeight)
             // 设置圆角半径
-            shader.setFloatUniform("radius", cornerRadius)
-
+            setFloatUniform("radius", cornerRadius)
             // 初始时间设为0
-            shader.setFloatUniform("iTime", 0f)
+            setFloatUniform("iTime", 0f)
 
             // 应用着色器到Paint
-            mPaint.shader = shader
+            mPaint.shader = this
         }
     }
 
@@ -204,10 +205,8 @@ open class ScreenEffectView2 @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-
         // 先绘制透明背景，确保没有黑色矩形
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
-
         // 然后绘制边缘光效果
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), mPaint)
     }
@@ -216,5 +215,9 @@ open class ScreenEffectView2 @JvmOverloads constructor(
         super.onDetachedFromWindow()
         // 在View从窗口分离时停止动画，防止内存泄漏
         valueAnimator?.cancel()
+    }
+
+    override fun updateWave(db: Float) {
+
     }
 }

@@ -10,6 +10,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
+/**
+ * 粒子特效，继承自氛围特效。叠加效果
+ */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class ScreenEffectView3 @JvmOverloads constructor(
     context: Context,
