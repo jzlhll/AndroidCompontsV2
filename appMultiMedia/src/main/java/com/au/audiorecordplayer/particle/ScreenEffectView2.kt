@@ -31,7 +31,7 @@ class ScreenEffectView2 @JvmOverloads constructor(
         private const val MAX_GRADIENT_DISTANCE_FACTOR = 0.1f
 
         // 动画配置
-        private const val ANIMATION_DURATION = 8000L // 动画周期5秒
+        private const val ANIMATION_DURATION = 6000L // 动画周期5秒
         private const val COLOR_CHANGE_SPEED = 1.5f // 颜色变化速度
     }
 
@@ -149,7 +149,7 @@ class ScreenEffectView2 @JvmOverloads constructor(
         valueAnimator?.apply {
             duration = ANIMATION_DURATION
             repeatCount = ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.RESTART
+            repeatMode = ValueAnimator.REVERSE
             interpolator = LinearInterpolator()
 
             addUpdateListener { animation ->
