@@ -7,8 +7,11 @@ import android.graphics.RuntimeShader
 import android.os.Build
 import android.util.AttributeSet
 import android.view.View
+import android.view.WindowInsets
+import android.view.RoundedCorner
 import android.view.animation.LinearInterpolator
 import androidx.annotation.RequiresApi
+import kotlin.math.max
 
 class ScreenEffectView2 @JvmOverloads constructor(
     context: Context,
@@ -19,14 +22,17 @@ class ScreenEffectView2 @JvmOverloads constructor(
     // 配置常量
     companion object {
         // 颜色配置
-        private val EDGE_COLOR_1 = floatArrayOf(0.0f, 0.0f, 1.0f, 1.0f) // 蓝色
-        private val EDGE_COLOR_2 = floatArrayOf(1.0f, 0.0f, 0.0f, 1.0f) // 红色
-        private val EDGE_COLOR_3 = floatArrayOf(0.0f, 1.0f, 0.0f, 1.0f) // 绿色
+        private val COLOR_1 = floatArrayOf(0.0f, 0.0f, 0.8f, 1.0f) // #ff0000cc
+        // 青色 - 只包含蓝绿分量，无红色
+        private val COLOR_2 = floatArrayOf(0.0f, 0.7f, 1.0f, 1.0f) // #ff00b3ff
+        // 蓝紫色 - 蓝红混合，绿色分量为零
+        private val COLOR_3 = floatArrayOf(0.6f, 0.0f, 1.0f, 1.0f) // #ff9900ff
 
         // 尺寸配置
         private const val RECT_SIZE_RATIO_WIDTH = 0.75f
         private const val RECT_SIZE_RATIO = 0.88f
-        private const val CORNER_RADIUS = 24f        // 着色器配置
+        private const val DEFAULT_CORNER_RADIUS = 16f        // 默认圆角半径
+        private const val CORNER_RADIUS_FIX_RATIO = 0.4f
 
         private const val MAX_GRADIENT_DISTANCE_FACTOR = 0.1f
 
@@ -38,9 +44,9 @@ class ScreenEffectView2 @JvmOverloads constructor(
     // 添加了时间uniform的AGSL着色器代码
     private val shaderSource = """
         uniform float2 resolution;   // 屏幕分辨率
-        uniform float4 edgeColor1;   // 边缘颜色1
-        uniform float4 edgeColor2;   // 边缘颜色2  
-        uniform float4 edgeColor3;   // 边缘颜色3
+        uniform float4 color1;   // 边缘颜色1
+        uniform float4 color2;   // 边缘颜色2  
+        uniform float4 color3;   // 边缘颜色3
         uniform float4 rectProps;    // 圆角矩形参数: x, y, width, height
         uniform float radius;        // 圆角半径
         uniform float iTime;         // 时间变量，用于动画
@@ -65,7 +71,7 @@ class ScreenEffectView2 @JvmOverloads constructor(
             factor3 /= sum;
             
             // 混合三种颜色
-            return edgeColor1 * factor1 + edgeColor2 * factor2 + edgeColor3 * factor3;
+            return color1 * factor1 + color2 * factor2 + color3 * factor3;
         }
         
         vec4 main(vec2 fragCoord) {
@@ -99,6 +105,7 @@ class ScreenEffectView2 @JvmOverloads constructor(
     private val mPaint: Paint = Paint()
     private var valueAnimator: ValueAnimator? = null
     private var shader: RuntimeShader? = null
+    private var cornerRadius = DEFAULT_CORNER_RADIUS // 动态圆角半径
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -110,6 +117,11 @@ class ScreenEffectView2 @JvmOverloads constructor(
         startAnimation()
     }
 
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        cornerRadius = calRoundedCornerPadding(DEFAULT_CORNER_RADIUS, CORNER_RADIUS_FIX_RATIO)
+        super.onLayout(changed, left, top, right, bottom)
+    }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun setupShader(w: Int, h: Int) {
         shader?.let { shader ->
@@ -117,9 +129,9 @@ class ScreenEffectView2 @JvmOverloads constructor(
             shader.setFloatUniform("resolution", w.toFloat(), h.toFloat())
 
             // 设置三种边缘颜色
-            shader.setFloatUniform("edgeColor1", EDGE_COLOR_1)
-            shader.setFloatUniform("edgeColor2", EDGE_COLOR_2)
-            shader.setFloatUniform("edgeColor3", EDGE_COLOR_3)
+            shader.setFloatUniform("color1", COLOR_1)
+            shader.setFloatUniform("color2", COLOR_2)
+            shader.setFloatUniform("color3", COLOR_3)
 
             // 设置圆角矩形参数
             val rectWidth = w * RECT_SIZE_RATIO_WIDTH
@@ -129,7 +141,7 @@ class ScreenEffectView2 @JvmOverloads constructor(
             shader.setFloatUniform("rectProps", rectX, rectY, rectWidth, rectHeight)
 
             // 设置圆角半径
-            shader.setFloatUniform("radius", CORNER_RADIUS)
+            shader.setFloatUniform("radius", cornerRadius)
 
             // 初始时间设为0
             shader.setFloatUniform("iTime", 0f)
@@ -155,7 +167,7 @@ class ScreenEffectView2 @JvmOverloads constructor(
             addUpdateListener { animation ->
                 // 获取当前动画值（时间）
                 val timeValue = animation.animatedValue as Float
-                // 更新着色器中的时间uniform[citation:5]
+                // 更新着色器中的时间uniform
                 shader?.setFloatUniform("iTime", timeValue)
                 // 触发重绘
                 invalidate()
