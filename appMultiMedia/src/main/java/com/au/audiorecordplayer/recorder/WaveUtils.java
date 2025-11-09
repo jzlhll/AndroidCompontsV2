@@ -37,7 +37,7 @@ public class WaveUtils {
 
     // 定义映射范围
     public static final float MIN_ADJUST_OUTPUT = 1.0f;
-    public static final float MAX_ADJUST_OUTPUT = 1.25f;
+    public static final float MAX_ADJUST_OUTPUT = 1.05f;
 
     public static float mapRmsToRange(double rms) {
         // 定义RMS的合理范围（根据你的实际观察调整）

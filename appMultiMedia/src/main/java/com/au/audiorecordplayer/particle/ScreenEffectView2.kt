@@ -10,6 +10,7 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.RequiresApi
 import com.au.audiorecordplayer.recorder.WaveUtils
+import com.au.module_android.utils.logdNoFile
 
 /**
  * 带圆角矩形和渐变效果的边缘氛围光效
@@ -109,7 +110,7 @@ open class ScreenEffectView2 @JvmOverloads constructor(
     protected var w = 0
     protected var h = 0
 
-    protected var adjustSizeRatio = 1f
+    protected var adjustSizeRatio = 1.05f
 
     // 添加背景绘制支持
     private val backgroundPaint = Paint().apply {
@@ -141,8 +142,9 @@ open class ScreenEffectView2 @JvmOverloads constructor(
     }
 
     private fun rectProps(shade: RuntimeShader?) {
-        rectWidth = w * RECT_RATIO_HORZ
-        rectHeight = h * RECT_RATIO_VERT
+        logdNoFile {"rect props $adjustSizeRatio"}
+        rectWidth = w * RECT_RATIO_HORZ / adjustSizeRatio
+        rectHeight = h * RECT_RATIO_VERT / adjustSizeRatio
         rectX = (w - rectWidth) * 0.5f
         rectY = (h - rectHeight) * RECT_RATIO_VERT_T
 
@@ -193,37 +195,43 @@ open class ScreenEffectView2 @JvmOverloads constructor(
         super.onDetachedFromWindow()
         // 在View从窗口分离时停止动画，防止内存泄漏
         valueAnimator?.cancel()
+        removeCallbacks(mInitRannable)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        removeCallbacks(mInitRannable)
+        changeRectRange(WaveUtils.MAX_ADJUST_OUTPUT)
+        postDelayed(mInitRannable, 2000)
     }
 
     ////////////实现跟随变更
     protected enum class WaveState {
         STARTED,
-        STARTED_LONG,
         STOPPED
     }
 
     protected var mWaveState = WaveState.STOPPED
-    private val mWaveRunnable: Runnable = Runnable {
-        mWaveState = WaveState.STARTED_LONG
+    private val mInitRannable: Runnable = Runnable {
+        changeRectRange(WaveUtils.MIN_ADJUST_OUTPUT)
     }
 
     override fun onVoiceStarted() {
         mWaveState = WaveState.STARTED
-        removeCallbacks(mWaveRunnable)
-        changeRectRange(WaveUtils.MAX_ADJUST_OUTPUT)
-        postDelayed(mWaveRunnable, 2000)
+        //todo
     }
 
     override fun onVoiceStopped() {
         mWaveState = WaveState.STOPPED
-        removeCallbacks(mWaveRunnable)
+        removeCallbacks(mInitRannable)
         changeRectRange(WaveUtils.MIN_ADJUST_OUTPUT)
     }
 
     override fun onRmsUpdated(rms: Double) {
-        if (mWaveState == WaveState.STARTED_LONG) {
-            changeRectRange(WaveUtils.mapRmsToRange(rms))
-        }
+        changeWave(WaveUtils.mapRmsToRange(rms))
+    }
+
+    private fun changeWave(waveRange: Float) { //todo
     }
 
     private fun changeRectRange(adjust: Float) {
