@@ -32,7 +32,7 @@ class ScreenEffectView3 @JvmOverloads constructor(
         private const val PARTICLE_LIFETIME_MIN = 1.5f
         private const val PARTICLE_LIFETIME_MAX = 3.0f
         private const val PARTICLE_SPREAD_ANGLE = 30 // 发射角度范围（度）
-        private const val VERTICAL_SPEED_RATIO = 0.3f // 调整这个值来控制向上距离
+        private const val VERTICAL_SPEED_RATIO = 0.25f // 调整这个值来控制向上距离
     }
 
     // 粒子类

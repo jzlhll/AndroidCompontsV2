@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:paddingHorizontal="4dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -11,6 +10,7 @@
 
     <com.au.module_android.widget.FlowLayout
         android:id="@+id/flowLayout"
+        android:paddingHorizontal="4dp"
         app:flChildSpacing="8dp"
         app:flRowSpacing="16dp"
         android:orientation="vertical"

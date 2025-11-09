@@ -36,8 +36,8 @@ public class WaveUtils {
     }
 
     // 定义映射范围
-    public static final float MIN_OUTPUT = 1.0f;
-    public static final float MAX_OUTPUT = 1.2f;
+    public static final float MIN_ADJUST_OUTPUT = 1.0f;
+    public static final float MAX_ADJUST_OUTPUT = 1.25f;
 
     public static float mapRmsToRange(double rms) {
         // 定义RMS的合理范围（根据你的实际观察调整）
@@ -49,6 +49,6 @@ public class WaveUtils {
 
         // 线性映射
         double ratio = (clampedRms - MIN_RMS) / (MAX_RMS - MIN_RMS);
-        return (float) (MIN_OUTPUT + ratio * (MAX_OUTPUT - MIN_OUTPUT));
+        return (float) (MIN_ADJUST_OUTPUT + ratio * (MAX_ADJUST_OUTPUT - MIN_ADJUST_OUTPUT));
     }
 }
