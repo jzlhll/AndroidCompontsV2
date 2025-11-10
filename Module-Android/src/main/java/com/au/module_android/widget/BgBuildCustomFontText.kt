@@ -5,6 +5,8 @@ import android.util.AttributeSet
 import com.au.module_android.R
 import com.au.module_android.utils.viewBackgroundBuild
 import androidx.core.content.withStyledAttributes
+import com.au.module_android.utils.BgBuildConstraintLayoutIds
+import com.au.module_android.utils.BgBuildCustomFontTextIds
 
 /**
  * @author au
@@ -18,8 +20,8 @@ open class BgBuildCustomFontText : CustomFontText {
         attrs,
         defStyleAttr
     ) {
-        context.withStyledAttributes(attrs, R.styleable.AnyView) {
-            viewBackgroundBuild(this)
+        context.withStyledAttributes(attrs, R.styleable.BgBuildCustomFontText) {
+            viewBackgroundBuild(this, BgBuildCustomFontTextIds)
         }
     }
 }

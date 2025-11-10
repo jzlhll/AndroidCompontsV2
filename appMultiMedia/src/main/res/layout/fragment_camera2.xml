@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:background="#333333"
-    tools:context=".MainActivity">
+    >
 
     <com.au.audiorecordplayer.cam2.view.Camera2View
         android:id="@+id/previewView"

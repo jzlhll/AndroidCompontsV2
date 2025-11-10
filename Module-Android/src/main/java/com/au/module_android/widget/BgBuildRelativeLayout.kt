@@ -6,6 +6,7 @@ import android.widget.RelativeLayout
 import com.au.module_android.R
 import com.au.module_android.utils.viewBackgroundBuild
 import androidx.core.content.withStyledAttributes
+import com.au.module_android.utils.BgBuildRelativeLayoutIds
 
 /**
  * @author allan
@@ -16,8 +17,8 @@ class BgBuildRelativeLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : RelativeLayout(context, attrs) {
     init {
-        context.withStyledAttributes(attrs, R.styleable.AnyView) {
-            viewBackgroundBuild(this)
+        context.withStyledAttributes(attrs, R.styleable.BgBuildRelativeLayout) {
+            viewBackgroundBuild(this, BgBuildRelativeLayoutIds)
         }
     }
 }

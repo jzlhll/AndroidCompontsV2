@@ -6,6 +6,7 @@ import android.view.View
 import com.au.module_android.R
 import com.au.module_android.utils.viewBackgroundBuild
 import androidx.core.content.withStyledAttributes
+import com.au.module_android.utils.BgBuildViewIds
 
 /**
  * @author allan
@@ -16,8 +17,8 @@ class BgBuildView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : View(context, attrs) {
     init {
-        context.withStyledAttributes(attrs, R.styleable.AnyView) {
-            viewBackgroundBuild(this)
+        context.withStyledAttributes(attrs, R.styleable.BgBuildView) {
+            viewBackgroundBuild(this, BgBuildViewIds)
         }
     }
 }

@@ -7,8 +7,12 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.view.View
 import androidx.annotation.ColorInt
+import androidx.annotation.StyleableRes
 import com.au.module_android.R
 import androidx.core.graphics.drawable.toDrawable
+import com.au.module_android.widget.BgBuildConstraintLayout
+import com.au.module_android.widget.BgBuildCustomFontText
+import com.au.module_android.widget.BgBuildView
 
 class ViewBackgroundBuilder {
     //private var mShape:Int = -1
@@ -156,12 +160,125 @@ class ViewBackgroundBuilder {
     }
 }
 
-fun View.viewBackgroundBuild(array:TypedArray) {
+data class AnyViewIds(
+    val backgroundAlpha: Int,
+    val backgroundNormal: Int,
+    val backgroundDisabled: Int,
+    val backgroundPressed: Int,
+    val cornerRadius: Int,
+    val cornerSizeTopLeft: Int,
+    val cornerSizeTopRight: Int,
+    val cornerSizeBottomLeft: Int,
+    val cornerSizeBottomRight: Int,
+    val strokeColor: Int,
+    val strokeWidth: Int
+)
+
+val BgBuildLinearLayoutIds = AnyViewIds(
+    R.styleable.BgBuildLinearLayout_backgroundAlpha,
+    R.styleable.BgBuildLinearLayout_backgroundNormal,
+    R.styleable.BgBuildLinearLayout_backgroundDisabled,
+    R.styleable.BgBuildLinearLayout_backgroundPressed,
+    R.styleable.BgBuildLinearLayout_cornerRadius,
+    R.styleable.BgBuildLinearLayout_cornerSizeTopLeft,
+    R.styleable.BgBuildLinearLayout_cornerSizeTopRight,
+    R.styleable.BgBuildLinearLayout_cornerSizeBottomLeft,
+    R.styleable.BgBuildLinearLayout_cornerSizeBottomRight,
+    R.styleable.BgBuildLinearLayout_strokeColor,
+    R.styleable.BgBuildLinearLayout_strokeWidth,
+)
+
+val BgBuildRelativeLayoutIds = AnyViewIds(
+    R.styleable.BgBuildRelativeLayout_backgroundAlpha,
+    R.styleable.BgBuildRelativeLayout_backgroundNormal,
+    R.styleable.BgBuildRelativeLayout_backgroundDisabled,
+    R.styleable.BgBuildRelativeLayout_backgroundPressed,
+    R.styleable.BgBuildRelativeLayout_cornerRadius,
+    R.styleable.BgBuildRelativeLayout_cornerSizeTopLeft,
+    R.styleable.BgBuildRelativeLayout_cornerSizeTopRight,
+    R.styleable.BgBuildRelativeLayout_cornerSizeBottomLeft,
+    R.styleable.BgBuildRelativeLayout_cornerSizeBottomRight,
+    R.styleable.BgBuildRelativeLayout_strokeColor,
+    R.styleable.BgBuildRelativeLayout_strokeWidth,
+)
+
+val BgBuildConstraintLayoutIds = AnyViewIds(
+    R.styleable.BgBuildConstraintLayout_backgroundAlpha,
+    R.styleable.BgBuildConstraintLayout_backgroundNormal,
+    R.styleable.BgBuildConstraintLayout_backgroundDisabled,
+    R.styleable.BgBuildConstraintLayout_backgroundPressed,
+    R.styleable.BgBuildConstraintLayout_cornerRadius,
+    R.styleable.BgBuildConstraintLayout_cornerSizeTopLeft,
+    R.styleable.BgBuildConstraintLayout_cornerSizeTopRight,
+    R.styleable.BgBuildConstraintLayout_cornerSizeBottomLeft,
+    R.styleable.BgBuildConstraintLayout_cornerSizeBottomRight,
+    R.styleable.BgBuildConstraintLayout_strokeColor,
+    R.styleable.BgBuildConstraintLayout_strokeWidth,
+)
+
+val BgBuildFrameLayoutIds = AnyViewIds(
+    R.styleable.BgBuildFrameLayout_backgroundAlpha,
+    R.styleable.BgBuildFrameLayout_backgroundNormal,
+    R.styleable.BgBuildFrameLayout_backgroundDisabled,
+    R.styleable.BgBuildFrameLayout_backgroundPressed,
+    R.styleable.BgBuildFrameLayout_cornerRadius,
+    R.styleable.BgBuildFrameLayout_cornerSizeTopLeft,
+    R.styleable.BgBuildFrameLayout_cornerSizeTopRight,
+    R.styleable.BgBuildFrameLayout_cornerSizeBottomLeft,
+    R.styleable.BgBuildFrameLayout_cornerSizeBottomRight,
+    R.styleable.BgBuildFrameLayout_strokeColor,
+    R.styleable.BgBuildFrameLayout_strokeWidth,
+)
+
+val BgBuildCustomFontTextIds = AnyViewIds(
+    R.styleable.BgBuildCustomFontText_backgroundAlpha,
+    R.styleable.BgBuildCustomFontText_backgroundNormal,
+    R.styleable.BgBuildCustomFontText_backgroundDisabled,
+    R.styleable.BgBuildCustomFontText_backgroundPressed,
+    R.styleable.BgBuildCustomFontText_cornerRadius,
+    R.styleable.BgBuildCustomFontText_cornerSizeTopLeft,
+    R.styleable.BgBuildCustomFontText_cornerSizeTopRight,
+    R.styleable.BgBuildCustomFontText_cornerSizeBottomLeft,
+    R.styleable.BgBuildCustomFontText_cornerSizeBottomRight,
+    R.styleable.BgBuildCustomFontText_strokeColor,
+    R.styleable.BgBuildCustomFontText_strokeWidth,
+)
+
+val BgBuildViewIds = AnyViewIds(
+    R.styleable.BgBuildView_backgroundAlpha,
+    R.styleable.BgBuildView_backgroundNormal,
+    R.styleable.BgBuildView_backgroundDisabled,
+    R.styleable.BgBuildView_backgroundPressed,
+    R.styleable.BgBuildView_cornerRadius,
+    R.styleable.BgBuildView_cornerSizeTopLeft,
+    R.styleable.BgBuildView_cornerSizeTopRight,
+    R.styleable.BgBuildView_cornerSizeBottomLeft,
+    R.styleable.BgBuildView_cornerSizeBottomRight,
+    R.styleable.BgBuildView_strokeColor,
+    R.styleable.BgBuildView_strokeWidth,
+)
+
+
+val CustomButtonIds = AnyViewIds(
+    R.styleable.CustomButton_backgroundAlpha,
+    R.styleable.CustomButton_backgroundNormal,
+    R.styleable.CustomButton_backgroundDisabled,
+    R.styleable.CustomButton_backgroundPressed,
+    R.styleable.CustomButton_cornerRadius,
+    R.styleable.CustomButton_cornerSizeTopLeft,
+    R.styleable.CustomButton_cornerSizeTopRight,
+    R.styleable.CustomButton_cornerSizeBottomLeft,
+    R.styleable.CustomButton_cornerSizeBottomRight,
+    R.styleable.CustomButton_strokeColor,
+    R.styleable.CustomButton_strokeWidth,
+)
+
+fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds) {
     val builder = ViewBackgroundBuilder()
 
     val noColor = 0
 
-    val bgAlpha = array.getFloat(R.styleable.AnyView_backgroundAlpha, -1f)
+    val bgAlpha = array.getFloat(viewIds.backgroundAlpha, -1f)
     if (bgAlpha in 0f..255f) {
         val alpha = if (bgAlpha <= 1f) {
             (225f * bgAlpha).toInt()
@@ -171,28 +288,24 @@ fun View.viewBackgroundBuild(array:TypedArray) {
         builder.setBackgroundAlpha(alpha)
     }
 
-    val bgNormalColor = array.getColor(R.styleable.AnyView_backgroundNormal, noColor)
-    val bgDisabledColor = array.getColor(R.styleable.AnyView_backgroundDisabled, noColor)
-    val bgPressedColor = array.getColor(R.styleable.AnyView_backgroundPressed, noColor)
+    val bgNormalColor = array.getColor(viewIds.backgroundNormal, noColor)
+    val bgDisabledColor = array.getColor(viewIds.backgroundDisabled, noColor)
+    val bgPressedColor = array.getColor(viewIds.backgroundPressed, noColor)
     builder.setBackground(bgNormalColor, bgPressedColor, bgDisabledColor)
 
-    val cornerRadius = array.getDimension(R.styleable.AnyView_cornerRadius, -1f)
+    val cornerRadius = array.getDimension(viewIds.cornerRadius, -1f)
     if (cornerRadius < 0f) {
-        val cornerSizeTopLeft =
-            array.getDimension(R.styleable.AnyView_cornerSizeTopLeft, 0f)
-        val cornerSizeTopRight =
-            array.getDimension(R.styleable.AnyView_cornerSizeTopRight, 0f)
-        val cornerSizeBottomLeft =
-            array.getDimension(R.styleable.AnyView_cornerSizeBottomLeft, 0f)
-        val cornerSizeBottomRight =
-            array.getDimension(R.styleable.AnyView_cornerSizeBottomRight, 0f)
+        val cornerSizeTopLeft = array.getDimension(viewIds.cornerSizeTopLeft, 0f)
+        val cornerSizeTopRight = array.getDimension(viewIds.cornerSizeTopRight, 0f)
+        val cornerSizeBottomLeft = array.getDimension(viewIds.cornerSizeBottomLeft, 0f)
+        val cornerSizeBottomRight = array.getDimension(viewIds.cornerSizeBottomRight, 0f)
         builder.setCornerRadius(cornerSizeTopLeft, cornerSizeTopRight, cornerSizeBottomLeft, cornerSizeBottomRight)
     } else {
         builder.setCornerRadius(cornerRadius)
     }
 
-    val strokeColor = array.getColor(R.styleable.AnyView_strokeColor, noColor)
-    val strokeWidth = array.getDimension(R.styleable.AnyView_strokeWidth, 0f)
+    val strokeColor = array.getColor(viewIds.strokeColor, noColor)
+    val strokeWidth = array.getDimension(viewIds.strokeWidth, 0f)
 
     builder.setStroke(strokeWidth, strokeColor)
     if (builder.isAtLeastOne) {

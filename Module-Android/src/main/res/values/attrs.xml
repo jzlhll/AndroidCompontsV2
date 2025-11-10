@@ -62,7 +62,7 @@
     </declare-styleable>
 
     <!-- 没有alpha，水波纹等比较特殊的场景。-->
-    <declare-styleable name="AnyView">
+    <declare-styleable name="BgBuildRelativeLayout">
         <attr name="backgroundNormal" />
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
@@ -76,6 +76,101 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
-        <attr name="autoHideIme" />
+    </declare-styleable>
+
+    <declare-styleable name="BgBuildLinearLayout">
+        <attr name="backgroundNormal" />
+        <attr name="backgroundAlpha" />
+        <attr name="backgroundPressed" />
+        <attr name="backgroundDisabled" />
+
+        <attr name="cornerRadius" />
+        <attr name="cornerSizeTopLeft" />
+        <attr name="cornerSizeTopRight" />
+        <attr name="cornerSizeBottomLeft" />
+        <attr name="cornerSizeBottomRight" />
+
+        <attr name="strokeColor" />
+        <attr name="strokeWidth" />
+    </declare-styleable>
+
+    <declare-styleable name="BgBuildFrameLayout">
+        <attr name="backgroundNormal" />
+        <attr name="backgroundAlpha" />
+        <attr name="backgroundPressed" />
+        <attr name="backgroundDisabled" />
+
+        <attr name="cornerRadius" />
+        <attr name="cornerSizeTopLeft" />
+        <attr name="cornerSizeTopRight" />
+        <attr name="cornerSizeBottomLeft" />
+        <attr name="cornerSizeBottomRight" />
+
+        <attr name="strokeColor" />
+        <attr name="strokeWidth" />
+    </declare-styleable>
+
+    <declare-styleable name="BgBuildCustomFontText">
+        <attr name="backgroundNormal" />
+        <attr name="backgroundAlpha" />
+        <attr name="backgroundPressed" />
+        <attr name="backgroundDisabled" />
+
+        <attr name="cornerRadius" />
+        <attr name="cornerSizeTopLeft" />
+        <attr name="cornerSizeTopRight" />
+        <attr name="cornerSizeBottomLeft" />
+        <attr name="cornerSizeBottomRight" />
+
+        <attr name="strokeColor" />
+        <attr name="strokeWidth" />
+    </declare-styleable>
+
+    <declare-styleable name="BgBuildConstraintLayout">
+        <attr name="backgroundNormal" />
+        <attr name="backgroundAlpha" />
+        <attr name="backgroundPressed" />
+        <attr name="backgroundDisabled" />
+
+        <attr name="cornerRadius" />
+        <attr name="cornerSizeTopLeft" />
+        <attr name="cornerSizeTopRight" />
+        <attr name="cornerSizeBottomLeft" />
+        <attr name="cornerSizeBottomRight" />
+
+        <attr name="strokeColor" />
+        <attr name="strokeWidth" />
+    </declare-styleable>
+
+    <declare-styleable name="BgBuildView">
+        <attr name="backgroundNormal" />
+        <attr name="backgroundAlpha" />
+        <attr name="backgroundPressed" />
+        <attr name="backgroundDisabled" />
+
+        <attr name="cornerRadius" />
+        <attr name="cornerSizeTopLeft" />
+        <attr name="cornerSizeTopRight" />
+        <attr name="cornerSizeBottomLeft" />
+        <attr name="cornerSizeBottomRight" />
+
+        <attr name="strokeColor" />
+        <attr name="strokeWidth" />
+    </declare-styleable>
+
+    <declare-styleable name="CustomButton">
+        <attr name="backgroundNormal" />
+        <attr name="backgroundAlpha" />
+        <attr name="backgroundPressed" />
+        <attr name="backgroundDisabled" />
+
+        <attr name="cornerRadius" />
+        <attr name="cornerSizeTopLeft" />
+        <attr name="cornerSizeTopRight" />
+        <attr name="cornerSizeBottomLeft" />
+        <attr name="cornerSizeBottomRight" />
+
+        <attr name="strokeColor" />
+        <attr name="strokeWidth" />
     </declare-styleable>
 </resources>

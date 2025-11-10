@@ -47,18 +47,18 @@
         android:supportsRtl="true"
         android:theme="@style/CustomModuleTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".MediaGalleryActivity"
             android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <activity
             android:name=".ScreenEffectActivity"
             android:theme="@style/TranslucentActivityTheme"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    >
 
     <LinearLayout
         android:layout_marginHorizontal="@dimen/ui_padding_edge"

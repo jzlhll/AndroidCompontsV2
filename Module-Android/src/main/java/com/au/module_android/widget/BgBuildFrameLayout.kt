@@ -6,6 +6,7 @@ import android.widget.FrameLayout
 import com.au.module_android.R
 import com.au.module_android.utils.viewBackgroundBuild
 import androidx.core.content.withStyledAttributes
+import com.au.module_android.utils.BgBuildFrameLayoutIds
 
 /**
  * @author allan
@@ -16,8 +17,8 @@ class BgBuildFrameLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
     init {
-        context.withStyledAttributes(attrs, R.styleable.AnyView) {
-            viewBackgroundBuild(this)
+        context.withStyledAttributes(attrs, R.styleable.BgBuildFrameLayout) {
+            viewBackgroundBuild(this, BgBuildFrameLayoutIds)
         }
     }
 
