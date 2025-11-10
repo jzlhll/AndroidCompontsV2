@@ -14,11 +14,11 @@ import kotlin.random.Random
  * 粒子特效，继承自氛围特效。叠加效果
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-class ScreenEffectView3 @JvmOverloads constructor(
+class ScreenEffectParticleView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ScreenEffectView2(context, attrs, defStyleAttr) {
+) : ScreenEffectView(context, attrs, defStyleAttr) {
 
     // 配置常量
     companion object {

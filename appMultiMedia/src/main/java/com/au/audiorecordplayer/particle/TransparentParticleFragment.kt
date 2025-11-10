@@ -17,13 +17,13 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
 
     var mRecord: ISimpleRecord? = null
 
-    private var mScreenEffectView : ScreenEffectView3? = null
+    private var mScreenEffectView : ScreenEffectParticleView? = null
 
     private fun startRecord() {
         permissionHelper.safeRun({
             runCatching {
                 mRecord?.start()
-                mScreenEffectView?.onVoiceStarted()
+               // mScreenEffectView?.onVoiceStarted()
             }.onFailure {
                 MainUIManager.get().toastSnackbar(binding.btn, "开始失败-" + it.message)
             }
@@ -37,7 +37,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
             mRecord = it
             it.setWaveDetectCallback { rms, db->
                 ALogJ.t("wave rms: $rms db: $db")
-                mScreenEffectView?.onRmsUpdated(rms)
+              //  mScreenEffectView?.onRmsUpdated(rms)
             }
             startRecord()
         }
@@ -46,7 +46,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
     private fun stopRecord() {
         mRecord?.stop()
         mRecord = null
-        mScreenEffectView?.onVoiceStopped()
+       // mScreenEffectView?.onVoiceStopped()
         MainUIManager.get().toastSnackbar(binding.btn, "录制已经停止")
     }
 
@@ -65,7 +65,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
         binding.container.apply {
             //如果大于等于13才显示
             if (true) {
-                addView(ScreenEffectView3(context).also {
+                addView(ScreenEffectParticleView(context).also {
                     mScreenEffectView = it
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,

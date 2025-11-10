@@ -1,4 +1,4 @@
-package com.au.audiorecordplayer.particle
+﻿package com.au.audiorecordplayer.particle
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
@@ -9,18 +9,17 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.RequiresApi
-import com.au.audiorecordplayer.recorder.WaveUtils
 import com.au.module_android.utils.logdNoFile
 
 /**
  * 带圆角矩形和渐变效果的边缘氛围光效
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-open class ScreenEffectView2 @JvmOverloads constructor(
+open class ScreenEffectView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : View(context, attrs, defStyleAttr), IScreenEffect {
+) : View(context, attrs, defStyleAttr) {
 
     // 配置常量
     companion object {
@@ -29,13 +28,12 @@ open class ScreenEffectView2 @JvmOverloads constructor(
         private const val RECT_RATIO_VERT = 0.91f
         private const val RECT_RATIO_VERT_T = 0.44f //top的占比
 
-        private const val DEFAULT_CORNER_RADIUS = 48f // 默认圆角半径, 这里忽略了density，直接自行处理好
+       // private const val DEFAULT_CORNER_RADIUS = 48f // 默认圆角半径, 这里忽略了density，直接自行处理好
 
         // 动画配置
         private const val ANIMATION_DURATION = 6000L // 动画周期5秒
         protected const val COLOR_CHANGE_SPEED = 1.5f // 颜色变化速度
 
-        private const val MAX_ALPHA = 0.65f //边缘最大透明度
     }
 
     // 颜色配置 - 调整为更适合深色模式的颜色
@@ -83,7 +81,8 @@ open class ScreenEffectView2 @JvmOverloads constructor(
             vec2 relativePos = fragCoord - rectCenter;
             
             // 计算到圆角矩形的距离（正数表示在矩形外部，负数表示在内部）
-            float distanceToRect = roundedBoxSDF(relativePos, rectHalfSize, $DEFAULT_CORNER_RADIUS);
+            //todo 48.0 提出常量
+            float distanceToRect = roundedBoxSDF(relativePos, rectHalfSize, 48.0);
     
             if (distanceToRect <= 0.0) {
                 return vec4(0.0, 0.0, 0.0, 0.0);
@@ -92,8 +91,10 @@ open class ScreenEffectView2 @JvmOverloads constructor(
             // 使用时间动态计算边缘颜色
             vec4 dynamicEdgeColor = mixColors(iTime);
             
-            float alpha = $MAX_ALPHA * (1.0 - 1.0/(1.0 + distanceToRect * 0.1));
-            return vec4(dynamicEdgeColor.rgb, alpha);
+            // 使用指数衰减，让近距离alpha快速衰减到0
+            //todo 0.45提出来变成常量
+            float alpha = 0.45 * min(distanceToRect / 150.0, 1.0);
+            return vec4(dynamicEdgeColor.rgb * alpha, alpha);
         }
     """.trimIndent()
 
@@ -189,53 +190,12 @@ open class ScreenEffectView2 @JvmOverloads constructor(
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
         // 然后绘制边缘光效果
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), mPaint)
+
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         // 在View从窗口分离时停止动画，防止内存泄漏
         valueAnimator?.cancel()
-        removeCallbacks(mInitRannable)
-    }
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        removeCallbacks(mInitRannable)
-        changeRectRange(WaveUtils.MAX_ADJUST_OUTPUT)
-        postDelayed(mInitRannable, 2000)
-    }
-
-    ////////////实现跟随变更
-    protected enum class WaveState {
-        STARTED,
-        STOPPED
-    }
-
-    protected var mWaveState = WaveState.STOPPED
-    private val mInitRannable: Runnable = Runnable {
-        changeRectRange(WaveUtils.MIN_ADJUST_OUTPUT)
-    }
-
-    override fun onVoiceStarted() {
-        mWaveState = WaveState.STARTED
-        //todo
-    }
-
-    override fun onVoiceStopped() {
-        mWaveState = WaveState.STOPPED
-        removeCallbacks(mInitRannable)
-        changeRectRange(WaveUtils.MIN_ADJUST_OUTPUT)
-    }
-
-    override fun onRmsUpdated(rms: Double) {
-        changeWave(WaveUtils.mapRmsToRange(rms))
-    }
-
-    private fun changeWave(waveRange: Float) { //todo
-    }
-
-    private fun changeRectRange(adjust: Float) {
-        adjustSizeRatio = adjust
-        rectProps(shader)
     }
 }

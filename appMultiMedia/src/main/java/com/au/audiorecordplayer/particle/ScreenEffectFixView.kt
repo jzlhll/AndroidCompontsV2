@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi
 /**
  * 固定一个颜色，固定区域，不动的效果很不错的全屏边缘特效
  */
-class ScreenEffectView1 @JvmOverloads constructor(
+class ScreenEffectFixView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
