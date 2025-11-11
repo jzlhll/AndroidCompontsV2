@@ -17,8 +17,6 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
 
     var mRecord: ISimpleRecord? = null
 
-    private var mScreenEffectView : ScreenEffectParticleView? = null
-
     private fun startRecord() {
         permissionHelper.safeRun({
             runCatching {
@@ -65,8 +63,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
         binding.container.apply {
             //如果大于等于13才显示
             if (true) {
-                addView(ScreenEffectParticleView(context).also {
-                    mScreenEffectView = it
+                addView(WaveParabolaView(context).also {
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
