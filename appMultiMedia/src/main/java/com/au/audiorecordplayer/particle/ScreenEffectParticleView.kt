@@ -2,9 +2,7 @@ package com.au.audiorecordplayer.particle
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.os.Build
 import android.util.AttributeSet
-import androidx.annotation.RequiresApi
 import kotlin.math.min
 import kotlin.math.cos
 import kotlin.math.sin
@@ -13,7 +11,6 @@ import kotlin.random.Random
 /**
  * 粒子特效，继承自氛围特效。叠加效果
  */
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class ScreenEffectParticleView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -23,7 +20,7 @@ class ScreenEffectParticleView @JvmOverloads constructor(
     // 配置常量
     companion object {
         // 粒子系统配置
-        private const val PARTICLE_COUNT = 50
+        private const val PARTICLE_COUNT = 80
         private const val PARTICLE_SIZE_MIN = 1.5f
         private const val PARTICLE_SIZE_MAX = 4.0f
         private const val PARTICLE_SPEED_MIN = 0.8f
@@ -31,12 +28,14 @@ class ScreenEffectParticleView @JvmOverloads constructor(
         private const val PARTICLE_EMISSION_RATE = 8 // 每帧发射粒子数
         private const val PARTICLE_LIFETIME_MIN = 1.5f
         private const val PARTICLE_LIFETIME_MAX = 3.0f
-        private const val PARTICLE_SPREAD_ANGLE = 30 // 发射角度范围（度）
-        private const val VERTICAL_SPEED_RATIO = 0.25f // 调整这个值来控制向上距离
+        private const val PARTICLE_SPREAD_ANGLE = 35 // 发射角度范围（度）
+        private const val VERTICAL_SPEED_RATIO = 0.45f // 调整这个值来控制向上距离
+        private const val MIX_COLOR = 0.25f //粒子混合白色比例
+        private const val MIX_COLOR_R = 1 - MIX_COLOR //1 - 粒子混合白色比例
     }
 
     // 粒子类
-    private data class Particle(
+    private class Particle(
         var x: Float,
         var y: Float,
         var velocityX: Float,
@@ -44,7 +43,6 @@ class ScreenEffectParticleView @JvmOverloads constructor(
         var size: Float,
         var lifetime: Float,
         var maxLifetime: Float,
-        var baseColor: FloatArray, // 基础颜色（mixColor）
         var currentColor: FloatArray // 当前颜色（混合白色后）
     )
 
@@ -116,9 +114,9 @@ class ScreenEffectParticleView @JvmOverloads constructor(
 
         // 混合白色（增加亮度）
         val mixedColor = floatArrayOf(
-            min(1.0f, baseColor[0] * 0.7f + 0.3f), // R
-            min(1.0f, baseColor[1] * 0.7f + 0.3f), // G
-            min(1.0f, baseColor[2] * 0.7f + 0.3f), // B
+            min(1.0f, baseColor[0] * MIX_COLOR + MIX_COLOR_R), // R
+            min(1.0f, baseColor[1] * MIX_COLOR + MIX_COLOR_R), // G
+            min(1.0f, baseColor[2] * MIX_COLOR + MIX_COLOR_R), // B
             baseColor[3] // Alpha
         )
 
@@ -130,7 +128,6 @@ class ScreenEffectParticleView @JvmOverloads constructor(
             size = size,
             lifetime = if (randomPosition) random.nextFloat() * lifetime else lifetime,
             maxLifetime = lifetime,
-            baseColor = baseColor,
             currentColor = mixedColor
         ))
     }
@@ -196,9 +193,9 @@ class ScreenEffectParticleView @JvmOverloads constructor(
                 particlesToRemove.add(particle)
             } else {
                 // 更新粒子颜色（基于当前mixColor混合白色）
-                particle.currentColor[0] = min(1.0f, currentMixColor[0] * 0.7f + 0.3f)
-                particle.currentColor[1] = min(1.0f, currentMixColor[1] * 0.7f + 0.3f)
-                particle.currentColor[2] = min(1.0f, currentMixColor[2] * 0.7f + 0.3f)
+                particle.currentColor[0] = min(1.0f, currentMixColor[0] * MIX_COLOR + MIX_COLOR_R)
+                particle.currentColor[1] = min(1.0f, currentMixColor[1] * MIX_COLOR + MIX_COLOR_R)
+                particle.currentColor[2] = min(1.0f, currentMixColor[2] * MIX_COLOR + MIX_COLOR_R)
 
                 // 根据生命周期调整alpha
                 val lifeRatio = particle.lifetime / particle.maxLifetime

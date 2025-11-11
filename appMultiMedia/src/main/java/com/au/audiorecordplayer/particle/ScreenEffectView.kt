@@ -24,15 +24,16 @@ open class ScreenEffectView @JvmOverloads constructor(
     // 配置常量
     companion object {
         // 尺寸配置
-        private const val RECT_RATIO_HORZ = 0.87f
-        private const val RECT_RATIO_VERT = 0.91f
-        private const val RECT_RATIO_VERT_T = 0.44f //top的占比
+        private const val RECT_RATIO_HORZ = 0.85f //减少该数字加大横向区域
+        private const val RECT_RATIO_VERT = 0.89f //减少该数字加大竖向区域
+        private const val RECT_RATIO_VERT_T = 0.4f //top的占比
 
-       // private const val DEFAULT_CORNER_RADIUS = 48f // 默认圆角半径, 这里忽略了density，直接自行处理好
+        private const val DEFAULT_CORNER_RADIUS = 48.0 // 默认圆角半径, 这里忽略了density，直接自行处理好
 
         // 动画配置
         private const val ANIMATION_DURATION = 6000L // 动画周期5秒
         protected const val COLOR_CHANGE_SPEED = 1.5f // 颜色变化速度
+        private const val MAX_ALPHA = 0.8 //最大透明度
 
     }
 
@@ -81,8 +82,7 @@ open class ScreenEffectView @JvmOverloads constructor(
             vec2 relativePos = fragCoord - rectCenter;
             
             // 计算到圆角矩形的距离（正数表示在矩形外部，负数表示在内部）
-            //todo 48.0 提出常量
-            float distanceToRect = roundedBoxSDF(relativePos, rectHalfSize, 48.0);
+            float distanceToRect = roundedBoxSDF(relativePos, rectHalfSize, $DEFAULT_CORNER_RADIUS);
     
             if (distanceToRect <= 0.0) {
                 return vec4(0.0, 0.0, 0.0, 0.0);
@@ -92,8 +92,7 @@ open class ScreenEffectView @JvmOverloads constructor(
             vec4 dynamicEdgeColor = mixColors(iTime);
             
             // 使用指数衰减，让近距离alpha快速衰减到0
-            //todo 0.45提出来变成常量
-            float alpha = 0.45 * min(distanceToRect / 150.0, 1.0);
+            float alpha = $MAX_ALPHA * min(distanceToRect / 150.0, 1.0);
             return vec4(dynamicEdgeColor.rgb * alpha, alpha);
         }
     """.trimIndent()
