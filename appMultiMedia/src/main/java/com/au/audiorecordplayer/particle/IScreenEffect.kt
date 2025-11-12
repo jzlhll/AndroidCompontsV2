@@ -1,7 +1,13 @@
 package com.au.audiorecordplayer.particle
 
 interface IScreenEffect {
-    fun onVoiceStarted()
-    fun onVoiceStopped()
-    fun onRmsUpdated(rms: Double)
+    /**
+     * 设置是否在录制状态
+     */
+    fun setVoiceIsRecording(isRecording: Boolean)
+    /**
+     * 集成办法：
+     *
+     */
+    fun onRmsUpdated(rms: Double, db: Double)
 }

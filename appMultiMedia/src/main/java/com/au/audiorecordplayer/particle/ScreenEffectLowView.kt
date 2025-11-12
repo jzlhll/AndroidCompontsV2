@@ -85,13 +85,10 @@ class ScreenEffectLowView @JvmOverloads constructor(
 
     // dp转px的扩展函数
     private fun Float.dpToPx(): Float = this * resources.displayMetrics.density
+    override fun setVoiceIsRecording(isRecording: Boolean) {
 
-    override fun onVoiceStarted() {
     }
 
-    override fun onVoiceStopped() {
-    }
-
-    override fun onRmsUpdated(rms: Double) {
+    override fun onRmsUpdated(rms: Double, db: Double) {
     }
 }

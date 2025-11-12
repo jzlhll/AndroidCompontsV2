@@ -2,7 +2,9 @@ package com.au.audiorecordplayer.particle
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Build
 import android.util.AttributeSet
+import androidx.annotation.RequiresApi
 import kotlin.math.min
 import kotlin.math.cos
 import kotlin.math.sin
@@ -11,6 +13,7 @@ import kotlin.random.Random
 /**
  * 粒子特效，继承自氛围特效。叠加效果
  */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class ScreenEffectParticleView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

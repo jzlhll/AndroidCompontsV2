@@ -1,8 +1,10 @@
 package com.au.audiorecordplayer.particle
 
+import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.annotation.RequiresApi
 import com.au.audiorecordplayer.databinding.FragmentFloatParticleBinding
 import com.au.audiorecordplayer.recorder.ISimpleRecord
 import com.au.audiorecordplayer.recorder.a2AudioRecord.WavePcmAudioRecord
@@ -12,8 +14,11 @@ import com.au.module_android.permissions.createPermissionForResult
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.ALogJ
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding>() {
     val permissionHelper = createPermissionForResult(android.Manifest.permission.RECORD_AUDIO)
+
+    private var mWave : WaveParabolaView? = null
 
     var mRecord: ISimpleRecord? = null
 
@@ -21,7 +26,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
         permissionHelper.safeRun({
             runCatching {
                 mRecord?.start()
-               // mScreenEffectView?.onVoiceStarted()
+               mWave?.setVoiceIsRecording(true)
             }.onFailure {
                 MainUIManager.get().toastSnackbar(binding.btn, "开始失败-" + it.message)
             }
@@ -35,21 +40,26 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
             mRecord = it
             it.setWaveDetectCallback { rms, db->
                 ALogJ.t("wave rms: $rms db: $db")
-              //  mScreenEffectView?.onRmsUpdated(rms)
+               mWave?.onRmsUpdated(rms, db)
             }
             startRecord()
         }
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mRecord?.stop()
+        mRecord = null
+    }
+
     private fun stopRecord() {
         mRecord?.stop()
         mRecord = null
-       // mScreenEffectView?.onVoiceStopped()
+        mWave?.setVoiceIsRecording(false)
         MainUIManager.get().toastSnackbar(binding.btn, "录制已经停止")
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        super.onBindingCreated(savedInstanceState)
         binding.btn.onClick {
             if (mRecord != null) {
                 binding.btn.text = "开始录音"
@@ -64,6 +74,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
             //如果大于等于13才显示
             if (true) {
                 addView(WaveParabolaView(context).also {
+                    mWave = it
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT

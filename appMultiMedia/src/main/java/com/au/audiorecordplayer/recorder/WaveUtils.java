@@ -1,7 +1,5 @@
 package com.au.audiorecordplayer.recorder;
 
-import android.util.Log;
-
 /*
  * AudioUtils：音频处理工具类
  * 1. 计算 PCM 数据的 RMS
@@ -36,10 +34,10 @@ public class WaveUtils {
     }
 
     // 定义映射范围
-    public static final float MIN_ADJUST_OUTPUT = 1.0f;
-    public static final float MAX_ADJUST_OUTPUT = 1.05f;
+    public static final float RMS_MAPPING_MIN = 1.0f;
+    public static final float RMS_MAPPING_MAX = 1.2f;
 
-    public static float mapRmsToRange(double rms) {
+    public static float rmsMapping(double rms) {
         // 定义RMS的合理范围（根据你的实际观察调整）
         final double MIN_RMS = 100;    // 安静环境
         final double MAX_RMS = 5000;   // 较大声音
@@ -49,6 +47,6 @@ public class WaveUtils {
 
         // 线性映射
         double ratio = (clampedRms - MIN_RMS) / (MAX_RMS - MIN_RMS);
-        return (float) (MIN_ADJUST_OUTPUT + ratio * (MAX_ADJUST_OUTPUT - MIN_ADJUST_OUTPUT));
+        return (float) (RMS_MAPPING_MIN + ratio * (RMS_MAPPING_MAX - RMS_MAPPING_MIN));
     }
 }
