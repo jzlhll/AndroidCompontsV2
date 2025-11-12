@@ -9,7 +9,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.RequiresApi
 import android.os.Build
-import com.au.audiorecordplayer.recorder.WaveUtils
+import com.au.audiorecordplayer.recorder.WaveRmsDbSample
 import com.au.module_android.utils.logdNoFile
 import kotlin.math.max
 import kotlin.math.min
@@ -34,8 +34,6 @@ class WaveParabolaView @JvmOverloads constructor(
         const val WAVE_MAX_WIDTH = 1.0 / 2.0
 
         const val WAVE_RATIO_NOT_RECORD = 0.2f
-        const val WAVE_RATIO_RECORD_MIN = 1f
-        const val WAVE_RATIO_RECORD_MAX = 2f
     }
 
     private val agslSource = """
@@ -201,19 +199,19 @@ class WaveParabolaView @JvmOverloads constructor(
     override fun setVoiceIsRecording(isRecording: Boolean) {
         mIsRecording = isRecording
         waveRatio = if (isRecording) {
-            WAVE_RATIO_RECORD_MIN
+            WaveRmsDbSample.DB_MAPPING_MIN
         } else {
             WAVE_RATIO_NOT_RECORD
         }
     }
 
-    override fun onRmsUpdated(rms: Double, db: Double) {
+    override fun onVoiceDbUpdated(db: Double) {
         if (!mIsRecording) {
             waveRatio = WAVE_RATIO_NOT_RECORD
             return
         }
-        val mapping = WaveUtils.rmsMapping(rms)
+        val mapping = WaveRmsDbSample.dbMapping(db)
         logdNoFile { "update wave mapping $mapping" }
-        waveRatio = max(WAVE_RATIO_RECORD_MIN, min(WAVE_RATIO_RECORD_MAX, mapping))
+        waveRatio = max(WaveRmsDbSample.DB_MAPPING_MIN, min(WaveRmsDbSample.DB_MAPPING_MAX, mapping))
     }
 }

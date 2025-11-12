@@ -9,5 +9,5 @@ interface IScreenEffect {
      * 集成办法：
      *
      */
-    fun onRmsUpdated(rms: Double, db: Double)
+    fun onVoiceDbUpdated(db: Double)
 }

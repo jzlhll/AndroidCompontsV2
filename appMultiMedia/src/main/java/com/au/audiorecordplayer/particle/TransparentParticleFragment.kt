@@ -7,18 +7,18 @@ import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import com.au.audiorecordplayer.databinding.FragmentFloatParticleBinding
 import com.au.audiorecordplayer.recorder.ISimpleRecord
+import com.au.audiorecordplayer.recorder.IWaveDetectRecord
 import com.au.audiorecordplayer.recorder.a2AudioRecord.WavePcmAudioRecord
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.click.onClick
 import com.au.module_android.permissions.createPermissionForResult
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.ALogJ
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding>() {
     val permissionHelper = createPermissionForResult(android.Manifest.permission.RECORD_AUDIO)
 
-    private var mWave : WaveParabolaView? = null
+    private var mWave : CombinedScreenEffectView? = null
 
     var mRecord: ISimpleRecord? = null
 
@@ -38,10 +38,11 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
     private fun initAndStartRecord() {
         WavePcmAudioRecord().also {
             mRecord = it
-            it.setWaveDetectCallback { rms, db->
-                ALogJ.t("wave rms: $rms db: $db")
-               mWave?.onRmsUpdated(rms, db)
-            }
+            it.setWaveDetectCallback(object : IWaveDetectRecord.IWaveDetectCallback {
+                override fun onWaveDetect(db: Double) {
+                    mWave?.onVoiceDbUpdated(db)
+                }
+            })
             startRecord()
         }
     }
@@ -73,7 +74,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
         binding.container.apply {
             //如果大于等于13才显示
             if (true) {
-                addView(WaveParabolaView(context).also {
+                addView(CombinedScreenEffectView(context).also {
                     mWave = it
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,

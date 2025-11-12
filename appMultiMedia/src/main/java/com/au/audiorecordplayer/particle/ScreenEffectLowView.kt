@@ -89,6 +89,6 @@ class ScreenEffectLowView @JvmOverloads constructor(
 
     }
 
-    override fun onRmsUpdated(rms: Double, db: Double) {
+    override fun onVoiceDbUpdated(db: Double) {
     }
 }

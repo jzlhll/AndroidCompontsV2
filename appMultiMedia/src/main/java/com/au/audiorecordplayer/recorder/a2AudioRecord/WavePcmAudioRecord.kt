@@ -1,18 +1,16 @@
 package com.au.audiorecordplayer.recorder.a2AudioRecord
 
-import com.au.audiorecordplayer.recorder.WaveUtils
+import com.au.audiorecordplayer.recorder.WaveRmsDbSample
 import com.au.audiorecordplayer.recorder.IWaveDetectRecord
 
-class WavePcmAudioRecord : SimplePCMAudioRecord(), IWaveDetectRecord {
-    private var mWaveDetectCallback: IWaveDetectRecord.IWaveDetectCallback? = null
+class WavePcmAudioRecord : SimplePCMAudioRecord() {
+    val waveUtils = WaveRmsDbSample()
 
-    override fun processAudioData(data: ByteArray?, length: Int) {
-        val rms = WaveUtils.calculateRMS(data, length)
-        mWaveDetectCallback?.onWaveDetect(rms, WaveUtils.rmsToDb(rms))
+    override fun processAudioData(buffer: ByteArray?, readBytes: Int) {
+        waveUtils.processAudioData(buffer, readBytes)
     }
 
-    override fun setWaveDetectCallback(callback: IWaveDetectRecord.IWaveDetectCallback?) {
-        mWaveDetectCallback = callback
+    fun setWaveDetectCallback(callback: IWaveDetectRecord.IWaveDetectCallback?) {
+        waveUtils.setWaveDetectCallback(callback)
     }
-
 }

@@ -7,7 +7,6 @@ import android.media.MediaRecorder;
 
 import androidx.annotation.RequiresPermission;
 
-import com.au.audiorecordplayer.recorder.WaveUtils;
 import com.au.audiorecordplayer.recorder.ISimpleRecord;
 import com.au.audiorecordplayer.util.CacheFileGenerator;
 import com.au.audiorecordplayer.util.MyLog;
