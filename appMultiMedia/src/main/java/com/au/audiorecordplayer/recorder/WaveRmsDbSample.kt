@@ -20,11 +20,14 @@ class WaveRmsDbSample : IWaveDetectRecord {
 
         // 定义映射范围
         const val DB_MAPPING_NOT = 0.15f  //必须小于DB_MAPPING_MIN
-        const val DB_MAPPING_MIN: Float = 0.2f //必须大于0.2
-        const val DB_MAPPING_MAX: Float = 1.2f
+        const val DB_MAPPING_MIN: Float = 1f //必须大于0.2
+        const val DB_MAPPING_MAX: Float = 1.8f
         // 定义分贝的合理范围（根据实际观察调整）
         const val MIN_DB = -120.0 // 安静环境
 
+        /**
+         * 约束返回范围为0.2～1.2f
+         */
         fun dbMapping(db: Double): Float { // 分段线性映射
             return when {
                 db < -50 -> DB_MAPPING_MIN // 非常小的声音

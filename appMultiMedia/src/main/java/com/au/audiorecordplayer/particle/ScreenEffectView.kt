@@ -25,15 +25,15 @@ open class ScreenEffectView @JvmOverloads constructor(
     companion object {
         // 尺寸配置
         private const val RECT_RATIO_HORZ = 0.85f //减少该数字加大横向区域
-        private const val RECT_RATIO_VERT = 0.89f //减少该数字加大竖向区域
-        private const val RECT_RATIO_VERT_T = 0.4f //top的占比
+        private const val RECT_RATIO_VERT = 0.88f //减少该数字加大竖向区域
+        private const val RECT_RATIO_VERT_T = 0.41f //top的占比
 
         private const val DEFAULT_CORNER_RADIUS = 48.0 // 默认圆角半径, 这里忽略了density，直接自行处理好
 
         // 动画配置
         private const val ANIMATION_DURATION = 6000L // 动画周期5秒
         protected const val COLOR_CHANGE_SPEED = 1.5f // 颜色变化速度
-        private const val MAX_ALPHA = 0.8 //最大透明度
+        private const val MAX_ALPHA = 0.65 //最大透明度
 
     }
 
