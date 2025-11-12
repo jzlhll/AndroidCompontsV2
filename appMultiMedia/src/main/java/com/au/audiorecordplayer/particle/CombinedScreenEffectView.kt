@@ -30,7 +30,7 @@ open class CombinedScreenEffectView @JvmOverloads constructor(
         const val WAVE_MIN_HEIGHT = 0.005
         const val WAVE_MIN_WIDTH = 1.0 / 3.0
         const val WAVE_MAX_WIDTH = 2.0 / 3.0
-        const val WAVE_RATIO_NOT_RECORD = 0.1f
+        const val WAVE_RATIO_NOT_RECORD = WaveRmsDbSample.DB_MAPPING_NOT
 
         // Screen Effect 相关常量
         private const val RECT_RATIO_HORZ = 0.85f

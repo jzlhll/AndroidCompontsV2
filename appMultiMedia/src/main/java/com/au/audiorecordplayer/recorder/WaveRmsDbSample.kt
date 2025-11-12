@@ -19,6 +19,7 @@ class WaveRmsDbSample : IWaveDetectRecord {
         private const val MIN_SIGNIFICANT_CHANGE = 0.15 // 15%变化才认为是显著变化
 
         // 定义映射范围
+        const val DB_MAPPING_NOT = 0.15f  //必须小于DB_MAPPING_MIN
         const val DB_MAPPING_MIN: Float = 0.2f //必须大于0.2
         const val DB_MAPPING_MAX: Float = 1.2f
         // 定义分贝的合理范围（根据实际观察调整）
