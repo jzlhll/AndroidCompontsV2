@@ -18,7 +18,7 @@ import com.au.module_android.ui.bindings.BindingFragment
 class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding>() {
     val permissionHelper = createPermissionForResult(android.Manifest.permission.RECORD_AUDIO)
 
-    private var mWave : CombinedScreenEffectView? = null
+    private var mWave : ScreenEffectParticleView? = null
 
     var mRecord: ISimpleRecord? = null
 
@@ -74,7 +74,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
         binding.container.apply {
             //如果大于等于13才显示
             if (true) {
-                addView(CombinedScreenEffectView(context).also {
+                addView(ScreenEffectParticleView(context).also {
                     mWave = it
                     it.layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,

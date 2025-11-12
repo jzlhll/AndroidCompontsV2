@@ -13,7 +13,7 @@ import com.au.audiorecordplayer.recorder.WaveRmsDbSample
 import com.au.module_android.utils.logdNoFile
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-class CombinedScreenEffectView @JvmOverloads constructor(
+open class CombinedScreenEffectView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -38,7 +38,7 @@ class CombinedScreenEffectView @JvmOverloads constructor(
         private const val RECT_RATIO_VERT_T = 0.42f
         private const val DEFAULT_CORNER_RADIUS = 48.0
         private const val ANIMATION_DURATION = 6000L
-        private const val COLOR_CHANGE_SPEED = 1.5f
+        const val COLOR_CHANGE_SPEED = 1.5f
         private const val MAX_ALPHA = 0.65
     }
 
@@ -190,16 +190,16 @@ class CombinedScreenEffectView @JvmOverloads constructor(
     private var horizontalProgress: Float = 0f
 
     // Screen Effect相关变量
-    private var rectX = 0f
-    private var rectY = 0f
-    private var rectWidth = 0f
-    private var rectHeight = 0f
+    var rectX = 0f
+    var rectY = 0f
+    var rectWidth = 0f
+    var rectHeight = 0f
     private var adjustSizeRatio = 1.05f
 
     // 颜色配置
-    private val edgeColor1 = floatArrayOf(0.2f, 0.2f, 1.0f, 1.0f)
-    private val edgeColor2 = floatArrayOf(0.0f, 0.8f, 1.0f, 1.0f)
-    private val edgeColor3 = floatArrayOf(0.7f, 0.2f, 1.0f, 1.0f)
+    val edgeColor1 = floatArrayOf(0.2f, 0.2f, 1.0f, 1.0f)
+    val edgeColor2 = floatArrayOf(0.0f, 0.8f, 1.0f, 1.0f)
+    val edgeColor3 = floatArrayOf(0.7f, 0.2f, 1.0f, 1.0f)
 
     // 三个独立的动画器
     private var waveAnimator: ValueAnimator? = null
@@ -294,11 +294,16 @@ class CombinedScreenEffectView @JvmOverloads constructor(
 
             addUpdateListener { animation ->
                 val timeValue = animation.animatedValue as Float
-                runtimeShader.setFloatUniform("edgeTime", timeValue)
+                onValueAnimatorUpdate(timeValue)
                 invalidate()
             }
             start()
         }
+    }
+
+    protected open fun onValueAnimatorUpdate(timeValue: Float) {
+        // 更新着色器中的时间uniform
+        runtimeShader.setFloatUniform("edgeTime", timeValue)
     }
 
     override fun onAttachedToWindow() {

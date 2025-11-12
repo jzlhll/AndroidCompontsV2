@@ -18,7 +18,7 @@ class ScreenEffectParticleView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ScreenEffectView(context, attrs, defStyleAttr) {
+) : CombinedScreenEffectView(context, attrs, defStyleAttr) {
 
     // 配置常量
     companion object {
@@ -148,9 +148,9 @@ class ScreenEffectParticleView @JvmOverloads constructor(
         val normalized3 = factor3 / sum
 
         // 混合三种颜色
-        currentMixColor[0] = color1[0] * normalized1 + color2[0] * normalized2 + color3[0] * normalized3
-        currentMixColor[1] = color1[1] * normalized1 + color2[1] * normalized2 + color3[1] * normalized3
-        currentMixColor[2] = color1[2] * normalized1 + color2[2] * normalized2 + color3[2] * normalized3
+        currentMixColor[0] = edgeColor1[0] * normalized1 + edgeColor2[0] * normalized2 + edgeColor3[0] * normalized3
+        currentMixColor[1] = edgeColor1[1] * normalized1 + edgeColor2[1] * normalized2 + edgeColor3[1] * normalized3
+        currentMixColor[2] = edgeColor1[2] * normalized1 + edgeColor2[2] * normalized2 + edgeColor3[2] * normalized3
         currentMixColor[3] = 1.0f
     }
 
