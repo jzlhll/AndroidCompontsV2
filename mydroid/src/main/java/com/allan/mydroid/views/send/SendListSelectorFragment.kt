@@ -23,6 +23,7 @@ import com.au.module_android.glide.glideSetAny
 import com.au.module_android.permissions.getContentForResult
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.ToolbarMenuManager
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.NotificationUtil
 import com.au.module_android.utils.asOrNull
@@ -71,7 +72,9 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
     }
 
-    override fun isPaddingStatusBar() = false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
+    }
 
     private val common = object : SendListSelectorCommon(false) {
         override fun rcv() = binding.rcv

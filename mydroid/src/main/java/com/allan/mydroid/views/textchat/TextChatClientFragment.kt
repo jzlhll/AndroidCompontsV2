@@ -12,6 +12,7 @@ import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.textchat.uibean.NormalItem
 import com.au.module_android.json.toJsonString
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.logd
@@ -22,8 +23,9 @@ import kotlinx.coroutines.launch
 
 class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
     private var mIp:String? = null
-    override fun isPaddingStatusBar() = false
-
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
+    }
     private fun uploadMyIp() {
         lifecycleScope.launch {
             if (!mIp.isNullOrEmpty()) {

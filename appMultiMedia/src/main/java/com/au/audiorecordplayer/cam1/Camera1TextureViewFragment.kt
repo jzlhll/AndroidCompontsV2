@@ -16,6 +16,7 @@ import com.au.audiorecordplayer.databinding.FragmentCamera1TextureviewBinding
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.Globals
 import com.au.module_android.permissions.createMultiPermissionForResult
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.bindings.BindingFragment
 import java.io.File
 import java.io.FileOutputStream
@@ -36,8 +37,8 @@ class Camera1TextureViewFragment : BindingFragment<FragmentCamera1TextureviewBin
     private var isRecording = false
     private var isPreviewing = false
 
-    override fun isPaddingStatusBar(): Boolean {
-        return false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {

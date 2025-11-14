@@ -1,24 +1,19 @@
 package com.au.module_android.ui.base
 
 /**
- * @author allan
- * @date :2024/8/27 10:38
- * @description: 如果activity想要实现全屏就实现IFullWindow
- * 并在onCreate里面将contentView调用setEdgeToEdge(this, contentView)
+ * @author au
+ * @date :2025/11/14
  */
 interface IFullWindow {
     /**
-     * 是否将顶部statusBar padding到合理的位置
+     * 是否在默认的实现中，沉浸式状态，是否延伸到statusBar和navigationBar下。
+     * 由于android15要求默认状态栏和导航栏是透明的，
+     * 所以对于一般的应用需要将状态栏和导航栏padding出来。所以这里默认都是true。
+     *
+     * 对于activity，我们架构设计为使用FragmentShellActivity承载Fragment显示。
+     * 因此，默认都有activity（从基类AbsActivity开始）都是完全沉浸式 FullImmersive。
+     *
+     * 对于Fragment，默认 ImmersiveMode.PaddingBars，让它padding掉头和尾。
      */
-    fun isPaddingStatusBar() = true
-
-    /**
-     * 底部navigationBar padding到合理的位置
-     */
-    fun isPaddingNavBar() = true
-
-    /**
-     * android15已经默认要求设置了。这里就强制处理。
-     */
-    fun fullWindowSetEdgeToEdge() = true
+    fun immersiveMode() : ImmersiveMode
 }

@@ -10,13 +10,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import com.au.module_android.BuildConfig
 import com.au.module_android.DarkModeAndLocalesConst
 import com.au.module_android.R
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
-import com.au.module_android.ui.fullPaddingEdgeToEdge
+import com.au.module_android.ui.postPaddingRootInner
 import com.au.module_android.utils.hideImeNew
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.logdNoFile
@@ -51,6 +52,7 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
     override fun onCreate(savedInstanceState: Bundle?) {
         ToutiaoScreenAdapter.attach(this)
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             enterAnim?.let { if(it != 0) overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, it, R.anim.activity_stay) }
@@ -62,24 +64,28 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
 
     override fun setContentView(view: View?) {
         super.setContentView(view)
-        setEdge(view)
+        postPaddingRoot(view)
     }
 
     override fun setContentView(layoutResID: Int) {
         super.setContentView(layoutResID)
-        setEdge(null)
+        postPaddingRoot(null)
     }
 
     override fun setContentView(view: View?, params: ViewGroup.LayoutParams?) {
         super.setContentView(view, params)
-        setEdge(view)
+        postPaddingRoot(view)
+    }
+
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingBars
     }
 
     /**
      * 进行全屏实现
      */
-    open fun setEdge(contentView:View?) {
-        fullPaddingEdgeToEdge(this, contentView ?: findViewById(android.R.id.content))
+    open fun postPaddingRoot(contentView:View?) {
+        postPaddingRootInner(this, contentView ?: findViewById(android.R.id.content))
     }
 
     override fun setRequestedOrientation(requestedOrientation: Int) {

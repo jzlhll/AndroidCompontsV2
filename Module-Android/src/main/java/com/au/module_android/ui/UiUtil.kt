@@ -4,10 +4,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
-import androidx.activity.enableEdgeToEdge
 import androidx.core.view.updatePadding
 import androidx.viewbinding.ViewBinding
 import com.au.module_android.ui.base.IFullWindow
+import com.au.module_android.ui.base.isPaddingNavigationBar
+import com.au.module_android.ui.base.isPaddingStatusBar
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import java.lang.reflect.ParameterizedType
 
@@ -74,13 +75,12 @@ fun <T : ViewBinding> createViewBindingT2(self: Class<*>, inflater: LayoutInflat
 }
 
 /**
- * 子类调用。
+ * 子类调用。将updatePaddingRoot进行padding处理。
  */
-fun IFullWindow.fullPaddingEdgeToEdge(activity: ComponentActivity, updatePaddingRoot: View) {
-    val isPaddingNav = isPaddingNavBar()
-    val isPaddingStatusBar = isPaddingStatusBar()
-
-    if(fullWindowSetEdgeToEdge()) activity.enableEdgeToEdge()
+internal fun IFullWindow.postPaddingRootInner(activity: ComponentActivity, updatePaddingRoot: View) {
+    val immersiveMode = immersiveMode()
+    val isPaddingNav = immersiveMode.isPaddingNavigationBar()
+    val isPaddingStatusBar = immersiveMode.isPaddingStatusBar()
 
     if (isPaddingNav || isPaddingStatusBar) {
         updatePaddingRoot.post {

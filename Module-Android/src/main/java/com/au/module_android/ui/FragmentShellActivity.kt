@@ -18,6 +18,7 @@ import com.au.module_android.R
 import com.au.module_android.permissions.activity.ActivityForResult
 import com.au.module_android.ui.base.AbsFragment
 import com.au.module_android.ui.base.IFullWindow
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.views.ViewActivity
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.serializableExtraCompat
@@ -136,12 +137,11 @@ open class FragmentShellActivity : ViewActivity() {
             Log.d("AU_APP", "FragmentShellActivity: ${fragmentClass.name}")
         }
 
-        //根据fragment情况来实现
+        //1️⃣。
+        // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。
+        //至于padding交给Fragment处理。
         if (instance is IFullWindow) {
-            //精髓所在：通过fragment的接口函数来判断是否updatePadding StatusBar或者NavBar。
-            instance.fullPaddingEdgeToEdge(this, v)
-        } else {
-            super.setEdge(v)
+            instance.postPaddingRootInner(this, v)
         }
 
         supportFragmentManager.beginTransaction().also {
@@ -156,9 +156,8 @@ open class FragmentShellActivity : ViewActivity() {
 //        AndroidBug5497Workaround.assistActivity(this)
 //    }
 
-    final override fun setEdge(contentView: View?) {
-        //empty 因为我们其实要判断Fragment中的padding函数。
-        //放在（instance is IFullWindow）去做。
+    final override fun immersiveMode(): ImmersiveMode { //默认全沉浸，因为配合实现沉浸式1️⃣。
+        return ImmersiveMode.FullImmersive
     }
 
     private var mIsAutoHideIme = false

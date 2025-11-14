@@ -33,6 +33,7 @@ import com.au.module_android.click.onClick
 import com.au.module_android.permissions.createMultiPermissionForResult
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.simpleflow.collectStatusState
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.ViewVisibilityDebounce
 import com.au.module_android.utils.asOrNull
@@ -49,8 +50,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
-    override fun isPaddingStatusBar(): Boolean {
-        return false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
     }
 
     val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)

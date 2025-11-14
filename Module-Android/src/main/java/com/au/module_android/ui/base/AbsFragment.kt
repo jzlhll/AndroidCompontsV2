@@ -61,4 +61,6 @@ open class AbsFragment : Fragment(), IFullWindow {
     }
 
     open fun isAutoHideIme() = false
+
+    override fun immersiveMode() = ImmersiveMode.PaddingBars
 }

@@ -50,10 +50,6 @@ class AndroidUiEditFragment : BindingFragment<FragmentAndroidUiEditBinding>() {
         }
     }
 
-    override fun fullWindowSetEdgeToEdge(): Boolean {
-        return enableEdge == 1
-    }
-
     override fun toolbarInfo(): ToolbarInfo {
         return ToolbarInfo()
     }

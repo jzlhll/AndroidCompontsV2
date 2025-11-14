@@ -12,6 +12,7 @@ import com.au.audiorecordplayer.recorder.a2AudioRecord.WavePcmAudioRecord
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.click.onClick
 import com.au.module_android.permissions.createPermissionForResult
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.bindings.BindingFragment
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -92,11 +93,7 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
         }
     }
 
-    override fun isPaddingStatusBar(): Boolean {
-        return false
-    }
-
-    override fun isPaddingNavBar(): Boolean {
-        return false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.FullImmersive
     }
 }

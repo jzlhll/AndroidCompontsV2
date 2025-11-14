@@ -14,6 +14,7 @@ import com.au.module_android.Globals
 import com.au.module_android.json.toJsonString
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.ToolbarMenuManager
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
@@ -39,7 +40,9 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         }
     }
 
-    override fun isPaddingStatusBar() = false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

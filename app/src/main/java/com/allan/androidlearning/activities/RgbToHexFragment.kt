@@ -111,10 +111,6 @@ class RgbToHexFragment : BindingFragment<FragmentRgb2HexBinding>() {
         return ToolbarInfo()
     }
 
-    override fun isPaddingStatusBar(): Boolean {
-        return true
-    }
-
     @ColorInt
     fun getArgb(alphaStr:String, r:Int, g:Int, b:Int) : Int{
         val alpha = if (alphaStr.endsWith("%")) {

@@ -15,6 +15,7 @@ import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
@@ -30,7 +31,9 @@ import com.au.module_androidcolor.R
 import com.bumptech.glide.request.target.Target
 
 class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
-    override fun isPaddingStatusBar() = false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
+    }
 
     private val common by unsafeLazy {
         object : SendListSelectorCommon(true) {

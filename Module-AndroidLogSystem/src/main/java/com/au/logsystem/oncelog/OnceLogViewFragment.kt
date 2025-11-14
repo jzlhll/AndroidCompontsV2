@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.au.logsystem.R
 import com.au.logsystem.databinding.FragmentLogViewBinding
 import com.au.module_android.ui.FragmentShellActivity
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.FileLog
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
@@ -164,11 +165,7 @@ class OnceLogViewFragment : BindingFragment<FragmentLogViewBinding>() {
 
     private var currentIsFull = true
 
-    override fun isPaddingStatusBar(): Boolean {
-        return false
-    }
-
-    override fun isPaddingNavBar(): Boolean {
-        return false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.FullImmersive
     }
 }

@@ -10,13 +10,16 @@ import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.json.toJsonString
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 
 class MyDroidTransferServerFragment : AbsLiveFragment<FragmentMyDroidTransferServerBinding>() {
 
-    override fun isPaddingStatusBar() = false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

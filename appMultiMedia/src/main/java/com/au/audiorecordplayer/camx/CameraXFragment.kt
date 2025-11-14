@@ -13,12 +13,15 @@ import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.permissions.createPermissionForResult
+import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.unsafeLazy
 import java.io.File
 
 class CameraXFragment : BindingFragment<FragmentCameraxBinding>() {
-    override fun isPaddingStatusBar() = false
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.PaddingNavigationBar
+    }
 
     private val permissionHelper = createPermissionForResult(Manifest.permission.CAMERA)
     private val outputDirectory by unsafeLazy {
