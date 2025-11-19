@@ -76,6 +76,7 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
+        <attr name="needRippleColor" />
     </declare-styleable>
 
     <declare-styleable name="BgBuildLinearLayout">
@@ -92,6 +93,7 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
+        <attr name="needRippleColor" />
     </declare-styleable>
 
     <declare-styleable name="BgBuildFrameLayout">
@@ -108,6 +110,7 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
+        <attr name="needRippleColor" />
     </declare-styleable>
 
     <declare-styleable name="BgBuildCustomFontText">
@@ -124,6 +127,7 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
+        <attr name="needRippleColor" />
     </declare-styleable>
 
     <declare-styleable name="BgBuildConstraintLayout">
@@ -140,6 +144,7 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
+        <attr name="needRippleColor" />
     </declare-styleable>
 
     <declare-styleable name="BgBuildView">
@@ -156,6 +161,7 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
+        <attr name="needRippleColor" />
     </declare-styleable>
 
     <declare-styleable name="CustomButton">
@@ -172,5 +178,6 @@
 
         <attr name="strokeColor" />
         <attr name="strokeWidth" />
+        <attr name="needRippleColor" />
     </declare-styleable>
 </resources>

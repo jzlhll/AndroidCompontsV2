@@ -22,39 +22,43 @@
 
         <com.au.module_android.widget.FlowLayout
             app:flChildSpacing="8dp"
+            app:flRowSpacing="8dp"
             android:paddingHorizontal="4dp"
+            android:background="#cccccc"
+            android:paddingVertical="4dp"
             android:layout_width="match_parent"
-            android:layout_height="48dp">
+            android:layout_height="wrap_content">
             <com.au.module_android.widget.BgBuildView
                 android:id="@+id/changeColor1"
                 app:backgroundNormal="#ff8800"
+                app:needRippleColor="true"
                 app:cornerRadius="4dp"
-                android:layout_width="48dp"
-                android:layout_height="match_parent"/>
+                android:layout_width="128dp"
+                android:layout_height="48dp"/>
             <com.au.module_android.widget.BgBuildView
                 android:id="@+id/changeColor2"
                 app:backgroundNormal="#008800"
                 app:cornerRadius="4dp"
-                android:layout_width="48dp"
-                android:layout_height="match_parent"/>
+                android:layout_width="128dp"
+                android:layout_height="48dp"/>
             <com.au.module_android.widget.BgBuildView
                 android:id="@+id/changeColor3"
                 app:backgroundNormal="#000000"
                 app:cornerRadius="4dp"
-                android:layout_width="48dp"
-                android:layout_height="match_parent"/>
+                android:layout_width="128dp"
+                android:layout_height="48dp"/>
             <com.au.module_android.widget.BgBuildView
                 android:id="@+id/changeColor4"
                 app:backgroundNormal="#eeeeee"
                 app:cornerRadius="4dp"
-                android:layout_width="48dp"
-                android:layout_height="match_parent"/>
+                android:layout_width="128dp"
+                android:layout_height="48dp"/>
             <com.au.module_android.widget.BgBuildView
                 android:id="@+id/changeColor5"
                 app:cornerRadius="4dp"
                 app:backgroundNormal="#4460ff"
-                android:layout_width="48dp"
-                android:layout_height="match_parent"/>
+                android:layout_width="128dp"
+                android:layout_height="48dp"/>
         </com.au.module_android.widget.FlowLayout>
 
         <com.au.module_android.widget.FlowLayout

@@ -7,22 +7,21 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.view.View
 import androidx.annotation.ColorInt
-import androidx.annotation.StyleableRes
+import com.au.module_android.Globals
 import com.au.module_android.R
-import androidx.core.graphics.drawable.toDrawable
-import com.au.module_android.widget.BgBuildConstraintLayout
-import com.au.module_android.widget.BgBuildCustomFontText
-import com.au.module_android.widget.BgBuildView
+import kotlin.math.max
 
 class ViewBackgroundBuilder {
     //private var mShape:Int = -1
     //private var mAlpha:Float = -1f
-    private var mCorner: CornerRadius? = null
+    internal var mCorner: CornerRadius? = null
     private var mStrokeWidth:Float = 0f
     private var mStrokeColor:Int = 0
     private var mBg:ColorStateList? = null
 
     private var mBgAlpha = -1
+
+    private var mNeedRippleColor = false
 
     var isAtLeastOne = false
 
@@ -30,7 +29,12 @@ class ViewBackgroundBuilder {
      * 圆角
      */
     sealed class CornerRadius {
-        class AllCornerRadius(val size: Float) : CornerRadius()
+        class AllCornerRadius(val size: Float) : CornerRadius() {
+            override fun size(): Float {
+                return size
+            }
+        }
+
         class EachCornerRadius(val topLeft:Float, val topRight:Float, val bottomLeft:Float, val bottomRight:Float) : CornerRadius() {
             fun convert() = floatArrayOf(
                 topLeft, topLeft,
@@ -38,7 +42,13 @@ class ViewBackgroundBuilder {
                 bottomLeft, bottomLeft,
                 bottomRight, bottomRight
             )
+
+            override fun size(): Float {
+                return max(topLeft, topRight)
+            }
         }
+
+        abstract fun size() : Float
     }
 
     /**
@@ -81,6 +91,11 @@ class ViewBackgroundBuilder {
 
     fun setBackgroundAlpha(alpha:Int): ViewBackgroundBuilder {
         mBgAlpha = alpha
+        return this
+    }
+
+    fun needRippleColor(need: Boolean) : ViewBackgroundBuilder {
+        mNeedRippleColor = need
         return this
     }
 
@@ -156,6 +171,11 @@ class ViewBackgroundBuilder {
         if (mBgAlpha >= 0) {
             it.alpha = mBgAlpha
         }
+
+        if (mNeedRippleColor) {
+            val color = Globals.app.resources.getColor(R.color.ripple_default, null)
+            return it.setRippleColor(color)
+        }
         return it
     }
 }
@@ -171,7 +191,8 @@ data class AnyViewIds(
     val cornerSizeBottomLeft: Int,
     val cornerSizeBottomRight: Int,
     val strokeColor: Int,
-    val strokeWidth: Int
+    val strokeWidth: Int,
+    val needRippleColor: Int
 )
 
 val BgBuildLinearLayoutIds = AnyViewIds(
@@ -186,6 +207,7 @@ val BgBuildLinearLayoutIds = AnyViewIds(
     R.styleable.BgBuildLinearLayout_cornerSizeBottomRight,
     R.styleable.BgBuildLinearLayout_strokeColor,
     R.styleable.BgBuildLinearLayout_strokeWidth,
+    R.styleable.BgBuildLinearLayout_needRippleColor
 )
 
 val BgBuildRelativeLayoutIds = AnyViewIds(
@@ -200,6 +222,7 @@ val BgBuildRelativeLayoutIds = AnyViewIds(
     R.styleable.BgBuildRelativeLayout_cornerSizeBottomRight,
     R.styleable.BgBuildRelativeLayout_strokeColor,
     R.styleable.BgBuildRelativeLayout_strokeWidth,
+    R.styleable.BgBuildRelativeLayout_needRippleColor
 )
 
 val BgBuildConstraintLayoutIds = AnyViewIds(
@@ -214,6 +237,7 @@ val BgBuildConstraintLayoutIds = AnyViewIds(
     R.styleable.BgBuildConstraintLayout_cornerSizeBottomRight,
     R.styleable.BgBuildConstraintLayout_strokeColor,
     R.styleable.BgBuildConstraintLayout_strokeWidth,
+    R.styleable.BgBuildConstraintLayout_needRippleColor
 )
 
 val BgBuildFrameLayoutIds = AnyViewIds(
@@ -228,6 +252,7 @@ val BgBuildFrameLayoutIds = AnyViewIds(
     R.styleable.BgBuildFrameLayout_cornerSizeBottomRight,
     R.styleable.BgBuildFrameLayout_strokeColor,
     R.styleable.BgBuildFrameLayout_strokeWidth,
+    R.styleable.BgBuildFrameLayout_needRippleColor
 )
 
 val BgBuildCustomFontTextIds = AnyViewIds(
@@ -242,6 +267,7 @@ val BgBuildCustomFontTextIds = AnyViewIds(
     R.styleable.BgBuildCustomFontText_cornerSizeBottomRight,
     R.styleable.BgBuildCustomFontText_strokeColor,
     R.styleable.BgBuildCustomFontText_strokeWidth,
+    R.styleable.BgBuildCustomFontText_needRippleColor
 )
 
 val BgBuildViewIds = AnyViewIds(
@@ -256,8 +282,8 @@ val BgBuildViewIds = AnyViewIds(
     R.styleable.BgBuildView_cornerSizeBottomRight,
     R.styleable.BgBuildView_strokeColor,
     R.styleable.BgBuildView_strokeWidth,
+    R.styleable.BgBuildView_needRippleColor
 )
-
 
 val CustomButtonIds = AnyViewIds(
     R.styleable.CustomButton_backgroundAlpha,
@@ -271,6 +297,7 @@ val CustomButtonIds = AnyViewIds(
     R.styleable.CustomButton_cornerSizeBottomRight,
     R.styleable.CustomButton_strokeColor,
     R.styleable.CustomButton_strokeWidth,
+    R.styleable.CustomButton_needRippleColor
 )
 
 fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds) {
@@ -294,12 +321,15 @@ fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds) {
     builder.setBackground(bgNormalColor, bgPressedColor, bgDisabledColor)
 
     val cornerRadius = array.getDimension(viewIds.cornerRadius, -1f)
-    if (cornerRadius < 0f) {
+    if (cornerRadius <= 0f) {
         val cornerSizeTopLeft = array.getDimension(viewIds.cornerSizeTopLeft, 0f)
         val cornerSizeTopRight = array.getDimension(viewIds.cornerSizeTopRight, 0f)
         val cornerSizeBottomLeft = array.getDimension(viewIds.cornerSizeBottomLeft, 0f)
         val cornerSizeBottomRight = array.getDimension(viewIds.cornerSizeBottomRight, 0f)
-        builder.setCornerRadius(cornerSizeTopLeft, cornerSizeTopRight, cornerSizeBottomLeft, cornerSizeBottomRight)
+        if (cornerSizeTopLeft > 0f || cornerSizeTopRight > 0f
+            || cornerSizeBottomLeft > 0 || cornerSizeBottomRight > 0) {
+            builder.setCornerRadius(cornerSizeTopLeft, cornerSizeTopRight, cornerSizeBottomLeft, cornerSizeBottomRight)
+        }
     } else {
         builder.setCornerRadius(cornerRadius)
     }
@@ -307,10 +337,14 @@ fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds) {
     val strokeColor = array.getColor(viewIds.strokeColor, noColor)
     val strokeWidth = array.getDimension(viewIds.strokeWidth, 0f)
 
+    builder.needRippleColor(array.getBoolean(viewIds.needRippleColor, false))
+
     builder.setStroke(strokeWidth, strokeColor)
-    if (builder.isAtLeastOne) {
-        background = builder.build()
-    }
+    val bg = if (builder.isAtLeastOne) {
+        builder.build()
+    } else null
+
+    background = bg
 }
 
 /**
@@ -324,13 +358,11 @@ fun Drawable?.setRippleColor(@ColorInt rippleColor: Int, radius: Int? = null) : 
         }
         return this
     }
+
     val newDrawable = RippleDrawable(
         ColorStateList.valueOf(rippleColor),
         this,
-        if (this == null)
-            rippleColor.toDrawable()
-        else
-            null
+        null
     )
     if (radius != null) {
         newDrawable.radius = radius

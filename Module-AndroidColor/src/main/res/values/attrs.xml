@@ -9,5 +9,6 @@
     <attr name="backgroundPressed" format="color" />
     <attr name="backgroundDisabled" format="color" />
 
+    <attr name="needRippleColor" format="boolean"/>
     <attr name="autoHideIme" format="boolean" />
 </resources>
