@@ -326,6 +326,7 @@
 
             <com.au.module_android.widget.CustomButton
                 style="@style/StyleButtonWarn"
+                android:clickable="true"
                 android:layout_marginBottom="0dp"
                 android:text="warning button"
                 android:textSize="14sp"

@@ -18,5 +18,6 @@ class CustomButton @JvmOverloads constructor(
         val attr = context.obtainStyledAttributes(attrs, R.styleable.CustomButton)
         viewBackgroundBuild(attr, CustomButtonIds)
         attr.recycle()
+        isClickable = true
     }
 }

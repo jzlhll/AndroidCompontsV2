@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#1296db</color>
-    <color name="colorPrimary_press">#881296db</color> <!--换算为非透明-->
-
     <color name="color_dot_red">#DC2525</color>
 
     <color name="color_chinese">#f0a912</color>

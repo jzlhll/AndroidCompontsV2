@@ -340,11 +340,9 @@ fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds) {
     builder.needRippleColor(array.getBoolean(viewIds.needRippleColor, false))
 
     builder.setStroke(strokeWidth, strokeColor)
-    val bg = if (builder.isAtLeastOne) {
-        builder.build()
-    } else null
-
-    background = bg
+    if (builder.isAtLeastOne) {
+        background = builder.build()
+    }
 }
 
 /**

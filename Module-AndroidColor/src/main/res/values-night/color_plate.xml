@@ -11,8 +11,8 @@
 
     <!-- 品牌主题色 | 超链接文字颜色 -->
     <color name="colorPrimary">#2A7ACE</color>
-    <color name="colorPrimary_disable">#708EB0</color>
-    <color name="colorPrimary_press">#6190d0</color>
+    <color name="colorPrimary_disable">#992A7ACE</color>
+    <color name="colorPrimary_press">#dd2A7ACE</color>
 
     <!-- 文字颜色 -->
     <color name="color_text_normal">#ffffff</color>
@@ -34,17 +34,17 @@
 
     <!-- button: secondary button色 -->
     <color name="color_second_btn_bg">#343434</color>
-    <color name="color_second_btn_bg_press">#cc343437</color>
+    <color name="color_second_btn_bg_press">#cc343434</color>
 <!--    <color name="color_second_btn_text">@color/color_text_normal</color>-->
 <!--    <color name="color_second_btn_text_press">@color/color_text_normal_press</color>-->
 
     <!-- button: disable -->
-    <color name="color_disable_btn_bg">#343434</color>
+    <color name="color_disable_btn_bg">#454545</color>
 <!--    <color name="color_disable_btn_text">@color/color_hint_text</color>-->
 
     <!-- button: warning button色 -->
     <color name="color_warn_btn_bg">#fa3939</color>
-    <color name="color_warn_btn_bg_press">#ccfa3939</color>
+    <color name="color_warn_btn_bg_press">#99fa3939</color>
     <color name="color_warn_btn_text">#ffffff</color>
 
     <!-- edit: 相关一切颜色 -->
