@@ -5,7 +5,7 @@ import com.au.jobstudy.check.NameList
 import com.au.jobstudy.databinding.FragmentMainHomeBinding
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.jobstudy.utils.WeekDateUtil.currentTimeToHelloGood
-import com.au.jobstudy.EnglishCheckFragment
+import com.au.jobstudy.words.loading.EnglishCheckFragment
 import com.au.jobstudy.words.loading.ExcelLoadingFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.bindings.BindingFragment

@@ -49,7 +49,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingHorizontal="8dp"
-            android:paddingVertical="12dp">
+            android:paddingVertical="8dp">
 
             <!-- 单词图片 -->
             <androidx.appcompat.widget.AppCompatImageView
@@ -57,7 +57,7 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:scaleType="centerCrop"
-                app:layout_constraintWidth_percent="0.8"
+                app:layout_constraintWidth_percent="0.72"
                 app:layout_constraintDimensionRatio="4:3"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -97,7 +97,8 @@
                 android:id="@+id/playBtn"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:padding="16dp"
+                android:padding="5dp"
+                android:src="@drawable/ic_tts_play"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/phoneticText"
@@ -108,8 +109,8 @@
                 android:id="@+id/meaningText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="加速，促进；加快，增长"
-                android:textSize="26sp"
+                tools:text="加速，促进；加快，增长"
+                android:textSize="24sp"
                 android:gravity="center"
                 android:lineSpacingExtra="8dp"
                 android:paddingHorizontal="24dp"
@@ -117,6 +118,21 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/playBtn"
                 android:layout_marginTop="32dp"/>
+
+            <!-- 单词意思 -->
+            <com.au.module_android.widget.CustomFontText
+                android:id="@+id/sampleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="This is a example."
+                android:textSize="20sp"
+                android:gravity="center"
+                android:lineSpacingExtra="8dp"
+                android:paddingHorizontal="12dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/meaningText"
+                android:layout_marginTop="12dp"/>
 
         </com.au.module_android.widget.BgBuildConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

@@ -10,12 +10,15 @@ import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 class LoadingViewModel : ViewModel() {
     private val TAG = "LoadingViewModel"
 
     private val excelParser = WordsManager.createExcelParser(Globals.app)
-    val overFlow = MutableSharedFlow<Boolean>()
+    // 设置replay=1确保即使在emit后collect也能收到最新的事件
+    private val _overFlow = MutableSharedFlow<Boolean>()
+    val overFlow = _overFlow.asSharedFlow()
 
     fun load() {
         viewModelScope.launchOnIOThread {
@@ -58,8 +61,8 @@ class LoadingViewModel : ViewModel() {
             WordsManager.allSingleWords = allSingleWords
             WordsManager.sheetMappingRows = sheetMappingRows
 
-            logdNoFile {"end of parse!"}
-            overFlow.tryEmit(true)
+            // 使用emit代替tryEmit，确保事件被发送
+            _overFlow.emit(true)
         }
     }
 }

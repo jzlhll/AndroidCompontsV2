@@ -1,4 +1,4 @@
-package com.au.jobstudy
+package com.au.jobstudy.words.loading
 
 import android.content.Context
 import android.os.Bundle
@@ -7,6 +7,7 @@ import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
 import com.au.jobstudy.words.WordsManager
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingNoToolbarFragment
+import com.au.module_android.utils.logdNoFile
 
 /**
  * 英文打卡Fragment
@@ -31,8 +32,25 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
     private var currentWordIndex = 1
     private var totalWords = 30
 
+    private var mIsTtsing = false
+    private var mTts : TTSNative? = null
+    private var isPlayingSentence = false
+
+    private fun tts() : TTSNative{
+        if (mTts == null) {
+            mTts = TTSNative(requireContext()).also {
+                it.setOnDoneCallback {
+                    binding.playBtn.setImageResource(com.au.jobstudy.R.drawable.ic_tts_play)
+                    mIsTtsing = false
+                }
+            }
+        }
+        return mTts!!
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewLifecycleOwner.lifecycle.addObserver(tts())
 
         // 获取传递的参数
         arguments?.let { bundle ->
@@ -59,6 +77,7 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
             binding.wordText.text = word.word
             binding.phoneticText.text = word.phonetic
             binding.meaningText.text = word.meaning
+            binding.sampleText.text = word.sentence
         }
 
         // TODO: 设置单词图片资源
@@ -73,8 +92,17 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
 
         // 播放按钮点击事件
         binding.playBtn.setOnClickListener {
-            // TODO: 播放单词发音
-            // playWordPronunciation()
+            if (!mIsTtsing) {
+                mIsTtsing = true
+                binding.playBtn.setImageResource(com.au.jobstudy.R.drawable.ic_tts_paused)
+
+                if (isPlayingSentence) {
+                    tts().speak(binding.sampleText.text.toString())
+                } else {
+                    tts().speak(binding.wordText.text.toString())
+                }
+                isPlayingSentence = !isPlayingSentence
+            }
         }
 
         // Next按钮点击事件
@@ -94,6 +122,7 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
             binding.wordText.text = word.word
             binding.phoneticText.text = word.phonetic
             binding.meaningText.text = word.meaning
+            binding.sampleText.text = word.sentence
         }
     }
 }

@@ -3,12 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="60dp">
+    android:layout_height="52dp">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/ivLogo"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginTop="3dp"
         android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
