@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
+import com.au.jobstudy.words.WordsManager
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingNoToolbarFragment
 
@@ -51,9 +52,14 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
         updateProgress()
 
         // 设置默认的单词数据（实际项目中应该从网络或本地获取）
-        binding.wordText.text = "accelerate"
-        binding.phoneticText.text = "/ækˈseləreɪt/"
-        binding.meaningText.text = "加速，促进；加快，增长"
+        //todo 先random
+        WordsManager.allSingleWords?.let {
+            val randomIndex = (Math.random() * it.size).toInt()
+            val word = it[randomIndex]
+            binding.wordText.text = word.word
+            binding.phoneticText.text = word.phonetic
+            binding.meaningText.text = word.meaning
+        }
 
         // TODO: 设置单词图片资源
         // binding.wordImage.setImageResource(R.drawable.word_accelerate)
@@ -82,41 +88,12 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
     }
 
     private fun goToNextWord() {
-        if (currentWordIndex < totalWords) {
-            currentWordIndex++
-            updateProgress()
-
-            // TODO: 加载下一个单词数据
-            // loadNextWord()
-
-            // 更新单词内容（演示用）
-            updateWordContent()
-        } else {
-            // 已完成所有单词学习
-            // TODO: 跳转到完成页面或显示完成对话框
-        }
-    }
-
-    private fun updateWordContent() {
-        // 模拟更新单词内容（实际项目中应该从数据源获取）
-        when (currentWordIndex) {
-            2 -> {
-                binding.wordText.text = "achievement"
-                binding.phoneticText.text = "/əˈtʃiːvmənt/"
-                binding.meaningText.text = "成就，成绩；达到，完成"
-            }
-            3 -> {
-                binding.wordText.text = "accomplish"
-                binding.phoneticText.text = "/əˈkʌmplɪʃ/"
-                binding.meaningText.text = "完成，做成；达到目的"
-            }
-            else -> {
-                // 循环显示示例数据
-                binding.wordText.text = "accelerate"
-                binding.phoneticText.text = "/ækˈseləreɪt/"
-                binding.meaningText.text = "加速，促进；加快，增长"
-                currentWordIndex = 1
-            }
+        WordsManager.allSingleWords?.let {
+            val randomIndex = (Math.random() * it.size).toInt()
+            val word = it[randomIndex]
+            binding.wordText.text = word.word
+            binding.phoneticText.text = word.phonetic
+            binding.meaningText.text = word.meaning
         }
     }
 }

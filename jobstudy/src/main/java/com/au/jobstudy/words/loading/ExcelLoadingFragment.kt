@@ -11,6 +11,7 @@ import com.au.jobstudy.databinding.FragmentLoadingBinding
 import com.au.jobstudy.EnglishCheckFragment
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingNoToolbarFragment
+import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.unsafeLazy
 import kotlinx.coroutines.launch
 
@@ -33,6 +34,7 @@ class ExcelLoadingFragment : BindingNoToolbarFragment<FragmentLoadingBinding>() 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.overFlow.collect {
+                    logdNoFile {"over flow!"}
                     requireActivity().finish()
                     // 导入成功后跳转到单词检查页面
                     EnglishCheckFragment.start(requireActivity(), 0, 100)
