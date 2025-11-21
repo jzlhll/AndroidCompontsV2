@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import com.au.module_android.R
 import com.au.module_android.utils.CustomButtonIds
 import com.au.module_android.utils.viewBackgroundBuild
+import androidx.core.content.withStyledAttributes
 
 /**
  * @author au
@@ -15,9 +16,9 @@ class CustomButton @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : CustomFontText(context, attrs) {
     init {
-        val attr = context.obtainStyledAttributes(attrs, R.styleable.CustomButton)
-        viewBackgroundBuild(attr, CustomButtonIds)
-        attr.recycle()
+        context.withStyledAttributes(attrs, R.styleable.CustomButton) {
+            viewBackgroundBuild(this, CustomButtonIds)
+        }
         isClickable = true
     }
 }
