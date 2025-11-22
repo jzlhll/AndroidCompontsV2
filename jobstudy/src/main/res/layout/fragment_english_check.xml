@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingHorizontal="@dimen/ui_padding_edge">
+    android:layout_height="match_parent">
 
     <!-- 顶部返回按钮和进度 -->
     <LinearLayout
+        android:id="@+id/toolbar"
+        app:layout_constraintTop_toTopOf="parent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -36,32 +36,46 @@
 
     </LinearLayout>
 
-    <!-- 居中内容容器 -->
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        app:cardBackgroundColor="#66C7EDCC"
+    <com.au.jobstudy.words.webview.ClawWebView
+        android:id="@+id/webView"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
         android:layout_marginTop="8dp"
-        app:cardElevation="4dp"
-        app:cardCornerRadius="16dp"
-        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintDimensionRatio="8:6"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- 居中内容容器 -->
+    <com.au.module_android.widget.BgBuildFrameLayout
+        app:backgroundNormal="#C7EDCC"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        app:layout_constraintTop_toBottomOf="@id/webView"
+        app:layout_constraintBottom_toTopOf="@id/nextBtn"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="18dp"
+        app:cornerRadius="16dp"
+        android:elevation="4dp"
+        android:layout_width="match_parent"
+        android:padding="12dp"
         android:layout_height="0dp">
         <com.au.module_android.widget.BgBuildConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="8dp">
+            android:layout_height="match_parent">
 
             <!-- 单词图片 -->
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/wordImage"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:scaleType="centerCrop"
-                app:layout_constraintWidth_percent="0.72"
-                app:layout_constraintDimensionRatio="4:3"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+<!--            <androidx.appcompat.widget.AppCompatImageView-->
+<!--                android:id="@+id/wordImage"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="0dp"-->
+<!--                android:scaleType="centerCrop"-->
+<!--                app:layout_constraintWidth_percent="0.72"-->
+<!--                app:layout_constraintDimensionRatio="4:3"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent"/>-->
 
             <!-- 大大的单词 -->
             <com.au.module_android.widget.CustomFontText
@@ -73,7 +87,7 @@
                 android:textSize="42dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/wordImage"
+                app:layout_constraintTop_toBottomOf="@id/webView"
                 android:layout_marginTop="12dp"
                 android:gravity="center"/>
 
@@ -95,14 +109,14 @@
             <!-- 播放按钮 -->
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/playBtn"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
                 android:padding="5dp"
                 android:src="@drawable/ic_tts_play"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/phoneticText"
-                android:layout_marginTop="24dp"/>
+                android:layout_marginTop="18dp"/>
 
             <!-- 单词意思 -->
             <com.au.module_android.widget.CustomFontText
@@ -117,7 +131,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/playBtn"
-                android:layout_marginTop="32dp"/>
+                android:layout_marginTop="18dp"/>
 
             <!-- 单词意思 -->
             <com.au.module_android.widget.CustomFontText
@@ -135,17 +149,18 @@
                 android:layout_marginTop="12dp"/>
 
         </com.au.module_android.widget.BgBuildConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
+    </com.au.module_android.widget.BgBuildFrameLayout>
 
     <!-- 底部Next按钮 -->
     <com.au.module_android.widget.CustomButton
         android:id="@+id/nextBtn"
-        android:layout_marginTop="24dp"
-        style="@style/StyleButtonPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        style="@style/StyleButtonSecondary"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginBottom="24dp"
         android:text="Next"
         android:textSize="22sp"/>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

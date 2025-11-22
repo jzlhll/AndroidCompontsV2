@@ -78,6 +78,8 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
             binding.phoneticText.text = word.phonetic
             binding.meaningText.text = word.meaning
             binding.sampleText.text = word.sentence
+
+            binding.webView.loadDoubaoWebAndAutoFill("https://www.doubao.com/chat/create-image", word.sentence)
         }
 
         // TODO: 设置单词图片资源
@@ -87,7 +89,7 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
     private fun setupClickListeners() {
         // 返回按钮点击事件
         binding.backBtn.setOnClickListener {
-            parentFragmentManager.popBackStack()
+            requireActivity().finishAfterTransition()
         }
 
         // 播放按钮点击事件
