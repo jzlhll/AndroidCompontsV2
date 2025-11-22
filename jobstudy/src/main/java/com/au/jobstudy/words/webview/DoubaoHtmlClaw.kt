@@ -2,12 +2,10 @@ package com.au.jobstudy.words.webview
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-import android.webkit.ValueCallback
 import android.webkit.WebView
 import com.au.module_android.utils.logdNoFile
 
-class HtmlClaw(private val webView: WebView) {
+class DoubaoHtmlClaw(private val webView: WebView) {
     private val TAG = "HtmlClaw"
 
     private val handler = Handler(Looper.getMainLooper())

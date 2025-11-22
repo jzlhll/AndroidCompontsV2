@@ -35,7 +35,7 @@ class ClawWebViewClient(val webView: ClawWebView) : BridgeWebViewClient(webView)
     private val successCallback:(Boolean)->Unit = {
         //// 填写第一个文本输入框
     }
-    val htmlClaw = HtmlClaw(webView).also {
+    val htmlClaw = DoubaoHtmlClaw(webView).also {
         it.successCallback = successCallback
     }
 

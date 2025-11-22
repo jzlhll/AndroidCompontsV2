@@ -3,11 +3,13 @@ package com.au.jobstudy.words.loading
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.ViewModelProvider
 import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
 import com.au.jobstudy.words.WordsManager
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingNoToolbarFragment
 import com.au.module_android.utils.logdNoFile
+import com.au.module_android.utils.unsafeLazy
 
 /**
  * 英文打卡Fragment
@@ -20,7 +22,7 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
         private const val ARG_TOTAL_WORDS = "total_words"
 
         fun start(context: Context, currentIndex: Int, totalWords: Int) {
-            FragmentShellActivity.Companion.start(
+            FragmentShellActivity.start(
                 context, EnglishCheckFragment::class.java,
                 Bundle().apply {
                     putInt(ARG_WORD_INDEX, currentIndex)
@@ -29,12 +31,10 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
         }
     }
 
-    private var currentWordIndex = 1
-    private var totalWords = 30
+    private val mViewModel by unsafeLazy { ViewModelProvider(this)[CheckViewModel::class.java] }
 
     private var mIsTtsing = false
     private var mTts : TTSNative? = null
-    private var isPlayingSentence = false
 
     private fun tts() : TTSNative{
         if (mTts == null) {
