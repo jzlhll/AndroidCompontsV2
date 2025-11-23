@@ -1,11 +1,9 @@
 package com.au.jobstudy.words.loading
 
 import android.content.Context
-import com.au.jobstudy.words.beans.RowInfo
-import com.au.jobstudy.words.loading.ExcelParseException
-import com.au.jobstudy.words.beans.RowOrigData
-import com.au.jobstudy.words.beans.SheetInfo
-import com.au.jobstudy.words.beans.SheetMode
+import com.au.jobstudy.words.domain.beans.RowInfo
+import com.au.jobstudy.words.domain.beans.RowOrigData
+import com.au.jobstudy.words.domain.beans.SheetInfo
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.loge
 import org.apache.poi.hssf.usermodel.HSSFWorkbook

@@ -1,7 +1,7 @@
 package com.au.jobstudy.words
 
 import android.content.Context
-import com.au.jobstudy.words.beans.RowInfo
+import com.au.jobstudy.words.domain.beans.RowInfo
 import com.au.jobstudy.words.loading.ApachePoiExcelParser
 import com.au.jobstudy.words.loading.IExcelParser
 
@@ -14,5 +14,15 @@ object WordsManager {
 
     fun createExcelParser(context: Context): IExcelParser {
         return ApachePoiExcelParser(context)
+    }
+
+    /**
+     * 获取asset下的excel版本信息
+     */
+    suspend fun assetExcelVersion(context: Context) : Int{
+        context.assets.open("小学英语总结.version").use {
+            return it.read().toInt()
+        }
+
     }
 }

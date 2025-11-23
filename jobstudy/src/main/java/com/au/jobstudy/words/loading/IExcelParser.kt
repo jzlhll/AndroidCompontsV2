@@ -1,7 +1,7 @@
 package com.au.jobstudy.words.loading
 
-import com.au.jobstudy.words.beans.RowOrigData
-import com.au.jobstudy.words.beans.SheetInfo
+import com.au.jobstudy.words.domain.beans.RowOrigData
+import com.au.jobstudy.words.domain.beans.SheetInfo
 
 interface IExcelParser {
     fun loadExcelFromAssets(fileName: String) : List<SheetInfo>

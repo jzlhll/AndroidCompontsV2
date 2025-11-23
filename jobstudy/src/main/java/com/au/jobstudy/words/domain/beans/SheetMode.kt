@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.beans
+package com.au.jobstudy.words.domain.beans
 
 enum class SheetMode {
     /**
@@ -26,22 +26,6 @@ enum class SheetMode {
     Mud,
 }
 
-enum class DBTableMode {
-    /**
-     * 单词
-     */
-    Word,
-
-    /**
-     * 句子
-     */
-    Question,
-
-    /**
-     * 杂项
-     */
-    Mud,
-}
 
 fun SheetMode.convert() = when (this) {
     SheetMode.Word4 -> DBTableMode.Word

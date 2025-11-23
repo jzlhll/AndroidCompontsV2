@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.beans
+package com.au.jobstudy.words.domain.beans
 
 /**
  * Excel表格信息

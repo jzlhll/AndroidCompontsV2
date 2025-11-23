@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.db.entities
+package com.au.jobstudy.words.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.db.entities
+package com.au.jobstudy.words.data.entities
 
 import androidx.annotation.Keep
 import androidx.room.Entity
@@ -10,5 +10,6 @@ data class MudRowEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val word: String,
+    val sheetName: String,
     val lines: String
 )

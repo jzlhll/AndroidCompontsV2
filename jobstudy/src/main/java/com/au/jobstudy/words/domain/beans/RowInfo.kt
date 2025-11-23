@@ -1,9 +1,9 @@
-package com.au.jobstudy.words.beans
+package com.au.jobstudy.words.domain.beans
 
 /**
  * 抽象单行数据
  */
-sealed class RowInfo {
+sealed class RowInfo() {
     companion object {
         fun parseRowHead(headRow: RowOrigData) : SheetMode {
             if (headRow.isRowHead && headRow.values.isNotEmpty()) {
@@ -60,10 +60,13 @@ sealed class RowInfo {
 
     abstract val word:String
 
+    abstract val sheetName:String
+
     /**
      * 一些空行。描述性行
      */
-    data class UnableRow(override val word: String) : RowInfo() {
+    data class UnableRow(override val word: String,
+                         override val sheetName: String) : RowInfo() {
         override fun toString(): String {
             return "UnableRow: $word"
         }
@@ -74,6 +77,7 @@ sealed class RowInfo {
      */
     data class MudRow(
         override val word: String = "",
+        override val sheetName: String,
         val lines: String) : RowInfo() {
         override fun toString(): String {
             return "MudRow: $word, $lines"
@@ -92,6 +96,7 @@ sealed class RowInfo {
      */
     data class QuestionRow(
         override val word: String,
+        override val sheetName: String,
         val function: String,
         val sentence:String,
         val sentence2:String,
@@ -117,6 +122,7 @@ sealed class RowInfo {
      */
     data class WordRow(
         override val word: String,
+        override val sheetName: String,
         val phonetic: String,
         val meaning: String,
         val category:String = "",

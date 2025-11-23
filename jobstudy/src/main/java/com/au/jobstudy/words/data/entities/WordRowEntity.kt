@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.db.entities
+package com.au.jobstudy.words.data.entities
 
 import androidx.annotation.Keep
 import androidx.room.Entity
@@ -12,6 +12,7 @@ data class WordRowEntity(
     val word: String,
     val phonetic: String,
     val meaning: String,
+    val sheetName:String,
     val category: String = "",
     val sentence: String,
     val sentence2: String = "",

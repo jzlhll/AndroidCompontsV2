@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.beans
+package com.au.jobstudy.words.domain.beans
 
 import com.au.jobstudy.words.loading.IConvert
 import com.au.module_android.utils.NoWayException

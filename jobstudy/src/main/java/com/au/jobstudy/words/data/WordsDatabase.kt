@@ -1,13 +1,13 @@
-package com.au.jobstudy.words.db
+package com.au.jobstudy.words.data
 
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.au.jobstudy.words.db.dao.WordsDao
-import com.au.jobstudy.words.db.entities.ImportVersionEntity
-import com.au.jobstudy.words.db.entities.MudRowEntity
-import com.au.jobstudy.words.db.entities.QuestionRowEntity
-import com.au.jobstudy.words.db.entities.WordRowEntity
+import com.au.jobstudy.words.data.dao.WordsDao
+import com.au.jobstudy.words.data.entities.ImportVersionEntity
+import com.au.jobstudy.words.data.entities.MudRowEntity
+import com.au.jobstudy.words.data.entities.QuestionRowEntity
+import com.au.jobstudy.words.data.entities.WordRowEntity
 import com.au.module_android.Globals
 
 @Database(

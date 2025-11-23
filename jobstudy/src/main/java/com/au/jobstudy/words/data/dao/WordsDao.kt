@@ -1,13 +1,13 @@
-package com.au.jobstudy.words.db.dao
+package com.au.jobstudy.words.data.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.au.jobstudy.words.db.entities.ImportVersionEntity
-import com.au.jobstudy.words.db.entities.MudRowEntity
-import com.au.jobstudy.words.db.entities.QuestionRowEntity
-import com.au.jobstudy.words.db.entities.WordRowEntity
+import com.au.jobstudy.words.data.entities.ImportVersionEntity
+import com.au.jobstudy.words.data.entities.MudRowEntity
+import com.au.jobstudy.words.data.entities.QuestionRowEntity
+import com.au.jobstudy.words.data.entities.WordRowEntity
 
 @Dao
 interface WordsDao {
@@ -40,6 +40,12 @@ interface WordsDao {
     
     @Query("SELECT * FROM word_row WHERE word = :word")
     suspend fun getWordRowByWord(word: String): List<WordRowEntity>
+
+    /**
+     * 根据sheetName查询Word
+     */
+    @Query("SELECT * FROM word_row WHERE sheetName = :sheetName")
+    suspend fun getWordRowBySheetName(sheetName: String): List<WordRowEntity>
     
     // ImportVersion相关操作
     @Insert(onConflict = OnConflictStrategy.REPLACE)
