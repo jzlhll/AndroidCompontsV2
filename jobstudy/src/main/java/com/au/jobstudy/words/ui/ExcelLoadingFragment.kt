@@ -1,17 +1,14 @@
-package com.au.jobstudy.words.loading
+package com.au.jobstudy.words.ui
 
 import android.content.Context
 import android.os.Bundle
-import android.view.View
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.au.jobstudy.databinding.FragmentLoadingBinding
-import com.au.jobstudy.words.loading.EnglishCheckFragment
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingNoToolbarFragment
-import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.unsafeLazy
 import kotlinx.coroutines.launch
 

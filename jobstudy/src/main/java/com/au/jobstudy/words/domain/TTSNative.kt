@@ -1,16 +1,15 @@
-package com.au.jobstudy.words.loading
+package com.au.jobstudy.words.domain
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.au.module_android.utils.logdNoFile
 import java.util.Locale
 import java.util.UUID
 
 // 在 MainActivity 类内部或外部定义这个接口类：
-class TTSNative(private val context: Context) : DefaultLifecycleObserver{
+class TTSNative(private val context: Context) : DefaultLifecycleObserver {
     private var tts: TextToSpeech? = null
     private var mDoneCb: () -> Unit = {}
 

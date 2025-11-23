@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.data
+package com.au.jobstudy.words.constants
 
 class Constants {
     companion object {

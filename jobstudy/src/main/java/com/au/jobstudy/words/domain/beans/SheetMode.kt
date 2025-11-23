@@ -26,7 +26,6 @@ enum class SheetMode {
     Mud,
 }
 
-
 fun SheetMode.convert() = when (this) {
     SheetMode.Word4 -> DBTableMode.Word
     SheetMode.Word5C -> DBTableMode.Word

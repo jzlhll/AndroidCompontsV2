@@ -1,9 +1,10 @@
-package com.au.jobstudy.words.loading
+package com.au.jobstudy.words.domain
 
 import android.content.Context
 import com.au.jobstudy.words.domain.beans.RowInfo
 import com.au.jobstudy.words.domain.beans.RowOrigData
 import com.au.jobstudy.words.domain.beans.SheetInfo
+import com.au.jobstudy.words.ui.ExcelParseException
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.loge
 import org.apache.poi.hssf.usermodel.HSSFWorkbook

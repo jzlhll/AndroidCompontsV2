@@ -1,4 +1,4 @@
-package com.au.jobstudy.words.loading
+package com.au.jobstudy.words.domain
 
 import com.au.jobstudy.words.domain.beans.RowOrigData
 import com.au.jobstudy.words.domain.beans.SheetInfo

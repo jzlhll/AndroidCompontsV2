@@ -1,14 +1,14 @@
-package com.au.jobstudy.words.loading
+package com.au.jobstudy.words.ui
 
 import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
 import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
-import com.au.jobstudy.words.WordsManager
+import com.au.jobstudy.words.constants.WordsManager
+import com.au.jobstudy.words.domain.TTSNative
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingNoToolbarFragment
-import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.unsafeLazy
 
 /**
@@ -36,7 +36,7 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
     private var mIsTtsing = false
     private var mTts : TTSNative? = null
 
-    private fun tts() : TTSNative{
+    private fun tts() : TTSNative {
         if (mTts == null) {
             mTts = TTSNative(requireContext()).also {
                 it.setOnDoneCallback {

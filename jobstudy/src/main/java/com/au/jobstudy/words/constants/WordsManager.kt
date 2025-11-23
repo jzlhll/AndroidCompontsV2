@@ -1,9 +1,10 @@
-package com.au.jobstudy.words
+package com.au.jobstudy.words.constants
 
 import android.content.Context
+import androidx.annotation.WorkerThread
 import com.au.jobstudy.words.domain.beans.RowInfo
-import com.au.jobstudy.words.loading.ApachePoiExcelParser
-import com.au.jobstudy.words.loading.IExcelParser
+import com.au.jobstudy.words.domain.ApachePoiExcelParser
+import com.au.jobstudy.words.domain.IExcelParser
 
 object WordsManager {
     var allSingleWords: List<RowInfo.WordRow> ?= null
@@ -19,10 +20,10 @@ object WordsManager {
     /**
      * 获取asset下的excel版本信息
      */
-    suspend fun assetExcelVersion(context: Context) : Int{
+    @WorkerThread
+    fun assetExcelVersion(context: Context) : Int{
         context.assets.open("小学英语总结.version").use {
-            return it.read().toInt()
+            return it.read()
         }
-
     }
 }

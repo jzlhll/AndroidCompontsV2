@@ -1,6 +1,6 @@
 package com.au.jobstudy.words.domain.beans
 
-import com.au.jobstudy.words.loading.IConvert
+import com.au.jobstudy.words.domain.IConvert
 import com.au.module_android.utils.NoWayException
 
 /**
@@ -12,14 +12,16 @@ import com.au.module_android.utils.NoWayException
 data class RowOrigData(val rowIndex: Int,
                        val values: List<String>,
                        val rowCellNum:Int,
-                       val isRowHead: Boolean = false,) : IConvert {
+                       val isRowHead: Boolean = false) : IConvert {
     /**
      * 转换一行数据为IRow
      */
-    override fun convert(rowData: RowOrigData, sheetMode: SheetMode) : RowInfo {
+    override fun convert(rowData: RowOrigData,
+                         sheetMode: SheetMode,
+                         sheetName:String) : RowInfo {
         // 如果是表头行或空行，返回UnableRow
         if (rowData.isRowHead || rowData.values.isEmpty() || rowData.values.all { it.isBlank() }) {
-            return RowInfo.UnableRow("")
+            return RowInfo.UnableRow("", sheetName)
         }
 
         return when (sheetMode) {
@@ -27,25 +29,28 @@ data class RowOrigData(val rowIndex: Int,
             SheetMode.Word5C,
              SheetMode.Word5P -> {
                 // 单词表
-                createWordRow(rowData, sheetMode)
+                createWordRow(rowData, sheetMode, sheetName)
             }
             SheetMode.Question -> {
                 // 问答表
-                createQuestionRow(rowData)
+                createQuestionRow(rowData, sheetName)
             }
             SheetMode.Mud -> {
                 // 杂项表
-                createMudRow(rowData)
+                createMudRow(rowData, sheetName)
             }
         }
-
     }
 
-    private fun createWordRow(rowData: RowOrigData, sheetMode: SheetMode): RowInfo.WordRow {
+    private fun createWordRow(rowData: RowOrigData,
+                              sheetMode: SheetMode,
+                              sheetName: String)
+            : RowInfo.WordRow {
         return when (sheetMode) {
             SheetMode.Word4 -> {
                 RowInfo.WordRow(
                     word = rowData.values[0].trim(),
+                    sheetName = sheetName,
                     phonetic = rowData.values.getOrElse(1) { "" }.trim(),
                     meaning = rowData.values.getOrElse(2) { "" }.trim(),
                     sentence = rowData.values.getOrElse(3) { "" }.trim(),
@@ -54,6 +59,7 @@ data class RowOrigData(val rowIndex: Int,
             SheetMode.Word5C -> {
                 RowInfo.WordRow(
                     word = rowData.values[0].trim(),
+                    sheetName = sheetName,
                     phonetic = rowData.values.getOrElse(1) { "" }.trim(),
                     meaning = rowData.values.getOrElse(2) { "" }.trim(),
                     category = rowData.values.getOrElse(3) { "" }.trim(),
@@ -64,6 +70,7 @@ data class RowOrigData(val rowIndex: Int,
             SheetMode.Word5P -> {
                 RowInfo.WordRow(
                     word = rowData.values[0].trim(),
+                    sheetName = sheetName,
                     phonetic = rowData.values.getOrElse(1) { "" }.trim(),
                     meaning = rowData.values.getOrElse(2) { "" }.trim(),
                     sentence = rowData.values.getOrElse(3) { "" }.trim(),
@@ -77,11 +84,12 @@ data class RowOrigData(val rowIndex: Int,
         }
     }
 
-    private fun createQuestionRow(rowData: RowOrigData): RowInfo.QuestionRow {
+    private fun createQuestionRow(rowData: RowOrigData, sheetName:String) : RowInfo.QuestionRow {
         // 检查第一列是否包含"?"或其他问答特征
         val firstCell = rowData.values[0].trim()
         return RowInfo.QuestionRow(
             word = firstCell,
+            sheetName = sheetName,
             function = rowData.values.getOrElse(1) { "" }.trim(),
             sentence = rowData.values.getOrElse(2) { "" }.trim(),
             sentence2 = rowData.values.getOrElse(3) { "" }.trim(),
@@ -94,9 +102,9 @@ data class RowOrigData(val rowIndex: Int,
     /**
      * 创建杂项行，将所有单元格内容用换行符连接
      */
-    private fun createMudRow(rowData: RowOrigData): RowInfo.MudRow {
+    private fun createMudRow(rowData: RowOrigData, sheetName: String) : RowInfo.MudRow {
         val word = rowData.values.firstOrNull()?.trim() ?: ""
         val lines = rowData.values.joinToString("\n") { it.trim() }
-        return RowInfo.MudRow(word, lines)
+        return RowInfo.MudRow(word, sheetName, lines)
     }
 }

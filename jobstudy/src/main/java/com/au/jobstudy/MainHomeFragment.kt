@@ -1,17 +1,22 @@
 package com.au.jobstudy
 
 import android.os.Bundle
+import androidx.lifecycle.ViewModelProvider
 import com.au.jobstudy.check.NameList
 import com.au.jobstudy.databinding.FragmentMainHomeBinding
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.jobstudy.utils.WeekDateUtil.currentTimeToHelloGood
-import com.au.jobstudy.words.loading.EnglishCheckFragment
-import com.au.jobstudy.words.loading.ExcelLoadingFragment
+import com.au.jobstudy.words.ui.EnglishCheckFragment
+import com.au.jobstudy.words.ui.ExcelLoadingFragment
+import com.au.jobstudy.words.ui.LoadingViewModel
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.utils.unsafeLazy
 
 class MainHomeFragment : BindingFragment<FragmentMainHomeBinding>() {
     private val userName = NameList.NAMES_JIANG_TJ
+
+    private val loadingViewModel by unsafeLazy { ViewModelProvider(this)[LoadingViewModel::class.java] }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.startBtn.onClick {
