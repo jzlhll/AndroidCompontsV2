@@ -1,4 +1,4 @@
-package com.au.module_android.ui
+package com.au.module_android.init
 
 import android.os.Bundle
 import android.view.ViewGroup
@@ -6,7 +6,7 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
-open class AbsSplashActivity : AppCompatActivity() {
+open class DefaultSplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
