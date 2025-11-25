@@ -60,4 +60,16 @@ dependencies {
     // Apache POI for Excel parsing
     implementation 'org.apache.poi:poi:5.2.5'
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
+
+    def nav_version = "2.9.6"
+
+    // Views/Fragments Integration
+    implementation "androidx.navigation:navigation-fragment:$nav_version"
+    implementation "androidx.navigation:navigation-ui:$nav_version"
+
+//    // Feature module support for Fragments
+//    implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
+//
+//    // JSON serialization library, works with the Kotlin serialization plugin.
+//    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
 }
