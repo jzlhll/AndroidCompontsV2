@@ -25,9 +25,6 @@ android {
         sourceCompatibility=gradle.ext.sourceCompatibility
         targetCompatibility=gradle.ext.targetCompatibility
     }
-    kotlinOptions {
-        jvmTarget = gradle.ext.jvmTarget
-    }
     buildFeatures {
         viewBinding=true
     }

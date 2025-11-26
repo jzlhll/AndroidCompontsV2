@@ -20,16 +20,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility=JavaVersion.VERSION_17
-        targetCompatibility=JavaVersion.VERSION_17
+        sourceCompatibility=gradle.ext.sourceCompatibility
+        targetCompatibility=gradle.ext.targetCompatibility
     }
 
     buildFeatures {
         viewBinding=true
-    }
-
-    kotlinOptions {
-        jvmTarget = gradle.ext.jvmTarget
     }
 }
 

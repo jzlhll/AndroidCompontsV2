@@ -55,10 +55,6 @@ android {
         sourceCompatibility=gradle.ext.sourceCompatibility
         targetCompatibility=gradle.ext.targetCompatibility
     }
-    kotlinOptions {
-        jvmTarget = gradle.ext.jvmTarget
-        freeCompilerArgs = ["-Xstring-concat=inline"]
-    }
     buildFeatures {
         viewBinding=true
         buildConfig=true
