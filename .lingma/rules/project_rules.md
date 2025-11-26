@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 ## 项目规则
 - 不要提示null判断，我会自行把握
 - 学习ALogKt.kt，日志使用logd，loge，和logdNoFile等方法
