@@ -9,6 +9,9 @@ import com.au.module_cached.AppDataStore
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.logt
+import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_cached.delegate.AppDataStoreIntCache
+import com.au.module_cached.delegate.AppDataStoreStringCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -19,6 +22,8 @@ import kotlinx.coroutines.launch
  */
 @EntryFrgName
 class DataStoreFragment : BindingFragment<FragmentDatastoreBinding>() {
+    private var delegateStr by AppDataStoreStringCache("infoString", "")
+    private var delegateInt by AppDataStoreIntCache("infoInteger", 0)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -31,25 +36,36 @@ class DataStoreFragment : BindingFragment<FragmentDatastoreBinding>() {
         }
 
         viewBinding.saveBtn.onClick {
-            AppDataStore.save("info", "abbcbdke")
+            AppDataStore.save("info", "randomStr " + System.currentTimeMillis())
         }
 
         viewBinding.readBtn.onClick {
             lifecycleScope.launch {
                 val data = AppDataStore.read<String>("info", "default_info")
+                toastOnTop("data: $data")
             }
         }
 
         viewBinding.containsBtn.onClick {
             lifecycleScope.launch {
                 val isContains = AppDataStore.containsKey<String>("info")
+                toastOnTop("isContains: $isContains")
             }
         }
 
         viewBinding.removeKeyBtn.onClick {
             lifecycleScope.launch {
                 val r = AppDataStore.removeSuspend<String>("info")
+                toastOnTop("removed: $r")
             }
+        }
+        viewBinding.updateIntBtn.onClick {
+            delegateInt += 1
+            toastOnTop("updateInt: $delegateInt")
+        }
+        viewBinding.updateStringBtn.onClick {
+            delegateStr += "a,"
+            toastOnTop("updateStr: $delegateStr")
         }
     }
 }
