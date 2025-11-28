@@ -27,7 +27,7 @@ android {
             //压缩资源，必须开启minifyEnabled才有用
 //            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            //signingConfig signingConfigs.typhurRelease
+            //signingConfig signingConfigs.auRelease
             // 设置是否要自动上传
             // firebaseCrashlytics {
             //     mappingFileUploadEnabled false

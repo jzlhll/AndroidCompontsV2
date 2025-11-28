@@ -10,10 +10,10 @@ public class Main {
     static String OUTPUT_EXCEL_PATH = "D:\\strings%d.xlsx";
     private static final List<OneDirStringsWork> works = new ArrayList<>();
     static {
-        works.add(new OneDirStringsWork("app", "D:\\code\\typhur\\typhurOrig\\app\\src\\main\\res"));
-        works.add(new OneDirStringsWork("module-android", "D:\\code\\typhur\\typhurOrig\\module-typhur\\module-android\\src\\main\\res"));
-        works.add(new OneDirStringsWork("module-base", "D:\\code\\typhur\\typhurOrig\\module-typhur\\module-base\\src\\main\\res"));
-        works.add(new OneDirStringsWork("module-player", "D:\\code\\typhur\\typhurOrig\\module-typhur\\module-player\\src\\main\\res"));
+        works.add(new OneDirStringsWork("app", "D:\\code\\au\\auOrig\\app\\src\\main\\res"));
+        works.add(new OneDirStringsWork("module-android", "D:\\code\\au\\auOrig\\module-au\\module-android\\src\\main\\res"));
+        works.add(new OneDirStringsWork("module-base", "D:\\code\\au\\auOrig\\module-au\\module-base\\src\\main\\res"));
+        works.add(new OneDirStringsWork("module-player", "D:\\code\\au\\auOrig\\module-au\\module-player\\src\\main\\res"));
     }
 
     public static void main(String[] args) throws Exception {

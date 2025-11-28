@@ -14,13 +14,13 @@ public class Main {
     private static final HashMap<String, OneDirStringsWork> worksMap = new HashMap<>();
     static {
         worksMap.put("D:\\tempStrings\\app",
-                new OneDirStringsWork("app", "D:\\code\\typhur\\typhurOrig\\app\\src\\main\\res"));
+                new OneDirStringsWork("app", "D:\\code\\au\\auOrig\\app\\src\\main\\res"));
         worksMap.put("D:\\tempStrings\\module-android",
-                new OneDirStringsWork("module-android", "D:\\code\\typhur\\typhurOrig\\module-typhur\\module-android\\src\\main\\res"));
+                new OneDirStringsWork("module-android", "D:\\code\\au\\auOrig\\module-au\\module-android\\src\\main\\res"));
         worksMap.put("D:\\tempStrings\\module-base",
-                new OneDirStringsWork("module-base", "D:\\code\\typhur\\typhurOrig\\module-typhur\\module-base\\src\\main\\res"));
+                new OneDirStringsWork("module-base", "D:\\code\\au\\auOrig\\module-au\\module-base\\src\\main\\res"));
         worksMap.put("D:\\tempStrings\\module-player",
-                new OneDirStringsWork("module-player", "D:\\code\\typhur\\typhurOrig\\module-typhur\\module-player\\src\\main\\res"));
+                new OneDirStringsWork("module-player", "D:\\code\\au\\auOrig\\module-au\\module-player\\src\\main\\res"));
 
         var keys = worksMap.keySet();
         for (var key : keys) {

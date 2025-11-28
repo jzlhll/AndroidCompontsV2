@@ -22,7 +22,7 @@ public class Main {
         System.out.println("!!!!!!!");
 
         //2. 解析android res的strings.xml
-        StringsXmlReader reader = new StringsXmlReader("D:\\code\\typhur\\typhur_app\\app\\src\\main\\res");
+        StringsXmlReader reader = new StringsXmlReader("D:\\code\\au\\au_app\\app\\src\\main\\res");
         var stringXmls = reader.readAllResources();
 
         //3. 匹配并重新输出
