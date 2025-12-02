@@ -18,9 +18,11 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.invisible
+import com.au.module_android.utils.isMainThread
 import com.au.module_android.utils.visible
 import com.au.module_androidui.databinding.LayoutToast1Binding
 import com.au.module_androidui.databinding.LayoutToast2Binding
+import com.au.module_androidui.toast.ToastUtil.toastPopup
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.max
 import kotlin.math.min
@@ -287,7 +289,7 @@ class ToastBuilder {
         return this
     }
 
-    fun setOnFragmentDialog(contentFragment: AbsFragment) : ToastBuilder {
+    fun setOnFragmentDialog(contentFragment: Fragment) : ToastBuilder {
         decorView = findDialog(contentFragment).asOrNull<IBaseDialog>()?.findToastViewGroup()
         return this
     }
@@ -353,16 +355,20 @@ class ToastBuilder {
         return this
     }
 
-    fun toast() : View? {
+    fun toast() {
+        val run = Runnable{ toastPopup(decorView, mDuration, mMsg, mDesc, mIcon, mAlwaysShown, mHasClose)?.root}
         if (mLaterTs == 0L) {
-            return ToastUtil.toastPopup(decorView, mDuration, mMsg, mDesc, mIcon, mAlwaysShown, mHasClose)?.root
+            if (isMainThread) {
+                run.run()
+            } else {
+                Globals.mainHandler.post(run)
+            }
         } else {
             Globals.mainHandler.postDelayed({
                 mLaterTs = 0
                 setOnTop()
-                ToastUtil.toastPopup(decorView, mDuration, mMsg, mDesc, mIcon, mAlwaysShown, mHasClose)?.root
+                run.run()
             }, mLaterTs)
-            return null
         }
     }
 }

@@ -13,3 +13,16 @@ inline fun <T:Any> ignoreError(
         null
     }
 }
+
+inline fun <T:Any> ignoreErrorCallback(
+    errorMsgCallback: (String?) -> Unit,
+    block: () -> T?
+): T? {
+    return try {
+        block.invoke()
+    } catch (e: Throwable) {
+        e.printStackTrace()
+        errorMsgCallback.invoke(e.message)
+        null
+    }
+}

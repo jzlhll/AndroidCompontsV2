@@ -35,15 +35,8 @@ object AppDataStore {
         val dataStore = context.mDataStore
     }
 
-    /**
-     * @author au
-     * @date :2023/11/7 10:24
-     * @description:
-     */
-    private const val DATA_STORE_NAME = "globalDataStore" //对应最终件:/data/data/xxxx/files/datastore/globalDataStore.preferences_pb
-
     val Context.globalDataStore by preferencesDataStore(
-        name = DATA_STORE_NAME,//指定名称
+        name = "global_data_store",//指定名称  //对应最终件:/data/data/xxxx/files/datastore/global_data_store.preferences_pb
 //    produceMigrations = {context ->  //指定要恢复的sp文件，无需恢复可不写
 //        listOf(SharedPreferencesMigration(context, SP_PREFERENCES_NAME))
 //    }

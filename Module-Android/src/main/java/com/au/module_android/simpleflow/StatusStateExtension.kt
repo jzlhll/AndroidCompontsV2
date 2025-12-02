@@ -19,11 +19,12 @@ suspend fun <T> SharedFlow<StatusState<T>>.collectStatusState(loading: ()->Unit 
     }
 }
 
-suspend fun <T> stateRunCatching(requestBlock: suspend () -> T) : StatusState<T>{
+suspend fun <T> stateRunCatching(errCallback:((String?)->Unit)? = null, requestBlock: suspend () -> T) : StatusState<T>{
     try {
         val data = requestBlock()
         return StatusState.Success(data)
     } catch (e: Exception) {
+        errCallback?.invoke(e.message)
         return StatusState.Error(e.message)
     }
 }
