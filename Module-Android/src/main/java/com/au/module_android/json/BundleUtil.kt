@@ -6,7 +6,7 @@ import androidx.core.os.bundleOf
 import org.json.JSONArray
 import org.json.JSONObject
 
-private fun Bundle.putAny(key:String, value:Any, isThrowException: Boolean = true) { //按照优先级重新排布了一下。
+fun Bundle.putAny(key:String, value:Any, isThrowException: Boolean = true) { //按照优先级重新排布了一下。
     when (value) {
         is String -> putString(key, value)
         is Int -> putInt(key, value)
