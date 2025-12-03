@@ -10,11 +10,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.au.module_android.BuildConfig
 import com.au.module_android.ui.FragmentShellActivity.Companion.KEY_ENTER_ANIM
 import com.au.module_android.ui.FragmentShellActivity.Companion.KEY_EXIT_ANIM
-import com.au.module_android.ui.FragmentShellActivity.Companion.KEY_FRAGMENT_ARGUMENTS
 import com.au.module_android.ui.base.AbsFragment
 import com.au.module_android.ui.base.IFullWindow
 import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.navigation.FragmentNavigationPage
+import com.au.module_android.ui.navigation.FragmentNavigationConfig
 import com.au.module_android.ui.navigation.FragmentNavigationScene
 import com.au.module_android.ui.navigation.FragmentNavigationViewModel
 import com.au.module_android.ui.views.ViewActivity
@@ -39,6 +38,7 @@ open class FragmentNavigationActivity : ViewActivity() {
         get() = mEnterAnim
 
     val viewModel by unsafeLazy { ViewModelProvider(this)[FragmentNavigationViewModel::class.java] }
+    private lateinit var fcv : FragmentContainerView
 
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val v = FragmentContainerView(inflater.context)
@@ -47,8 +47,24 @@ open class FragmentNavigationActivity : ViewActivity() {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         v.id = View.generateViewId()
+
+        val scene = FragmentNavigationScene.fromIntent(intent)
+        viewModel.initScene(scene)
+
+        val entryParams = scene.entryParams
+        val pageId = FragmentNavigationConfig.checkEntryParams(scene.sceneId, entryParams) ?: scene.startPageId
+        navigateTo(pageId)
+
+        this.fcv = v
+        return v
+    }
+
+    private fun navigateTo(pageId: String) {
+        val fragmentClass = viewModel.scene.list.first { it.pageId == pageId }.fragmentClass
+
         val instance = fragmentClass.getDeclaredConstructor().newInstance()
-        instance.arguments = intent.getBundleExtra(KEY_FRAGMENT_ARGUMENTS)
+        //添加传统传入的机制，兼容旧版本。你可以继续使用 arguments 获取每次 navigate 进来后的参数
+        instance.arguments = viewModel.getPageData(pageId)
 
         mIsAutoHideIme = instance.asOrNull<AbsFragment>()?.isAutoHideIme() ?: false
 
@@ -60,14 +76,49 @@ open class FragmentNavigationActivity : ViewActivity() {
         // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。
         //至于padding交给Fragment处理。
         if (instance is IFullWindow) {
-            instance.postPaddingRootInner(this, v)
+            instance.postPaddingRootInner(this, fcv)
         }
 
         supportFragmentManager.beginTransaction().also {
-            it.replace(v.id, instance)
+            it.setCustomAnimations(android.R.attr.activityOpenEnterAnimation,
+                android.R.attr.activityOpenExitAnimation,
+                android.R.attr.activityCloseEnterAnimation,
+                android.R.attr.activityCloseExitAnimation)
+            it.replace(fcv.id, instance)
+            it.addToBackStack(pageId)
             it.commit()
-        }//todo 增加tag。
-        return v
+        }
+    }
+
+    private fun navigateBack(clearTo:String? = null) {
+        val fragmentClass = viewModel.scene.list.first { it.pageId == pageId }.fragmentClass
+
+        val instance = fragmentClass.getDeclaredConstructor().newInstance()
+        //添加传统传入的机制，兼容旧版本。你可以继续使用 arguments 获取每次 navigate 进来后的参数
+        instance.arguments = viewModel.getPageData(pageId)
+
+        mIsAutoHideIme = instance.asOrNull<AbsFragment>()?.isAutoHideIme() ?: false
+
+        if (BuildConfig.DEBUG) {
+            Log.d("AU_APP", "FragmentShellActivity: ${fragmentClass.name}")
+        }
+
+        //1️⃣。
+        // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。
+        //至于padding交给Fragment处理。
+        if (instance is IFullWindow) {
+            instance.postPaddingRootInner(this, fcv)
+        }
+
+        supportFragmentManager.beginTransaction().also {
+            it.setCustomAnimations(android.R.attr.activityOpenEnterAnimation,
+                android.R.attr.activityOpenExitAnimation,
+                android.R.attr.activityCloseEnterAnimation,
+                android.R.attr.activityCloseExitAnimation)
+            it.replace(fcv.id, instance)
+            it.addToBackStack(pageId)
+            it.commit()
+        }
     }
 
 //    override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,10 +134,5 @@ open class FragmentNavigationActivity : ViewActivity() {
 
     final override fun isAutoHideIme(): Boolean {
         return mIsAutoHideIme
-    }
-
-    fun navigateTo(page: FragmentNavigationPage, clear: Boolean = false) {
-        //current.save()
-        //todo
     }
 }

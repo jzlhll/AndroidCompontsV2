@@ -5,13 +5,21 @@ import androidx.lifecycle.ViewModel
 import com.au.module_android.json.putAny
 import com.au.module_android.simplelivedata.NoStickLiveData
 
+/**
+ * 他们都在同一个 Activity 上，因此可以通过 getPageData 来获取缓存内容。也可以相互赋值和获取。
+ *
+ */
 class FragmentNavigationViewModel : ViewModel() {
     private var dataListLiveData = mutableMapOf<String, NoStickLiveData<Bundle>>()
 
-    fun initAllPages(pageIds:List<String>) {
-        for (pageId in pageIds) {
-            val dataMap = NoStickLiveData<Bundle>()
-            dataListLiveData[pageId] = dataMap
+    lateinit var scene : FragmentNavigationScene
+
+    fun initScene(scene:FragmentNavigationScene) {
+        this.scene = scene
+        for (page in scene.list) {
+            val data = NoStickLiveData<Bundle>()
+            data.setValueSafe(page.params ?: Bundle())
+            dataListLiveData[page.pageId] = data
         }
     }
 
@@ -22,8 +30,19 @@ class FragmentNavigationViewModel : ViewModel() {
         dataMap.setValueSafe(bundle)
     }
 
+    fun restorePageData(pageId: String) {
+        val data = dataListLiveData.getOrPut(pageId) {
+            NoStickLiveData()
+        }
+        data.setValueSafe(scene.list.find { it.pageId == pageId }?.params ?: Bundle())
+    }
+
     fun getPageData(pageId:String):Bundle? {
         return dataListLiveData[pageId]?.value
+    }
+
+    fun getPageLiveData(pageId:String):NoStickLiveData<Bundle>? {
+        return dataListLiveData[pageId]
     }
 
     fun updatePageData(pageId:String, kv:Map<String, Any?>) {
