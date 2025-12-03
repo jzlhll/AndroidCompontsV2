@@ -1,13 +1,22 @@
 package com.au.module_android.ui
 
+import android.R.attr.fragment
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultCallback
+import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import com.au.module_android.BuildConfig
+import com.au.module_android.R
+import com.au.module_android.permissions.activity.ActivityForResult
 import com.au.module_android.ui.FragmentShellActivity.Companion.KEY_ENTER_ANIM
 import com.au.module_android.ui.FragmentShellActivity.Companion.KEY_EXIT_ANIM
 import com.au.module_android.ui.base.AbsFragment
@@ -18,14 +27,37 @@ import com.au.module_android.ui.navigation.FragmentNavigationScene
 import com.au.module_android.ui.navigation.FragmentNavigationViewModel
 import com.au.module_android.ui.views.ViewActivity
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.startActivityFix
 import com.au.module_android.utils.unsafeLazy
+import kotlin.jvm.java
 
-/**
- * @author au
- * Date: 2023/8/29
- * Description 限制
- */
 open class FragmentNavigationActivity : ViewActivity() {
+    companion object {
+        fun start(context: Context,
+                  sceneId: String,
+                  activityResult: ActivityForResult? = null,
+                  optionsCompat: ActivityOptionsCompat? = null,
+                  enterAnim:Int? = null,
+                  exitAnim:Int? = null,
+                  activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
+            val intent = Intent(context, FragmentNavigationActivity::class.java)
+
+            FragmentNavigationScene.putIntent(intent, FragmentNavigationConfig.getScene(sceneId))
+            if (exitAnim != null) intent.putExtra(KEY_EXIT_ANIM, exitAnim)
+            if (enterAnim != null) intent.putExtra(KEY_ENTER_ANIM, enterAnim)
+
+            if (activityResult != null) {
+                activityResult.start(intent, optionsCompat, activityResultCallback)
+
+                if (enterAnim != null && context is Activity) {
+                    context.overridePendingTransition(enterAnim, R.anim.activity_stay)
+                }
+            } else {
+                context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim)
+            }
+        }
+    }
+
     private val mEnterAnim by unsafeLazy { intent.getIntExtra(KEY_ENTER_ANIM, 0) }
     private val mExitAnim by unsafeLazy { intent.getIntExtra(KEY_EXIT_ANIM, 0) }
 
@@ -38,10 +70,14 @@ open class FragmentNavigationActivity : ViewActivity() {
         get() = mEnterAnim
 
     val viewModel by unsafeLazy { ViewModelProvider(this)[FragmentNavigationViewModel::class.java] }
+
+    private var mBackstackPageIds = mutableListOf<String>()
+
     private lateinit var fcv : FragmentContainerView
 
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val v = FragmentContainerView(inflater.context)
+        this.fcv = v
         v.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -55,11 +91,19 @@ open class FragmentNavigationActivity : ViewActivity() {
         val pageId = FragmentNavigationConfig.checkEntryParams(scene.sceneId, entryParams) ?: scene.startPageId
         navigateTo(pageId)
 
-        this.fcv = v
         return v
     }
 
-    private fun navigateTo(pageId: String) {
+    fun navigateTo(pageId: String,
+                   clearCurrent: Boolean = false,
+                   transitionId:Int = TRANSIT_FRAGMENT_MATCH_ACTIVITY_OPEN) {
+        navigateToInner(pageId, clearCurrent, transitionId, false)
+    }
+
+    private fun navigateToInner(pageId: String,
+                                clearCurrent: Boolean = false,
+                                transitionId:Int= TRANSIT_FRAGMENT_MATCH_ACTIVITY_OPEN,
+                                isBack: Boolean) {
         val fragmentClass = viewModel.scene.list.first { it.pageId == pageId }.fragmentClass
 
         val instance = fragmentClass.getDeclaredConstructor().newInstance()
@@ -72,6 +116,13 @@ open class FragmentNavigationActivity : ViewActivity() {
             Log.d("AU_APP", "FragmentShellActivity: ${fragmentClass.name}")
         }
 
+        if (clearCurrent || isBack) {
+            mBackstackPageIds.removeLast()
+        }
+        if (!isBack) {
+            mBackstackPageIds.add(pageId)
+        }
+
         //1️⃣。
         // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。
         //至于padding交给Fragment处理。
@@ -80,45 +131,44 @@ open class FragmentNavigationActivity : ViewActivity() {
         }
 
         supportFragmentManager.beginTransaction().also {
-            it.setCustomAnimations(android.R.attr.activityOpenEnterAnimation,
-                android.R.attr.activityOpenExitAnimation,
-                android.R.attr.activityCloseEnterAnimation,
-                android.R.attr.activityCloseExitAnimation)
+            it.setTransition(transitionId)
             it.replace(fcv.id, instance)
-            it.addToBackStack(pageId)
             it.commit()
         }
     }
 
-    private fun navigateBack(clearTo:String? = null) {
-        val fragmentClass = viewModel.scene.list.first { it.pageId == pageId }.fragmentClass
-
-        val instance = fragmentClass.getDeclaredConstructor().newInstance()
-        //添加传统传入的机制，兼容旧版本。你可以继续使用 arguments 获取每次 navigate 进来后的参数
-        instance.arguments = viewModel.getPageData(pageId)
-
-        mIsAutoHideIme = instance.asOrNull<AbsFragment>()?.isAutoHideIme() ?: false
-
-        if (BuildConfig.DEBUG) {
-            Log.d("AU_APP", "FragmentShellActivity: ${fragmentClass.name}")
+    /**
+     * 返回 false，就表示不要做 finish；返回 true 就要 finish。
+     * @param clearTo 如果为空，则向上一层；不为空，则表示从当前页面开始，向上清除到 clearTo 的页面。
+     * @param extraParams 如果不为空，则表示在返回时，将 extraParams 传给前一个页面。
+     */
+    fun navigateBack(clearTo:String? = null, extraParams:Map<String, Any?>? = null) {
+        if (mBackstackPageIds.size <= 1) {
+            finishAfterTransition()
+            return
         }
 
-        //1️⃣。
-        // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。
-        //至于padding交给Fragment处理。
-        if (instance is IFullWindow) {
-            instance.postPaddingRootInner(this, fcv)
+        var backPageId :String? = null
+        if (clearTo == null) {
+            mBackstackPageIds.removeLast()
+            val last = mBackstackPageIds.last()
+            backPageId = last
+        } else {
+            while (mBackstackPageIds.size > 1) {
+                val last = mBackstackPageIds.removeLast()
+                if (last == clearTo) {
+                    backPageId = last
+                    break
+                }
+            }
         }
 
-        supportFragmentManager.beginTransaction().also {
-            it.setCustomAnimations(android.R.attr.activityOpenEnterAnimation,
-                android.R.attr.activityOpenExitAnimation,
-                android.R.attr.activityCloseEnterAnimation,
-                android.R.attr.activityCloseExitAnimation)
-            it.replace(fcv.id, instance)
-            it.addToBackStack(pageId)
-            it.commit()
+        if (backPageId == null) {
+            throw RuntimeException("clearTo: $clearTo not found")
         }
+
+        if(extraParams != null) viewModel.updatePageData(backPageId, extraParams) //将数据写到前一个页面上。
+        navigateToInner(backPageId, transitionId = TRANSIT_FRAGMENT_MATCH_ACTIVITY_CLOSE, isBack = true)
     }
 
 //    override fun onCreate(savedInstanceState: Bundle?) {

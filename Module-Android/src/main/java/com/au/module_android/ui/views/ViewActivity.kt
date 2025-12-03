@@ -5,7 +5,6 @@ import android.view.View
 import androidx.annotation.CallSuper
 import com.au.module_android.ui.base.AbsActivity
 import com.au.module_android.ui.base.IUi
-import com.au.module_android.ui.navigation.FragmentNavigationPage
 
 /**
  * @author au

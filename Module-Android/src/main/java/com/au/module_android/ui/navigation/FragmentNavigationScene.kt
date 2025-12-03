@@ -27,14 +27,12 @@ data class FragmentNavigationScene(
             )
             return scene
         }
-    }
 
-    fun packAsBundle() : Bundle {
-        val bundle = Bundle()
-        bundle.putString(KEY_SCENE_ID, sceneId)
-        bundle.putParcelableArrayList(KEY_PAGE_LIST, ArrayList(list))
-        bundle.putString(KEY_START_PAGE_ID, startPageId)
-        bundle.putBundle(KEY_ENTRY_PARAMS, entryParams)
-        return bundle
+        fun putIntent(intent: Intent, scene: FragmentNavigationScene) {
+            intent.putExtra(KEY_SCENE_ID, scene.sceneId)
+            intent.putParcelableArrayListExtra(KEY_PAGE_LIST, ArrayList(scene.list))
+            intent.putExtra(KEY_START_PAGE_ID, scene.startPageId)
+            intent.putExtra(KEY_ENTRY_PARAMS, scene.entryParams)
+        }
     }
 }

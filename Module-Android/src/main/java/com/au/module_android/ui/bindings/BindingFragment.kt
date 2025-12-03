@@ -18,7 +18,7 @@ import com.au.module_android.ui.views.ViewToolbarFragment
 abstract class BindingFragment<VB: ViewBinding> : ViewToolbarFragment() {
     lateinit var binding:VB private set
 
-    override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    final override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vb = createViewBinding(javaClass, inflater, container, false) as VB
         binding = vb
         onBindingCreated(savedInstanceState)

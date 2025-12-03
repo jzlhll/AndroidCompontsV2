@@ -1,12 +1,10 @@
 package com.au.module_android.ui.navigation
 
-import android.os.Build
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.Keep
 import androidx.fragment.app.Fragment
-import kotlin.jvm.java
 
 @Keep
 data class FragmentNavigationPage(
