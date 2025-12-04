@@ -6,7 +6,6 @@ import android.text.style.ForegroundColorSpan
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import androidx.annotation.ColorInt
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.MenuProvider
 import androidx.core.view.get
@@ -24,7 +23,7 @@ import androidx.lifecycle.LifecycleOwner
 open class ToolbarMenuManager(private val owner: LifecycleOwner,
                               private val toolbar: Toolbar,
                               private val menuXml: Int? = null,
-                              @ColorInt private val color:Int? = null,
+                              private val color:Int? = null,
                               private val onMenuItemBlock:((MenuItem)->Unit)? = null) {
     private var menuProvider: MenuProvider? = null
 

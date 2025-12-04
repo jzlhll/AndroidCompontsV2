@@ -1,8 +1,7 @@
 package com.au.module_android.ui.views
 
 import android.widget.RelativeLayout
-import com.au.module_android.ui.ToolbarManager
-import com.au.module_android.widget.CustomToolbar
+import com.au.module_android.widget.YourToolbar
 
 /**
  * @author allan
@@ -10,7 +9,7 @@ import com.au.module_android.widget.CustomToolbar
  * @description:
  */
 interface IHasToolbar {
-    fun toolbarInfo() : ToolbarInfo? = null
+    fun toolbarInfo() : YourToolbarInfo? = null
 
     /**
      * 如果toolbarInfo()!=null，则会从基类创建ViewGroup(RelativeLayout)。
@@ -26,10 +25,5 @@ interface IHasToolbar {
     /**
      * hasToolbar() = true 才会有。
      */
-    val toolbar : CustomToolbar?
-
-    /**
-     * hasToolbarManager()!=null 才会有。
-     */
-    val toolbarManager:ToolbarManager?
+    val toolbar : YourToolbar?
 }

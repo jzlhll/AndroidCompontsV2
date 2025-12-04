@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.EmptySuper
 import androidx.viewbinding.ViewBinding
-import com.au.module_android.ui.base.IUi
 import com.au.module_android.ui.createViewBinding
 import com.au.module_android.ui.views.ViewToolbarFragment
 
@@ -21,8 +20,13 @@ abstract class BindingFragment<VB: ViewBinding> : ViewToolbarFragment() {
     final override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vb = createViewBinding(javaClass, inflater, container, false) as VB
         binding = vb
-        onBindingCreated(savedInstanceState)
         return vb.root
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val v = super.onCreateView(inflater, container, savedInstanceState)
+        onBindingCreated(savedInstanceState)
+        return v
     }
 
     @EmptySuper

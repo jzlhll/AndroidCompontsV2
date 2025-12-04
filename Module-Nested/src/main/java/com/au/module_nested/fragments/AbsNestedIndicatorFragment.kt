@@ -3,12 +3,10 @@ package com.au.module_nested.fragments
 import android.os.Bundle
 import android.widget.FrameLayout
 import androidx.annotation.CallSuper
-import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
+import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_nested.databinding.NestedIndicatorLayoutBinding
-import com.au.module_android.ui.bindings.BindingNoToolbarFragment
 import com.au.module_android.ui.createViewBindingT2
-import com.au.module_android.ui.views.initToolBar
 
 /**
  * @author allan
@@ -18,13 +16,11 @@ import com.au.module_android.ui.views.initToolBar
  *
  * 只允许继承一次。否则需要修改createViewBindingT2的逻辑。
  */
-abstract class AbsNestedIndicatorFragment<Void, ContentVB:ViewBinding> : BindingNoToolbarFragment<NestedIndicatorLayoutBinding>() {
+abstract class AbsNestedIndicatorFragment<Void, ContentVB:ViewBinding> : BindingFragment<NestedIndicatorLayoutBinding>() {
     lateinit var contentViewBinding: ContentVB
 
     @CallSuper
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        initToolBar(requireActivity() as AppCompatActivity, binding.myToolbar, true)
-
         val vb = createViewBindingT2(javaClass, requireActivity().layoutInflater, binding.contentHost, isContentViewMergeXml()) as ContentVB
         contentViewBinding = vb
         if (!isContentViewMergeXml()) {

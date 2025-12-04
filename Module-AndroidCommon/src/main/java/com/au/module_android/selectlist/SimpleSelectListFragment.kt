@@ -9,7 +9,6 @@ import android.widget.LinearLayout
 import androidx.core.view.children
 import androidx.core.widget.NestedScrollView
 import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.views.ToolbarInfo
 import com.au.module_android.ui.views.ViewToolbarFragment
 
 /**
@@ -55,10 +54,6 @@ abstract class SimpleSelectListFragment<B: SimpleItem> : ViewToolbarFragment() {
      * 每一行的top边距
      */
     open fun itemTopMargin():Int = 0
-
-    override fun toolbarInfo(): ToolbarInfo? {
-        return ToolbarInfo()
-    }
 
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         setTitle(title)

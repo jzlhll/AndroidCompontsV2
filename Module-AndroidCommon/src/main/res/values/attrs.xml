@@ -180,4 +180,10 @@
         <attr name="strokeWidth" />
         <attr name="needRippleColor" />
     </declare-styleable>
+
+    <declare-styleable name="YourToolbar">
+        <attr name="toolbarLayout" format="reference" />
+        <attr name="toolbarLayoutDefault" format="boolean" />
+        <attr name="toolbarNormalTitle" format="string" />
+    </declare-styleable>
 </resources>

@@ -154,3 +154,8 @@ androidx.recyclerview.widget.LinearLayoutManager mLayoutManager;
 # for DexGuard only
 #-keepresourcexmlelements manifest/application/meta-data@value=GlideModule
 -dontwarn com.bumptech.glide.**
+
+# 或者保留某个包下所有类的字段（常用于模型包）
+-keepclassmembers class com.au.module_android.api.** {
+    <fields>;
+}

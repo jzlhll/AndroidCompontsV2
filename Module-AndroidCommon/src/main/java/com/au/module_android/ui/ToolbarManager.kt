@@ -4,13 +4,13 @@ import android.graphics.drawable.Drawable
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.widget.Toolbar
 import androidx.activity.ComponentActivity
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.au.module_android.ui.views.IHasToolbar
-import com.au.module_android.ui.views.MenuBean
 import com.au.module_android.utils.asOrNull
 import com.google.android.material.appbar.MaterialToolbar
 
@@ -29,6 +29,8 @@ import com.google.android.material.appbar.MaterialToolbar
  * </menu>
  */
 open class ToolbarManager{
+    data class MenuBean(val menuXml: Int, val showWhenOnCreate:Boolean, val onMenuItemBlock:((MenuItem)->Unit))
+
     private val fragmentOrActivity: LifecycleOwner
     private val activity: ComponentActivity
     private val menuBean: MenuBean?
@@ -94,9 +96,7 @@ open class ToolbarManager{
     /**
      * 隐藏不需要的返回键
      */
-    fun hideNavigationIcon() {
-        val uiHelper = fragmentOrActivity.asOrNull<IHasToolbar>() ?: return
-        val toolbar = uiHelper.toolbar ?: return
+    fun hideNavigationIcon(toolbar: Toolbar) {
         //进行备份
         navigationIcon = toolbar.navigationIcon
         toolbar.navigationIcon = null
@@ -105,9 +105,7 @@ open class ToolbarManager{
     /**
      * 显示出来。这个必须是备份了以后才有得使用的。
      */
-    fun showNavigationIcon() {
-        val uiHelper = fragmentOrActivity.asOrNull<IHasToolbar>() ?: return
-        val toolbar = uiHelper.toolbar ?: return
+    fun showNavigationIcon(toolbar: Toolbar) {
         //使用备份的
         if (toolbar.navigationIcon == null && navigationIcon != null) {
             toolbar.navigationIcon = navigationIcon

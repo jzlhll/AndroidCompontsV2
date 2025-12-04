@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.widget.Toolbar
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -68,9 +69,7 @@ open class TitleAndMenuManager(private val fragment: Fragment,
     /**
      * 隐藏不需要的返回键
      */
-    fun hideNavigationIcon() {
-        val uiHelper = fragment.asOrNull<IHasToolbar>() ?: return
-        val toolbar = uiHelper.toolbar ?: return
+    fun hideNavigationIcon(toolbar: Toolbar) {
         //进行备份
         navigationIcon = toolbar.navigationIcon
         toolbar.navigationIcon = null
@@ -79,9 +78,7 @@ open class TitleAndMenuManager(private val fragment: Fragment,
     /**
      * 显示出来。这个必须是备份了以后才有得使用的。
      */
-    fun showNavigationIcon() {
-        val uiHelper = fragment.asOrNull<IHasToolbar>() ?: return
-        val toolbar = uiHelper.toolbar ?: return
+    fun showNavigationIcon(toolbar: Toolbar) {
         //使用备份的
         if (toolbar.navigationIcon == null && navigationIcon != null) {
             toolbar.navigationIcon = navigationIcon

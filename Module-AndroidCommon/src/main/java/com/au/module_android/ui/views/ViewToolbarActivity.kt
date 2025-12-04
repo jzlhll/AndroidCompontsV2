@@ -4,11 +4,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.annotation.CallSuper
-import com.au.module_android.R
-import com.au.module_android.ui.ToolbarManager
 import com.au.module_android.ui.base.AbsActivity
 import com.au.module_android.ui.base.IUi
-import com.au.module_android.widget.CustomToolbar
+import com.au.module_android.widget.YourToolbar
 
 /**
  * @author au
@@ -19,17 +17,13 @@ abstract class ViewToolbarActivity : AbsActivity(), IUi, IHasToolbar {
     lateinit var root: View
 
     private var _realRoot: RelativeLayout? = null
-    private var _toolbar: CustomToolbar? = null
-    private var _toolbarMgr: ToolbarManager? = null
+    private var _toolbar: YourToolbar? = null
 
     final override val realRoot: RelativeLayout?
         get() = _realRoot
 
-    final override val toolbar: CustomToolbar?
+    final override val toolbar: YourToolbar?
         get() = _toolbar
-
-    final override val toolbarManager: ToolbarManager?
-        get() = _toolbarMgr
 
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,24 +31,23 @@ abstract class ViewToolbarActivity : AbsActivity(), IUi, IHasToolbar {
         val v = onUiCreateView(layoutInflater, null, savedInstanceState)
         root = v
 
-        val info = toolbarInfo()
-        if (info != null) {
-            if(info.title != null) this.title = info.title //before create toolbar
-            val bgColor = info.backgroundColor ?: R.color.color_toolbar_background
-            val vb = createToolbarLayout(layoutInflater.context, v, info.hasBackIcon, bgColor)
+        when (val info = toolbarInfo()) {
+            is YourToolbarInfo -> {
+                val vb = createToolbarLayout(layoutInflater.context, v)
+                _realRoot = vb.root
+                _toolbar = vb.toolbar
 
-            _realRoot = vb.root
-            _toolbar = vb.toolbar
-
-            if (info.menuBean != null) {
-                _toolbarMgr = ToolbarManager(this, info.menuBean).also {
-                    if(info.menuBean.showWhenOnCreate) it.showMenu()
+                if (info is YourToolbarInfo.Defaults) {
+                    vb.toolbar.initAsNormal(info.title)
+                } else if (info is YourToolbarInfo.Yours<*>) {
+                    vb.toolbar.initAsYourBinding(info.layoutId, info.viewBindingInitializer)
                 }
+                setContentView(vb.root)
             }
 
-            setContentView(vb.root)
-        } else {
-            setContentView(v)
+            else -> {
+                setContentView(v)
+            }
         }
     }
 

@@ -20,38 +20,6 @@ import com.au.module_android.DarkModeAndLocalesConst
 //https://developer.android.google.cn/develop/ui/views/layout/edge-to-edge-manually?hl=zh-cn
 
 /**
- * 修改状态栏文字颜色
- */
-fun Activity.changeBarsTextColor(statusBarTextDark: Boolean? = null,
-                                 navBarTextDark: Boolean? = null) {
-    window.run {
-        if (statusBarTextDark != null || navBarTextDark != null) {
-            val controller = WindowInsetsControllerCompat(this, decorView)
-            if (statusBarTextDark != null) controller.isAppearanceLightStatusBars = statusBarTextDark
-            if (navBarTextDark != null) controller.isAppearanceLightNavigationBars = navBarTextDark
-        }
-    }
-}
-
-/**
- * 监听某个 View 的变化，获取到 WindowInsetsCompat
- */
-fun View.applyWindowInsets(insetsBlock: (
-    insets: WindowInsetsCompat,
-    statusBarsHeight: Int,
-    navigationBarHeight: Int
-) -> WindowInsetsCompat = {insets, _, _ -> insets}
-) {
-    ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
-        insetsBlock.invoke(
-            insets,
-            insets.getInsets(WindowInsetsCompat.Type.statusBars()).top,
-            insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-        )
-    }
-}
-
-/**
  * 透明状态栏
  *
  * isAppearLightXXX，true表示让bar的文字是黑色的底是白的；false是bar文字是白色的。
@@ -90,6 +58,42 @@ fun Activity.transparentStatusBar(statusBarTextDark: Boolean? = null,
                 insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             )
         }
+    }
+}
+
+/**
+ * 修改状态栏文字颜色
+ */
+fun Activity.changeBarsTextColor(statusBarTextDark: Boolean? = null,
+                                 navBarTextDark: Boolean? = null) {
+    window.run {
+        if (statusBarTextDark != null || navBarTextDark != null) {
+            val controller = WindowInsetsControllerCompat(this, decorView)
+            if (statusBarTextDark != null) controller.isAppearanceLightStatusBars = statusBarTextDark
+            if (navBarTextDark != null) controller.isAppearanceLightNavigationBars = navBarTextDark
+        }
+    }
+}
+
+/**
+ * 监听某个 View 的变化，获取到 WindowInsetsCompat
+ */
+fun View.applyWindowInsets(once:Boolean= false, insetsBlock: (
+    insets: WindowInsetsCompat,
+    statusBarsHeight: Int,
+    navigationBarHeight: Int
+) -> WindowInsetsCompat = {insets, _, _ -> insets}
+) {
+    ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
+        val ret = insetsBlock.invoke(
+            insets,
+            insets.getInsets(WindowInsetsCompat.Type.statusBars()).top,
+            insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+        )
+        if (once) {
+            ViewCompat.setOnApplyWindowInsetsListener(this, null)
+        }
+        ret
     }
 }
 

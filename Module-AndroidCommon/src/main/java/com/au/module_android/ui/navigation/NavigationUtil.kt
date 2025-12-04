@@ -1,7 +1,7 @@
 package com.au.module_android.ui.navigation
 
-import ai.imagecho.module_android.ui.FragmentNavigationActivity
 import androidx.fragment.app.Fragment
+import com.au.module_android.ui.FragmentNavigationActivity
 
 /**
  * 在同一个场景下，切换不同的页面。
