@@ -35,7 +35,7 @@ android {
 }
 
 dependencies {
-    implementation project(":Module-Android")
+    implementation project(':Module-AndroidCommon')
     implementation project(':Module-AndroidUi')
     implementation project(":Module-Nested")
     implementation project(":Module-Okhttp")

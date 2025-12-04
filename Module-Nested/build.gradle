@@ -34,8 +34,8 @@ dependencies {
     implementation libs.androidx.lifecycle.viewmodel.ktx
     implementation libs.androidx.appcompat
     implementation libs.material
+    implementation project(':Module-AndroidCommon')
 
-    implementation project(":Module-Android")
     implementation project(':Module-AndroidUi')
     implementation project(':Module-AndroidColor')
 }

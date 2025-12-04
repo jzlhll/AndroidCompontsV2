@@ -86,8 +86,8 @@ dependencies {
     implementation(libs.gson)
 
     implementation(libs.blurview)
+    implementation(project(":Module-AndroidCommon"))
 
-    implementation(project(":Module-Android"))
     implementation(project(":Module-AndroidUi"))
     implementation(project(":Module-Nested"))
     implementation(project(":Module-ImageCompressed"))

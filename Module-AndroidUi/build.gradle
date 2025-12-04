@@ -29,6 +29,6 @@ android {
 }
 
 dependencies {
-    implementation project(":Module-Android")
+    implementation project(':Module-AndroidCommon')
     implementation project(":Module-AndroidColor")
 }

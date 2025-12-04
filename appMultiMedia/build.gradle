@@ -34,7 +34,7 @@ android {
 dependencies {
     implementation project(":Module-AndroidColor")
     implementation project(":Module-AndroidUi")
-    implementation project(":Module-Android")
+    implementation project(':Module-AndroidCommon')
     implementation project(":Module-ImageCompressed")
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat

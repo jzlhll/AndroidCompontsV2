@@ -95,8 +95,7 @@ android {
 }
 
 dependencies {
-    implementation project(":Module-Android")
-
+    implementation project(':Module-AndroidCommon')
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat
     implementation libs.material

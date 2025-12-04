@@ -35,5 +35,5 @@ dependencies {
     implementation libs.androidx.lifecycle.viewmodel.ktx
     implementation libs.androidx.appcompat
     ksp libs.glideKsp
-    implementation project(":Module-Android")
+    implementation project(':Module-AndroidCommon')
 }
