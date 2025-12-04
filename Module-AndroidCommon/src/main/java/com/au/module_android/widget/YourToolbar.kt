@@ -96,7 +96,7 @@ class YourToolbar @JvmOverloads constructor(
         val layoutInflater = LayoutInflater.from(context)
         val v = layoutInflater.inflate(toolbarLayoutResId, this, true)
         //注意这里是RelativeLayout
-        val params = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+        val params = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
         v.layoutParams = params
         toolbarView = v
         return v
