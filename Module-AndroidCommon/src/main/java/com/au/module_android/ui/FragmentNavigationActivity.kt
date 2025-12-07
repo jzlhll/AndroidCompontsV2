@@ -1,6 +1,5 @@
 package com.au.module_android.ui
 
-import android.R.attr.fragment
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -13,8 +12,9 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.FragmentContainerView
+import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_MATCH_ACTIVITY_CLOSE
+import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_MATCH_ACTIVITY_OPEN
 import androidx.lifecycle.ViewModelProvider
-import com.au.module_android.BuildConfig
 import com.au.module_android.R
 import com.au.module_android.permissions.activity.ActivityForResult
 import com.au.module_android.ui.FragmentShellActivity.Companion.KEY_ENTER_ANIM
@@ -29,7 +29,7 @@ import com.au.module_android.ui.views.ViewActivity
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.startActivityFix
 import com.au.module_android.utils.unsafeLazy
-import kotlin.jvm.java
+import jp.wasabeef.glide.transformations.BuildConfig
 
 open class FragmentNavigationActivity : ViewActivity() {
     companion object {
@@ -117,7 +117,7 @@ open class FragmentNavigationActivity : ViewActivity() {
         }
 
         if (clearCurrent || isBack) {
-            mBackstackPageIds.removeLast()
+            mBackstackPageIds.removeLastOrNull()
         }
         if (!isBack) {
             mBackstackPageIds.add(pageId)
@@ -150,12 +150,12 @@ open class FragmentNavigationActivity : ViewActivity() {
 
         var backPageId :String? = null
         if (clearTo == null) {
-            mBackstackPageIds.removeLast()
+            mBackstackPageIds.removeLastOrNull()
             val last = mBackstackPageIds.last()
             backPageId = last
         } else {
             while (mBackstackPageIds.size > 1) {
-                val last = mBackstackPageIds.removeLast()
+                val last = mBackstackPageIds.removeLastOrNull()
                 if (last == clearTo) {
                     backPageId = last
                     break
