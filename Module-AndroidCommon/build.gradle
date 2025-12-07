@@ -91,6 +91,7 @@ dependencies {
 
     implementation libs.androidx.lifecycle.process
     api libs.glide
+    api libs.glidetransformations
     api libs.okhttp3.integration
 
     //implementation libs.mmkv.static

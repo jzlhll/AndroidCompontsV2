@@ -4,14 +4,6 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <ImageView
-        android:id="@+id/backIcon"
-        android:layout_marginStart="@dimen/ui_padding_edge"
-        android:src="@drawable/icon_normal_back"
-        android:padding="3dp"
-        android:layout_width="46dp"
-        android:layout_height="46dp" />
-
     <com.au.module_android.widget.CustomFontText
         android:id="@+id/toolbarTitle"
         android:layout_width="match_parent"
@@ -21,6 +13,12 @@
         android:gravity="center"
         tools:text="Toolbar title"
         android:paddingBottom="2dp"
-        android:layout_height="46dp" />
+        android:layout_height="@dimen/toolbar_height" />
 
+    <ImageView
+        android:id="@+id/backIcon"
+        android:src="@drawable/icon_back"
+        android:padding="4dp"
+        android:layout_width="@dimen/toolbar_height"
+        android:layout_height="@dimen/toolbar_height" />
 </FrameLayout>

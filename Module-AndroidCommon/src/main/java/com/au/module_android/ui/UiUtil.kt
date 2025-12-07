@@ -47,12 +47,33 @@ fun <T : ViewBinding> createViewBinding(self: Class<*>, inflater: LayoutInflater
         }
     }
     if (clz == null) throw IllegalArgumentException("需要一个ViewBinding类型的泛型")
+    return try {
+        clz.getMethod(
+            "inflate",
+            LayoutInflater::class.java,
+            ViewGroup::class.java,
+            Boolean::class.java
+        ).invoke(null, inflater, container, attach) as T
+    } catch (e : NoSuchMethodException) {
+        createViewBindingMerged(clz, inflater, container)
+    }
+}
+
+fun <T : ViewBinding> createViewBindingMerged(self: Class<*>, inflater: LayoutInflater, container: ViewGroup?): T {
+    var clz: Class<T>? = findViewBinding(self)
+    //修正框架，允许往上寻找3层superClass的第一个泛型做为ViewBinding
+    if (clz == null) {
+        val superClass = self.superclass
+        if (superClass != null) {
+            clz = findViewBinding(superClass) ?: superClass.superclass?.let { findViewBinding(it) }
+        }
+    }
+    if (clz == null) throw IllegalArgumentException("需要一个ViewBinding类型的泛型")
     return clz.getMethod(
         "inflate",
         LayoutInflater::class.java,
-        ViewGroup::class.java,
-        Boolean::class.java
-    ).invoke(null, inflater, container, attach) as T
+        ViewGroup::class.java
+    ).invoke(null, inflater, container) as T
 }
 
 /**
