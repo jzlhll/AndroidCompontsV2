@@ -19,8 +19,24 @@ import com.au.module_androidui.databinding.AbsCenterFakeDialogBinding
 
 /**
  * 定义一种弹窗，用于输入内容
- * #BD000000的颜色的覆盖，就跟系统的 overlay 差不多
- * 模拟的动画和背景。其实是添加在 Activity 上的 View。
+ * #60000000的颜色覆盖，就跟系统的 overlay 差不多(亮色和黑暗模式都通用支持)
+ * 模拟的动画和背景。但是其实是直接添加在 Activity DecorView上。
+ *
+ * ```xml
+ * <com.au.module_android.widget.BgBuildConstraintLayout
+ *     xmlns:android="http://schemas.android.com/apk/res/android"
+ *     xmlns:app="http://schemas.android.com/apk/res-auto"
+ *     android:layout_width="match_parent"
+ *     android:layout_height="wrap_content"
+ *     android:orientation="vertical"
+ *     app:backgroundNormal="@color/windowDialogBackground"
+ *     app:cornerSizeTopLeft="12dp"
+ *     app:cornerSizeTopRight="12dp"
+ *     app:cornerSizeBottomLeft="12dp"
+ *     app:cornerSizeBottomRight="12dp">
+ *
+ * </com.au.module_android.widget.BgBuildConstraintLayout>
+ * ```
  */
 abstract class AbsCenterFakeDialog<T : ViewBinding> : DefaultLifecycleObserver {
     /**

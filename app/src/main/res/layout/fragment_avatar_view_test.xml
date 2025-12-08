@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.au.module_android.widget.FlowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:flChildSpacing="8dp"
+    app:flRowSpacing="4dp"
+    android:layout_height="match_parent">
+    <View android:layout_width="match_parent"
+        android:layout_height="24dp" />
+
+    <com.au.module_androidui.widget.AvatarView
+        android:id="@+id/avatarDefaultText"
+        app:avatarDefaultText="A"
+        app:cardCornerRadius="30dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
+
+    <com.au.module_androidui.widget.AvatarView
+        android:id="@+id/avatarDefaultSrc"
+        app:avatarDefaultSrc="@drawable/ic_mic"
+        app:cardCornerRadius="30dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
+
+    <com.au.module_androidui.widget.AvatarView
+        android:id="@+id/avatarCodeText"
+        app:cardCornerRadius="30dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
+
+    <com.au.module_androidui.widget.AvatarView
+        android:id="@+id/avatarCodeSrc"
+        app:cardCornerRadius="30dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
+
+    <com.au.module_androidui.widget.AvatarView
+        android:id="@+id/avatarCodeGlide"
+        app:cardCornerRadius="30dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"/>
+</com.au.module_android.widget.FlowLayout>

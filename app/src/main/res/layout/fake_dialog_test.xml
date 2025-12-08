@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.au.module_android.widget.BgBuildConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    app:backgroundNormal="@color/windowDialogBackground"
+    app:cornerSizeTopLeft="12dp"
+    app:cornerSizeTopRight="12dp"
+    app:cornerSizeBottomLeft="12dp"
+    app:cornerSizeBottomRight="12dp">
+
+    <com.au.module_android.widget.CustomEditText
+        android:id="@+id/edit"
+        android:paddingHorizontal="16dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginHorizontal="30dp"
+        style="@style/StyleBlankEditText"
+        android:layout_width="match_parent"
+        android:layout_height="42dp" />
+
+    <com.au.module_android.widget.CustomButton
+        android:id="@+id/cancelButton"
+        style="@style/StyleButtonSecondary"
+        android:layout_width="0dp"
+        android:layout_height="42dp"
+        android:text="@string/cancel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/sureButton"
+        app:layout_constraintTop_toBottomOf="@id/edit"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        android:layout_marginTop="15dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="12dp" />
+
+    <com.au.module_android.widget.CustomButton
+        android:id="@+id/sureButton"
+        style="@style/StyleButtonPrimary"
+        android:layout_marginBottom="0dp"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/cancelButton"
+        app:layout_constraintTop_toTopOf="@id/cancelButton"
+        android:layout_marginEnd="30dp"
+        android:layout_marginStart="12dp"
+        android:layout_width="0dp"
+        android:layout_height="42dp"
+        android:text="@string/ok"/>
+
+    <View
+        android:id="@+id/bottomView"
+        android:background="@color/windowDialogBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cancelButton"
+        android:layout_width="0.01dp"
+        android:layout_height="25dp"/>
+</com.au.module_android.widget.BgBuildConstraintLayout>

@@ -7,12 +7,13 @@ import android.view.LayoutInflater
 import android.widget.ImageView
 import androidx.cardview.widget.CardView
 import com.au.module_android.widget.CustomFontText
+import com.au.module_androidui.R
 import com.au.module_androidui.databinding.AvatarViewBinding
 import kotlin.math.absoluteValue
 
 class AvatarView @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null
-) : CardView(context, attrs) {
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : CardView(context, attrs, defStyleAttr) {
     private val binding: AvatarViewBinding = AvatarViewBinding.inflate(LayoutInflater.from(context), this)
 
     private val colorArray = intArrayOf(
@@ -25,6 +26,18 @@ class AvatarView @JvmOverloads constructor(
         Color.parseColor("#FF9A4BB0"), // 紫色
         Color.parseColor("#FFFF9800")  // 橙色
     )
+
+    init {
+        context.obtainStyledAttributes(attrs, R.styleable.AvatarView).apply {
+            getResourceId(R.styleable.AvatarView_avatarDefaultSrc, -1).takeIf { it != -1 }?.let {
+                setAvatarResource(it)
+            }
+            getString(R.styleable.AvatarView_avatarDefaultText)?.takeIf { it.isNotEmpty() }?.let {
+                setAvatarText(it)
+            }
+            recycle()
+        }
+    }
 
     /**
      * 根据文本内容生成固定的背景颜色
@@ -44,6 +57,15 @@ class AvatarView @JvmOverloads constructor(
         get() = binding.urlAvatar
 
     /**
+     * 设置头像的图片资源
+     */
+    fun setAvatarResource(resId: Int) {
+        avatarImage.setImageResource(resId)
+        avatarImage.visibility = VISIBLE
+        avatarText.visibility = GONE
+    }
+
+    /**
      * 设置头像的文本内容，文字始终大写白色，并设置自带背景颜色
      */
     fun setAvatarText(text: String) {
@@ -51,6 +73,8 @@ class AvatarView @JvmOverloads constructor(
         avatarText.text = upperText
         avatarText.setTextColor(Color.WHITE)
         super.setCardBackgroundColor(getColorFromText(upperText))
+        avatarImage.visibility = GONE
+        avatarText.visibility = VISIBLE
     }
 
     override fun setCardBackgroundColor(color: Int) {
