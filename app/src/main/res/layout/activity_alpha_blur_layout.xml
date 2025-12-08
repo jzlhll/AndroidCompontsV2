@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent">
+
+    <com.au.module_android.widget.BgBuildLinearLayout
+        android:id="@+id/bottomLL"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_marginHorizontal="50dp"
+        android:layout_marginTop="50dp"
+        app:cornerRadius="24dp"
+        app:backgroundNormal="#e0e0e0"
+        android:layout_height="500dp">
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="20dp"
+            android:src="@drawable/ic_launcher_background" />
+
+        <TextView
+            android:text="Hello World"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:text="Hello World"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:text="Hello World"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:text="Hello World"
+            android:layout_gravity="end"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:layout_marginTop="30dp"
+            android:layout_gravity="center"
+            android:id="@+id/showBlurBtn"
+            android:text="showBlur"
+            android:layout_width="120dp"
+            android:layout_height="40dp" />
+    </com.au.module_android.widget.BgBuildLinearLayout>
+
+    <LinearLayout
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/hideIt"
+            android:text="hide"
+            android:visibility="gone"
+            android:layout_marginBottom="100dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+</FrameLayout>

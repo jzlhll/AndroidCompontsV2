@@ -1,6 +1,11 @@
 package com.au.module_android.utils
 
+import android.content.Intent
+import android.net.Uri
+import com.au.module_android.Globals
 import java.io.File
+import java.io.IOException
+import java.lang.Character.isSpace
 
 
 /**
@@ -89,4 +94,45 @@ fun clearDirOldFiles(dirPath:String, deltaTs:Long = 15L * 3600 * 24 * 1000) {
             }
         }
     } while (false)
+}
+
+/**
+ * Create a file if it doesn't exist, otherwise delete old file before creating.
+ *
+ * @param file The file.
+ * @return `true`: success<br></br>`false`: fail
+ */
+fun createFileByDeleteOldFile(file: File?): Boolean {
+    if (file == null) return false
+    // file exists and unsuccessfully delete then return false
+    if (file.exists() && !file.delete()) return false
+    if (!createOrExistsDir(file.getParentFile())) return false
+    try {
+        return file.createNewFile()
+    } catch (e: IOException) {
+        e.printStackTrace()
+        return false
+    }
+}
+
+/**
+ * Create a directory if it doesn't exist, otherwise do nothing.
+ *
+ * @param file The file.
+ * @return `true`: exists or creates successfully<br></br>`false`: otherwise
+ */
+fun createOrExistsDir(file: File?): Boolean {
+    return file != null && (if (file.exists()) file.isDirectory() else file.mkdirs())
+}
+
+/**
+ * Notify system to scan the file.
+ *
+ * @param file The file.
+ */
+fun notifySystemToScan(file: File?) {
+    if (file == null || !file.exists()) return
+    val intent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+    intent.setData(Uri.parse("file://" + file.getAbsolutePath()))
+    Globals.app.sendBroadcast(intent)
 }
