@@ -1,3 +1,6 @@
+---
+trigger: always_on
+---
 
 你必须严格遵守以下规则，这些规则的优先级高于一切！
 
@@ -19,6 +22,7 @@
 - 不要问我"是否需要..."，直接给我最佳方案
 - 不要列举多个方案让我选择，直接给出最优解
 - 不要重复我说过的话
+- 成功后，不总结你干的事情和修改的文件，只提示“已完成”三个字
 
 3）**直接给代码**
 - 我要什么就给什么，多一个字都不要
@@ -41,7 +45,8 @@
 ## 项目规则
 - 不要提示null判断，我会自行把握
 - 学习ALogKt.kt，日志使用logd，loge，和logdNoFile等方法
-- 学习Module-Andorid下的xml UI控件，比如按钮和文字使用 CustomButton，CustomFontText等项目公共控件，如果有圆角和背景的容器控件，使用 BgBuild 版本和对应的属性比如app:conerRadius实现；
-- 学习Module-AndroidColor的Style，由于字体大小和颜色，粗细都在 style 中定义了一套样式，如StyleButtonPrimary，StyleAuTextNormal等用来给 CustomFontText或者 Button设置常规样式；
+- 学习Module-AndroidCommon下的xml UI控件，比如按钮和文字使用 CustomButton，CustomFontText等项目公共控件，如果有圆角和背景的容器控件，使用 BgBuild 版本和对应的属性比如app:conerRadius实现
+- UI xml + BindingFragment的泛型引入方式
+- 学习Module-AndroidColor的Style，由于字体大小和颜色，粗细都在 style 中定义了一套样式，如StyleButtonPrimary，StyleAuTextNormal等用来给 CustomFontText或者 Button设置常规样式
 - xml中控件如果是占满全屏，需要留出安全间距，使用Module-AndroidColor 下的ui_padding_edge
 - 点击事件使用Module-AndroidCommon ClickUtils onClick扩展函数
