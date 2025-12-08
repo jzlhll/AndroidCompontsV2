@@ -7,6 +7,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.au.module_android.widget.CustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_height"/>
+
     <RelativeLayout
         android:layout_marginTop="3dp"
         android:layout_width="match_parent"

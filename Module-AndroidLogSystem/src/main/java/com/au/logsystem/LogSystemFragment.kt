@@ -8,7 +8,7 @@ import com.au.logsystem.databinding.FragmentLogSystemBinding
 import com.au.logsystem.oncelog.OnceLogViewFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.FileLog
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.invisible
@@ -21,8 +21,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class LogSystemFragment : BindingFragment<FragmentLogSystemBinding>(), LogViewActionDialog.IAction {
-    override fun toolbarInfo(): ToolbarInfo? {
-        return ToolbarInfo(title = "日志系统")
+
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults("日志系统")
     }
 
     private val adapter = LogRcvAdapter()

@@ -16,6 +16,7 @@ import com.allan.androidlearning.databinding.ActivityEchartsBinding
 import com.allan.androidlearning.recordview.ContinuousBitmapRecorderManager
 import com.au.module_android.Globals
 import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.UnzipHelper
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.ignoreError
@@ -71,6 +72,10 @@ class WebEChartsGetDataUrlBitmapFragment : BindingFragment<ActivityEchartsBindin
     private val customBase64PrefixLength = "echartImage:".length + "data:image/png;base64,".length
     private var imagePrintCount = 0
 
+    override fun toolbarInfo(): YourToolbarInfo {
+        return YourToolbarInfo.Defaults("Demo View Record by Echarts Images")
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         ignoreError {
@@ -79,8 +84,6 @@ class WebEChartsGetDataUrlBitmapFragment : BindingFragment<ActivityEchartsBindin
                 it.delete()
             }
         } }
-
-        this.toolbar?.title = "Demo View Record by Echarts Images"
 
         val h5 = RecordWebV2Fragment()
         parentFragmentManager.beginTransaction()

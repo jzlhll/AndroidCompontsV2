@@ -23,7 +23,7 @@ import androidx.lifecycle.LifecycleOwner
 open class ToolbarMenuManager(private val owner: LifecycleOwner,
                               private val toolbar: Toolbar,
                               private val menuXml: Int? = null,
-                              private val color:Int? = null,
+                              private val menuStrColor:Int? = null,
                               private val onMenuItemBlock:((MenuItem)->Unit)? = null) {
     private var menuProvider: MenuProvider? = null
 
@@ -36,7 +36,7 @@ open class ToolbarMenuManager(private val owner: LifecycleOwner,
             menuProvider = object : MenuProvider {
                 override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                     menuInflater.inflate(menuXml, menu)
-                    val c = color
+                    val c = menuStrColor
                     if (c != null) {
                         // 遍历所有菜单项
                         for (i in 0 until menu.size) {

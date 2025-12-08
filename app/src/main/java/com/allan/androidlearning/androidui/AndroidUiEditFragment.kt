@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import com.allan.androidlearning.databinding.FragmentAndroidUiEditBinding
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.widget.CustomTextInputLayout
 
@@ -41,8 +41,6 @@ class AndroidUiEditFragment : BindingFragment<FragmentAndroidUiEditBinding>() {
             requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN)
             "Adjust Pan"
         }
-        setTitle("Edit")
-
         binding.infoText.text = msg + " NestedScrollView " + fullInfo()
 
         if (enableEdge == -1) {
@@ -50,8 +48,8 @@ class AndroidUiEditFragment : BindingFragment<FragmentAndroidUiEditBinding>() {
         }
     }
 
-    override fun toolbarInfo(): ToolbarInfo {
-        return ToolbarInfo()
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults("Edit")
     }
 
     override fun isAutoHideIme(): Boolean {

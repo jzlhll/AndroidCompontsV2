@@ -10,10 +10,9 @@ import com.allan.androidlearning.databinding.FragmentRgb2HexBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.ImeHelper
 import com.au.module_android.utils.hideImeNew
-import kotlinx.coroutines.flow.combine
 import okhttp3.internal.toHexString
 import kotlin.math.min
 
@@ -107,8 +106,8 @@ class RgbToHexFragment : BindingFragment<FragmentRgb2HexBinding>() {
         }
     }
 
-    override fun toolbarInfo(): ToolbarInfo? {
-        return ToolbarInfo()
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults("RGB2Hex")
     }
 
     @ColorInt

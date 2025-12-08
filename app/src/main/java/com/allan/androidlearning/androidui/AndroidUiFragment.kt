@@ -5,10 +5,9 @@ import android.view.View
 import com.allan.androidlearning.R
 import com.allan.androidlearning.databinding.FragmentAndroidUiBinding
 import com.allan.classnameanno.EntryFrgName
+import com.au.module_android.ui.ToolbarMenuManager
 import com.au.module_nested.viewpager2.simplePagerAdapter
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.MenuBean
-import com.au.module_android.ui.views.ToolbarInfo
 
 /**
  * @author allan
@@ -17,9 +16,7 @@ import com.au.module_android.ui.views.ToolbarInfo
  */
 @EntryFrgName(priority = 11)
 class AndroidUiFragment : BindingFragment<FragmentAndroidUiBinding>() {
-    override fun toolbarInfo(): ToolbarInfo {
-        return ToolbarInfo(menuBean = MenuBean(R.menu.skip_menu, true) {})
-    }
+    private var toolbarMenuManager: ToolbarMenuManager? = null
 
     private val pages = listOf(
         Pair("CustomView", AndroidUi4Fragment::class.java),
@@ -29,6 +26,9 @@ class AndroidUiFragment : BindingFragment<FragmentAndroidUiBinding>() {
     )
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        toolbarMenuManager = ToolbarMenuManager(this, binding.toolbar, menuXml = R.menu.skip_menu) {
+        }
+
         //不经过post 有毛用 binding.viewPager.overScrollNever()
         binding.viewPager.simplePagerAdapter(this, pages) { _, pair ->
             pair.second.getDeclaredConstructor().newInstance()
@@ -39,6 +39,6 @@ class AndroidUiFragment : BindingFragment<FragmentAndroidUiBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbarManager?.setTitleAlign(false)
+        toolbarMenuManager?.showMenu()
     }
 }

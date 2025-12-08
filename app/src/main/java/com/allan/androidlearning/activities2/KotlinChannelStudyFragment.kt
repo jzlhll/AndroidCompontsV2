@@ -9,17 +9,14 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import com.allan.classnameanno.EntryFrgName
-import com.au.module_android.ui.views.ToolbarInfo
 import com.au.module_android.ui.views.ViewToolbarFragment
-import com.au.module_android.utils.launchOnThread
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.logt
 import com.au.module_android.utils.unsafeLazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -29,9 +26,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlin.getValue
 
@@ -40,8 +35,8 @@ class KotlinChannelStudyFragment : ViewToolbarFragment() {
     //private val mViewModel : ChannelViewModel1 by viewModels()
     private val mViewModel3 by unsafeLazy { ViewModelProvider(this)[ChannelViewModel3::class.java] }
 
-    override fun toolbarInfo(): ToolbarInfo? {
-        return ToolbarInfo()
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults("ChannelStudy")
     }
 
     override fun onUiCreateView(

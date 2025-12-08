@@ -3,6 +3,7 @@ package com.allan.androidlearning.activities
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import com.allan.androidlearning.EntryActivity
 import com.allan.androidlearning.Locales
@@ -12,9 +13,9 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.DarkModeAndLocalesConst
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
+import com.au.module_android.ui.ToolbarMenuManager
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.MenuBean
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.HtmlPart
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.gone
@@ -27,18 +28,21 @@ import com.au.module_android.utils.visible
 @EntryFrgName(priority = 10, customName = "GenerateSetting")
 class DarkModeAndLocalesFragment : BindingFragment<FragmentDarkModeSettingBinding>() {
     private val localePart = LocalesPart()
+    private var toolbarManager: ToolbarMenuManager? = null
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        toolbarManager = ToolbarMenuManager(this, binding.toolbar, com.au.module_android.R.menu.right_menu_save) {
+            if (it.itemId == com.au.module_android.R.id.menuOk) {
+                localePart.afterChange()
+            }
+        }
         DarkModePart().initDarkMode()
         localePart.initLocales()
     }
 
-    override fun toolbarInfo(): ToolbarInfo {
-        return ToolbarInfo(getString(R.string.settings), menuBean = MenuBean(com.au.module_android.R.menu.right_menu_save, false) {
-            if (it.itemId == com.au.module_android.R.id.menuOk) {
-                localePart.afterChange()
-            }
-        })
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        toolbarManager?.showMenu()
     }
 
     private inner class LocalesPart {
