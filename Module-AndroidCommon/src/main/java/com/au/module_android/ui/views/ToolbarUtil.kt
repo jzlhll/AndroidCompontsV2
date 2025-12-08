@@ -20,9 +20,9 @@ internal fun createToolbarLayout(context: Context, contentView:View) : ToolbarAc
 
 /**
  * 使用如下方式来获取自定义的toolbarBinding
-private val toolbarBinding by unsafeLazy {
-toolbarYoursBinding<FragmentProfileToolbarBinding>()
-}
+    private val toolbarBinding by unsafeLazy {
+       toolbarYoursBinding<FragmentProfileToolbarBinding>()
+    }
  */
 fun <VB : ViewBinding> IHasToolbar.toolbarYoursBinding() : VB? {
     val toolbarInfo = toolbarInfo() ?: return null
