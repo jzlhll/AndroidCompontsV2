@@ -39,7 +39,7 @@ trigger: always_on
 如下列出多个模块的使用规则，必须扫描如下代码学习后记忆下来，后续必须遵守：
 
 ### Module-AndroidCommon技术学习与使用
-  - 学习ALogKt.kt：日志使用logd，loge等追加落盘和console日志，使用logdNoFile追加普通日志，优先使用logdNoFile
+  - 学习ALogKt.kt文件，日志使用logd，loge等追加落盘和console日志，使用logdNoFile追加普通日志，优先使用logdNoFile，注意是import后直接使用扩展函数即可，不需要ALogKt.xxx
   - 学习UI控件类：如CustomButton按钮，CustomFontText文字等项目公共控件，有圆角和背景的容器控件，使用BgBuildXXX和属性如app:conerRadius, app:backgroundNormal实现
   - 理解UI xml + BindingFragment的泛型引入方式
   - 点击事件使用ClickUtils onClick扩展函数
