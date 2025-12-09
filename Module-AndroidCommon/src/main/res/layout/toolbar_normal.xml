@@ -16,6 +16,7 @@
         android:layout_height="@dimen/toolbar_height" />
 
     <ImageView
+        android:contentDescription="Back"
         android:id="@+id/backIcon"
         android:src="@drawable/icon_back"
         android:padding="4dp"

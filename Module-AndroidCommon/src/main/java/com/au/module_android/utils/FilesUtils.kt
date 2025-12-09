@@ -5,8 +5,6 @@ import android.net.Uri
 import com.au.module_android.Globals
 import java.io.File
 import java.io.IOException
-import java.lang.Character.isSpace
-
 
 /**
  * 删除文件

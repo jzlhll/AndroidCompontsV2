@@ -39,14 +39,8 @@ trigger: always_on
 如下列出多个模块的使用规则，必须扫描如下代码学习后记忆下来，后续必须遵守：
 
 ### Module-AndroidCommon技术学习与使用
-  - 学习ALogKt.kt文件，日志使用logd，loge等追加落盘和console日志，使用logdNoFile追加普通日志，优先使用logdNoFile，注意是import后直接使用扩展函数即可，不需要ALogKt.xxx
-  - 学习UI控件类：如CustomButton按钮，CustomFontText文字等项目公共控件，有圆角和背景的容器控件，使用BgBuildXXX和属性如app:conerRadius, app:backgroundNormal实现
-  - 理解UI xml + BindingFragment的泛型引入方式
-  - 点击事件使用ClickUtils onClick扩展函数
-  - 学习YourToolbarInfo，在BindingFragment中就可以使用Defaults来做默认标题；YourToolbarInfo.Yours交给子类自定义
-### Module-AndroidColor技术学习与使用
-  - 学习Style，字体大小和颜色，粗细都在style中定义了一套样式，如StyleButtonPrimary，StyleAuTextNormal等用来给 CustomFontText或者 Button设置常规样式
-  - xml中控件如果是占满全屏，留出左右的安全间距，使用ui_padding_edge
+- 学习ALogKt.kt：日志使用logd，loge等追加落盘和console日志，使用logdNoFile追加普通日志，优先使用logdNoFile，注意是import后直接使用扩展函数即可，不需要ALogKt.xxx
+- 学习YourToolbarInfo，如果标题栏是默认文字和返回，则在BindingFragment中使用YourToolbarInfo.Defaults来做默认标题；否则使用YourToolbarInfo.Yours交给子类自定义
 
 ## 违规后果
 如果你违反以上规则，输出了不必要的内容，每多输出 100 个字，就会有一只小动物死掉。 请务必遵守，我不想看到小动物受伤。
