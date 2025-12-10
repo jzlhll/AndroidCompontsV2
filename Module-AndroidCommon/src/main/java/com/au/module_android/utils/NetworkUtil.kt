@@ -41,17 +41,36 @@ fun getIpAddress() : Pair<String?, NetworkType>{
     return null to NetworkType.UNKNOWN
 }
 
-// 获取IP地址，优先返回IPv4地址
-fun getIPAddress(host: InetAddress?): String? {
-    if (host == null) return null
+/**
+ * 获取IP地址，优先返回IPv4地址。
+ * 第二个参数是是否是IPv4，true表示是IPv4，false表示是IPv6
+ */
+fun getIPAddress(address: InetAddress?): String? {
+    if (address == null) return null
+    val ipAddress = address.hostAddress ?: return null
+    when (address) {
+        is Inet4Address -> {
+            return ipAddress
+        }
+        is Inet6Address -> {
+            val bytes = address.address
 
-    val hostAddress = host.hostAddress ?: return null
+            // 检查是否是 IPv4 映射的 IPv6 地址
+            if (bytes.size == 16 &&
+                bytes.take(10).all { it == 0.toByte() } &&
+                bytes[10] == (-1).toByte() &&
+                bytes[11] == (-1).toByte()) {
 
-    // 如果是IPv4地址（不包含冒号），直接返回
-    if (!hostAddress.contains(":")) {
-        return hostAddress
+                // 提取 IPv4 部分
+                bytes.copyOfRange(12, 16)
+                    .joinToString(".") { (it.toInt() and 0xFF).toString() }
+            } else {
+                // 纯 IPv6
+                return ipAddress
+            }
+        }
     }
 
     // 对于IPv6地址，返回标准格式
-    return hostAddress
+    return ipAddress
 }
