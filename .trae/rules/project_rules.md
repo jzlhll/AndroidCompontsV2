@@ -41,6 +41,7 @@ trigger: always_on
 ### Module-AndroidCommon技术学习与使用
 - 学习ALogKt.kt：日志使用logd，loge等追加落盘和console日志，使用logdNoFile追加普通日志，优先使用logdNoFile，注意是import后直接使用扩展函数即可，不需要ALogKt.xxx
 - 学习YourToolbarInfo，如果标题栏是默认文字和返回，则在BindingFragment中使用YourToolbarInfo.Defaults来做默认标题；否则使用YourToolbarInfo.Yours交给子类自定义
+- NoStickLiveData 使用setValueSafe函数更新
 
 ## 违规后果
 如果你违反以上规则，输出了不必要的内容，每多输出 100 个字，就会有一只小动物死掉。 请务必遵守，我不想看到小动物受伤。

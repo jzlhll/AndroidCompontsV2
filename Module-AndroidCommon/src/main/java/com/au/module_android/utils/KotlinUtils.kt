@@ -10,6 +10,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -57,6 +59,34 @@ suspend inline fun <T> awaitOnIoThread(crossinline block: (CancellableContinuati
     return withIoThread {
         suspendCancellableCoroutine(block)
     }
+}
+
+/**
+ * 新增的扩展函数，用于并发执行请求并等待所有结果
+ * @param request 确保一定不会报错
+ */
+suspend fun <T, R> CoroutineScope.awaitAll(
+    items: List<T>,
+    request: suspend (T) -> R
+): List<R> {
+    val deferredList = items.map { item ->
+        async(Dispatchers.Default) {
+            request(item)
+        }
+    }
+    return deferredList.awaitAll()
+}
+
+suspend fun <T, R> CoroutineScope.awaitAllNotNull(
+    items: List<T>,
+    request: suspend (T) -> R
+): List<R> {
+    val deferredList = items.map { item ->
+        async(Dispatchers.Default) {
+            request(item)
+        }
+    }
+    return deferredList.awaitAll().filterNotNull()
 }
 
 fun <T> unsafeLazy(initializer: () -> T) = lazy(LazyThreadSafetyMode.NONE, initializer)
