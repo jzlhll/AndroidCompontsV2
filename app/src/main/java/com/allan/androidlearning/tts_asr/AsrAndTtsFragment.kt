@@ -69,7 +69,7 @@ Flite	非常轻量级、适合资源极度受限的场景	基础	主要英文	�
 Kitten TTS
  */
 
-@EntryFrgName(priority = 12)
+@EntryFrgName()
 class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
     override fun isAutoHideIme() = true
 

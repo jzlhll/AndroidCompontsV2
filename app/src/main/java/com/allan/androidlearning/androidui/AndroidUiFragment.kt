@@ -14,7 +14,7 @@ import com.au.module_android.ui.bindings.BindingFragment
  * @date :2024/8/19 15:15
  * @description:
  */
-@EntryFrgName(priority = 11)
+@EntryFrgName()
 class AndroidUiFragment : BindingFragment<FragmentAndroidUiBinding>() {
     private var toolbarMenuManager: ToolbarMenuManager? = null
 

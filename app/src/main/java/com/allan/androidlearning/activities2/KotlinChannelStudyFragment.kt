@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.getValue
 
-@EntryFrgName(priority = 100)
+@EntryFrgName()
 class KotlinChannelStudyFragment : ViewToolbarFragment() {
     //private val mViewModel : ChannelViewModel1 by viewModels()
     private val mViewModel3 by unsafeLazy { ViewModelProvider(this)[ChannelViewModel3::class.java] }

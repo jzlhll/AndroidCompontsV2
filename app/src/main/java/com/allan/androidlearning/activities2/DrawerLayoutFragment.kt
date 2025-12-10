@@ -15,7 +15,7 @@ import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.widget.CustomFontText
 import com.google.android.material.navigation.NavigationView
 
-@EntryFrgName(priority = 100)
+@EntryFrgName()
 class DrawerLayoutFragment : BindingFragment<ActivityDrawerLayoutBinding>() {
     private lateinit var drawer : DrawerLayout
     private lateinit var navigationView : NavigationView

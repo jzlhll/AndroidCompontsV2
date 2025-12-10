@@ -71,7 +71,7 @@ import kotlinx.coroutines.launch
 //        UI层：fragment/activity等，不跟数据层产生任何交互，只监听ViewModel的stateFlow/SharedFlow变更UI状态。
 
 val dataSourceScope = CoroutineScope( MainScope().coroutineContext + Dispatchers.Default )
-@EntryFrgName(priority = 100)
+@EntryFrgName()
 class FlowStudyFragment : ViewFragment() {
     val viewModel by lazy { FlowStudyViewModel() }
 

@@ -15,6 +15,7 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_MATCH_ACTIVITY_CLOSE
 import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_MATCH_ACTIVITY_OPEN
 import androidx.lifecycle.ViewModelProvider
+import com.au.module_android.BuildConfig
 import com.au.module_android.R
 import com.au.module_android.permissions.activity.ActivityForResult
 import com.au.module_android.ui.FragmentShellActivity.Companion.KEY_ENTER_ANIM
@@ -29,7 +30,6 @@ import com.au.module_android.ui.views.ViewActivity
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.startActivityFix
 import com.au.module_android.utils.unsafeLazy
-import jp.wasabeef.glide.transformations.BuildConfig
 
 open class FragmentNavigationActivity : ViewActivity() {
     companion object {
