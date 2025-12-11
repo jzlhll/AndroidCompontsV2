@@ -76,7 +76,6 @@
 
     <!-- toolBar相关 -->
     <color name="color_toolbar_text">@color/color_text_normal</color>
-    <color name="color_toolbar_background">#ffffff</color>
 
     <!-- glide 的基础颜色 -->
     <color name="color_glide_gray_default">#f0f0f0</color>
