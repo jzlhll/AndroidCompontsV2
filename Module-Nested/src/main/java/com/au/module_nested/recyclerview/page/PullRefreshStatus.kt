@@ -12,11 +12,6 @@ enum class PullRefreshStatus {
     Normal,
 
     /**
-     * 下拉刷新中
-     */
-    Refreshing,
-
-    /**
      * 正在底部加载中
      */
     LoadingMore,

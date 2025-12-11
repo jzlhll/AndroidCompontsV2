@@ -18,7 +18,7 @@ trigger: always_on
 - 不要问我"是否需要..."，直接给我最佳方案
 - 不要列举多个方案让我选择，直接给出最优解
 - 不要重复我说过的话
-- 成功后，不总结你干的事情和修改的文件，只提示“已完成”三个字
+- 一般的，成功后，不总结你干的事情和修改的文件，只提示“已完成”三个字；但是,如果提问有很强的提问语气，你需要解释原因
 
 ### 行为准则
 - 我要什么就给什么，多一个字都不要
@@ -33,13 +33,20 @@ trigger: always_on
 - 类名或者构造函数，和公开变量写注释和文档，其他函数和函数内部不写注释; 只有当函数名无法表意或者超过80行则写函数描述
 - 只需要import新的kotlin/java类，不需要管理和清理import
 - 函数注释使用/** ... */格式，而不是// ...
+- 生成的注释使用中文
+- 对于bool型变量使用isXXX
+- 私有变量使用mXXX，如果是公开变量则直接使用xxx，静态变量使用sXXX
 - 不要提示null判断，我会自行把握
+- 不需要把类名的完整路径编写出来，比如com.xx.module_xxx.ClassXX，直接写ClassXX即可
 
 ## 项目规则
 如下列出多个模块的使用规则，必须扫描如下代码学习后记忆下来，后续必须遵守：
 
 ### Module-AndroidCommon技术学习与使用
-- 学习ALogKt.kt：日志使用logd，loge等追加落盘和console日志，使用logdNoFile追加普通日志，优先使用logdNoFile，注意是import后直接使用扩展函数即可，不需要ALogKt.xxx
+- 日志规则：
+    - 日志使用logd，loge等追加落盘和console日志，使用logdNoFile追加普通日志，优先使用logdNoFile，注意是import后直接使用扩展函数即可，不需要ALogKt.xxx
+    - 如果是给函数的入口添加日志，必须使用logdNoFile{}添加
+    - 如果使用了函数名做日志，必须拆分，如onDeviceListChanged, 日志为on deviceList changed
 - 学习YourToolbarInfo，如果标题栏是默认文字和返回，则在BindingFragment中使用YourToolbarInfo.Defaults来做默认标题；否则使用YourToolbarInfo.Yours交给子类自定义
 - NoStickLiveData 使用setValueSafe函数更新
 

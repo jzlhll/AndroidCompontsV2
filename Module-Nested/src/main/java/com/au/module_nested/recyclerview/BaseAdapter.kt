@@ -9,7 +9,7 @@ import com.au.module_android.utils.unsafeLazy
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 
 /**
- * @author au
+ * @author allan
  * Date: 2023/2/20
  * Description ("这是一个非常基础的类。请勿直接使用。请使用BindRcvAdapter或者AutoLoadMoreXXX")
  *
@@ -38,7 +38,7 @@ abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView
     fun removeDataChanged(listener: IOnChangeListener) {
         onDataChangedList.remove(listener)
     }
-    
+
     protected fun onDataChanged(info: DataExtraInfo) {
         for (listener in onDataChangedList) {
             listener.onChange(info)
@@ -105,6 +105,13 @@ abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView
         datas[index] = data
         notifyItemChanged(index, payload)
         onDataChanged(DataUpdateExtraInfo(index))
+    }
+
+    fun updateItem(data : DATA) {
+        val index = datas.indexOf(data)
+        if (index >= 0) {
+            updateItem(index, data)
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.isMainThread
 import kotlin.concurrent.Volatile
 
 /**
@@ -132,6 +133,16 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
             foundList.forEach {
                 super.removeObserver(it)
             }
+        }
+    }
+
+    /**
+     * 新增一个移除所有观察者的方法
+     */
+    fun removeAllObservers() {
+        assert(isMainThread)
+        for (entry in requireMObservers()) {
+            super.removeObserver(entry.key as Observer<in T>)
         }
     }
 
