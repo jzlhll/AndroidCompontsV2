@@ -159,3 +159,4 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
 }
 
 inline fun <reified B> LiveData<B>.asNoStickLiveData() : NoStickLiveData<B> = this as NoStickLiveData<B>
+inline fun <reified B> LiveData<B>.realValue() : B? = if(this is NoStickLiveData) this.realValue else this.value
