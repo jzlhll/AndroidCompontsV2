@@ -71,10 +71,7 @@ class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs: Attr
 
         mViewBinding.root.onClick {
             if(isDisabled) return@onClick
-
-            val newIsLeft = !isLeft
-            setValue(newIsLeft)
-            valueCallback?.invoke(newIsLeft)
+            switchIt()
         }
 
         post {
@@ -108,6 +105,15 @@ class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs: Attr
             }
             changeTextColor()
         }
+    }
+
+    /*
+    * 点击
+    */
+    fun switchIt() {
+        val newIsLeft = !isLeft
+        setValue(newIsLeft)
+        valueCallback?.invoke(newIsLeft)
     }
 
     private fun changeTextColor() {

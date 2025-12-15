@@ -102,6 +102,12 @@ inline fun <THIS : Any> THIS.logt(tag:String = TAG, crossinline block: (THIS) ->
     }
 }
 
+fun logDebug(s:String) {
+    if (BuildConfig.DEBUG) {
+        Log.d(TAG, s)
+    }
+}
+
 fun logStace(tag:String = TAG, s: String) {
     Log.d(tag, "$s...start...")
     val ex = Exception()

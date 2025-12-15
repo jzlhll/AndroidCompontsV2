@@ -1,5 +1,8 @@
 package com.au.module_android.utils
 
+import android.net.nsd.NsdServiceInfo
+import android.os.Build
+import android.os.ext.SdkExtensions
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -41,36 +44,69 @@ fun getIpAddress() : Pair<String?, NetworkType>{
     return null to NetworkType.UNKNOWN
 }
 
+fun getIPAddress(nsd: NsdServiceInfo) : String?{
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.TIRAMISU) >= 7) {
+        getIPAddress(nsd.hostAddresses)
+    } else {
+        getIPAddress(listOf(nsd.host))
+    }
+}
+
+fun getIPAddress(addresses: List<InetAddress>): String? {
+    for (addr in addresses) {
+        val r = getIPAddress(addr)
+        if (r != null) {
+            return r
+        }
+    }
+    return null
+}
+
 /**
  * 获取IP地址，优先返回IPv4地址。
- * 第二个参数是是否是IPv4，true表示是IPv4，false表示是IPv6
+ * 自动过滤回环地址(127.0.0.1, ::1)、链路本地地址(169.254.x.x, fe80::)、多播地址等不可用地址。
+ * 对于 IPv4 映射的 IPv6 地址，会自动转换为 IPv4 格式。
+ * 对于 IPv6 地址，会去除 scope id (如 %wlan0)。
  */
-fun getIPAddress(address: InetAddress?): String? {
-    if (address == null) return null
-    val ipAddress = address.hostAddress ?: return null
-    when (address) {
-        is Inet4Address -> {
-            return ipAddress
+private fun getIPAddress(address: InetAddress?): String? {
+    if (address == null || address.isLoopbackAddress  //回环
+        || address.isAnyLocalAddress  // 任意本地地址
+        || address.isMulticastAddress // 多播
+        || address.isLinkLocalAddress // 排除链路本地地址 (169.254.x.x) (fe80::/10)
+    ) {
+        return null
+    }
+
+    // 2. IPv4 处理
+    if (address is Inet4Address) {
+        return address.hostAddress
+    }
+
+    // 3. IPv6 处理
+    if (address is Inet6Address) {
+        val bytes = address.address
+        // 检查是否是 IPv4 映射的 IPv6 地址 (::ffff:x.x.x.x)
+        // 格式：80 bits of 0, followed by 16 bits of 0xFFFF, followed by 32 bits of IPv4
+        if (bytes.size == 16 &&
+            bytes.take(10).all { it == 0.toByte() } &&
+            bytes[10] == (-1).toByte() &&
+            bytes[11] == (-1).toByte()) {
+
+            // 提取 IPv4 部分
+            val ipv4 = bytes.copyOfRange(12, 16)
+                .joinToString(".") { (it.toInt() and 0xFF).toString() }
+            return ipv4
         }
-        is Inet6Address -> {
-            val bytes = address.address
 
-            // 检查是否是 IPv4 映射的 IPv6 地址
-            if (bytes.size == 16 &&
-                bytes.take(10).all { it == 0.toByte() } &&
-                bytes[10] == (-1).toByte() &&
-                bytes[11] == (-1).toByte()) {
-
-                // 提取 IPv4 部分
-                bytes.copyOfRange(12, 16)
-                    .joinToString(".") { (it.toInt() and 0xFF).toString() }
-            } else {
-                // 纯 IPv6
-                return ipAddress
-            }
+        // 纯 IPv6：去掉 Scope ID (例如 %wlan0)
+        val fullAddress = address.hostAddress ?: return null
+        val percentIndex = fullAddress.indexOf('%')
+        return if (percentIndex != -1) {
+            fullAddress.take(percentIndex)
+        } else {
+            fullAddress
         }
     }
 
-    // 对于IPv6地址，返回标准格式
-    return ipAddress
+    return null
 }
