@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
 android {
@@ -97,6 +98,9 @@ dependencies {
     //implementation files('libs/mmkv.aar')
 
     api libs.androidx.datastore.preferences
+
+    api libs.kotlinx.serialization.json
+    api libs.kotlin.reflect
 
     implementation libs.androidx.core.splashscreen
     //implementation libs.android.cn.oaid

@@ -7,6 +7,8 @@ import com.au.module_android.init.GlobalActivityCallback
 import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.init.optimizeSpTask
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
+import com.google.gson.Gson
+import kotlinx.serialization.json.Json
 
 /**
  * 自动初始化
@@ -20,6 +22,18 @@ class FirstInitial {
 
     fun init(context: Application, initCfg:FirstInitialConfig? = null): Application {
         Globals.internalApp = context
+
+        Globals.gson = Gson()
+        Globals.kson = Json {
+            ignoreUnknownKeys = true      // 后端多给字段也不报错
+            encodeDefaults = true         // 输出默认值；关掉可减小体积
+            prettyPrint = false           // 日常关；调试可开
+            isLenient = true              // 宽松模式，允许非标准 JSON
+            explicitNulls = false         // null 字段不主动输出
+            //allowTrailingComma = true
+            // classDiscriminator = "type" // 多态时的类型标记字段名（见下）
+            // namingStrategy = JsonNamingStrategy.SnakeCase // 字段命名转换（版本要求较新）
+        }
 
         UncaughtExceptionHandlerObj.init()
 

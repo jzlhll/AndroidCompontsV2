@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
+import kotlinx.serialization.json.Json
 import java.io.File
 
 object Globals {
@@ -55,7 +56,9 @@ object Globals {
     /**
      * gson对象
      */
-    val gson: Gson by lazy { Gson() }
+    lateinit var gson: Gson
+
+    lateinit var kson: Json
 
     /**
      * 选择合适的cacheDir

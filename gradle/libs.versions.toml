@@ -38,6 +38,7 @@ composeBom = "2025.06.00"
 jetbrainsKotlinJvm = "2.2.21"
 activity = "1.12.0"
 uiUnit = "1.9.4"
+kotlinxSerializationJson = "1.9.0"
 
 [libraries]
 
@@ -74,6 +75,8 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 jsbridgev2 = { module = "com.github.jzlhll:jsbridgeV2", version.ref = "jsbridgev2" }
 junit = { module = "junit:junit", version.ref = "junit" }
 glideKsp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 
 material = { module = "com.google.android.material:material", version.ref = "material" }
 nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
@@ -101,3 +104,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "jetbrainsKotlinJvm" }
