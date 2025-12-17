@@ -13,12 +13,13 @@ import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.logd
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
-import com.au.module_imagecompressed.MultiPhotoPickerContractResult
 import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
 import com.au.module_imagecompressed.UriWrap
 import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
+import com.au.module_imagecompressed.compatMultiUriPickerForResult
 import com.au.module_imagecompressed.photoPickerForResult
+import com.au.module_imagecompressed.uriPickerForResult
 import java.io.File
 
 @EntryFrgName
@@ -26,6 +27,9 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
     val singleResult = photoPickerForResult().also { it.setNeedLubanCompress(100) }
 
     val multiResult = compatMultiPhotoPickerForResult(3)
+
+    val mutiUriResult = compatMultiUriPickerForResult(8)
+    val uriResult = uriPickerForResult()
 
     val cameraHelper = CameraPermissionHelp(this, object : CameraPermissionHelp.Supplier {
         override fun createFileProvider(): Pair<File, Uri> {
@@ -107,11 +111,11 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         }
 
         binding.multiPicV2.onClick {
-            multiResult.setCurrentMaxItems(6)
+            multiResult.setCurrentMaxItems(Int.MAX_VALUE)
             multiResult.launchByAll(PickerType.IMAGE, null) {uris->
                 for (uri in uris) {
                     logd { "uri: $uri" }
-                    showPic(uri)
+                    //showPic(uri)
                 }
             }
         }
@@ -131,6 +135,19 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
                     logd { "uri: $uri" }
                     showPic(uri)
                 }
+            }
+        }
+
+
+        binding.multiUri1.onClick {
+            uriResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
+                logd { "file uri: $uris" }
+            }
+        }
+
+        binding.multiUri2.onClick {
+            mutiUriResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
+                logd { "file uri: $uris" }
             }
         }
     }

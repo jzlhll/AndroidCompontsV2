@@ -7,6 +7,10 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.Companion.ACTION_SYSTEM_FALLBACK_PICK_IMAGES
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.Companion.EXTRA_SYSTEM_FALLBACK_PICK_IMAGES_MAX
+import com.au.module_android.utils.ignoreError
+import com.au.module_android.utils.logdNoFile
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * 支持 > 1
@@ -24,16 +28,21 @@ class DynamicPickMultiVisualMedia(currentMaxItems:Int) : ActivityResultContracts
     }
 
     override fun createIntent(context: Context, input: PickVisualMediaRequest): Intent {
+        val systemLimit = ignoreError { max(100, MediaStore.getPickImagesMaxLimit()) } ?: 100
+        val max = min(mCurrentMax, systemLimit)
         return super.createIntent(context, input).apply {
             when (action) {
                 MediaStore.ACTION_PICK_IMAGES -> {
-                    putExtra("android.provider.extra.PICK_IMAGES_MAX", mCurrentMax)
+                    logdNoFile { "MediaStore.getPickImagesMaxLimit() " + MediaStore.getPickImagesMaxLimit() }
+                    putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, max)
                 }
                 ACTION_SYSTEM_FALLBACK_PICK_IMAGES -> {
-                    putExtra(EXTRA_SYSTEM_FALLBACK_PICK_IMAGES_MAX, mCurrentMax)
+                    logdNoFile { "FallBack to system" }
+                    putExtra(EXTRA_SYSTEM_FALLBACK_PICK_IMAGES_MAX, Int.MAX_VALUE) //later: 其实这里可以使用Int.MAX_VALUE
                 }
                 "com.google.android.gms.provider.action.PICK_IMAGES" -> {
-                    putExtra("com.google.android.gms.provider.extra.PICK_IMAGES_MAX", mCurrentMax)
+                    logdNoFile { "FallBack to gms" }
+                    putExtra("com.google.android.gms.provider.extra.PICK_IMAGES_MAX", max) //later: 其实这里可以使用Int.MAX_VALUE
                 }
             }
         }
