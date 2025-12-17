@@ -225,12 +225,12 @@ class JsonUtilTestFunctions {
     fun testToStringListStrNormal(): Pair<String, String?> {
         var codeStr = ""
         try {
-            val list = listOf("aa", "bb", "cc")
+            val list:List<Any> = listOf("aa", "bb", 100, true, 'c')
             codeStr = """
-                val list = listOf("aa", "bb", "cc")
+                val list:List<Any> = listOf("aa", "bb", 100, true, 'c')
                 val str = list.lisToKsonStringTyped(serializer<String>())
             """.trimIndent()
-            val str = list.lisToKsonStringTyped(serializer<String>())
+            val str = list.lisToKsonStringTyped(serializer<Any>())
             logdNoFile("🌟kson") { "lisToKsonStringTyped Normal $str" }
             return codeStr to str
         } catch (e: Exception) {
@@ -242,9 +242,9 @@ class JsonUtilTestFunctions {
     fun testToStringListStrNormalDefault(): Pair<String, String?> {
         var codeStr = ""
         try {
-            val list = listOf("aa", "bb", "cc")
+            val list:List<Any> = listOf("aa", "bb", 100, true, 'c')
             codeStr = """
-                val list = listOf("aa", "bb", "cc")
+                val list:List<Any> = listOf("aa", "bb", 100, true, 'c')
                 val str = list.toKsonString()
             """.trimIndent()
             val str = list.toKsonString()
@@ -259,9 +259,9 @@ class JsonUtilTestFunctions {
     fun testToStringListStrNormalLimited(): Pair<String, String?> {
         var codeStr = ""
         try {
-            val list = listOf("aa", "bb", "cc")
+            val list:List<Any> = listOf("aa", "bb", 100, true, 'c')
             codeStr = """
-                val list = listOf("aa", "bb", "cc")
+                val list:List<Any> = listOf("aa", "bb", 100, true, 'c')
                 val str = (list as Any).toKsonStringLimited()
             """.trimIndent()
             val str = (list as Any).toKsonStringLimited()

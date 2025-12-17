@@ -21,9 +21,12 @@ import kotlin.reflect.typeOf
 bean类对象要求必须@Serializable注解；
 序列化：
     toKsonStringTyped 万能，而且性能好，无需反射，传好对应的serialized()就能正确解析。listToKsonStringTyped/mapToKsonStringTyped只是节约一层泛型传入而已。
-    toKsonString 通过反射，无法跨平台，但能用，唯一不能支持Map<String, Any?>。
-    toKsonStringLimited 基础类型不需反射，类类型通过反射，因为不是inline，处理的是Any对象，有很多限制，主要是嵌套泛型不能处理。
+    toKsonString 通过反射，无法跨平台，但能用。
 
+    上述2个不支持Any类型，Any是基础类型。
+        比如Map<String, Any>，List<Any>, toKsonStringTyped是因为不知道传入什么serializer(); toKsonString() 因为是any无法typeOf。
+
+    toKsonStringLimited 基础类型不需反射，类类型通过反射，因为不是inline，处理的是Any对象，有很多限制，主要是嵌套泛型不能处理。
 
 反序列化：
     fromKson 万能，fromKsonList/fromKsonMap只是节约一层泛型传入而已。
@@ -39,8 +42,6 @@ bean类对象要求必须@Serializable注解；
         序列化和反序列化都失败
 3.1 List<String>
         均支持
-3.2 List<Any>
-        均支持
 
 4.  Map<String/Int, _1SerializableBean>
         toKsonString()/listToKsonStringLimited()/toKsonStringTyped(String.serialized(), _1XBean.serialized())/fromKson/fromKsonMap
@@ -49,8 +50,13 @@ bean类对象要求必须@Serializable注解；
         序列化和反序列化都失败
 
 6.  Map<String, Any?>（Any为简单类型）
-        toKsonStringLimited()/toKsonStringTyped(Bean.serialized())
-        toKsonString() 💔不支持 ， fromJson 💔不支持
+        toKsonStringLimited()
+        toKsonString() 💔不支持 ，toKsonStringTyped 💔不支持，因为不知道怎么传serialized()
+        fromJson 💔不支持, 因为泛型不知道传什么，需要序列化注解
+6.1  List<Any>
+        toKsonStringLimited()
+        toKsonString() 💔不支持 ，toKsonStringTyped 💔不支持，因为不知道怎么传serialized()
+        fromJson 💔不支持, 因为泛型不知道传什么，需要序列化注解
 
 7.  BaseResultBean<T>（T为_1SerializableBean或_2NormalBean）
         toKsonString()/toKsonStringTyped(BaseResultBean.serialized(_1XBean.serialized()))/fromJson<BaseResultBean<_1XBean>>()
@@ -97,7 +103,13 @@ bean类对象要求必须@Serializable注解；
 inline fun <reified T> T.toKsonString() = Globals.kson.encodeToString(Json.serializersModule.serializer(typeOf<T>()), this)
 
 /**
- * 使用的是反射机制this:class.createType实现的，对于map/List有额外item解析。不支持跨平台。其实不太推荐。要反射我为何不用gson？
+ * 专攻List<Any>, Map<String, Any?>的toString。
+ *
+ * 不支持嵌套泛型。
+ * 使用的是反射机制this:class.createType实现的，
+ * 对于map/List有额外item解析。
+ *
+ * 不支持跨平台。其实不太推荐。
  *
  * json序列化。其实还是要求如果是T类型，T必须也是使用了@ Serializable注解才行
  */
