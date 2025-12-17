@@ -97,10 +97,33 @@ fun TextView.useSimpleHtmlText(vararg items : HtmlPart) {
                 }
             }
 
+        val text = it.text.replace("&", "&amp;")   // 必须第一个转义
+            .replace("<", "&lt;")    // 小于号
+            .replace(">", "&gt;")    // 大于号
+            .replace("\"", "&quot;") // 双引号
+            .replace("'", "&#39;")   // 单引号 (或 &apos;)
+            .replace("`", "&#96;")   // 反引号 (在某些上下文中)
+            .replace("\u00A0", "&nbsp;")    // 非断空格
+            .replace("\u2002", "&ensp;")    // en空格
+            .replace("\u2003", "&emsp;")    // em空格
+            .replace("\u00A9", "&copy;")    // © 版权符号
+            .replace("\u00AE", "&reg;")     // ® 注册商标
+            .replace("\u2122", "&trade;")   // ™ 商标符号
+            .replace("\u20AC", "&euro;")    // € 欧元
+            .replace("\u00A3", "&pound;")   // £ 英镑
+            .replace("\u00A5", "&yen;")     // ¥ 日元
+            .replace("\u00D7", "&times;")   // × 乘号
+            .replace("\u00F7", "&divide;")  // ÷ 除号
+            .replace("\u00B1", "&plusmn;")  // ± 正负号
+            .replace("\u2190", "&larr;")    // ← 左箭头
+            .replace("\u2192", "&rarr;")    // → 右箭头
+            .replace("\u2191", "&uarr;")    // ↑ 上箭头
+            .replace("\u2193", "&darr;")    // ↓ 下箭头
+
         val part = if (it.color != null) {
-            String.format(fmt, htmlPartColor(it.color), it.text)
+            String.format(fmt, htmlPartColor(it.color), text)
         } else {
-            String.format(fmt, it.text)
+            String.format(fmt, text)
         }
         sb.append(part)
     }

@@ -15,18 +15,94 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.full.createType
 import kotlin.reflect.typeOf
 
+/*
+支持情况如下：
+总结：
+bean类对象要求必须@Serializable注解；
+序列化：
+    toKsonStringTyped 万能，而且性能好，无需反射，传好对应的serialized()就能正确解析。listToKsonStringTyped/mapToKsonStringTyped只是节约一层泛型传入而已。
+    toKsonString 通过反射，无法跨平台，但能用，唯一不能支持Map<String, Any?>。
+    toKsonStringLimited 基础类型不需反射，类类型通过反射，因为不是inline，处理的是Any对象，有很多限制，主要是嵌套泛型不能处理。
+
+
+反序列化：
+    fromKson 万能，fromKsonList/fromKsonMap只是节约一层泛型传入而已。
+    不支持转成Map<String, Any?>。一般只是单向序列化传给后台，我们不需要转成它。
+
+1.  单个@Serializable注解的_1SerializableBean
+        toKsonString()/toKsonStringLimited()/toKsonStringTyped(_1XBean.serialized())/fromJson
+
+2.  List<_1SerializableBean>, Array<_1SerializableBean>, Set<_1SerializableBean>
+        toKsonString()/listToKsonStringLimited()/toKsonStringTyped(_1XBean.serialized())/fromKson/fromKsonList
+
+3.  List<_2NormalBean>, Array<_2NormalBean>, Set<_2NormalBean>
+        序列化和反序列化都失败
+3.1 List<String>
+        均支持
+3.2 List<Any>
+        均支持
+
+4.  Map<String/Int, _1SerializableBean>
+        toKsonString()/listToKsonStringLimited()/toKsonStringTyped(String.serialized(), _1XBean.serialized())/fromKson/fromKsonMap
+
+5.  Map<String/Int, _2NormalBean>
+        序列化和反序列化都失败
+
+6.  Map<String, Any?>（Any为简单类型）
+        toKsonStringLimited()/toKsonStringTyped(Bean.serialized())
+        toKsonString() 💔不支持 ， fromJson 💔不支持
+
+7.  BaseResultBean<T>（T为_1SerializableBean或_2NormalBean）
+        toKsonString()/toKsonStringTyped(BaseResultBean.serialized(_1XBean.serialized()))/fromJson<BaseResultBean<_1XBean>>()
+        toKsonStringLimited()💔不支持，提示缺乏泛型；因为是Any的做法，无法知道类型
+        普通类型T，都是失败
+
+8.  BaseResultBean<List<_1SerializableBean>>
+        toKsonString()/toKsonStringTyped(BaseResultBean.serialized(ListSerializer(_1XBean.serialized())))/fromJson<BaseResultBean<List<_1XBean>>>()
+        toKsonStringLimited()💔不支持，提示缺乏泛型；因为是Any的做法，无法知道类型
+
+9.  BaseResultBean<Map<String, _1SerializableBean>>                                   暂时忽略
+
+10. Map<String, List<_1SerializableBean>>
+        toKsonString()/listToKsonStringLimited()/toKsonStringTyped(String.serialized(), _1XBean.serialized())/fromKson/fromKsonMap 都支持
+
+
+11. List<Map<String, _1SerializableBean>>                                               暂时忽略
+
+12. List<BaseResultBean<_1SerializableBean>>
+        toKsonString()/toKsonStringTyped(BaseResultBean.serialized(_1XBean.serialized()))
+        toKsonStringLimited()💔不支持，提示缺乏泛型；因为是Any的做法，无法知道类型
+        fromJson<List<BaseResultBean<_1XBean>>>() / fromJsonList<BaseResultBean<_1XBean>>()
+
+13. _3SerializableNestBean内部包含一个字段_1SerializableBean
+        均支持
+
+14. _3SerializableNestBean内部包含一个字段List<_1SerializableBean>
+        均支持
+
+15. _3SerializableNestBean内部包含一个字段Map<String, _1SerializableBean>
+        均支持
+
+16. BaseResultBean<Pair<_1SerializableBean, _2NormalBean>>                           暂时忽略
+17. 密封类sealed class Base的不同子类（都带@Serializable）                                暂时忽略
+18. 接口的不同实现类的解析                                                                      暂时忽略
+19. 抽象类的具体子类实例                                                                        暂时忽略
+ */
+
 /**
- * 使用的是反射机制实现的，不支持跨平台。
- * 而且也不能支持非@Serializable注解的class。
- * 能支持嵌套泛型，因为它使用inline，T在编译的时候，成了真实类型。
- *
- *  简单的List String, Map<String, Any?>，其中Any是简单类型。
- *  简单的List<MyClass> 其中MyClass已经使用了@ Serializable注解
- *  简单的Map<String, MyClass> 其中MyClass已经使用了@ Serializable注解
+ * 使用的是反射机制typeOf<T>实现的，不支持跨平台。其实不太推荐。要反射我为何不用gson？
  *
  */
 @Deprecated("")
 inline fun <reified T> T.toKsonString() = Globals.kson.encodeToString(Json.serializersModule.serializer(typeOf<T>()), this)
+
+/**
+ * 使用的是反射机制this:class.createType实现的，对于map/List有额外item解析。不支持跨平台。其实不太推荐。要反射我为何不用gson？
+ *
+ * json序列化。其实还是要求如果是T类型，T必须也是使用了@ Serializable注解才行
+ */
+@Deprecated("极度受限，使用上位版本[toJsonString]？")
+fun Any.toKsonStringLimited() : String = Globals.kson.encodeToString(this.toKsonElementLimited())
 
 /**
  * inline+KSerializer让编译时就确定类型准确无误。[toJsonString]的标准版。
@@ -34,28 +110,15 @@ inline fun <reified T> T.toKsonString() = Globals.kson.encodeToString(Json.seria
  */
 inline fun <reified T> T.toKsonStringTyped(serializer: KSerializer<T>) : String = Globals.kson.encodeToString(serializer, this)
 
-inline fun <reified E> List<E>.toKsonStringTyped(serializer: KSerializer<E>) : String
+inline fun <reified E> List<E>.lisToKsonStringTyped(serializer: KSerializer<E>) : String
     = Globals.kson.encodeToString(ListSerializer(serializer), this)
 
-inline fun <reified K, reified V> Map<K, V>.toKsonStringTyped(kSerializer: KSerializer<K>, vSerializer: KSerializer<V>) : String
+inline fun <reified K, reified V> Map<K, V>.mapToKsonStringTyped(kSerializer: KSerializer<K>, vSerializer: KSerializer<V>) : String
     = Globals.kson.encodeToString(MapSerializer(kSerializer, vSerializer), this)
 
-/**
- *
- * json序列化。其实还是要求如果是T类型，T必须也是使用了@ Serializable注解才行
- * 极度受限，使用上位版本[toJsonString]
- *
- *  什么时候，可以使用它呢？
- *
- *  简单的List String, Map<String, Any?>，其中Any是简单类型。
- *  简单的List<MyClass> 其中MyClass已经使用了@ Serializable注解
- *  简单的Map<String, MyClass> 其中MyClass已经使用了@ Serializable注解
- */
-@Deprecated("极度受限，使用上位版本[toJsonString]？")
-fun Any.toKsonStringLimited() : String = Globals.kson.encodeToString(this.toKsonElementLimited())
 
 @Deprecated("极度受限，使用上位版本[toJsonString]？")
-fun Any?.toKsonElementLimited(): JsonElement = when (this) {
+internal fun Any?.toKsonElementLimited(): JsonElement = when (this) {
     null -> JsonNull
     is JsonElement -> this
     is Number -> JsonPrimitive(this)
@@ -76,3 +139,5 @@ inline fun <reified E> String.fromKsonList(): List<E> =
     ignoreError { Globals.kson.decodeFromString<List<E>>(this) } ?: emptyList()
 
 
+inline fun <reified K, reified V> String.fromKsonMap(): Map<K, V> =
+    ignoreError { Globals.kson.decodeFromString<Map<K, V>>(this) } ?: emptyMap()

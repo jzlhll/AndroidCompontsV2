@@ -8,6 +8,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.validate
@@ -25,6 +26,7 @@ class AllEntryFrgNamesProvider : SymbolProcessorProvider{
 }
 
 /**
+ * creator: lt  2022/10/20  lt.dygzs@qq.com
  * effect : ksp处理程序
  * warning:
  */
@@ -48,8 +50,17 @@ class TestKspSymbolProcessor(private val environment: SymbolProcessorEnvironment
             else {
                 if (symbol is KSClassDeclaration && symbol.classKind == ClassKind.CLASS) {
                     val qualifiedClassName = symbol.qualifiedName?.asString()
-                    // 访问注解的参数
-                    allEntryFragmentNamesTemplate.insert(qualifiedClassName!!)
+                    //解析priority
+                    var priority = 0
+                    var customName:String? = null
+                    var autoEnter = false
+                    symbol.annotations.forEach { an->
+                        val pair = parseAnnotation(an, qualifiedClassName)
+                        customName = pair.first
+                        priority = pair.second
+                        autoEnter = pair.third
+                    }
+                    allEntryFragmentNamesTemplate.insert(qualifiedClassName!!, priority, customName, autoEnter)
 //                    symbol.accept(TestKspVisitor(environment), Unit)//处理符号
                 } else {
                     ret.add(symbol)
@@ -59,6 +70,37 @@ class TestKspSymbolProcessor(private val environment: SymbolProcessorEnvironment
 
         //返回无法处理的符号
         return ret
+    }
+
+    private fun parseAnnotation(
+        an: KSAnnotation,
+        qualifiedClassName: String?,
+    ): Triple<String?, Int, Boolean> {
+        var priority = 0
+        var customName:String? = null
+        var autoEnter = false
+        if (an.shortName.getShortName() == "EntryFrgName") {
+            an.arguments.forEach { arg ->
+                val argName = arg.name?.asString()
+                when (argName) {
+                    "priority" -> {
+                        priority = arg.value.toString().toInt()
+                        environment.logger.warn("ksp process $qualifiedClassName priority $priority")
+                    }
+
+                    "customName" -> {
+                        customName = arg.value.toString()
+                        environment.logger.warn("ksp process $qualifiedClassName customName $customName")
+                    }
+
+                    "autoEnter" -> {
+                        autoEnter = arg.value.toString().toBoolean()
+                        environment.logger.warn("ksp process $qualifiedClassName autoEnter $autoEnter")
+                    }
+                }
+            }
+        }
+        return Triple(customName, priority, autoEnter)
     }
 
     override fun finish() {
