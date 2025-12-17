@@ -132,6 +132,18 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_marginTop="18dp"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/selectDirBtn"
+            android:text="选择文件夹"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
     <com.au.module_android.widget.FlowLayout
         android:orientation="horizontal"
         android:layout_marginTop="8dp"

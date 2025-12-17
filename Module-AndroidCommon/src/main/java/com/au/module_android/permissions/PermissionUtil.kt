@@ -15,6 +15,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.au.module_android.Globals
 import com.au.module_android.permissions.activity.ActivityForResult
 import com.au.module_android.permissions.activity.GetContentForResult
+import com.au.module_android.permissions.activity.SelectSysDirForResult
 import com.au.module_android.permissions.activity.SystemTakePictureForResult
 import com.au.module_android.permissions.activity.SystemTakeVideoFaceForResult
 import com.au.module_android.permissions.activity.SystemTakeVideoForResult
@@ -29,6 +30,8 @@ const val REQUEST_OVERLAY_CODE: Int = 1001
 //todo https://article.juejin.cn/post/7082314521284444173 增加拍照等
 
 fun LifecycleOwner.getContentForResult() = GetContentForResult(this)
+
+fun LifecycleOwner.selectSysDirForResult() = SelectSysDirForResult(this)
 
 fun LifecycleOwner.systemTakePictureForResult() = SystemTakePictureForResult(this)
 

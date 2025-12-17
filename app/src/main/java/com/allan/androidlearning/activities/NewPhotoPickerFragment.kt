@@ -9,6 +9,7 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
+import com.au.module_android.permissions.selectSysDirForResult
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.logd
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
@@ -30,6 +31,8 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     val mutiUriResult = compatMultiUriPickerForResult(8)
     val uriResult = uriPickerForResult()
+
+    val selectDirResult = selectSysDirForResult()
 
     val cameraHelper = CameraPermissionHelp(this, object : CameraPermissionHelp.Supplier {
         override fun createFileProvider(): Pair<File, Uri> {
@@ -148,6 +151,11 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         binding.multiUri2.onClick {
             mutiUriResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
                 logd { "file uri: $uris" }
+            }
+        }
+        binding.selectDirBtn.onClick {
+            selectDirResult.start(null) {
+
             }
         }
     }
