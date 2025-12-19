@@ -22,6 +22,7 @@ import com.au.module_android.utilsmedia.URI_COPY_PARAM_HEIC_TO_JPG
 import com.au.module_android.utilsmedia.UriParserUtil
 import com.au.module_android.utilsmedia.copyToCacheConvert
 import java.io.File
+import kotlin.collections.toTypedArray
 
 /**
  * @author allan
@@ -34,37 +35,12 @@ class MultiPhotoPickerContractResult(
     resultContract: ActivityResultContract<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>)
     : IContractResult<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>(fragment, resultContract) {
 
-    private var mCopyMode: CopyMode = CopyMode.COPY_CVT_IMAGE_TO_JPG
-
     private var oneByOneCallback:((UriWrap)->Unit)? = null
     private var allCallback:((Array<UriWrap>)->Unit)? = null
 
-    private var mLimitImageSize = 50 * 1024 * 1024
-    private var mTargetImageSize = 5 * 1024 * 1024
-    private var mLimitVideoSize = 100 * 1024 * 1024L
-    private var ignoreSizeKb = 100
-    private var mNeedLuban = false
+    val paramsBuilder = PickerMediaParams.Builder().asStingy()
 
     private val logTag = "Picker"
-
-    /**
-     * target表示最终压缩后的大小
-     */
-    fun setLimitImageSize(limitSize: Int, targetLimitSize:Int) : MultiPhotoPickerContractResult {
-        mLimitImageSize = limitSize
-        mTargetImageSize = targetLimitSize
-        return this
-    }
-
-    fun setLimitVideoSize(limitSize:Long) : MultiPhotoPickerContractResult {
-        mLimitVideoSize = limitSize
-        return this
-    }
-
-    fun setCopyMode(copyMode: CopyMode) : MultiPhotoPickerContractResult {
-        mCopyMode = copyMode
-        return this
-    }
 
     fun setCurrentMaxItems(max:Int) : MultiPhotoPickerContractResult {
         require(max > 0) {"max must > 0"}
@@ -73,17 +49,12 @@ class MultiPhotoPickerContractResult(
         return this
     }
 
-    fun setNeedLubanCompress(ignoreSkb:Int = 100): MultiPhotoPickerContractResult {
-        this.ignoreSizeKb = ignoreSkb
-        mNeedLuban = true
-        return this
-    }
-
     @WorkerThread
     private fun lubanCompress(uriWrap: UriWrap,
                               isAllCallback: Boolean,
                               totalNum: Int,
-                              allResults: MutableList<UriWrap>) {
+                              allResults: MutableList<UriWrap>,
+                              params: PickerMediaParams) {
         LubanCompress()
             .setResultCallback { srcPath, resultPath, isSuc -> //主线程。Luban内部main handler回调回来的
                 val path = resultPath ?: srcPath
@@ -91,7 +62,7 @@ class MultiPhotoPickerContractResult(
                     val pathFile = File(path)
                     uriWrap.uri = Uri.fromFile(pathFile)
                     uriWrap.fileSize = pathFile.length()
-                    uriWrap.beLimitedSize = uriWrap.fileSize > mTargetImageSize
+                    uriWrap.beLimitedSize = uriWrap.fileSize > params.targetImageSize
                     uriWrap.beCopied = true
                     uriWrap.fileName = pathFile.name
 
@@ -107,7 +78,7 @@ class MultiPhotoPickerContractResult(
                     }
                 }
             }
-            .compress(fragment.requireContext(), uriWrap.uri, ignoreSizeKb)
+            .compress(fragment.requireContext(), uriWrap.uri, params.ignoreSizeKb)
     }
 
     private val subCacheDir = "luban_disk_cache"
@@ -116,13 +87,14 @@ class MultiPhotoPickerContractResult(
     private fun ifCopy(
         uri: Uri,
         totalNum: Int,
-        cr: ContentResolver
+        cr: ContentResolver,
+        params: PickerMediaParams
     ): UriWrap {
         val util = UriParserUtil(uri)
         val parsedInfo = util.parse(cr)
         val fileSize = parsedInfo.fileLength
         val isImage = util.isUriImage()
-        val limitSize = if(isImage) mLimitImageSize.toLong() else mLimitVideoSize
+        val limitSize = if(isImage) params.limitImageSize.toLong() else params.limitVideoSize
         val mime = parsedInfo.mimeType
         val fileName = parsedInfo.name
 
@@ -132,7 +104,7 @@ class MultiPhotoPickerContractResult(
             )
         }
 
-        return when (mCopyMode) {
+        return when (params.copyMode) {
             CopyMode.COPY_NOTHING -> {
                 UriWrap(uri, totalNum, fileSize, isImage, mime = mime, fileName = fileName)
             }
@@ -210,16 +182,17 @@ class MultiPhotoPickerContractResult(
             fragment.lifecycleScope.launchOnThread {
                 val cr = fragment.requireContext().contentResolver
                 val totalNum = cutUriList.size
+                val params = paramsBuilder.build()
 
                 val isAllCallback = allCallback != null
                 val allResults = mutableListOf<UriWrap>()
 
                 cutUriList.forEach { uri->
                     //2. check if copy
-                    val uriWrap = ifCopy(uri, totalNum, cr)
+                    val uriWrap = ifCopy(uri, totalNum, cr, params)
                     if(BuildConfig.DEBUG) Log.d(logTag, "2>if Copy: $uriWrap")
 
-                    if (!mNeedLuban || !uriWrap.isImage) {
+                    if (!params.needLuban || !uriWrap.isImage) {
                         //3. 回调
                         fragment.lifecycleScope.launchOnUi {
                             if(!isAllCallback)
@@ -233,7 +206,7 @@ class MultiPhotoPickerContractResult(
                         }
                     } else {
                         //3. luban压缩和回调
-                        lubanCompress(uriWrap, isAllCallback, totalNum, allResults)
+                        lubanCompress(uriWrap, isAllCallback, totalNum, allResults, params)
                     }
                 }
             }

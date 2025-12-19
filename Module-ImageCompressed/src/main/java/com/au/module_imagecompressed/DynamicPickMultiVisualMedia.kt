@@ -1,7 +1,10 @@
 package com.au.module_imagecompressed
 
+import android.R.attr.action
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.ext.SdkExtensions
 import android.provider.MediaStore
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,7 +31,9 @@ class DynamicPickMultiVisualMedia(currentMaxItems:Int) : ActivityResultContracts
     }
 
     override fun createIntent(context: Context, input: PickVisualMediaRequest): Intent {
-        val systemLimit = ignoreError { max(100, MediaStore.getPickImagesMaxLimit()) } ?: 100
+        val systemLimit = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.R) >= 2) {
+            max(100, MediaStore.getPickImagesMaxLimit())
+        } else { 100 }
         val max = min(mCurrentMax, systemLimit)
         return super.createIntent(context, input).apply {
             when (action) {

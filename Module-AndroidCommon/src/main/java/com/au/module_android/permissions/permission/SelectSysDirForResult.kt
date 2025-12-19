@@ -1,4 +1,4 @@
-package com.au.module_android.permissions.activity
+package com.au.module_android.permissions.permission
 
 import android.net.Uri
 import androidx.activity.result.ActivityResultCallback

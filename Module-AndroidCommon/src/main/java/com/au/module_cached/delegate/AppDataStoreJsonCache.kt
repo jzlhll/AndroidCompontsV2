@@ -1,24 +1,35 @@
 package com.au.module_cached.delegate
 
-import com.au.module_android.json.fromJson
-import com.au.module_android.json.toJsonString
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
+import com.au.module_android.Globals.kson
+import com.au.module_android.utils.IReadMoreWriteLessCacheProperty
+import com.au.module_android.utils.ignoreError
+import kotlinx.serialization.KSerializer
 
 /**
  * 通过json string存入到AppDataStoreStringCache。实现转换Json。
  * 不能直接修改你的Class里面的内容是不会给你保存的。 你需要·等于一下·就能保存了。
+ *
+ * warn：注意目前只传入了一层 class，因此不能支持嵌套泛型。尽量简约。
  */
-class AppDataStoreJsonCache<T:Any>(key:String, defaultValue:T, private val tClass:Class<T>, cacheFileName: String? = null)
-        : ReadWriteProperty<Any, T> {
-    private var cache by AppDataStoreStringCache(key, defaultValue.toJsonString(), cacheFileName)
+class AppDataStoreJsonCache<T : Any> (
+    key: String,
+    defaultValue: T,
+    private val serializer: KSerializer<T>,
+    cacheFileName: String? = null
+) : IReadMoreWriteLessCacheProperty<T>(key, defaultValue) {
 
-    override fun getValue(thisRef: Any, property: KProperty<*>): T {
+    private var cache by AppDataStoreStringCache(key, kson.encodeToString(serializer, defaultValue), cacheFileName)
+    override fun read(key: String, defaultValue: T): T {
         val jsonStr = cache
-        return fromJson(jsonStr, tClass)
+        if (jsonStr.isNotEmpty()) {
+            return ignoreError { kson.decodeFromString(serializer, jsonStr) } ?: defaultValue
+        }
+        return defaultValue
     }
 
-    override fun setValue(thisRef: Any, property: KProperty<*>, value: T) {
-        cache = value.toJsonString()
+    override fun save(key: String, value: T) {
+        val c = kson.encodeToString(serializer, value)
+        cache = c
     }
+
 }

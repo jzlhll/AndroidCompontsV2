@@ -14,8 +14,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import com.au.module_android.Globals
 import com.au.module_android.permissions.activity.ActivityForResult
-import com.au.module_android.permissions.activity.GetContentForResult
-import com.au.module_android.permissions.activity.SelectSysDirForResult
+import com.au.module_android.permissions.activity.GetMultipleContentsForResult
+import com.au.module_android.permissions.activity.OpenMultipleDocsForResult
+import com.au.module_android.permissions.permission.SelectSysDirForResult
 import com.au.module_android.permissions.activity.SystemTakePictureForResult
 import com.au.module_android.permissions.activity.SystemTakeVideoFaceForResult
 import com.au.module_android.permissions.activity.SystemTakeVideoForResult
@@ -29,7 +30,15 @@ import com.au.module_android.utils.startActivityFix
 const val REQUEST_OVERLAY_CODE: Int = 1001
 //todo https://article.juejin.cn/post/7082314521284444173 增加拍照等
 
-fun LifecycleOwner.getContentForResult() = GetContentForResult(this)
+/**
+ * 专门用于文档操作，系统会自动授予持久化权限，适合需要长期访问的场景
+ */
+fun LifecycleOwner.openMultipleDocsForResult() = OpenMultipleDocsForResult(this)
+
+/**
+ * 主要用于选择内容（如图片、文件），但返回的Uri权限是临时的，应用进程结束后会失效
+ */
+fun LifecycleOwner.getMultipleContentsForResult() = GetMultipleContentsForResult(this)
 
 fun LifecycleOwner.selectSysDirForResult() = SelectSysDirForResult(this)
 

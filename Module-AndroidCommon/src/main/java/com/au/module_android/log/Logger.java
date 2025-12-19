@@ -1,4 +1,6 @@
 package com.au.module_android.log;
+
+
 import com.au.module_android.BuildConfig;
 
 public final class Logger {
@@ -16,6 +18,10 @@ public final class Logger {
         if (isDebugEnabled) android.util.Log.d(tag, formatMessage(message, args));
     }
 
+    public void d(String message, Object... args) {
+        if (isDebugEnabled) android.util.Log.d(tag, formatMessage(message, args));
+    }
+
     public void warn(String message, Object... args) {
         android.util.Log.w(tag, formatMessage(message, args));
     }
@@ -24,11 +30,27 @@ public final class Logger {
         android.util.Log.w(tag, formatMessage(message, args), throwable);
     }
 
+    public void w(String message, Object... args) {
+        android.util.Log.w(tag, formatMessage(message, args));
+    }
+
+    public void w(String message, Throwable throwable, Object... args) {
+        android.util.Log.w(tag, formatMessage(message, args), throwable);
+    }
+
     public void error(String message, Object... args) {
         android.util.Log.e(tag, formatMessage(message, args));
     }
 
     public void error(String message, Throwable throwable, Object... args) {
+        android.util.Log.e(tag, formatMessage(message, args), throwable);
+    }
+
+    public void e(String message, Object... args) {
+        android.util.Log.e(tag, formatMessage(message, args));
+    }
+
+    public void e(String message, Throwable throwable, Object... args) {
         android.util.Log.e(tag, formatMessage(message, args), throwable);
     }
 
