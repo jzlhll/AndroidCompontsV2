@@ -25,7 +25,7 @@ import java.io.File
 
 @EntryFrgName
 class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), TakePhotoActionDialog.ITakePhotoActionDialogCallback {
-    val singleResult = photoPickerForResult().also { it.setNeedLubanCompress(100) }
+    val singleResult = photoPickerForResult()
 
     val multiResult = compatMultiPhotoPickerForResult(3)
 

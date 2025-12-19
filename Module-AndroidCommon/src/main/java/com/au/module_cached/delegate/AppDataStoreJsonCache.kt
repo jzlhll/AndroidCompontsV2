@@ -11,7 +11,7 @@ import kotlinx.serialization.KSerializer
  *
  * warn：注意目前只传入了一层 class，因此不能支持嵌套泛型。尽量简约。
  */
-class AppDataStoreJsonCache<T : Any> (
+class AppDataStoreKsonCache<T : Any> (
     key: String,
     defaultValue: T,
     private val serializer: KSerializer<T>,

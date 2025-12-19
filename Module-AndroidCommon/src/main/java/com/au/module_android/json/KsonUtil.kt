@@ -2,10 +2,6 @@ package com.au.module_android.json
 
 import com.au.module_android.Globals
 import com.au.module_android.utils.ignoreError
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.MapSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -13,7 +9,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
 import kotlin.reflect.full.createType
-import kotlin.reflect.typeOf
 
 /*
 支持情况如下：
@@ -94,14 +89,6 @@ bean类对象要求必须@Serializable注解；
 18. 接口的不同实现类的解析                                                                      暂时忽略
 19. 抽象类的具体子类实例                                                                        暂时忽略
  */
-
-/**
- * 使用的是反射机制typeOf<T>实现的，不支持跨平台。其实不太推荐。要反射我为何不用gson？
- *
- */
-@Deprecated("")
-inline fun <reified T> T.toKsonString() = Globals.kson.encodeToString(Json.serializersModule.serializer(typeOf<T>()), this)
-
 /**
  * 专攻List<Any>, Map<String, Any?>的toString。
  *
@@ -113,23 +100,10 @@ inline fun <reified T> T.toKsonString() = Globals.kson.encodeToString(Json.seria
  *
  * json序列化。其实还是要求如果是T类型，T必须也是使用了@ Serializable注解才行
  */
-@Deprecated("极度受限，使用上位版本[toJsonString]？")
+@Deprecated("极度受限，使用上位版本[toKsonString]")
 fun Any.toKsonStringLimited() : String = Globals.kson.encodeToString(this.toKsonElementLimited())
 
-/**
- * inline+KSerializer让编译时就确定类型准确无误。[toJsonString]的标准版。
- * 嵌套类型比如：loginBean.toJsonStringTyped(ResultBean.serializer(LoginResponse.serializer()))
- */
-inline fun <reified T> T.toKsonStringTyped(serializer: KSerializer<T>) : String = Globals.kson.encodeToString(serializer, this)
-
-inline fun <reified E> List<E>.lisToKsonStringTyped(serializer: KSerializer<E>) : String
-    = Globals.kson.encodeToString(ListSerializer(serializer), this)
-
-inline fun <reified K, reified V> Map<K, V>.mapToKsonStringTyped(kSerializer: KSerializer<K>, vSerializer: KSerializer<V>) : String
-    = Globals.kson.encodeToString(MapSerializer(kSerializer, vSerializer), this)
-
-
-@Deprecated("极度受限，使用上位版本[toJsonString]？")
+@Deprecated("极度受限，使用上位版本[toKsonString]")
 internal fun Any?.toKsonElementLimited(): JsonElement = when (this) {
     null -> JsonNull
     is JsonElement -> this
@@ -145,11 +119,10 @@ internal fun Any?.toKsonElementLimited(): JsonElement = when (this) {
     else -> Globals.kson.encodeToJsonElement(serializer(this::class.createType()), this)
 }
 
+/**
+ * inline+KSerializer让编译时就确定类型准确无误。
+ * 嵌套类型比如：loginBean.toJsonStringTyped(ResultBean.serializer(LoginResponse.serializer()))
+ */
+inline fun <reified T> T.toKsonString() : String = Globals.kson.encodeToString(this)
+
 inline fun <reified T> String.fromKson() = ignoreError { Globals.kson.decodeFromString<T>(this) }
-
-inline fun <reified E> String.fromKsonList(): List<E> =
-    ignoreError { Globals.kson.decodeFromString<List<E>>(this) } ?: emptyList()
-
-
-inline fun <reified K, reified V> String.fromKsonMap(): Map<K, V> =
-    ignoreError { Globals.kson.decodeFromString<Map<K, V>>(this) } ?: emptyMap()

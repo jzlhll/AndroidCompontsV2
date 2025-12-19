@@ -12,7 +12,7 @@
         android:padding="16dp"
         android:id="@+id/font"
         tools:text="xxxxxxx"
-        android:textSize="13sp"
+        android:textSize="17sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 

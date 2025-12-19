@@ -5,24 +5,28 @@ import android.graphics.Color
 import android.net.Uri
 import android.view.LayoutInflater
 import androidx.activity.ComponentActivity
+import androidx.core.net.toUri
 import androidx.viewbinding.ViewBinding
 import com.allan.androidlearning.databinding.HolderKsonIteBinding
 import com.allan.classnameanno.EntryFrgName
+import com.au.module_android.Globals.kson
 import com.au.module_android.click.onClick
 import com.au.module_android.json.fromJson
-import com.au.module_android.json.lisToKsonStringTyped
+import com.au.module_android.json.fromKson
 import com.au.module_android.json.toKsonString
-import com.au.module_android.json.toKsonStringTyped
 import com.au.module_android.selectlist.SimpleItem
 import com.au.module_android.selectlist.SimpleListFragment
 import com.au.module_android.utils.HtmlPart
+import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.useSimpleHtmlText
 import com.au.module_androidui.databinding.KsonTemprorayViewBinding
 import com.au.module_androidui.dialogs.AbsCenterFakeDialog
-import kotlinx.serialization.builtins.serializer
+import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 import java.util.Date
-import kotlin.toString
 
 class KsonItem(override val itemName: String,
                override val onItemClick: () -> Unit) : SimpleItem() {
@@ -33,6 +37,7 @@ class KsonTestFragment(
     override val title: String = "KsonTest",
 ) : SimpleListFragment<KsonItem>() {
 
+    private val temporarySimpleView = TemporarySimpleView()
     private val temporaryView = TemporaryView()
     private val testFunc = JsonUtilTestFunctions()
 
@@ -43,9 +48,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create1_simple_toStringTyped(): KsonItem {
-        return KsonItem("1. 简单对象序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringSimpleTyped()
+    private fun create1_simple_toStringTypedNoParam(): KsonItem {
+        return KsonItem("1. 简单对象序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringSimpleTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -71,9 +76,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create2_annotatedList_toString(): KsonItem {
-        return KsonItem("2. 注解类列表序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringListAnnotated()
+    private fun create2_annotatedList_toStringTypedNoParam(): KsonItem {
+        return KsonItem("2. 注解类列表序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringListAnnotatedTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -86,22 +91,15 @@ class KsonTestFragment(
     }
 
     private fun create2_annotatedList_fromString(): KsonItem {
-        return KsonItem("2. 注解类列表从字符串反序列化") {
+        return KsonItem("2. 注解类列表从字符串反序列化 ") {
             val r = testFunc.testFromStringListAnnotated()
             temporaryView.deserialize(this, r.third, r.second?.toString())
         }
     }
 
-    private fun create2_annotatedList_fromString2(): KsonItem {
-        return KsonItem("2. 注解类列表从字符串反序列化（List专用）") {
-            val r = testFunc.testFromStringListAnnotated2()
-            temporaryView.deserialize(this, r.third, r.second?.toString())
-        }
-    }
-
-    private fun create3_normalList_toString(): KsonItem {
-        return KsonItem("3. 普通类列表序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringListNormal()
+    private fun create3_normalList_toStringTypedNoParam(): KsonItem {
+        return KsonItem("3. 普通类列表序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringListNormalTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -121,23 +119,16 @@ class KsonTestFragment(
     }
 
     private fun create3_normalList_fromString(): KsonItem {
-        return KsonItem("3. 普通类列表从字符串反序列化") {
+        return KsonItem("3. 普通类列表从字符串反序列化 ") {
             val r = testFunc.testFromStringListNormal()
             temporaryView.deserialize(this, r.third, r.second?.toString())
         }
     }
 
-    private fun create3_normalList_fromString2(): KsonItem {
-        return KsonItem("3. 普通类列表从字符串反序列化（List专用）") {
-            val r = testFunc.testFromStringListNormal2()
-            temporaryView.deserialize(this, r.third, r.second?.toString())
-        }
-    }
-
     /////
-    private fun create3_normalListStr_toString(): KsonItem {
-        return KsonItem("3. 普通类列表string序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringListStrNormal()
+    private fun create3_normalListStr_toStringTypedNoParam(): KsonItem {
+        return KsonItem("3. 普通类列表string序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringListStrNormalTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -163,10 +154,9 @@ class KsonTestFragment(
         }
     }
     ////
-
-    private fun create4_annotatedMap_toString(): KsonItem {
-        return KsonItem("4. 注解类Map序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringMapAnnotated()
+    private fun create4_annotatedMap_toStringTypedNoParam(): KsonItem {
+        return KsonItem("4. 注解类Map序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringMapAnnotatedTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -200,16 +190,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create4_annotatedMap_fromString2(): KsonItem {
-        return KsonItem("4. 注解类Map从字符串反序列化（Map专用）") {
-            val r = testFunc.testFromStringMapAnnotated2()
-            temporaryView.deserialize(this, r.third, r.second?.toString())
-        }
-    }
-
-    private fun create5_normalMap_toString(): KsonItem {
-        return KsonItem("5. 普通类Map序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringMapNormal()
+    private fun create5_normalMap_toStringTypedNoParam(): KsonItem {
+        return KsonItem("5. 普通类Map序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringMapNormalTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -235,13 +218,6 @@ class KsonTestFragment(
         }
     }
 
-    private fun create5_normalMap_fromString2(): KsonItem {
-        return KsonItem("5. 普通类Map从字符串反序列化（Map专用）") {
-            val r = testFunc.testFromStringMapNormal2()
-            temporaryView.deserialize(this, r.third, r.second?.toString())
-        }
-    }
-
     private fun create6_simpleMap_toString(): KsonItem {
         return KsonItem("6. 简单类型Map序列化 (Default)") {
             val (obj, serializedStr) = testFunc.testToStringMapSimple()
@@ -249,9 +225,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create6_simpleMap_toStringTyped(): KsonItem {
-        return KsonItem("6. 简单类型Map序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringMapSimpleTyped()
+    private fun create6_simpleMap_toStringTypedNoParam(): KsonItem {
+        return KsonItem("6. 简单类型Map序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringMapSimpleTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -270,16 +246,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create6_simpleMap_fromString2(): KsonItem {
-        return KsonItem("6. 简单类型Map从字符串反序列化（Map专用）") {
-            val r = testFunc.testFromStringMapSimple2()
-            temporaryView.deserialize(this, r.third, r.second?.toString())
-        }
-    }
-
-    private fun create7_genericAnnotated_toString(): KsonItem {
-        return KsonItem("7. 泛型结果-注解类型序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringGenericCustomAnnotated()
+    private fun create7_genericAnnotated_toStringTypedNoParam(): KsonItem {
+        return KsonItem("7. 泛型结果-注解类型序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringGenericCustomAnnotatedTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -305,9 +274,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create7_genericNormal_toString(): KsonItem {
-        return KsonItem("7. 泛型结果-普通类型序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringGenericCustomNormal()
+    private fun create7_genericNormal_toStringTypedNoParam(): KsonItem {
+        return KsonItem("7. 泛型结果-普通类型序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringGenericCustomNormalTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -333,9 +302,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create8_nestedList_toString(): KsonItem {
-        return KsonItem("8. 嵌套泛型-列表序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringNestedGenericList()
+    private fun create8_nestedList_toStringTypedNoParam(): KsonItem {
+        return KsonItem("8. 嵌套泛型-列表序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringNestedGenericListTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -361,9 +330,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create10_nestedMapList_toString(): KsonItem {
-        return KsonItem("10. 嵌套泛型-Map<List>序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringNestedMapList()
+    private fun create10_nestedMapList_toStringTypedNoParam(): KsonItem {
+        return KsonItem("10. 嵌套泛型-Map<List>序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringNestedMapListTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -383,22 +352,15 @@ class KsonTestFragment(
     }
 
     private fun create10_nestedMapList_fromString(): KsonItem {
-        return KsonItem("10. 嵌套泛型-Map<List>从字符串反序列化") {
+        return KsonItem("10. 嵌套泛型-Map<List>从字符串反序列化 ") {
             val r = testFunc.testFromStringNestedMapList()
             temporaryView.deserialize(this, r.third, r.second?.toString())
         }
     }
 
-    private fun create10_nestedMapList_fromString2(): KsonItem {
-        return KsonItem("10. 嵌套泛型-Map<List>从字符串反序列化（Map专用）") {
-            val r = testFunc.testFromStringNestedMapList2()
-            temporaryView.deserialize(this, r.third, r.second?.toString())
-        }
-    }
-
-    private fun create12_nestedListGeneric_toString(): KsonItem {
-        return KsonItem("12. 嵌套列表-泛型结果序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringNestedListGeneric()
+    private fun create12_nestedListGeneric_toStringTypedNoParam(): KsonItem {
+        return KsonItem("12. 嵌套列表-泛型结果序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringNestedListGenericTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -424,13 +386,6 @@ class KsonTestFragment(
         }
     }
 
-    private fun create12_nestedListGeneric_fromString2(): KsonItem {
-        return KsonItem("12. 嵌套列表-泛型结果从字符串反序列化（List专用）") {
-            val r = testFunc.testFromStringNestedListGeneric2()
-            temporaryView.deserialize(this, r.third, r.second?.toString())
-        }
-    }
-
     private fun create13_deepNestField_toString(): KsonItem {
         return KsonItem("13. 深度嵌套-对象字段序列化 (Default)") {
             val (obj, serializedStr) = testFunc.testToStringDeepNestField()
@@ -438,9 +393,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create13_deepNestField_toStringTyped(): KsonItem {
-        return KsonItem("13. 深度嵌套-对象字段序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringDeepNestFieldTyped()
+    private fun create13_deepNestField_toStringTypedNoParam(): KsonItem {
+        return KsonItem("13. 深度嵌套-对象字段序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringDeepNestFieldTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -466,9 +421,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create14_deepNestList_toStringTyped(): KsonItem {
-        return KsonItem("14. 深度嵌套-列表字段序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringDeepNestListTyped()
+    private fun create14_deepNestList_toStringTypedNoParam(): KsonItem {
+        return KsonItem("14. 深度嵌套-列表字段序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringDeepNestListTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -494,9 +449,9 @@ class KsonTestFragment(
         }
     }
 
-    private fun create15_deepNestMap_toStringTyped(): KsonItem {
-        return KsonItem("15. 深度嵌套-Map字段序列化 (Typed)") {
-            val (obj, serializedStr) = testFunc.testToStringDeepNestMapTyped()
+    private fun create15_deepNestMap_toStringTypedNoParam(): KsonItem {
+        return KsonItem("15. 深度嵌套-Map字段序列化 (Typed No Param)") {
+            val (obj, serializedStr) = testFunc.testToStringDeepNestMapTypedNoParam()
             temporaryView.serialize(this, obj, serializedStr)
         }
     }
@@ -515,75 +470,144 @@ class KsonTestFragment(
         }
     }
 
+    private fun createSingleTest01() : KsonItem{
+        return KsonItem("单测01：测试@JsonNames 反序列化") {
+            val json1 = """{"user_name": "Alice", "user_email": "alice@test.com"}"""
+            val json2 = """{"username": "Bob", "email_address": "bob@test.com"}"""
+            val json3 = """{"userName": "Charlie"}"""
+            val bean1 = json1.fromKson<JsonNameBean>()
+            val bean2 = json2.fromKson<JsonNameBean>()
+            val bean3 = json3.fromKson<JsonNameBean>()
+            logdNoFile { "bean1: $bean1" }
+            logdNoFile { "bean2: $bean2" }
+            logdNoFile { "bean3: $bean3" }
+
+            temporaryView.deserialize(this,
+                "json1 $json1\n json2 $json2 \njson3 $json3\n",
+                "bean1 $bean1 \nbean2 $bean2 \nbean3 $bean3")
+        }
+    }
+    private fun createSingleTest02() : KsonItem{
+        return KsonItem("单测02：测试@JsonNames 序列化") {
+            val bean1 = JsonNameBean("Alice", "alice@test.com")
+            val bean2 = JsonNameBean("Bob", "bob@test.com")
+            val bean3 = JsonNameBean("Charlie")
+
+            val jsonStr1 = bean1.toKsonString()
+            val jsonStr2 = bean2.toKsonString()
+            val jsonStr3 = bean3.toKsonString()
+
+            temporaryView.serialize(this,
+                "bean1 $bean1\nbean2 $bean2\nbean3 $bean3\n",
+                "jsonStr1 $jsonStr1\njsonStr2 $jsonStr2\njsonStr3 $jsonStr3\n"
+                )
+        }
+    }
+
+    private fun createSingleTest03() : KsonItem{
+        return KsonItem("单测03：测试Contextual") {
+            val bean = ContextualBean("https://www.baidu.com".toUri(), "message data info.")
+            try {
+                val module = SerializersModule {
+                    contextual(UriSerializer)
+                }
+
+                val json = Json { serializersModule = module }
+                val beanStr2 = json.encodeToString(bean)
+                val beanStr = ignoreError {bean.toKsonString() }
+                temporaryView.serialize(this,
+                    "bean $bean\n",
+                    "beanStr $beanStr\nbeanStr2 $beanStr2"
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun createSingleTest04() : KsonItem{
+        return KsonItem("单测04：必须传入serializer()") {
+//            val bean1 = _1SerializableBean("icon.png/11", 100)
+//            val bean2 = _1SerializableBean("icon.png/22", 101)
+//            val list = listOf(bean1, bean2)
+//            val str = list.toKsonString()
+//            logdNoFile { "list $str" }
+//            toastOnTop("list $str")
+
+            val listType = listOf(listOf("a", "b"), listOf("c", "d"))
+           // val listSerializer = ListSerializer(ListSerializer(String.serializer()))
+            val jsonStr1 = kson.encodeToString(listType)
+            toastOnTop("jsonStr1 $jsonStr1")
+        }
+    }
+
     private val _items = listOf(
+        createSingleTest01(),
+        createSingleTest02(),
+        createSingleTest03(),
+        createSingleTest04(),
+
         create1_simple_toString(),
-        create1_simple_toStringTyped(),
+        create1_simple_toStringTypedNoParam(),
         create1_simple_toStringLimited(),
         create1_simple_fromString(),
         create2_annotatedList_toStringDefault(),
-        create2_annotatedList_toString(),
+        create2_annotatedList_toStringTypedNoParam(),
         create2_annotatedList_toStringLimited(),
         create2_annotatedList_fromString(),
-        create2_annotatedList_fromString2(),
-        create3_normalList_toString(),
+        create3_normalList_toStringTypedNoParam(),
         create3_normalList_toStringDefault(),
         create3_normalList_toStringLimited(),
         create3_normalList_fromString(),
-        create3_normalList_fromString2(),
 
-        create3_normalListStr_toString(),
+        create3_normalListStr_toStringTypedNoParam(),
         create3_normalListStr_toStringDefault(),
         create3_normalListStr_toStringLimited(),
         create3_normalListStr_fromString(),
 
-        create4_annotatedMap_toString(),
+        create4_annotatedMap_toStringTypedNoParam(),
         create4_annotatedMap_toStringDefault(),
         create4_annotatedMap_toStringIntDefault(),
         create4_annotatedMap_toStringLimited(),
         create4_annotatedMap_fromString(),
-        create4_annotatedMap_fromString2(),
-        create5_normalMap_toString(),
+        create5_normalMap_toStringTypedNoParam(),
         create5_normalMap_toStringDefault(),
         create5_normalMap_toStringLimited(),
         create5_normalMap_fromString(),
-        create5_normalMap_fromString2(),
         create6_simpleMap_toString(),
-        create6_simpleMap_toStringTyped(),
+        create6_simpleMap_toStringTypedNoParam(),
         create6_simpleMap_toStringLimited(),
         create6_simpleMap_fromString(),
-        create6_simpleMap_fromString2(),
-        create7_genericAnnotated_toString(),
+        create7_genericAnnotated_toStringTypedNoParam(),
         create7_genericAnnotated_toStringDefault(),
         create7_genericAnnotated_toStringLimited(),
         create7_genericAnnotated_fromString(),
-        create7_genericNormal_toString(),
+        create7_genericNormal_toStringTypedNoParam(),
         create7_genericNormal_toStringDefault(),
         create7_genericNormal_toStringLimited(),
         create7_genericNormal_fromString(),
-        create8_nestedList_toString(),
+        create8_nestedList_toStringTypedNoParam(),
         create8_nestedList_toStringDefault(),
         create8_nestedList_toStringLimited(),
         create8_nestedList_fromString(),
-        create10_nestedMapList_toString(),
+        create10_nestedMapList_toStringTypedNoParam(),
         create10_nestedMapList_toStringDefault(),
         create10_nestedMapList_toStringLimited(),
         create10_nestedMapList_fromString(),
-        create10_nestedMapList_fromString2(),
-        create12_nestedListGeneric_toString(),
+        create12_nestedListGeneric_toStringTypedNoParam(),
         create12_nestedListGeneric_toStringDefault(),
         create12_nestedListGeneric_toStringLimited(),
         create12_nestedListGeneric_fromString(),
-        create12_nestedListGeneric_fromString2(),
         create13_deepNestField_toString(),
-        create13_deepNestField_toStringTyped(),
+        create13_deepNestField_toStringTypedNoParam(),
         create13_deepNestField_toStringLimited(),
         create13_deepNestField_fromString(),
         create14_deepNestList_toString(),
-        create14_deepNestList_toStringTyped(),
+        create14_deepNestList_toStringTypedNoParam(),
         create14_deepNestList_toStringLimited(),
         create14_deepNestList_fromString(),
         create15_deepNestMap_toString(),
-        create15_deepNestMap_toStringTyped(),
+        create15_deepNestMap_toStringTypedNoParam(),
         create15_deepNestMap_toStringLimited(),
         create15_deepNestMap_fromString(),
     )
@@ -618,26 +642,6 @@ class KsonTestFragment(
             e.printStackTrace()
             logdNoFile("🌟kson") { "-------第三方直接toKsonString error-------" }
         }
-
-        try {
-            val cookieStr = cookie.toKsonStringTyped(CookieSerializer)
-            logdNoFile("🌟kson") { "-------第三方toKsonStringTyped(CookieSerializer) to success-------\n$cookieStr\n" }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            logdNoFile("🌟kson") { "-------第三方toKsonStringTyped(CookieSerializer) error-------" }
-        }
-
-        val cookieBean = CookieStoreBean()
-        cookieBean.cookies = listOf(cookie)
-        try {
-            val cookieStr1 = cookieBean.toKsonString()
-            logdNoFile("🌟kson") { "cookieBean Str1 $cookieStr1" }
-            val cookieStr2 = cookieBean.toKsonStringTyped(CookieStoreBean.serializer())
-            logdNoFile("🌟kson") { "cookieBean Str2 $cookieStr2" }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        logdNoFile("🌟kson") { "-------3-------" }
 
         val cookieStrings = """
             {"cookies":[{"name":"xiao li","value":"api_token","expiresAt":253402300799999,"domain":"domain.com","path":"/","secure":false,"httpOnly":true,"persistent":false,"hostOnly":false}]}
@@ -679,9 +683,6 @@ class KsonTestFragment(
             val listStr1 = list.toKsonString()
             logdNoFile("🌟kson") { "listStr $listStr1" }
 
-            val listStr2 = list.lisToKsonStringTyped(String.serializer())
-            logdNoFile("🌟kson") { "listStr2 $listStr2" }
-
             val origStr = """
                 ["eee","yyyy","xxx"]
             """.trimIndent()
@@ -699,14 +700,6 @@ class KsonTestFragment(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        try {
-            val loginBean = BaseResultBean("100", "message11", true, Tokens("token_111", "refresh_token_111"))
-            val logBeanStr = loginBean.toKsonStringTyped(BaseResultBean.serializer(Tokens.serializer()))
-            logdNoFile("🌟kson") { "loginBeanStr3 $logBeanStr" }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        logdNoFile("🌟kson") { "-------2-------" }
 
         try {
             val map = mapOf("a" to "aaa", "b" to "bbb", "c" to "ccc")
@@ -745,6 +738,27 @@ class TemporaryView : AbsCenterFakeDialog<KsonTemprorayViewBinding>() {
             hide()
         }
         binding.font.useSimpleHtmlText(*mText)
+    }
+
+    override fun onHide(binding: KsonTemprorayViewBinding) {
+    }
+
+}
+
+
+class TemporarySimpleView : AbsCenterFakeDialog<KsonTemprorayViewBinding>() {
+    private lateinit var mText:String
+
+    fun popText(fragment: KsonTestFragment, text:String) {
+        mText = text
+        pop(fragment)
+    }
+
+    override fun onShow(activity: ComponentActivity, binding: KsonTemprorayViewBinding) {
+        binding.root.onClick {
+            hide()
+        }
+        binding.font.text = mText
     }
 
     override fun onHide(binding: KsonTemprorayViewBinding) {

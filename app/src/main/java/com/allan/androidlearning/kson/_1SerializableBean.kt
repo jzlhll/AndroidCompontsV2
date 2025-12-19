@@ -5,9 +5,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 @Serializable
-data class _1SerializableBean(
+data class _1SerializableBean (
     val avatar: String? = null,
     @SerialName("created_at") val createdAt: Long = 0L,
+
     val email: String? = null,
 ) {
     /**
