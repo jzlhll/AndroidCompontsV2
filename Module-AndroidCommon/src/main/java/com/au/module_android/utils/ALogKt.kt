@@ -6,98 +6,76 @@ import com.au.module_android.BuildConfig
 const val TAG:String = "au"
 var ALWAYS_FILE_LOG = BuildConfig.ENABLE_FILE_LOG_DEFAULT
 
-inline fun <THIS : Any> THIS.loge(tag:String, crossinline block: (THIS) -> String) {
+/**
+ * 之所以定义这些，是综合考虑了反编译的字节码长度，避免inline过多膨胀
+ */
+
+inline fun <THIS : Any> THIS.loge(tag:String = TAG, javaClass: Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     val str = block(this)
-    val log = ALogJ.log("E", str, tag, this.javaClass)
-    Log.e(TAG, log)
+    val log = ALogJ.log("E", str, tag, javaClass)
+    Log.e(tag, log)
 
     if (ALWAYS_FILE_LOG) FileLog.write(log)
 }
 
-inline fun <THIS : Any> THIS.loge(crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logw(tag:String = TAG, javaClass: Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     val str = block(this)
-    val log = ALogJ.log("E", str, this.javaClass)
-    Log.e(TAG, log)
+    val log = ALogJ.log("W", str, tag, javaClass)
+    Log.w(tag, log)
 
     if (ALWAYS_FILE_LOG) FileLog.write(log)
 }
 
-inline fun <THIS : Any> THIS.logw(tag:String, crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logEx(tag:String = TAG, javaClass: Class<*> = this.javaClass, throwable: Throwable, crossinline block: (THIS) -> String) {
     val str = block(this)
-    val log = ALogJ.log("W", str, tag, this.javaClass)
-    Log.w(TAG, log)
+    val log = ALogJ.log("E", str, tag, javaClass)
+    val ex = ALogJ.ex(throwable)
 
-    if (ALWAYS_FILE_LOG) FileLog.write(log)
-}
-
-inline fun <THIS : Any> THIS.logw(crossinline block: (THIS) -> String) {
-    val str = block(this)
-    val log = ALogJ.log("W", str, this.javaClass)
-    Log.w(TAG, log)
-
-    if (ALWAYS_FILE_LOG) FileLog.write(log)
-}
-
-inline fun <THIS : Any> THIS.loge(tag:String, exception: Throwable, crossinline block: (THIS) -> String) {
-    val str = block(this)
-    val log = ALogJ.log("E", str, tag, this.javaClass)
-    val ex = ALogJ.ex(exception)
-
-    Log.e(TAG, log)
-    Log.e(TAG, ex)
+    Log.e(tag, log)
+    Log.e(tag, ex)
     if (ALWAYS_FILE_LOG) FileLog.write(log + "\n" + ex)
 }
 
-inline fun <THIS : Any> THIS.loge(exception: Throwable, crossinline block: (THIS) -> String) {
-    val str = block(this)
-    val log = ALogJ.log("E", str, this.javaClass)
-    val ex = ALogJ.ex(exception)
-
-    Log.e(TAG, log)
-    Log.e(TAG, ex)
-    if (ALWAYS_FILE_LOG) FileLog.write(log + "\n" + ex)
-}
-
-inline fun <THIS : Any> THIS.logd(crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logd(javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     if (BuildConfig.ENABLE_LOGCAT || ALWAYS_FILE_LOG) {
         val str = block(this)
-        val log = ALogJ.log("D", str, this.javaClass)
+        val log = ALogJ.log("D", str, javaClass)
         if(BuildConfig.ENABLE_LOGCAT) Log.d(TAG, log)
 
         if (ALWAYS_FILE_LOG) FileLog.write(log)
     }
 }
 
-inline fun <THIS : Any> THIS.logd(tag:String, crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logd(tag:String = TAG, javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     if (BuildConfig.ENABLE_LOGCAT || ALWAYS_FILE_LOG) {
         val str = block(this)
-        val log = ALogJ.log("D", str, tag, this.javaClass)
-        if(BuildConfig.ENABLE_LOGCAT) Log.d(TAG, log)
+        val log = ALogJ.log("D", str, tag, javaClass)
+        if(BuildConfig.ENABLE_LOGCAT) Log.d(tag, log)
 
         if (ALWAYS_FILE_LOG) FileLog.write(log)
     }
 }
 
-inline fun <THIS : Any> THIS.logdNoFile(crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logdNoFile(javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     if (BuildConfig.ENABLE_LOGCAT) {
         val str = block(this)
-        val log = ALogJ.log("D", str, this.javaClass)
+        val log = ALogJ.log("D", str, javaClass)
         Log.d(TAG, log)
     }
 }
 
-inline fun <THIS : Any> THIS.logdNoFile(tag:String = TAG, crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logdNoFile(tag:String = "", javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     if (BuildConfig.ENABLE_LOGCAT) {
         val str = block(this)
-        val log = ALogJ.log("D", str, tag, this.javaClass)
+        val log = ALogJ.log("D", str, tag, javaClass)
         Log.d(TAG, log)
     }
 }
 
-inline fun <THIS : Any> THIS.logt(tag:String = TAG, crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logt(tag:String = TAG, javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     if (BuildConfig.ENABLE_LOGCAT) {
         val str = block(this)
-        val log = ALogJ.logThread(str, this.javaClass)
+        val log = ALogJ.logThread(str, javaClass)
         Log.d(tag, log)
     }
 }

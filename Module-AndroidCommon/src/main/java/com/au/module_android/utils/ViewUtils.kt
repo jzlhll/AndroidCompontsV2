@@ -1,14 +1,16 @@
 package com.au.module_android.utils
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Outline
 import android.graphics.Rect
 import android.text.InputFilter
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
+import android.view.Window
 import android.widget.EditText
-import androidx.annotation.Keep
 import androidx.core.view.forEach
 
 fun View.visible() {
@@ -129,4 +131,17 @@ fun EditText.makeAutoFill(autoFillHints:String) {
 fun EditText.makeNoAutoFill() {
     importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
     importantForAccessibility = View.IMPORTANT_FOR_AUTOFILL_NO
+}
+
+fun View.findWindow() : Window?{
+    var curContext: Context? = context
+    var count = 0
+    while (curContext is ContextWrapper && count <= 3) {
+        if (curContext is Activity) {
+            break
+        }
+        curContext = curContext.baseContext
+        count++
+    }
+    return (curContext as? Activity)?.window
 }

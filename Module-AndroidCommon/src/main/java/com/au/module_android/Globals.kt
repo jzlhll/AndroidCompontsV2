@@ -11,17 +11,13 @@ import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.au.module_android.scopes.BackAppScope
+import com.au.module_android.scopes.MainAppScope
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.utils.loge
 import com.au.module_android.utils.unsafeLazy
 //import com.github.gzuliyujiang.oaid.DeviceIdentifier
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.plus
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -34,17 +30,15 @@ object Globals {
     /**
      * 全局协程作用域
      */
-    val mainScope by lazy { MainScope().also {
-        it.plus(CoroutineExceptionHandler { coroutineContext, throwable->
-            loge(throwable) { "Globals mainScope error ->" }
-        })
-    } }
+    val mainScope by lazy { createMainAppScope() }
 
-    val backgroundScope by lazy { MainScope() +
-            Dispatchers.Default + SupervisorJob() +
-            CoroutineExceptionHandler { coroutineContext, throwable->
-                loge(throwable) { "Globals backgroundScope error ->" }
-            }}
+    val backgroundScope by lazy { createBackAppScope() }
+
+    // 使用函数创建实例（替代原来的函数）
+    fun createMainAppScope(): MainAppScope = MainAppScope()
+
+    fun createBackAppScope(exceptionPrefix: String = "Coroutine catch: "): BackAppScope =
+        BackAppScope(exceptionPrefix)
 
     /**
      * 主线程的Handler
@@ -57,8 +51,10 @@ object Globals {
      * gson对象
      */
     lateinit var gson: Gson
+        internal set
 
     lateinit var kson: Json
+        internal set
 
     /**
      * 选择合适的cacheDir

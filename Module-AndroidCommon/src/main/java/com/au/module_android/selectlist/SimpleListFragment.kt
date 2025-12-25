@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.core.view.postDelayed
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.Lifecycle
 import androidx.viewbinding.ViewBinding
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.views.ViewToolbarFragment
@@ -58,18 +60,32 @@ abstract class SimpleListFragment<B: SimpleItem> : ViewToolbarFragment() {
                 ViewGroup.LayoutParams.WRAP_CONTENT))
 
             val itemTopMargin = itemTopMargin()
-
             val context = inflater.context
 
             val items = this.items
-            for (item in items) {
-                val v = createItem(context, item)
+            if (items.isNotEmpty()) {
+                postBatch(context, itemTopMargin, 0)
+            }
+        }
+    }
+
+    val batchSize = 20
+    fun postBatch(context:Context, itemTopMargin:Int, startIndex:Int) {
+        host.postDelayed(100) {
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return@postDelayed
+            val endIndex = minOf(startIndex + batchSize, items.size)
+            for (i in startIndex until endIndex) {
+                val v = createItem(context, items[i])
                 host.addView(
                     v,
                     LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, itemHeight()).also {
                         it.topMargin = itemTopMargin
                     }
                 )
+            }
+
+            if (endIndex < items.size) {
+                postBatch(context, itemTopMargin, endIndex)
             }
         }
     }

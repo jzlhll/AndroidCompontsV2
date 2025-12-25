@@ -3,6 +3,7 @@ package com.au.module_android.init
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import com.au.module_android.BuildConfig
 import com.au.module_android.Globals.activityList
 
 /**
@@ -14,6 +15,7 @@ class GlobalActivityCallback : Application.ActivityLifecycleCallbacks {
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         //logdNoFile { "onActivityCreated $activity ${activity.asOrNull<FragmentShellActivity>()?.fragmentClass?.simpleName}" }
         activityList.add(activity)
+        if (BuildConfig.DEBUG) monitorActivityLoadTime(activity)
     }
 
     override fun onActivityStarted(activity: Activity) {

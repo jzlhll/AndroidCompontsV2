@@ -5,6 +5,10 @@ import android.os.Build
 import android.os.Build.VERSION
 import android.os.Bundle
 import android.os.Parcelable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -12,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -53,15 +58,6 @@ suspend inline fun <T> awaitAny(crossinline block: (CancellableContinuation<T>) 
 }
 
 /**
- * 在io线程操作
- */
-suspend inline fun <T> awaitOnIoThread(crossinline block: (CancellableContinuation<T>) -> Unit): T {
-    return withIoThread {
-        suspendCancellableCoroutine(block)
-    }
-}
-
-/**
  * 新增的扩展函数，用于并发执行请求并等待所有结果
  * @param request 确保一定不会报错
  */
@@ -89,6 +85,15 @@ suspend fun <T, R> CoroutineScope.awaitAllNotNull(
     return deferredList.awaitAll().filterNotNull()
 }
 
+/**
+ * 在io线程操作
+ */
+suspend inline fun <T> awaitOnIoThread(crossinline block: (CancellableContinuation<T>) -> Unit): T {
+    return withIoThread {
+        suspendCancellableCoroutine(block)
+    }
+}
+
 fun <T> unsafeLazy(initializer: () -> T) = lazy(LazyThreadSafetyMode.NONE, initializer)
 
 fun CoroutineScope.launchOnThread(
@@ -108,6 +113,43 @@ fun CoroutineScope.launchOnUi(
 ): Job {
     return launch(Dispatchers.Main.immediate, start = CoroutineStart.DEFAULT, block = block)
 }
+
+// ... existing code ...
+
+/**
+ * 封装 launch + repeatOnLifecycle 模式，用于安全地收集 Flow
+ * @param block 要执行的收集逻辑
+ */
+inline fun LifecycleOwner.launchRepeatOnStarted(
+    crossinline block: suspend () -> Unit
+) {
+    lifecycleScope.launch {
+        repeatOnLifecycle(Lifecycle.State.STARTED) {
+            block()
+        }
+    }
+}
+
+/**
+ * 便捷方法：直接收集 Flow 并处理结果
+ * @param flow 要收集的 Flow
+ * @param collector 处理 Flow 发送值的函数
+ */
+inline fun <T> LifecycleOwner.launchRepeatOnStarted(
+    flow: Flow<T>,
+    crossinline collector: (T) -> Unit
+) {
+    lifecycleScope.launch {
+        repeatOnLifecycle(Lifecycle.State.STARTED) {
+            flow.collect { value ->
+                collector(value)
+            }
+        }
+    }
+}
+
+// ... existing code ...
+
 
 inline fun <reified T : Serializable> Bundle.serializableCompat(key: String): T? = when {
     VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> getSerializable(key, T::class.java)

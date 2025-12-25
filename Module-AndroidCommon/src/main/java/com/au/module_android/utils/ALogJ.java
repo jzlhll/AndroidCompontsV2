@@ -3,17 +3,13 @@ package com.au.module_android.utils;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Locale;
-
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -23,12 +19,23 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 public final class ALogJ {
-    private static final String TAG = "logImagecho";
+    private static final String TAG = "au";
     private static final int JSON_INDENT = 2;
 
     public static String log(String lvl, String s, Class<?> javaClass) {
         var log = javaClass.toString();
-        return lvl + " " + log.substring(log.lastIndexOf('.') + 1) + ": " + s;
+        var prefix = log.substring(log.lastIndexOf('.') + 1);
+        int firstDollar = prefix.indexOf('$');
+        if (firstDollar >= 0) {
+            int lastDollar = prefix.lastIndexOf('$');
+            if (lastDollar > firstDollar) {
+                int secondLastDollar = prefix.lastIndexOf('$', lastDollar - 1);
+                var head = prefix.substring(0, firstDollar);
+                var tail = prefix.substring(secondLastDollar + 1, lastDollar);
+                prefix = head + ".." + tail;
+            }
+        }
+        return lvl + " " + prefix + ": " + s;
     }
 
     public static String logThread(String s, Class<?> javaClass) {
