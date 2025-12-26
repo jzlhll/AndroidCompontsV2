@@ -12,7 +12,7 @@ import com.au.module_android.Globals
 import com.au.module_android.json.fromJson
 import com.au.module_android.permissions.createActivityForResult
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.unsafeLazy
 
 class CompletedFragment : BindingFragment<FragmentCompletedBinding>() {
@@ -28,7 +28,9 @@ class CompletedFragment : BindingFragment<FragmentCompletedBinding>() {
 
     val activityLauncher = createActivityForResult()
 
-    override fun toolbarInfo() = ToolbarInfo("任务列表")
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults("任务列表")
+    }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.rcv.layoutManager = LinearLayoutManager(requireContext())

@@ -16,7 +16,7 @@ import com.au.module_android.click.onClick
 import com.au.module_android.permissions.PermissionStorageHelper
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
@@ -97,5 +97,7 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
         parseShareImportIntent(this)
     }
 
-    override fun toolbarInfo() = ToolbarInfo(getString(R.string.app_name), hasBackIcon = false)
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults(getString(R.string.app_name))
+    }
 }

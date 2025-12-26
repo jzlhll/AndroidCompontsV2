@@ -20,9 +20,8 @@ import com.au.module_android.utils.visible
 import com.au.module_android.widget.SuitScreenHelper
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_cached.delegate.AppDataStoreStringCache
-import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.PickerType
-import com.au.module_imagecompressed.UriStrWrap
 import com.au.module_imagecompressed.photoPickerForResult
 import java.io.File
 import java.io.FileInputStream
@@ -30,7 +29,7 @@ import java.io.FileInputStream
 class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() {
     private var mLastFile by AppDataStoreStringCache("returnYourFaceLastFile", "")
 
-    val singleResult = photoPickerForResult().also { it.setNeedLubanCompress(2048) }
+    val singleResult = photoPickerForResult().also { it.paramsBuilder.setNeedLuban(2048) }
 
     private val thresholdPadding = 10.dp
 
@@ -244,13 +243,12 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.selectedImageButton.onClick {
             singleResult.launchOneByOne(PickerType.IMAGE, null) { uri->
-                val uriStr = uri.toUriStrWrap()
-                mLastFile = uriStr.toJsonString()
+                mLastFile = uri.toJsonString()
                 logdNoFile { "selectedImage: $uri" }
                 binding.selectedImageButton.gone()
                 binding.adjustImageGroup.visible()
-                binding.viewFinder.glideSetAny(uri.uri)
-                parseImageSize(uri.uri.toFile())
+                binding.viewFinder.glideSetAny(uri.uriParsedInfo.uri)
+                parseImageSize(uri.uriParsedInfo.uri.toFile())
             }
         }
 
@@ -270,7 +268,7 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
                     ) {
                         binding.selectedImageButton.gone()
                         binding.adjustImageGroup.visible()
-                        val lastUrl = mLastFile.fromJson<UriStrWrap>()?.toUriWrap()?.uri
+                        val lastUrl = mLastFile.fromJson<PickUriWrap>()?.uriParsedInfo?.uri
                         lastUrl?.let { uri->
                             binding.viewFinder.glideSetAny(uri)
                             parseImageSize(uri.toFile())

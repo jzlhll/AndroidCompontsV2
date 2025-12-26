@@ -20,7 +20,7 @@ import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.click.onClick
 import com.au.module_android.permissions.createPermissionForResult
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -28,8 +28,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class AudioRecorderTestFragment : BindingFragment<AudioRecordsBinding>() {
-    override fun toolbarInfo(): ToolbarInfo? {
-        return ToolbarInfo(title = "Audio Recorders")
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults("Audio Recorders")
     }
 
     val permissionHelper = createPermissionForResult(android.Manifest.permission.RECORD_AUDIO)

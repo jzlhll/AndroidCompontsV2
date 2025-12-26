@@ -5,7 +5,7 @@ import com.allan.mydroid.R
 import com.au.module_android.Globals
 import com.au.module_android.api.ResultBean
 import com.au.module_android.json.toJsonString
-import com.au.module_android.utilsmedia.MediaHelper
+import com.au.module_android.utilsmedia.MediaTypeUtil
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
@@ -110,11 +110,11 @@ fun getIcon(fileName: String?): Int {
         "mp4" -> R.drawable.ic_filetype_mp4
         // 其他类型
         else ->
-            if (MediaHelper.isImageFileSimple(extension)) {
+            if (MediaTypeUtil.isImageFileSimple(extension)) {
                 R.drawable.ic_filetype_img
-            } else if (MediaHelper.isAudioFileSimple(extension)) {
+            } else if (MediaTypeUtil.isAudioFileSimple(extension)) {
                 R.drawable.ic_filetype_audio
-            } else if (MediaHelper.isVideoFileSimple(extension)) {
+            } else if (MediaTypeUtil.isVideoFileSimple(extension)) {
                 R.drawable.ic_filetype_video
             } else {
                 R.drawable.ic_filetype_other

@@ -33,14 +33,16 @@ class MyInitApplication : InitApplication() {
             }
         })
 
-        GlobalBackgroundCallback.addListener {
-            logd { "update SummerConst when foreground $it" }
-            if (!it) {
-                Globals.mainScope.launchOnThread {
-                    StarConsts.onlyInitOnce()
-                    CheckConsts.whenTrigger()
+        GlobalBackgroundCallback.addListener(object : GlobalBackgroundCallback.IBackgroundListener {
+            override fun onBackground(isBackground: Boolean) {
+                logd { "update SummerConst when foreground $it" }
+                if (!isBackground) {
+                    Globals.mainScope.launchOnThread {
+                        StarConsts.onlyInitOnce()
+                        CheckConsts.whenTrigger()
+                    }
                 }
             }
-        }
+        })
     }
 }

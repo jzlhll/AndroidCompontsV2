@@ -15,7 +15,7 @@ import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 
@@ -34,8 +34,8 @@ class BleTestFragment : BindingFragment<BtBleBinding>() {
         arguments?.getBoolean(IS_BLE) ?: false
     }
 
-    override fun toolbarInfo(): ToolbarInfo? {
-        return ToolbarInfo(title = if(isBle) "BLE蓝牙" else "经典蓝牙")
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults(title = if(isBle) "BLE蓝牙" else "经典蓝牙")
     }
 
     val blePermissionHelp = BtPermissionHelp(this)

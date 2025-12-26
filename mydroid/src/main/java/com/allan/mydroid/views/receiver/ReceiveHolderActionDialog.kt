@@ -10,7 +10,7 @@ import com.au.module_android.Globals.resStr
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.serializableCompat
-import com.au.module_android.utilsmedia.UriParserUtil
+import com.au.module_android.utilsmedia.myParseSuspend
 import com.au.module_android.utilsmedia.openWith
 import com.au.module_android.utilsmedia.saveFileToPublicDirectory
 import com.au.module_android.utilsmedia.shareFile
@@ -95,9 +95,7 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
             refreshFileListCallback?.get()?.invoke()
         }
 
-        val util = if(uri != null) UriParserUtil(uri) else null
-        util?.parseSuspend(Globals.app.contentResolver)
-        val parsedInfo = util?.parsedInfo
+        val parsedInfo = uri?.myParseSuspend(Globals.app.contentResolver)
         if (parsedInfo != null) {
             val fullPath = parsedInfo.fullPath
             val relativePath = parsedInfo.relativePath

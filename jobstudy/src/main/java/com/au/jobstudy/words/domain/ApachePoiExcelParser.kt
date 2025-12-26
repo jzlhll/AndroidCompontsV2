@@ -5,6 +5,7 @@ import com.au.jobstudy.words.domain.beans.RowInfo
 import com.au.jobstudy.words.domain.beans.RowOrigData
 import com.au.jobstudy.words.domain.beans.SheetInfo
 import com.au.jobstudy.words.ui.ExcelParseException
+import com.au.module_android.utils.logEx
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.loge
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
@@ -61,10 +62,10 @@ class ApachePoiExcelParser(private val context: Context) : IExcelParser {
             logd(TAG) { "Loaded Excel file: $fileName with ${sheetInfos.size} sheets" }
             return sheetInfos
         } catch (e: IOException) {
-            loge(TAG, e) { "Error loading Excel file from assets: $fileName" }
+            logEx(tag=TAG, throwable = e) { "Error loading Excel file from assets: $fileName" }
             throw ExcelParseException("Failed to load Excel file: $fileName", e)
         } catch (e: Exception) {
-            loge(TAG, e) { "Error processing Excel file: $fileName" }
+            logEx(TAG, throwable = e) { "Error processing Excel file: $fileName" }
             throw ExcelParseException("Error processing Excel file: $fileName", e)
         }
     }
@@ -98,7 +99,7 @@ class ApachePoiExcelParser(private val context: Context) : IExcelParser {
             return rowDataList
             
         } catch (e: Exception) {
-            loge(TAG, e) { "Error parsing sheet: ${sheetInfo.sheetName}" }
+            logEx(TAG, throwable = e) { "Error parsing sheet: ${sheetInfo.sheetName}" }
             throw ExcelParseException("Failed to parse sheet: ${sheetInfo.sheetName}", e)
         }
     }
@@ -195,7 +196,7 @@ class ApachePoiExcelParser(private val context: Context) : IExcelParser {
             workbook = null
             logd(TAG) { "Workbook closed" }
         } catch (e: IOException) {
-            loge(TAG, e) { "Error closing workbook" }
+            logEx(TAG, throwable = e) { "Error closing workbook" }
         }
     }
 }

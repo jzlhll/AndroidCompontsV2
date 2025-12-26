@@ -20,7 +20,7 @@ import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.permissions.getContentForResult
+import com.au.module_android.permissions.getMultipleContentsForResult
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.ToolbarMenuManager
 import com.au.module_android.ui.base.ImmersiveMode
@@ -35,7 +35,7 @@ import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
-import com.au.module_android.utilsmedia.MimeUtil
+import com.au.module_android.utilsmedia.MediaTypeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_imagecompressed.PickerType
@@ -86,9 +86,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 deleteBean(bean)
             } else if (mode == CLICK_MODE_ROOT && bean != null) {
                 logd { "click on icon $bean" }
-                val mimeUtil = MimeUtil(bean.mimeType)
-                val isImg = mimeUtil.isUriImage()
-                val isVideo = mimeUtil.isUriVideo()
+                val isImg = MediaTypeUtil.isUriImage(bean.mimeType)
+                val isVideo = MediaTypeUtil.isUriVideo(bean.mimeType)
                 if (isImg || isVideo) {
                     showBigIcon(bean, isVideo)
                 }
@@ -133,7 +132,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
 
     val pickerResult = compatMultiUriPickerForResult(9)
-    val documentResult = getContentForResult()
+    val documentResult = getMultipleContentsForResult()
 
     private var mAutoNextJob: Job? = null
     private var mDelayCancelDialog: ConfirmBottomSingleDialog? = null
@@ -201,7 +200,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
 
         val documentRun:(view: View)->Unit = {
-            documentResult.start(arrayOf("*/*")) { uris->
+            documentResult.start("*/*") { uris->
                 onUrisBack(uris, PICKER_NEED_PERMISSION)
             }
         }

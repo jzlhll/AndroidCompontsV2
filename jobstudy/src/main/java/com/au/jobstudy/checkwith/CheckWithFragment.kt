@@ -27,13 +27,13 @@ import com.au.module_android.json.toJsonString
 import com.au.module_android.permissions.activity.ActivityForResult
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.ToolbarInfo
-import com.au.module_android.utilsmedia.MediaHelper
+import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.invisible
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utils.replaceFragment
 import com.au.module_android.utils.visible
+import com.au.module_android.utilsmedia.MediaTypeUtil
 import java.io.File
 import java.util.stream.Collectors
 
@@ -65,8 +65,8 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
         return true
     }
 
-    override fun toolbarInfo(): ToolbarInfo {
-        return ToolbarInfo("开始打卡")
+    override fun toolbarInfo(): YourToolbarInfo? {
+        return YourToolbarInfo.Defaults("开始打卡")
     }
 
     private val dataItem = sDataItem!!
@@ -178,7 +178,7 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
     private fun alreadyFileListSet(mFiles: List<String>) {
         mFiles.forEach { fileStr ->
             val file = File(fileStr)
-            val mimeType = MediaHelper.getMimeTypePath(fileStr)
+            val mimeType = MediaTypeUtil.getMimeTypePath(fileStr)
             if (mimeType.contains("video")) {
                 binding.alreadyFilesList.addView(AlreadyFilesItemBinding.inflate(requireActivity().layoutInflater).also {
                     it.image.setImageResource(R.drawable.ic_b_video_record)

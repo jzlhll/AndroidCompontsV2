@@ -33,7 +33,7 @@ class MultiPhotoPickerContractResult(
     private var oneByOneCallback:((PickUriWrap)->Unit)? = null
     private var allCallback:((Array<PickUriWrap>)->Unit)? = null
 
-    val paramsBuilder = PickerMediaParams.Builder().asNoLimit()
+    val paramsBuilder = PickerMediaParams.Builder().asStingy()
 
     private val logTag = "Picker"
 

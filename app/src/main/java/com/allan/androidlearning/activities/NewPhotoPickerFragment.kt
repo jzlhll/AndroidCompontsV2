@@ -14,9 +14,9 @@ import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.logd
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
+import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
-import com.au.module_imagecompressed.UriWrap
 import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
 import com.au.module_imagecompressed.compatMultiUriPickerForResult
 import com.au.module_imagecompressed.photoPickerForResult
@@ -162,7 +162,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     var currentIndex = 1
     @Synchronized
-    private fun showPic(uriWrap: UriWrap?) {
+    private fun showPic(uriWrap: PickUriWrap?) {
         uriWrap ?: return
         val pic = when(currentIndex) {
             1 -> binding.pic1
@@ -176,7 +176,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         if (currentIndex == 6) {
             currentIndex = 1
         }
-        pic?.glideSetAny(uriWrap.uri)
+        pic?.glideSetAny(uriWrap.uriParsedInfo.uri)
     }
 
     override fun onClickTakePic() : Boolean{

@@ -54,7 +54,7 @@ class WebUploadFragment : BindingFragment<ActivityJsHtmlBinding>(), TakePhotoAct
             for (uri in uris) {
                 logd { "launchSelectPhotos callback uri: $uri" }
             }
-            updateSelectValueCallback(uris.map { it.uri }.toTypedArray())
+            updateSelectValueCallback(uris.map { it.uriParsedInfo.uri }.toTypedArray())
         }
     }
 
@@ -63,7 +63,7 @@ class WebUploadFragment : BindingFragment<ActivityJsHtmlBinding>(), TakePhotoAct
         return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(requireContext()){mode, uriWrap->
             logd { "on click take pic mode=>$mode" }
             if (uriWrap != null) {
-                updateSelectValueCallback(arrayOf(uriWrap.uri))
+                updateSelectValueCallback(arrayOf(uriWrap.uriParsedInfo.uri))
             } else {
                 updateSelectValueCallback(null)
             }

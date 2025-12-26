@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.PowerManager
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.utils.findLaunchActivity
+import com.au.module_android.utils.logEx
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.loge
 import com.au.module_android.utils.startActivityFix
@@ -67,7 +68,7 @@ class AlarmReceiver : BroadcastReceiver() {
             // 2. 执行定时任务（例如启动服务、发送通知等）
             start(context)
         } catch (e: Exception) {
-          loge(exception = e) {"on receiver."}
+          logEx(throwable = e) {"on receiver."}
         } finally {
             //wakeLock.release() //try不做释放
         }

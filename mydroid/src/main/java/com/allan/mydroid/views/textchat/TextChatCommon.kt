@@ -22,10 +22,9 @@ import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
-import com.au.module_imagecompressed.MultiPhotoPickerContractResult
+import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
-import com.au.module_imagecompressed.UriWrap
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -50,7 +49,7 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
         return true
     }
 
-    private fun onPicGot(uriWrap: UriWrap) {
+    private fun onPicGot(uriWrap: PickUriWrap) {
         //todo file
     }
 

@@ -3,19 +3,20 @@ package com.au.jobstudy.words.ui
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.lifecycle.ViewModelProvider
 import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
 import com.au.jobstudy.words.constants.WordsManager
 import com.au.jobstudy.words.domain.TTSNative
 import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingNoToolbarFragment
+import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.unsafeLazy
 
 /**
  * 英文打卡Fragment
  * 显示单词学习界面，包含单词、音标、发音和释义
  */
-class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBinding>() {
+class EnglishCheckFragment : BindingFragment<FragmentEnglishCheckBinding>() {
 
     companion object {
         private const val ARG_WORD_INDEX = "word_index"
@@ -47,6 +48,10 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
         }
         return mTts!!
     }
+
+    private var isPlayingSentence = false
+    private var currentWordIndex = 1
+    private var totalWords = 30
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -114,7 +119,7 @@ class EnglishCheckFragment : BindingNoToolbarFragment<FragmentEnglishCheckBindin
     }
 
     private fun updateProgress() {
-        binding.progressText.text = "$currentWordIndex/$totalWords"
+       // binding.progressText.text = "$currentWordIndex/$totalWords"
     }
 
     private fun goToNextWord() {

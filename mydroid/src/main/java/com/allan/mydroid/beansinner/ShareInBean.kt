@@ -6,10 +6,11 @@ import androidx.core.net.toUri
 import com.allan.mydroid.R
 import com.allan.mydroid.utils.JsonUriAdapter
 import com.au.module_android.Globals
-import com.au.module_android.utilsmedia.MediaHelper
+import com.au.module_android.utilsmedia.MediaTypeUtil
 import com.au.module_android.utilsmedia.UriParsedInfo
-import com.au.module_android.utilsmedia.UriParserUtil
+import com.au.module_android.utilsmedia.VideoDurationHelper
 import com.au.module_android.utilsmedia.formatBytes
+import com.au.module_android.utilsmedia.myParseSuspend
 import com.google.gson.annotations.JsonAdapter
 import kotlinx.coroutines.delay
 import java.util.UUID
@@ -41,8 +42,9 @@ data class ShareInBean(val uriUuid:String,
             val fileSize = info.file.length()
             val fileLen = formatBytes(fileSize)
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
-            val mimeType = MediaHelper.getMimeTypePath(info.file.absolutePath)
-            val videoDuration = MediaHelper().getDurationNormally(info.file.absolutePath, mimeType)
+
+            val mimeType = MediaTypeUtil.getMimeTypePath(info.file.absolutePath)
+            val videoDuration = VideoDurationHelper().getDurationNormally(info.file.absolutePath, mimeType)
             return ShareInBean(uriUuid,
                 info.file.toUri(),
                 from,
@@ -55,7 +57,7 @@ data class ShareInBean(val uriUuid:String,
 
         suspend fun convert(uri: Uri, from:String) : ShareInBean {
             delay(0)
-            val parsedInfo = UriParserUtil(uri).parseSuspend(Globals.app.contentResolver)
+            val parsedInfo = uri.myParseSuspend(Globals.app.contentResolver)
             return copyFrom(parsedInfo, from)
         }
 

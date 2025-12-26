@@ -35,7 +35,7 @@ class CropEntryFragment : AbsNestedIndicatorFragment<Void, FragmentCropEntryBind
         contentViewBinding.button.onClick {
             photoPickResult.launchOneByOne(PickerType.IMAGE, null) { uri ->
                 logd { "uri $uri" }
-                CropCircleImageFragment.startCropForResult(requireContext(), gotoUcropResult, uri.uri) {
+                CropCircleImageFragment.startCropForResult(requireContext(), gotoUcropResult, uri.uriParsedInfo.uri) {
                     val intent = it.data
                     val code = it.resultCode
                     logd { "code $code, data: " + intent }

@@ -50,11 +50,13 @@ class CheckViewModel : ViewModel(), IActionDispatcher by ActionDispatcherImpl() 
         viewModelScope.launchOnThread {
             when (dbTabMode) {
                 DBTableMode.Word -> {
-                    val words = repo.getWord(sheetName)
+                    val words = repo.getWord(sheetName!!)
                     infoBeans.add(UIInfo().apply {
                         totalWords = words.size
                     })
                 }
+
+                else -> {}
             }
         }
     }

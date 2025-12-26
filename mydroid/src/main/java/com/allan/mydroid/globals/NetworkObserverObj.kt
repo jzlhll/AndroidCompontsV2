@@ -9,6 +9,7 @@ import com.allan.mydroid.beansinner.IpInfo
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.init.GlobalBackgroundCallback
+import com.au.module_android.utils.getIpAddress
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 
@@ -33,7 +34,8 @@ object NetworkObserverObj {
         if (ip == null) {
             MyDroidConst.networkStatusData.setValueSafe(NetworkStatus.Disconnected)
         } else {
-            MyDroidConst.networkStatusData.setValueSafe(NetworkStatus.Connected(IpInfo(ip, null, null), netType!!))
+            //todo
+            MyDroidConst.networkStatusData.setValueSafe(NetworkStatus.Connected(IpInfo(ip, null, null), netType.toString()))
         }
     }
 
@@ -52,21 +54,23 @@ object NetworkObserverObj {
     fun initial() {
         getIpAndTrySend()
 
-        GlobalBackgroundCallback.addListener { inBg->
-            logdNoFile { "Network observer is in bg $inBg" }
-            val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            if (inBg) {
-                logd { "Unregistering network callback" }
-                manager.unregisterNetworkCallback(netObserver)
-            } else {
-                // 注册网络回调
-                logd { "Starting network" }
-                val request = NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    .build()
-                manager.registerNetworkCallback(request, netObserver)
+        GlobalBackgroundCallback.addListener(object : GlobalBackgroundCallback.IBackgroundListener {
+            override fun onBackground(isBackground: Boolean) {
+                logdNoFile { "Network observer is in bg $isBackground" }
+                val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                if (isBackground) {
+                    logd { "Unregistering network callback" }
+                    manager.unregisterNetworkCallback(netObserver)
+                } else {
+                    // 注册网络回调
+                    logd { "Starting network" }
+                    val request = NetworkRequest.Builder()
+                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        .build()
+                    manager.registerNetworkCallback(request, netObserver)
+                }
             }
-        }
+        })
     }
 
 //    private val networkStatusFlow: Flow<NetworkStatus> = callbackFlow {

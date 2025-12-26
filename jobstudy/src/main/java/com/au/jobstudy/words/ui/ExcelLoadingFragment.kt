@@ -8,14 +8,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.au.jobstudy.databinding.FragmentLoadingBinding
 import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingNoToolbarFragment
+import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.unsafeLazy
 import kotlinx.coroutines.launch
 
 /**
  * 导入Excel数据的加载页面
  */
-class ExcelLoadingFragment : BindingNoToolbarFragment<FragmentLoadingBinding>() {
+class ExcelLoadingFragment : BindingFragment<FragmentLoadingBinding>() {
     private val viewModel by unsafeLazy {
         ViewModelProvider(this)[LoadingViewModel::class.java]
     }
@@ -38,7 +38,7 @@ class ExcelLoadingFragment : BindingNoToolbarFragment<FragmentLoadingBinding>() 
         }
 
         binding.loadingText.post {
-            viewModel.load()
+            viewModel.checkAndImportExcel()
         }
     }
 }
