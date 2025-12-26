@@ -1,5 +1,6 @@
 package com.au.module_android.utils
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.ActivityManager.RunningAppProcessInfo
@@ -380,4 +381,18 @@ fun isPhotoPickerAvailable(context: Context) : Boolean {
         val availability = ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(context)
         availability
     }
+}
+
+/**
+ * 转变为 分钟：秒。如果超过99分钟，就是99分钟。
+ */
+@SuppressLint("DefaultLocale")
+fun convertMillisToMMSS(ts: Long): String {
+    var minutes = (ts / (1000 * 60)).toInt()
+    val seconds = ((ts / 1000) % 60).toInt()
+
+    if (minutes >= 99) {
+        minutes = 99
+    }
+    return String.format("%02d:%02d", minutes, seconds)
 }

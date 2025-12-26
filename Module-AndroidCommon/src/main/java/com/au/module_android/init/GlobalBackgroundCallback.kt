@@ -2,10 +2,13 @@ package com.au.module_android.init
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.au.module_android.Globals.activityList
+import com.au.module_android.Globals
 import java.util.concurrent.CopyOnWriteArrayList
 
 object GlobalBackgroundCallback : DefaultLifecycleObserver {
+    interface IBackgroundListener {
+        fun onBackground(isBackground: Boolean)
+    }
 
     /**
      * 是否是在前台
@@ -24,14 +27,14 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
     private var isInBackground = false
 
     private val listeners by lazy {
-        CopyOnWriteArrayList<(Boolean)->Unit>()
+        CopyOnWriteArrayList<IBackgroundListener>()
     }
 
-    fun addListener(callback:(Boolean)->Unit) {
+    fun addListener(callback:IBackgroundListener) {
         if(!listeners.contains(callback)) listeners.add(callback)
     }
 
-    fun removeListener(callback:(Boolean)->Unit) {
+    fun removeListener(callback:IBackgroundListener) {
         listeners.remove(callback)
     }
 
@@ -44,7 +47,7 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
 
     override fun onStop(owner: LifecycleOwner) {
         //ProcessLifecycleOwner.get().lifecycle监听的结果，onStop就代表进入了后台。如果应用还活着就会回调。
-        isInBackground = activityList.isNotEmpty()
+        isInBackground = Globals.activityList.isNotEmpty()
         if (isInBackground) {
             notifyListener()
         }
@@ -53,7 +56,7 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
     private fun notifyListener() {
         val inBg = isInBackground
         listeners.forEach {
-            it(inBg)
+            it.onBackground(inBg)
         }
     }
 }

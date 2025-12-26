@@ -6,6 +6,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
+import android.os.Build
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
 
 /**
  * 这样所有的框架中的Fragment都实现了IFullWindow。但是由于只有在FragmentShellActivity中使用。故而没有问题。
@@ -18,6 +21,14 @@ open class AbsFragment : Fragment(), IFullWindow {
      */
     open val customBackAction:(()->Boolean)? = null
 
+    private val invokedBack:Any? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        OnBackInvokedCallback {
+            customBack()
+        }
+    } else {
+        null
+    }
+
     /**
      * onViewCreated
      */
@@ -25,18 +36,33 @@ open class AbsFragment : Fragment(), IFullWindow {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object: OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                val action = customBackAction
-                if (action == null) {
-                    requireActivity().finishAfterTransition()
-                } else {
-                    if (action.invoke()) {
-                        requireActivity().finishAfterTransition()
-                    }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, invokedBack as OnBackInvokedCallback)
+        } else {
+            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object: OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    customBack()
                 }
+            })
+        }
+    }
+
+    private fun customBack() {
+        val action = customBackAction
+        if (action == null) {
+            requireActivity().finishAfterTransition()
+        } else {
+            if (action.invoke()) {
+                requireActivity().finishAfterTransition()
             }
-        })
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, invokedBack as OnBackInvokedCallback)
+        }
     }
 
     /**

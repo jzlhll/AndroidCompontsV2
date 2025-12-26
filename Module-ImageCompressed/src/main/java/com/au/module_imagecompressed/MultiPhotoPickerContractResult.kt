@@ -1,5 +1,11 @@
 package com.au.module_imagecompressed
 
+import com.au.module_android.BuildConfig
+import com.au.module_android.permissions.IContractResult
+import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.launchOnThread
+import com.au.module_android.utils.launchOnUi
+import com.au.module_android.utilsmedia.*
 import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
@@ -11,18 +17,7 @@ import androidx.annotation.WorkerThread
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.au.module_android.BuildConfig
-import com.au.module_android.permissions.IContractResult
-import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.launchOnUi
-import com.au.module_android.utilsmedia.CopyMode
-import com.au.module_android.utilsmedia.URI_COPY_PARAM_ANY_TO_JPG
-import com.au.module_android.utilsmedia.URI_COPY_PARAM_HEIC_TO_JPG
-import com.au.module_android.utilsmedia.UriParserUtil
-import com.au.module_android.utilsmedia.copyToCacheConvert
 import java.io.File
-import kotlin.collections.toTypedArray
 
 /**
  * @author allan
@@ -35,10 +30,10 @@ class MultiPhotoPickerContractResult(
     resultContract: ActivityResultContract<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>)
     : IContractResult<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>(fragment, resultContract) {
 
-    private var oneByOneCallback:((UriWrap)->Unit)? = null
-    private var allCallback:((Array<UriWrap>)->Unit)? = null
+    private var oneByOneCallback:((PickUriWrap)->Unit)? = null
+    private var allCallback:((Array<PickUriWrap>)->Unit)? = null
 
-    val paramsBuilder = PickerMediaParams.Builder().asStingy()
+    val paramsBuilder = PickerMediaParams.Builder().asNoLimit()
 
     private val logTag = "Picker"
 
@@ -50,21 +45,20 @@ class MultiPhotoPickerContractResult(
     }
 
     @WorkerThread
-    private fun lubanCompress(uriWrap: UriWrap,
+    private fun lubanCompress(uriWrap: PickUriWrap,
                               isAllCallback: Boolean,
                               totalNum: Int,
-                              allResults: MutableList<UriWrap>,
+                              allResults: MutableList<PickUriWrap>,
                               params: PickerMediaParams) {
         LubanCompress()
             .setResultCallback { srcPath, resultPath, isSuc -> //主线程。Luban内部main handler回调回来的
                 val path = resultPath ?: srcPath
                 if (path != null) {
                     val pathFile = File(path)
-                    uriWrap.uri = Uri.fromFile(pathFile)
-                    uriWrap.fileSize = pathFile.length()
-                    uriWrap.beLimitedSize = uriWrap.fileSize > params.targetImageSize
+                    val parsedInfo = pathFile.myParse()
+                    uriWrap.uriParsedInfo = parsedInfo
+                    uriWrap.beLimitedSize = parsedInfo.fileLength > params.targetImageSize
                     uriWrap.beCopied = true
-                    uriWrap.fileName = pathFile.name
 
                     if(BuildConfig.DEBUG) Log.d(logTag, "3>luban: $uriWrap")
                 }
@@ -78,7 +72,7 @@ class MultiPhotoPickerContractResult(
                     }
                 }
             }
-            .compress(fragment.requireContext(), uriWrap.uri, params.ignoreSizeKb)
+            .compress(fragment.requireContext(), uriWrap.uriParsedInfo.uri, params.ignoreSizeKb)
     }
 
     private val subCacheDir = "luban_disk_cache"
@@ -89,41 +83,32 @@ class MultiPhotoPickerContractResult(
         totalNum: Int,
         cr: ContentResolver,
         params: PickerMediaParams
-    ): UriWrap {
-        val util = UriParserUtil(uri)
-        val parsedInfo = util.parse(cr)
+    ): PickUriWrap {
+        val parsedInfo = uri.myParse(cr)
         val fileSize = parsedInfo.fileLength
-        val isImage = util.isUriImage()
+        val isImage = parsedInfo.isUriImage()
         val limitSize = if(isImage) params.limitImageSize.toLong() else params.limitVideoSize
-        val mime = parsedInfo.mimeType
-        val fileName = parsedInfo.name
 
         if (fileSize > limitSize) {
-            return UriWrap(
-                uri, totalNum, fileSize, isImage, beLimitedSize = true, mime = mime, fileName = fileName
-            )
+            return PickUriWrap(parsedInfo, totalNum, isImage, beLimitedSize = true)
         }
 
         return when (params.copyMode) {
             CopyMode.COPY_NOTHING -> {
-                UriWrap(uri, totalNum, fileSize, isImage, mime = mime, fileName = fileName)
+                PickUriWrap(parsedInfo, totalNum, isImage)
             }
 
             CopyMode.COPY_NOTHING_BUT_CVT_HEIC -> {
-                if (util.isUriHeic()) {
+                if (parsedInfo.isUriHeic()) {
                     val size = longArrayOf(-1L)
                     val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_HEIC_TO_JPG, subCacheDir, copyFilePrefix, size)
-                    UriWrap(
-                        copyUri,
+                    PickUriWrap(
+                        parsedInfo,
                         totalNum,
-                        if (size[0] == -1L) fileSize else size[0],
                         isImage,
-                        beCopied = copyUri != uri,
-                        mime = mime,
-                        fileName = fileName
-                    )
+                        beCopied = copyUri != uri)
                 } else {
-                    UriWrap(uri, totalNum, fileSize, isImage, mime = mime, fileName = fileName)
+                    PickUriWrap(parsedInfo, totalNum, isImage)
                 }
             }
 
@@ -131,30 +116,25 @@ class MultiPhotoPickerContractResult(
                 if (isImage) {
                     val size = longArrayOf(-1L)
                     val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_ANY_TO_JPG, subCacheDir, copyFilePrefix, size)
-                    UriWrap(
-                        copyUri, totalNum,
-                        if (size[0] == -1L) fileSize else size[0],
+                    val copyParsedInfo = copyUri.myParse(cr)
+                    PickUriWrap(
+                        copyParsedInfo, totalNum,
                         isImage = true,
                         beCopied = copyUri != uri,
-                        mime = mime,
-                        fileName = fileName
                     )
                 } else {
-                    UriWrap(uri, totalNum, fileSize, isImage = false, mime = mime, fileName = fileName)
+                    PickUriWrap(parsedInfo, totalNum, isImage = false)
                 }
             }
 
             CopyMode.COPY_ALWAYS -> {
                 val size = longArrayOf(-1L)
                 val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_HEIC_TO_JPG, subCacheDir, copyFilePrefix, size)
-                UriWrap(
-                    copyUri, totalNum,
-                    if (size[0] == -1L) fileSize else size[0],
+                val copyParsedInfo = copyUri.myParse(cr)
+                PickUriWrap(
+                    copyParsedInfo, totalNum,
                     isImage = true,
-                    beCopied = copyUri != uri,
-                    mime = mime,
-                    fileName = fileName
-                )
+                    beCopied = copyUri != uri)
             }
         }
     }
@@ -185,7 +165,7 @@ class MultiPhotoPickerContractResult(
                 val params = paramsBuilder.build()
 
                 val isAllCallback = allCallback != null
-                val allResults = mutableListOf<UriWrap>()
+                val allResults = mutableListOf<PickUriWrap>()
 
                 cutUriList.forEach { uri->
                     //2. check if copy
@@ -216,7 +196,7 @@ class MultiPhotoPickerContractResult(
     /**
      * 推荐使用
      */
-    fun launchOneByOne(type: PickerType, option: ActivityOptionsCompat?, oneByOneCallback:(UriWrap)->Unit) {
+    fun launchOneByOne(type: PickerType, option: ActivityOptionsCompat?, oneByOneCallback:(PickUriWrap)->Unit) {
         this.oneByOneCallback = oneByOneCallback
         this.allCallback = null
         launchCommon(type, option)
@@ -225,7 +205,7 @@ class MultiPhotoPickerContractResult(
     /**
      * 可以使用。但推荐使用oneByOne。
      */
-    fun launchByAll(type: PickerType, option: ActivityOptionsCompat?, callback:(Array<UriWrap>)->Unit) {
+    fun launchByAll(type: PickerType, option: ActivityOptionsCompat?, callback:(Array<PickUriWrap>)->Unit) {
         this.allCallback = callback
         this.oneByOneCallback = null
         launchCommon(type, option)

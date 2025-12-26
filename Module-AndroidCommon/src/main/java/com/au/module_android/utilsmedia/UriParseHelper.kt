@@ -10,23 +10,19 @@ import com.au.module_android.utils.logdNoFile
 import kotlinx.coroutines.delay
 import java.io.File
 
-class UriParserUtil(private val uri: Uri) {
-    lateinit var parsedInfo : UriParsedInfo
+internal class UriParseHelper {
+    private lateinit var uri: Uri
+    private lateinit var file: File
 
-    fun isFullPath() : Boolean = parsedInfo.fullPath != null
-
-    fun isUriHeic() : Boolean{
-        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(parsedInfo.mimeType)
-        return extension?.lowercase() == "heic"
+    constructor(uri: Uri) {
+        this.uri = uri
     }
 
-    fun isUriVideo(): Boolean {
-        return parsedInfo.mimeType.startsWith("video/")
+    constructor(file: File) {
+        this.file = file
     }
 
-    fun isUriImage(): Boolean {
-        return parsedInfo.mimeType.startsWith("image/")
-    }
+    private lateinit var parsedInfo : UriParsedInfo
 
     suspend fun parseSuspend(cr: ContentResolver): UriParsedInfo {
         delay(0)
@@ -35,7 +31,7 @@ class UriParserUtil(private val uri: Uri) {
 
     fun parse(cr: ContentResolver) : UriParsedInfo{
         logdNoFile { "parse uri: $uri" }
-        if (isFileScheme()) {
+        if (isFileScheme(uri)) {
             parseAsFile(uri.toFile())
         } else {
             parseAsContent(cr)
@@ -43,11 +39,17 @@ class UriParserUtil(private val uri: Uri) {
         return parsedInfo
     }
 
+    fun parseFile(): UriParsedInfo {
+        parseAsFile(file)
+        return parsedInfo
+    }
+
+    ///////////////必须先调用parse
     private fun parseAsFile(file: File) : Boolean{
         val extension = file.extension.lowercase()
         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
         val fileLength = file.length()
-        val videoDuration = MediaHelper().getDurationNormally(file.absolutePath, mimeType)
+        val videoDuration = VideoDurationHelper().getDurationNormally(file.absolutePath, mimeType)
 
         parsedInfo = UriParsedInfo(uri,
             file.name,
@@ -128,10 +130,6 @@ class UriParserUtil(private val uri: Uri) {
 
         logdNoFile { "parseAsContent parsed Info: $parsedInfo" }
     }
-
-    fun isFileScheme() = uri.scheme == ContentResolver.SCHEME_FILE
-
-    fun isContentScheme() = uri.scheme == ContentResolver.SCHEME_CONTENT
 
     /*
 

@@ -1,11 +1,5 @@
 package com.au.module_imagecompressed
 
-import android.content.Context
-import android.net.Uri
-import androidx.core.app.ActivityCompat
-import androidx.core.net.toUri
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import com.au.module_android.Globals
 import com.au.module_android.permissions.activity.SystemTakePictureForResult
 import com.au.module_android.permissions.createPermissionForResult
@@ -14,7 +8,14 @@ import com.au.module_android.permissions.permission.IOnePermissionResult
 import com.au.module_android.permissions.systemTakePictureForResult
 import com.au.module_android.sp.SharedPrefUtil
 import com.au.module_android.utils.ignoreError
+import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.toast.ToastBuilder
+import android.content.Context
+import android.net.Uri
+import androidx.core.app.ActivityCompat
+import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import java.io.File
 
 /**
@@ -136,7 +137,7 @@ class CameraPermissionHelp {
     fun safeRunTakePicMust(context: Context,
                                    needLubanCompress:Boolean = true,
                                    errorToastBlock:()->Unit = {ToastBuilder().setOnTop().setIcon("info").setMessage("需要camera权限.").toast() },
-                                   callback: (mode:String, uriWrap: UriWrap?)->Unit) : Boolean{
+                                   callback: (mode:String, uriWrap: PickUriWrap?)->Unit) : Boolean{
         val ret = safeRunTakePic({createdTmpFile->
             if (createdTmpFile != null) {
                 val createdTmpUri = createdTmpFile.toUri()
@@ -147,7 +148,7 @@ class CameraPermissionHelp {
                         if (afterCompressPath != null) {
                             ignoreError {
                                 val afterCompressFile = File(afterCompressPath)
-                                val cvtUri = afterCompressFile.imageFileConvertToUriWrap(afterCompressFile.toUri())
+                                val cvtUri = imageFileConvertToWrap(afterCompressFile)
                                 callback("takePicResultLubanCompressed", cvtUri)
                             }
                         } else {
@@ -156,7 +157,7 @@ class CameraPermissionHelp {
                     }.compress(context, createdTmpUri) //必须是file的scheme。那个FileProvider提供的则不行。
                 } else {
                     //不压缩
-                    val cvtUri = createdTmpFile.imageFileConvertToUriWrap(createdTmpUri)
+                    val cvtUri = imageFileConvertToWrap(createdTmpFile)
                     callback("takePicResultDirect", cvtUri)
                 }
             } else {
@@ -173,4 +174,11 @@ class CameraPermissionHelp {
 
         return ret == -2
     }
+
+    //我的cacheDir或者fileDir下的文件来转成UriWrap。
+    private fun imageFileConvertToWrap(file:File) = PickUriWrap(file.myParse(),
+        1,
+        isImage = true,
+        beLimitedSize = false,
+        beCopied = true)
 }

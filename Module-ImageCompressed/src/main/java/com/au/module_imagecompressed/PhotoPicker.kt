@@ -18,6 +18,7 @@ fun Fragment.compatMultiPhotoPickerForResult(maxItem:Int)
  */
 fun Fragment.photoPickerForResult() = MultiPhotoPickerContractResult(this, 1, CompatMultiPickVisualMedia(1))
 
+
 /**
  * google新要求：尽量不要使用自定义的图片选择器，使用系统的。
  * 请求多张系统图片或视频

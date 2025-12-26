@@ -1,8 +1,8 @@
 package com.au.module_imagecompressed
 
+import com.au.module_android.utilsmedia.isPicCanCompress
 import android.content.Context
 import android.net.Uri
-import com.au.module_android.utilsmedia.isPicNeedCompress
 import top.zibin.luban.Luban
 import top.zibin.luban.OnNewCompressListener
 import java.io.File
@@ -66,7 +66,7 @@ class LubanCompress {
             .ignoreBy(ignoreSizeKb) //250kb不做压缩
             //不再过滤。避免无法回调。
             .filter { path -> //过滤掉http图片；能支持的图片。
-                isPicNeedCompress(path)
+                isPicCanCompress(path)
             }
             .setRenameListener { filePath ->
                 val indexOf = filePath.lastIndexOf(".")

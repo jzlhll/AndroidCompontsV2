@@ -11,12 +11,9 @@ import android.provider.MediaStore
 import com.au.module_android.Globals
 import com.au.module_android.permissions.hasPermission
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logt
-import com.au.module_android.utilsmedia.MediaHelper.MediaType
 import kotlinx.coroutines.delay
 import java.io.File
 import java.io.IOException
-
 
 /**
  * 导出到download目录。
@@ -214,8 +211,8 @@ fun insertFileToContentResolverUri(
     subPath: String,
     contentValuesAction: Function1<ContentValues, Unit>? = null
 ) : Uri? {
-    val mimeType = UriParserUtil(origUri).parse(context.contentResolver).mimeType
-    val mediaType = MediaHelper.mediaTypeOfMimeType(mimeType)
+    val mimeType = UriParseHelper(origUri).parse(context.contentResolver).mimeType
+    val mediaType = MediaTypeUtil.mediaTypeTo(mimeType)
     return insertFileToContentResolver(context, mediaType, mimeType, displayName, subPath, contentValuesAction)
 }
 

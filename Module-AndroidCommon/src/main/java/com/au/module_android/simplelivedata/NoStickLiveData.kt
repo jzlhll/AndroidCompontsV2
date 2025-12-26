@@ -1,5 +1,7 @@
 package com.au.module_android.simplelivedata
 
+import com.au.module_android.simplelivedata.ReadOnlyMustNoStickLiveData
+import com.au.module_android.simplelivedata.ReadOnlyNoStickLiveData
 import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LifecycleOwner
@@ -7,6 +9,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.isMainThread
+import java.lang.Iterable
+import java.util.Map
 import kotlin.concurrent.Volatile
 
 /**
@@ -98,9 +102,9 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
     }
 
     //反射拿到父类的field mObservers。
-    private var mObservers:(java.lang.Iterable<java.util.Map.Entry<*, *>>)? = null
+    private var mObservers:(Iterable<Map.Entry<*, *>>)? = null
 
-    private fun requireMObservers() : java.lang.Iterable<java.util.Map.Entry<*, *>> {
+    private fun requireMObservers() : Iterable<Map.Entry<*, *>> {
         val mOb = mObservers
         if (mOb == null) {
             var superClass: Class<*>? = javaClass.superclass
@@ -109,7 +113,7 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
                     val field = superClass.getDeclaredField("mObservers")
                     field.isAccessible = true
                     val o = field.get(this)
-                    mObservers = o as java.lang.Iterable<java.util.Map.Entry<*, *>>
+                    mObservers = o as Iterable<Map.Entry<*, *>>
                     break
                 }
                 superClass = superClass.superclass
@@ -149,7 +153,7 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
     private class NoStickWrapObserver<D>(val self: NoStickLiveData<D>,
                                          val initVersion:Long,
                                          val observer: Observer<in D>)
-            : Observer<D> {
+        : Observer<D> {
         override fun onChanged(value: D) {
             if (initVersion < self.mVersion) {
                 observer.onChanged(value)
@@ -160,3 +164,63 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
 
 inline fun <reified B> LiveData<B>.asNoStickLiveData() : NoStickLiveData<B> = this as NoStickLiveData<B>
 inline fun <reified B> LiveData<B>.realValue() : B? = if(this is NoStickLiveData) this.realValue else this.value
+
+/**
+ * 变成只读
+ */
+fun <T> NoStickLiveData<T>.asReadOnly() : ReadOnlyNoStickLiveData<T> {
+    val src = this
+    return object : ReadOnlyNoStickLiveData<T> {
+        override val value: T?
+            get() = src.value
+
+        override val realValue: T?
+            get() = src.realValue
+
+        override fun observe(owner: LifecycleOwner, observer: Observer<in T>) {
+            src.observe(owner, observer)
+        }
+
+        override fun observeForever(observer: Observer<in T>) {
+            src.observeForever(observer)
+        }
+
+        override fun observeUnStick(owner: LifecycleOwner, observer: Observer<in T>) {
+            src.observeUnStick(owner, observer)
+        }
+
+        override fun observeForeverUnStick(observer: Observer<in T>) {
+            src.observeForeverUnStick(observer)
+        }
+
+        override fun removeObserver(observer: Observer<in T>) {
+            src.removeObserver(observer)
+        }
+    }
+}
+
+/**
+ * 仅支持无粘性观察者
+ */
+fun <T> NoStickLiveData<T>.asReadOnlyMustNoStick() : ReadOnlyMustNoStickLiveData<T> {
+    val src = this
+    return object : ReadOnlyMustNoStickLiveData<T> {
+        override val value: T?
+            get() = src.value
+
+        override val realValue: T?
+            get() = src.realValue
+
+        override fun observeUnStick(owner: LifecycleOwner, observer: Observer<in T>) {
+            src.observeUnStick(owner, observer)
+        }
+
+        override fun observeForeverUnStick(observer: Observer<in T>) {
+            src.observeForeverUnStick(observer)
+        }
+
+        override fun removeObserver(observer: Observer<in T>) {
+            src.removeObserver(observer)
+        }
+    }
+}

@@ -14,11 +14,13 @@ import android.util.Log
 import androidx.annotation.WorkerThread
 import com.au.module_android.Globals
 import com.au.module_android.utils.logt
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
+
+fun File.myParse() = UriParseHelper(this).parseFile()
+fun Uri.myParse(context: Context = Globals.app) = UriParseHelper(this).parse(context.contentResolver)
+fun Uri.myParse(cr: ContentResolver) = UriParseHelper(this).parse(cr)
+suspend fun Uri.myParseSuspend(context: Context = Globals.app) = UriParseHelper(this).parseSuspend(context.contentResolver)
+suspend fun Uri.myParseSuspend(cr: ContentResolver) = UriParseHelper(this).parseSuspend(cr)
 
 fun isUrlHasImage(url: String): Boolean {
     val lowUrl = url.lowercase()
@@ -35,10 +37,14 @@ fun isHasHttp(path: String): Boolean {
     return path.startsWith("http") || path.startsWith("https")
 }
 
+fun isFileScheme(uri: Uri) = uri.scheme == ContentResolver.SCHEME_FILE
+
+fun isContentScheme(uri: Uri) = uri.scheme == ContentResolver.SCHEME_CONTENT
+
 /**
  * 基本上都已经拷贝过的图才能如此操作。
  */
-fun isPicNeedCompress(path:String) = isUrlHasImage(path) && !isHasHttp(path)
+fun isPicCanCompress(path:String) = isUrlHasImage(path) && !isHasHttp(path)
 
 /**
  * 将Uri识别，拷贝到本地cache；如果param有传参，则会进行转换拷贝。
@@ -88,7 +94,7 @@ private fun Uri.copyToCacheFileSchemeContent(cr: ContentResolver,
                                              subCacheDir:String,
                                              copyFilePrefix:String = "copy_",
                                              size:LongArray? = null) : File {
-    val parsedInfo = UriParserUtil(this).parse(cr)
+    val parsedInfo = UriParseHelper(this).parse(cr)
     val extension = parsedInfo.extension
 
     val cacheDir = Globals.goodCacheDir
@@ -256,7 +262,7 @@ fun Uri.length(cr: ContentResolver, schemeForce:String? = null) : Long {
                     ?: throw Exception("Content provider recently crashed")
                 resultLength = fileDescriptor.statSize
             } catch (e: Exception) {
-                Log.d("allan", e.message ?: e.javaClass.simpleName)
+                Log.d("UrlUtil", e.message ?: e.javaClass.simpleName)
                 resultLength = -1L
             } finally {
                 fileDescriptor?.close()
@@ -283,7 +289,7 @@ fun Uri.length(cr: ContentResolver, schemeForce:String? = null) : Long {
                     resultLength = -1L
                 }
             } catch (e: Exception) {
-                Log.d("allan", e.message ?: e.javaClass.simpleName)
+                Log.d("UrlUtil", e.message ?: e.javaClass.simpleName)
                 resultLength = -1L
             } finally {
                 cursor?.close()
@@ -307,7 +313,7 @@ fun Uri.length(cr: ContentResolver, schemeForce:String? = null) : Long {
                     ?: throw Exception("Content provider recently crashed")
                 resultLength = assetFileDescriptor.length
             } catch (e: Exception) {
-                Log.d("allan", e.message ?: e.javaClass.simpleName)
+                Log.d("UrlUtil", e.message ?: e.javaClass.simpleName)
                 resultLength = -1L
             } finally {
                 assetFileDescriptor?.close()
