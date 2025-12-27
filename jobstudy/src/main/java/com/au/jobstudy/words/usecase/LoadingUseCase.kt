@@ -1,8 +1,7 @@
 package com.au.jobstudy.words.usecase
 
-import com.au.jobstudy.words.constants.WordsManager
 import com.au.jobstudy.words.constants.Constants.Companion.XLSX_NAME
-import com.au.jobstudy.words.data.WordsRepositoryImpl
+import com.au.jobstudy.words.constants.WordsManager
 import com.au.jobstudy.words.data.entities.ImportVersionEntity
 import com.au.jobstudy.words.domain.IImportExcelRepository
 import com.au.jobstudy.words.domain.IWordRepository
@@ -13,10 +12,11 @@ import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 
 class LoadingUseCase(
+    val wordsManager: WordsManager,
     val importExcelRepository: IImportExcelRepository,
     val wordRepository: IWordRepository) {
 
-    private val excelParser = WordsManager.createExcelParser(Globals.app)
+    private val excelParser = wordsManager.createExcelParser(Globals.app)
 
     /**
      * 检查导入excel原始数据
@@ -25,7 +25,7 @@ class LoadingUseCase(
         val repo = importExcelRepository
         val versionInfo = repo.importVersionInfo()
         var need = false
-        val version = WordsManager.assetExcelVersion(Globals.app)
+        val version = wordsManager.assetExcelVersion(Globals.app)
 
         if (versionInfo == null) {
             need = true
@@ -82,16 +82,17 @@ class LoadingUseCase(
             }
         }
 
-        WordsManager.allMudWords = allMudWords
-        WordsManager.allQuestionWords = allQuestionWords
-        WordsManager.allSingleWords = allSingleWords
-        WordsManager.sheetMappingRows = sheetMappingRows
+        wordsManager.allMudWords = allMudWords
+        wordsManager.allQuestionWords = allQuestionWords
+        wordsManager.allSingleWords = allSingleWords
+        wordsManager.sheetMappingRows = sheetMappingRows
 
         importExcelRepository.importAllRows(allRows)
     }
 
     private suspend fun loadFromDB() {
         val repo = wordRepository
+        logdNoFile { "repo $repo" }
         val allSingleWords = repo.getAllRows(DBTableMode.Word).map {
             it as RowInfo.WordRow
         }
@@ -103,10 +104,10 @@ class LoadingUseCase(
         }
         val sheetMappingRows = repo.getAllRows()
         val sheetMappingRowsMap = sheetMappingRows.associateBy { it.sheetName }
-        WordsManager.allMudWords = allMudWords
-        WordsManager.allQuestionWords = allQuestionWords
-        WordsManager.allSingleWords = allSingleWords
-        WordsManager.sheetMappingRows = sheetMappingRowsMap
+        wordsManager.allMudWords = allMudWords
+        wordsManager.allQuestionWords = allQuestionWords
+        wordsManager.allSingleWords = allSingleWords
+        wordsManager.sheetMappingRows = sheetMappingRowsMap
     }
 
     fun close() {

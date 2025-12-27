@@ -1,30 +1,19 @@
 package com.au.jobstudy.words.ui
 
-import android.content.Context
 import android.os.Bundle
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.au.jobstudy.databinding.FragmentLoadingBinding
-import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.unsafeLazy
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * 导入Excel数据的加载页面
  */
 class ExcelLoadingFragment : BindingFragment<FragmentLoadingBinding>() {
-    private val viewModel by unsafeLazy {
-        ViewModelProvider(this)[LoadingViewModel::class.java]
-    }
-
-    companion object {
-        fun start(context: Context) {
-            FragmentShellActivity.start(context, ExcelLoadingFragment::class.java)
-        }
-    }
+    private val viewModel : LoadingViewModel by viewModel()
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         lifecycleScope.launch {

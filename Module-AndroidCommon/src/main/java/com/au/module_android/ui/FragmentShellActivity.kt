@@ -24,6 +24,8 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.serializableExtraCompat
 import com.au.module_android.utils.startActivityFix
 import com.au.module_android.utils.unsafeLazy
+import org.koin.android.ext.android.get
+import org.koin.core.qualifier.named
 
 /**
  * @author au
@@ -38,6 +40,7 @@ open class FragmentShellActivity : ViewActivity() {
 
     companion object {
         const val KEY_FRAGMENT_CLASS = "FragmentShellActivity_key_fragment"
+        const val KEY_FRAGMENT_KOIN_NAME = "FragmentShellActivity_key_fragment_koin_name"
         const val KEY_FRAGMENT_ARGUMENTS = "FragmentShellActivity_key_arguments"
         const val KEY_EXIT_ANIM = "FragmentShellActivity_key_exit_anim"
         const val KEY_ENTER_ANIM = "FragmentShellActivity_key_enter_anim"
@@ -66,6 +69,26 @@ open class FragmentShellActivity : ViewActivity() {
          * 把一个Fragment放到本Activity当做唯一的界面。
          *
          * @param context Context
+         * @param koinFragmentName 使用koin做Fragment名
+         * @param arguments 用来透传给Fragment
+         * @param optionsCompat 是startActivity的参数
+         * @param enterAnim 与android标准不同的是，这里给出的anim都是限定即将打开的activity进入时候的动画
+         * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
+         */
+        fun start(context: Context,
+                  koinFragmentName:String,
+                  arguments: Bundle? = null,
+                  optionsCompat: ActivityOptionsCompat? = null,
+                  enterAnim:Int? = null,
+                  exitAnim:Int? = null,
+                  activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
+            startRoot(context, FragmentShellActivity::class.java, koinFragmentName, null, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
+        }
+
+        /**
+         * 把一个Fragment放到本Activity当做唯一的界面。
+         *
+         * @param context Context
          * @param fragmentClass 需要显示的fragment的类
          * @param activityResult 如果传入了非空对象，则会通过它启动，会携带返回；否则就是默认启动。
          * @param arguments 用来透传给Fragment
@@ -82,6 +105,28 @@ open class FragmentShellActivity : ViewActivity() {
                   exitAnim:Int? = null,
                   activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
             startRoot(context, FragmentShellActivity::class.java, fragmentClass, activityResult, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
+        }
+
+        /**
+         * 把一个Fragment放到本Activity当做唯一的界面。
+         *
+         * @param context Context
+         * @param koinFragmentName 使用koin做Fragment名
+         * @param activityResult 如果传入了非空对象，则会通过它启动，会携带返回；否则就是默认启动。
+         * @param arguments 用来透传给Fragment
+         * @param optionsCompat 是startActivity的参数
+         * @param enterAnim 与android标准不同的是，这里给出的anim都是限定即将打开的activity进入时候的动画
+         * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
+         */
+        fun startForResult(context: Context,
+                           koinFragmentName:String,
+                           activityResult:ActivityForResult,
+                           arguments: Bundle? = null,
+                           optionsCompat: ActivityOptionsCompat? = null,
+                           enterAnim:Int? = null,
+                           exitAnim:Int? = null,
+                           activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
+            startRoot(context, FragmentShellActivity::class.java, koinFragmentName, activityResult, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
         }
 
         internal fun startRoot(context: Context,
@@ -109,9 +154,37 @@ open class FragmentShellActivity : ViewActivity() {
                 context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim)
             }
         }
+
+        internal fun startRoot(context: Context,
+                               showActivityClass:Class<out Activity>,
+                               koinFragmentName:String,
+                               activityResult:ActivityForResult?,
+                               arguments: Bundle?,
+                               optionsCompat: ActivityOptionsCompat?,
+                               enterAnim:Int? = null,
+                               exitAnim:Int? = null,
+                               activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
+            val intent = Intent(context, showActivityClass)
+            intent.putExtra(KEY_FRAGMENT_KOIN_NAME, koinFragmentName)
+            if (arguments != null) intent.putExtra(KEY_FRAGMENT_ARGUMENTS, arguments)
+            if (exitAnim != null) intent.putExtra(KEY_EXIT_ANIM, exitAnim)
+            if (enterAnim != null) intent.putExtra(KEY_ENTER_ANIM, enterAnim)
+
+            if (activityResult != null) {
+                activityResult.start(intent, optionsCompat, activityResultCallback)
+
+                if (enterAnim != null && context is Activity) {
+                    context.overridePendingTransition(enterAnim, R.anim.activity_stay)
+                }
+            } else {
+                context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim)
+            }
+        }
     }
 
-    val fragmentClass by unsafeLazy { intent.serializableExtraCompat<Class<Fragment>>(KEY_FRAGMENT_CLASS)!! }
+    val fragmentClass by unsafeLazy { intent.serializableExtraCompat<Class<Fragment>>(KEY_FRAGMENT_CLASS) }
+    val fragmentKoinName by unsafeLazy { intent.getStringExtra(KEY_FRAGMENT_KOIN_NAME) }
+
     private val mEnterAnim by unsafeLazy { intent.getIntExtra(KEY_ENTER_ANIM, 0) }
     private val mExitAnim by unsafeLazy { intent.getIntExtra(KEY_EXIT_ANIM, 0) }
 
@@ -128,14 +201,25 @@ open class FragmentShellActivity : ViewActivity() {
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         v.id = View.generateViewId()
-        val instance = fragmentClass.getDeclaredConstructor().newInstance()
+
+        val frgClz = fragmentClass
+        val instance : Fragment
+        if (frgClz != null) {
+            instance = frgClz.getDeclaredConstructor().newInstance()
+            if (BuildConfig.DEBUG) {
+                Log.d("AU_APP", "FragmentShellActivity: frg ${frgClz.name}")
+            }
+        } else {
+            instance = get<AbsFragment>(named(fragmentKoinName!!))
+            if (BuildConfig.DEBUG) {
+                Log.d("AU_APP", "FragmentShellActivity: koin $fragmentKoinName")
+            }
+        }
+
         instance.arguments = intent.getBundleExtra(KEY_FRAGMENT_ARGUMENTS)
 
         mIsAutoHideIme = instance.asOrNull<AbsFragment>()?.isAutoHideIme() ?: false
 
-        if (BuildConfig.DEBUG) {
-            Log.d("AU_APP", "FragmentShellActivity: ${fragmentClass.name}")
-        }
 
         //1️⃣。
         // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。

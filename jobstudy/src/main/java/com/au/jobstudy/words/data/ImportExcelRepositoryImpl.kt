@@ -1,15 +1,17 @@
 package com.au.jobstudy.words.data
 
-import com.au.jobstudy.words.domain.beans.RowInfo
 import com.au.jobstudy.words.data.dao.WordsDao
 import com.au.jobstudy.words.data.entities.ImportVersionEntity
 import com.au.jobstudy.words.data.entities.MudRowEntity
 import com.au.jobstudy.words.data.entities.QuestionRowEntity
 import com.au.jobstudy.words.data.entities.WordRowEntity
 import com.au.jobstudy.words.domain.IImportExcelRepository
+import com.au.jobstudy.words.domain.beans.RowInfo
 
-class ImportExcelRepositoryImpl(private val wordsDao: WordsDao = WordsDatabase.db.wordsDao())
-        : IImportExcelRepository {
+class ImportExcelRepositoryImpl(
+    private val wordsDao: WordsDao
+) : IImportExcelRepository {
+
     override suspend fun isImported() : Boolean {
         val latestVersion = wordsDao.getLatestImportVersion()
         return latestVersion != null

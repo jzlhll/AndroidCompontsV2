@@ -13,16 +13,16 @@ import android.view.ViewOutlineProvider;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.viewbinding.ViewBinding;
 
 import com.au.module_android.R;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import androidx.annotation.NonNull;
-import androidx.viewbinding.ViewBinding;
 
 /**
  * ViewStub的Pro版本;
@@ -36,9 +36,12 @@ import androidx.viewbinding.ViewBinding;
  * 用法eg:
  * <p>
  *     1. xml中设置replaceLayout（layout资源id）和inflatedId。然后viewStubPro.launch()。
+ * <br>
  *     2. xml中设置replaceViewClass (class全名) 和 inflatedId 。然后viewStubPro.launch()。
  *          这种情况，需要保护replaceViewClass不被混淆名字和构造体。
+ *<br>
  *     3. view = viewStubPro.setReplaceLayoutResource(R.layout.layout_any_layout).launch()。
+ *     <br>
  *     4. view = viewStubPro.setReplaceViewClass(class Or ClassFullName).launch()。
  *         这种情况，setReplaceViewClass(string)需要保护不被混淆名字和构造体。
  * <p>

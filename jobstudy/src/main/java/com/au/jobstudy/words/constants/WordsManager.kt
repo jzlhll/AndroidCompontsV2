@@ -2,11 +2,11 @@ package com.au.jobstudy.words.constants
 
 import android.content.Context
 import androidx.annotation.WorkerThread
-import com.au.jobstudy.words.domain.beans.RowInfo
 import com.au.jobstudy.words.domain.ApachePoiExcelParser
 import com.au.jobstudy.words.domain.IExcelParser
+import com.au.jobstudy.words.domain.beans.RowInfo
 
-object WordsManager {
+class WordsManager {
     var allSingleWords: List<RowInfo.WordRow> ?= null
     var allQuestionWords : List<RowInfo.QuestionRow>?= null
     var allMudWords: List<RowInfo.MudRow>?= null

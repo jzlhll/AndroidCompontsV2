@@ -1,22 +1,25 @@
 package com.au.jobstudy
 
 import android.os.Bundle
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.au.jobstudy.check.NameList
+import com.au.jobstudy.check.dao.WorkDao
 import com.au.jobstudy.databinding.FragmentMainHomeBinding
+import com.au.jobstudy.utils.ISingleDayer
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.jobstudy.utils.WeekDateUtil.currentTimeToHelloGood
 import com.au.jobstudy.words.ui.EnglishCheckFragment
-import com.au.jobstudy.words.ui.ExcelLoadingFragment
-import com.au.jobstudy.words.ui.LoadingViewModel
 import com.au.module_android.click.onClick
+import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.unsafeLazy
+import com.au.module_android.utils.launchOnThread
+import org.koin.android.ext.android.inject
 
 class MainHomeFragment : BindingFragment<FragmentMainHomeBinding>() {
-    private val userName = NameList.NAMES_JIANG_TJ
+    private val workDao : WorkDao by inject()
+    private val dayer : ISingleDayer by inject()
 
-    private val loadingViewModel by unsafeLazy { ViewModelProvider(this)[LoadingViewModel::class.java] }
+    private val userName = NameList.NAMES_JIANG_TJ
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.startBtn.onClick {
@@ -29,8 +32,11 @@ class MainHomeFragment : BindingFragment<FragmentMainHomeBinding>() {
                 EnglishCheckFragment.start(requireActivity(), 0, 100)
             } else {
                 // 如果未导入，先跳转到加载页面进行导入
-                ExcelLoadingFragment.start(requireActivity())
+                FragmentShellActivity.start(requireActivity(), UiNames.EXCEL_LOADING)
             }
+        }
+        lifecycleScope.launchOnThread {
+            workDao.queryAWeek(dayer.weekStartDay)
         }
     }
 

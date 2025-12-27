@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <View
+        android:id="@+id/topSpace"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <androidx.appcompat.widget.AppCompatTextView
         android:textColor="#000000"
         android:layout_width="match_parent"
@@ -29,6 +34,7 @@
         android:textStyle="bold" />
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="#f8f8f8"
@@ -82,7 +88,7 @@
         android:id="@+id/feedbackText"
         android:layout_marginTop="6dp"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

@@ -1,12 +1,15 @@
 package com.au.jobstudy.words.data
 
-import com.au.jobstudy.words.domain.beans.DBTableMode
-import com.au.jobstudy.words.domain.beans.RowInfo
 import com.au.jobstudy.words.data.dao.WordsDao
 import com.au.jobstudy.words.domain.IWordRepository
+import com.au.jobstudy.words.domain.beans.DBTableMode
+import com.au.jobstudy.words.domain.beans.RowInfo
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class WordsRepositoryImpl(private val wordsDao: WordsDao = WordsDatabase.db.wordsDao())
-        : IWordRepository {
+class WordsRepositoryImpl()
+        : IWordRepository, KoinComponent {
+    private val wordsDao: WordsDao by inject()
     /** 查询全部函数
      * @param mode 如果是null，则返回所有数据; 如果是非null，则返回指定模式下的数据(由于几个Word相同，故而相同)
      * */

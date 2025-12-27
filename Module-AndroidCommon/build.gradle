@@ -103,5 +103,8 @@ dependencies {
     api libs.kotlin.reflect
 
     implementation libs.androidx.core.splashscreen
+
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
     //implementation libs.android.cn.oaid
 }

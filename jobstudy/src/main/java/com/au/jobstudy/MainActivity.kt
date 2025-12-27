@@ -1,19 +1,20 @@
 package com.au.jobstudy
 
 import android.os.Bundle
+import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
-import com.au.module_nested.bottom_nav.BottomNavAdapter
-import com.au.module_nested.bottom_nav.BottomPageBean
-import com.au.module_nested.recyclerview.NoScrollLinearLayoutManager
-import com.au.module_nested.viewpager2.simplePagerAdapter
 import com.au.jobstudy.databinding.ActivityMainBinding
 import com.au.jobstudy.databinding.BottomPageMenuBinding
 import com.au.module_android.Globals.app
 import com.au.module_android.ui.bindings.BindingActivity
 import com.au.module_android.utils.unsafeLazy
-import androidx.core.graphics.toColorInt
+import com.au.module_nested.bottom_nav.BottomNavAdapter
+import com.au.module_nested.bottom_nav.BottomPageBean
+import com.au.module_nested.recyclerview.NoScrollLinearLayoutManager
+import com.au.module_nested.viewpager2.simplePagerAdapter
 
 class MainActivity : BindingActivity<ActivityMainBinding>() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

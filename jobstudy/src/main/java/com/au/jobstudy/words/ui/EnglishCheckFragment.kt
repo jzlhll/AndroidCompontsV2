@@ -3,20 +3,21 @@ package com.au.jobstudy.words.ui
 import android.content.Context
 import android.os.Bundle
 import android.view.View
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.lifecycle.ViewModelProvider
+import com.au.jobstudy.UiNames
 import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
 import com.au.jobstudy.words.constants.WordsManager
 import com.au.jobstudy.words.domain.TTSNative
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.unsafeLazy
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * 英文打卡Fragment
  * 显示单词学习界面，包含单词、音标、发音和释义
  */
-class EnglishCheckFragment : BindingFragment<FragmentEnglishCheckBinding>() {
+class EnglishCheckFragment(
+    private val wordsManager : WordsManager
+) : BindingFragment<FragmentEnglishCheckBinding>() {
 
     companion object {
         private const val ARG_WORD_INDEX = "word_index"
@@ -24,7 +25,8 @@ class EnglishCheckFragment : BindingFragment<FragmentEnglishCheckBinding>() {
 
         fun start(context: Context, currentIndex: Int, totalWords: Int) {
             FragmentShellActivity.start(
-                context, EnglishCheckFragment::class.java,
+                context,
+                UiNames.ENGLISH_CHECK,
                 Bundle().apply {
                     putInt(ARG_WORD_INDEX, currentIndex)
                     putInt(ARG_TOTAL_WORDS, totalWords)
@@ -32,7 +34,7 @@ class EnglishCheckFragment : BindingFragment<FragmentEnglishCheckBinding>() {
         }
     }
 
-    private val mViewModel by unsafeLazy { ViewModelProvider(this)[CheckViewModel::class.java] }
+    private val mViewModel: CheckViewModel by viewModel()
 
     private var mIsTtsing = false
     private var mTts : TTSNative? = null
@@ -76,7 +78,7 @@ class EnglishCheckFragment : BindingFragment<FragmentEnglishCheckBinding>() {
 
         // 设置默认的单词数据（实际项目中应该从网络或本地获取）
         //todo 先random
-        WordsManager.allSingleWords?.let {
+        wordsManager.allSingleWords?.let {
             val randomIndex = (Math.random() * it.size).toInt()
             val word = it[randomIndex]
             binding.wordText.text = word.word
@@ -123,7 +125,7 @@ class EnglishCheckFragment : BindingFragment<FragmentEnglishCheckBinding>() {
     }
 
     private fun goToNextWord() {
-        WordsManager.allSingleWords?.let {
+        wordsManager.allSingleWords?.let {
             val randomIndex = (Math.random() * it.size).toInt()
             val word = it[randomIndex]
             binding.wordText.text = word.word

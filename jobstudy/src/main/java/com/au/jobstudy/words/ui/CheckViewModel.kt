@@ -2,8 +2,8 @@ package com.au.jobstudy.words.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.au.jobstudy.words.domain.IWordRepository
 import com.au.jobstudy.words.domain.beans.DBTableMode
-import com.au.jobstudy.words.data.WordsRepositoryImpl
 import com.au.module_android.simpleflow.ActionDispatcherImpl
 import com.au.module_android.simpleflow.IActionDispatcher
 import com.au.module_android.simpleflow.IStateAction
@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CheckViewModel : ViewModel(), IActionDispatcher by ActionDispatcherImpl() {
+class CheckViewModel(
+    private val repo : IWordRepository
+) : ViewModel(), IActionDispatcher by ActionDispatcherImpl() {
     class LoadingAction(val dbTabMode: DBTableMode,
                         val sheetName:String? = null) : IStateAction
 
@@ -44,8 +46,6 @@ class CheckViewModel : ViewModel(), IActionDispatcher by ActionDispatcherImpl() 
     private fun startLoad(action: LoadingAction) {
         val sheetName = action.sheetName
         val dbTabMode = action.dbTabMode
-
-        val repo = WordsRepositoryImpl()
 
         viewModelScope.launchOnThread {
             when (dbTabMode) {
