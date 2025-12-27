@@ -1,12 +1,11 @@
 package com.au.jobstudy.completed
 
 import android.os.Bundle
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.au.jobstudy.check.CheckConsts
 import com.au.jobstudy.check.bean.CompletedEntity
 import com.au.jobstudy.checkwith.CheckWithFragment
 import com.au.jobstudy.databinding.FragmentCompletedBinding
+import com.au.jobstudy.utils.ISingleDayer
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
 import com.au.module_android.json.fromJson
@@ -14,11 +13,15 @@ import com.au.module_android.permissions.createActivityForResult
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.unsafeLazy
+import org.koin.android.ext.android.get
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class CompletedFragment : BindingFragment<FragmentCompletedBinding>() {
     private lateinit var adpater:CompletedAdapter
 
-    private val viewModel by lazy { ViewModelProvider(requireActivity())[CompletedViewModel::class] }
+    private val viewModel:CompletedViewModel by viewModel(ownerProducer = {
+        requireActivity()
+    })
 
     private var loadedLastDay : Int = 0
 
@@ -76,12 +79,13 @@ class CompletedFragment : BindingFragment<FragmentCompletedBinding>() {
             }
         }
 
+        val dayer = get<ISingleDayer>()
         if (!isWeek) {
-            val days = getNewDays(CheckConsts.currentDay())
+            val days = getNewDays(dayer.currentDay)
             viewModel.fetch(days)
 
         } else {
-            val weeks = getWeeks(CheckConsts.dayer!!.weekStartDay)
+            val weeks = getWeeks(dayer.weekStartDay)
             viewModel.fetchWeek(weeks)
         }
 

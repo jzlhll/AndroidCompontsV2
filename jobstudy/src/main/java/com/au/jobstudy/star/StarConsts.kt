@@ -1,14 +1,14 @@
 package com.au.jobstudy.star
 
 import com.au.jobstudy.check.AppDatabase
-import com.au.jobstudy.check.CheckConsts
 import com.au.jobstudy.check.NameList
 import com.au.jobstudy.check.bean.StarEntity
-import com.au.module_cached.AppDataStore
+import com.au.jobstudy.utils.ISingleDayer
 import com.au.module_android.Globals
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.logd
+import com.au.module_cached.AppDataStore
 import kotlinx.coroutines.delay
 
 /**
@@ -16,7 +16,10 @@ import kotlinx.coroutines.delay
  * @date :2024/7/15 11:07
  * @description:
  */
-object StarConsts {
+class StarConsts (
+    val db: AppDatabase,
+    val singleDayer: ISingleDayer
+) {
     val allStarsLiveData = NoStickLiveData<List<StarItemBean>>()
 
     val mineStarData = NoStickLiveData<StarEntity>()
@@ -44,7 +47,7 @@ object StarConsts {
         NameList.NORMAL_STUDENT_5 to true
     )
 
-    private const val INIT_STAR_LIST_VERSION = 1
+    private val INIT_STAR_LIST_VERSION = 1
 
     var myRank = -1
 
@@ -52,8 +55,8 @@ object StarConsts {
         delay(0)
         //如果version不同，名单变化，则会进行更新。
         if (AppDataStore.read("initStarList", -1) != INIT_STAR_LIST_VERSION) {
-            AppDatabase.db.runInTransaction {
-                val dao = AppDatabase.db.getStarDao()
+            db.runInTransaction {
+                val dao = db.getStarDao()
                 val starList = dao.queryAll()
                 val savedStarNames = starList.map { it.name }
                 bestStudents.forEach { (k, v) ->
@@ -78,7 +81,7 @@ object StarConsts {
     }
 
     fun dbStarEntity(name:String) : StarEntity {
-        val starEntities = AppDatabase.db.getStarDao().queryDingByName(name)
+        val starEntities = db.getStarDao().queryDingByName(name)
         val starEntity = if (starEntities.isEmpty()) {
             StarEntity(NameList.NAMES_JIANG_TJ, 0, 0, 0)
         } else {
@@ -95,7 +98,7 @@ object StarConsts {
             val entity = dbStarEntity(name)
             entity.dingDay = day
             entity.dingCount += 1
-            AppDatabase.db.getStarDao().insert(entity)
+            db.getStarDao().insert(entity)
             checkIfMineEntityNotify(entity)
         }
     }
@@ -111,15 +114,15 @@ object StarConsts {
         Globals.mainScope.launchOnThread {
             val entity = dbStarEntity(name)
             entity.starCount += 1
-            AppDatabase.db.getStarDao().insert(entity)
+            db.getStarDao().insert(entity)
             checkIfMineEntityNotify(entity)
         }
     }
 
     suspend fun fakeUpdateStudentsDingCount() {
         delay(0)
-        AppDatabase.db.runInTransaction{
-            val dao = AppDatabase.db.getStarDao()
+        db.runInTransaction{
+            val dao = db.getStarDao()
             val allExistStarEntities = dao.queryAll()
             val mineStar = dbStarEntity(NameList.NAMES_JIANG_TJ)
             val myStarCt = mineStar.starCount
@@ -172,15 +175,14 @@ object StarConsts {
     suspend fun initData() {
         delay(0)
 
-        val curDay = CheckConsts.currentDay()
-        val allStars = AppDatabase.db.getStarDao().queryAll()
+        val allStars = db.getStarDao().queryAll()
 
         allStars.find { it.name == NameList.NAMES_JIANG_TJ }?.let {
             checkIfMineEntityNotify(it)
         }
 
         val starList = allStars
-            .map { StarItemBean(it.name, it.starCount, it.dingCount, it.dingDay == curDay) }.toMutableList()
+            .map { StarItemBean(it.name, it.starCount, it.dingCount, it.dingDay == singleDayer.currentDay) }.toMutableList()
 
         starList.sortWith { o1, o2 ->
             if (o1.starNum > o2.starNum) {

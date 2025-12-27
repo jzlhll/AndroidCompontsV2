@@ -11,7 +11,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
-object Api {
+class Api {
     suspend fun requestJobData(yearMonth:Int, day:Int) : JobBean? {
         val file = requestJob(yearMonth, day)
         return file?.let { fileToJobBean(it) }

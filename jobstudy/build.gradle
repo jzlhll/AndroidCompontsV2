@@ -64,6 +64,9 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment:$nav_version"
     implementation "androidx.navigation:navigation-ui:$nav_version"
 
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
+
 //    // Feature module support for Fragments
 //    implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
 //

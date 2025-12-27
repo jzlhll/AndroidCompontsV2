@@ -34,6 +34,7 @@ import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utils.replaceFragment
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.MediaTypeUtil
+import org.koin.android.ext.android.inject
 import java.io.File
 import java.util.stream.Collectors
 
@@ -69,6 +70,9 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
         return YourToolbarInfo.Defaults("开始打卡")
     }
 
+    private val checkConsts : CheckConsts by inject()
+    private val db : AppDatabase by inject()
+
     private val dataItem = sDataItem!!
     private val completedItem = sCompletedItem
 
@@ -92,7 +96,7 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
                 partialFragment?.getUploadFiles()?.let { it1 -> newList.addAll(it1) }
                 val entity = CompletedEntity(dataItem.id, dataItem.day, dataItem.weekStartDay,
                     newList.toJsonString(), completedItem?.id ?: 0)
-                CheckConsts.markCompleted(entity, fromCompletedList)
+                checkConsts.markCompleted(entity, fromCompletedList)
                 requireActivity().setResult(0, Intent().also {
                     it.putExtra("completedEntity", entity.toJsonString())
                 })
@@ -164,7 +168,7 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
             }
         } else {
             lifecycleScope.launchOnThread {
-                val completed = AppDatabase.db.getCompletedDao().queryCompletedByWorkId(dayWorkId = dataItem.id).firstOrNull()
+                val completed = db.getCompletedDao().queryCompletedByWorkId(dayWorkId = dataItem.id).firstOrNull()
                 val files = completed?.files?.fromJsonList<String>()
                 files?.let { mFiles->
                     lifecycleScope.launchOnUi {

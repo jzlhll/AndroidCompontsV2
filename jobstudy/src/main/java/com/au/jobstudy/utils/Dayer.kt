@@ -10,13 +10,17 @@ import com.au.jobstudy.utils.WeekDateUtil.timeToDayInt
  * @date :2023/11/27 10:48
  * @description:
  */
-class Dayer {
-    var yesterday: Int = 0
-    var currentDay:Int = 0
-    var weekStartDay:Int = 0
-    var lastWeekStartDay = 0
+class Dayer : ISingleDayer{
+    override var yesterday: Int = 0
+        private set
+    override var currentDay:Int = 0
+        private set
+    override var weekStartDay:Int = 0
+        private set
+    override var lastWeekStartDay = 0
+        private set
 
-    fun isYesterdayIsLastWeek() : Boolean {
+    override fun isYesterdayIsLastWeek() : Boolean {
         return anyDayToWeekStartDay(yesterday) == lastWeekStartDay
     }
 
@@ -49,5 +53,9 @@ class Dayer {
 
     override fun hashCode(): Int {
         return currentDay
+    }
+
+    override fun update() {
+        init(timeToDayInt())
     }
 }

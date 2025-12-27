@@ -3,9 +3,9 @@ package com.au.jobstudy.checkwith.video
 import android.os.Bundle
 import androidx.core.content.FileProvider
 import com.au.jobstudy.BuildConfig
-import com.au.jobstudy.check.CheckConsts
 import com.au.jobstudy.checkwith.base.FirstResumeBindingFragment
 import com.au.jobstudy.databinding.PartialVideoBinding
+import com.au.jobstudy.utils.IFactoryDayer
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
@@ -13,6 +13,7 @@ import com.au.module_android.permissions.activity.SystemTakeVideoFaceForResult
 import com.au.module_android.permissions.systemTakeVideo2FrontForResult
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
+import org.koin.android.ext.android.get
 import java.io.File
 import java.util.Collections
 
@@ -55,7 +56,8 @@ class CheckVideoPartialFragment : FirstResumeBindingFragment<PartialVideoBinding
     }
 
     fun startTake() {
-        val picture = File(Globals.goodCacheDir.absolutePath + "/videos/" + CheckConsts.currentDay())
+        val dayer = get<IFactoryDayer>()
+        val picture = File(Globals.goodCacheDir.absolutePath + "/videos/" + dayer.currentDay)
         picture.mkdirs()
         val file = File(picture, "vid_" + WeekDateUtil.currentHHmmssSSS() + ".mp4")
         val uri = FileProvider.getUriForFile(

@@ -4,17 +4,15 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
 import com.au.jobstudy.check.NameList
 import com.au.jobstudy.databinding.FragmentMainMineBinding
-import com.au.module_android.Globals
-import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.ui.bindings.BindingFragment
-import kotlinx.coroutines.launch
+import org.koin.android.ext.android.get
 
 
 class MainMineFragment : BindingFragment<FragmentMainMineBinding>() {
+    private val androidSdkMapping: AndroidSdkMapping = get()
+
     private var clickDebugCount = 0
 
     fun getStatusBarHeight(context: Context): Int {
@@ -39,7 +37,7 @@ class MainMineFragment : BindingFragment<FragmentMainMineBinding>() {
         super.onViewCreated(view, savedInstanceState)
         binding.name.text = NameList.NAMES_JIANG_TJ
         val appName = getString(R.string.app_name)
-        val system = AndroidSdkMapping().currentVersionStr
+        val system = androidSdkMapping.currentVersionStr
         val name = "$appName${BuildConfig.VERSION_NAME} - versionCode:${BuildConfig.VERSION_CODE}\n$system"
         binding.logoText.text = name
 

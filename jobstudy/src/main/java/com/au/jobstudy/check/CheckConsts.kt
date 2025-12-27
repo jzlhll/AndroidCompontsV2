@@ -12,6 +12,7 @@ import com.au.module_cached.AppDataStore
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.utils.logd
 import kotlinx.coroutines.delay
+import org.koin.core.component.KoinComponent
 
 enum class StatusMode {
     Completed,
@@ -22,12 +23,14 @@ enum class StatusMode {
  */
 data class UpdateChangeStatus(val statusMode:StatusMode, val index:Long)
 
-object CheckConsts {
-
+class CheckConsts(
+    private val starConsts: StarConsts,
+    private val db: AppDatabase
+) : KoinComponent{
     /**
      * 可以用来监听更新日期显示，更新上下午变化等等。
      */
-    var dayer:Dayer? = null
+    private var dayer:Dayer? = null
     fun currentDay() = dayer!!.currentDay
 
     private val api : AbsGeneratorApi = SummerGeneratorApi()
@@ -105,14 +108,14 @@ object CheckConsts {
         //增加dingCount
         val savedDay = readSavedDay(newDayer.currentDay)
         if (savedDay != newDayer.currentDay) { //后面的天打开
-            StarConsts.fakeUpdateStudentsDingCount()
+            starConsts.fakeUpdateStudentsDingCount()
             AppDataStore.save(SAVED_CUR_DAY, newDayer.currentDay)
         }
 
         //读取
         var isWeekChange = false
         if (curDayer == null) { //为空就进行db的读取，看看是否已经生成
-            StarConsts.initData()
+            starConsts.initData()
             isWeekChange = true
         } else {
             isWeekChange = if (newDayer != curDayer) {
@@ -152,7 +155,7 @@ object CheckConsts {
 
         val workIds = weeklyWorks().map { it.id }
         logd { "weekChanged workIds $workIds" }
-        curWeekWorksCompleted = AppDatabase.db.getCompletedDao().queryCompletedListByWorkIds(workIds)
+        curWeekWorksCompleted = db.getCompletedDao().queryCompletedListByWorkIds(workIds)
 
         if (BuildConfig.DEBUG) {
             curWeekWorksCompleted?.forEach {
@@ -171,7 +174,7 @@ object CheckConsts {
     }
 
     private suspend fun getOrCreateDbWeekData(weekStartDayInt:Int) : List<WorkEntity>{
-        val dao = AppDatabase.db.getWorkDao()
+        val dao = db.getWorkDao()
         val dbList = dao.queryAWeek(weekStartDayInt)
         if (dbList.isEmpty()) {
             val works = api.getWeekWorks(weekStartDayInt)
@@ -186,17 +189,17 @@ object CheckConsts {
 
     private suspend fun getDbCompletedWorks(day:Int) : List<CompletedEntity>{
         delay(0)
-        return AppDatabase.db.getCompletedDao().queryCompletedByDay(day)
+        return db.getCompletedDao().queryCompletedByDay(day)
     }
 
-    const val SAVED_CUR_DAY = "savedCurDay"
+    val SAVED_CUR_DAY = "savedCurDay"
 
     suspend fun markCompleted(completedEntity: CompletedEntity, isUpdate:Boolean) {
-        val dao = AppDatabase.db.getCompletedDao()
+        val dao = db.getCompletedDao()
         if(isUpdate) dao.update(completedEntity) else dao.insert(completedEntity)
         logd { "mark completed id: ${completedEntity.dayWorkId}" }
 
-        StarConsts.updateNameStar(NameList.NAMES_JIANG_TJ)
+        starConsts.updateNameStar(NameList.NAMES_JIANG_TJ)
 
         whenTrigger(true)
     }

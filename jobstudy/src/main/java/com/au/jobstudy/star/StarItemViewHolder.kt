@@ -3,8 +3,8 @@ package com.au.jobstudy.star
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.View
+import com.au.jobstudy.AppGlobals
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
-import com.au.jobstudy.check.CheckConsts
 import com.au.jobstudy.databinding.HolderStarHeadBinding
 import com.au.jobstudy.databinding.HolderStarItemBinding
 import com.au.jobstudy.databinding.HomeMarkupBinding
@@ -31,7 +31,9 @@ class StarItemViewHolder(vh: HolderStarItemBinding, itemBeforeClick:((View, Star
             currentData.asOrNull<StarItemBean>()?.let {
                 itemBeforeClick(v, it)
                 if (it.isDing != true) {
-                    StarConsts.updateNameDing(it.name, CheckConsts.currentDay())
+                    val dayer =
+                    AppGlobals.starConsts.updateNameDing(it.name,
+                        AppGlobals.dayer.currentDay)
                     it.dingNum += 1
                     it.isDing = true
                     binding.dingCount.text = "" + it.dingNum

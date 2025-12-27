@@ -3,13 +3,13 @@ package com.au.jobstudy.completed
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.au.jobstudy.check.AppDatabase
-import com.au.jobstudy.check.bean.CompletedEntity
-import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
 
-class CompletedViewModel : ViewModel() {
+class CompletedViewModel(
+    private val db: AppDatabase
+) : ViewModel() {
     /**
      * 日期 to 任务
      */
@@ -18,7 +18,7 @@ class CompletedViewModel : ViewModel() {
     fun updateABean(bean:CompletedBean, cb:()->Unit) {
         val workId = bean.workEntity.id
         viewModelScope.launchOnThread {
-            bean.completedEntity = AppDatabase.db.getCompletedDao().queryCompletedByWorkId(workId).firstOrNull()
+            bean.completedEntity = db.getCompletedDao().queryCompletedByWorkId(workId).firstOrNull()
             viewModelScope.launchOnUi {
                 cb()
             }
@@ -29,13 +29,13 @@ class CompletedViewModel : ViewModel() {
         viewModelScope.launchOnThread {
             val list = ArrayList<ICompletedBean>()
 
-            AppDatabase.db.runInTransaction {
+            db.runInTransaction {
                 weekStartDays.forEach { weekStartDay->
-                    val works = AppDatabase.db.getWorkDao().queryAWeekNotDayWork(weekStartDay)
+                    val works = db.getWorkDao().queryAWeekNotDayWork(weekStartDay)
                     if (works.isNotEmpty()) {
                         list.add(CompletedDateBean(weekStartDay, true))
                     }
-                    val completed = AppDatabase.db.getCompletedDao().queryCompletedListByWorkIds(works.map { it.id })
+                    val completed = db.getCompletedDao().queryCompletedListByWorkIds(works.map { it.id })
                     works.forEach { work->
                         list.add(CompletedBean(work, completed.find { it.dayWorkId == work.id }))
                     }
@@ -51,13 +51,13 @@ class CompletedViewModel : ViewModel() {
         viewModelScope.launchOnThread {
             val list = ArrayList<ICompletedBean>()
 
-            AppDatabase.db.runInTransaction {
+            db.runInTransaction {
                 for (day in days) {
-                    val works = AppDatabase.db.getWorkDao().queryADay(day)
+                    val works = db.getWorkDao().queryADay(day)
                     if (works.isNotEmpty()) {
                         list.add(CompletedDateBean(day, false))
                     }
-                    val completed = AppDatabase.db.getCompletedDao().queryCompletedListByWorkIds(works.map { it.id })
+                    val completed = db.getCompletedDao().queryCompletedListByWorkIds(works.map { it.id })
                     works.forEach { work->
                         list.add(CompletedBean(work, completed.find { it.dayWorkId == work.id }))
                     }

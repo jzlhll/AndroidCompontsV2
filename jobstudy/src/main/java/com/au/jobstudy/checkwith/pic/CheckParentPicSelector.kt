@@ -3,12 +3,10 @@ package com.au.jobstudy.checkwith.pic
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.content.FileProvider
-import com.au.module_nested.recyclerview.BindRcvAdapter
-import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import com.au.jobstudy.BuildConfig
 import com.au.jobstudy.R
-import com.au.jobstudy.check.CheckConsts
 import com.au.jobstudy.databinding.HolderPartialPictureBinding
+import com.au.jobstudy.utils.IFactoryDayer
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
@@ -16,9 +14,13 @@ import com.au.module_android.glide.glideSetAny
 import com.au.module_android.permissions.systemTakePictureForResult
 import com.au.module_android.utils.invisible
 import com.au.module_android.utils.visible
+import com.au.module_nested.recyclerview.BindRcvAdapter
+import com.au.module_nested.recyclerview.viewholder.BindViewHolder
+import org.koin.android.ext.android.get
 import java.io.File
 
 class CheckParentPicSelector(private val f:CheckPicturePartialFragment) {
+
     fun createAdapter() : PicAdapter{
         return PicAdapter { bean, pos, clickOnDelete ->
             if (clickOnDelete) {
@@ -49,7 +51,8 @@ class CheckParentPicSelector(private val f:CheckPicturePartialFragment) {
     val launcher = f.systemTakePictureForResult()
 
     fun clickOnAdd(addIconPosition:Int) {
-        val picture = File(Globals.goodCacheDir.path + "/pictures/" + CheckConsts.currentDay())
+        val dayer = f.get<IFactoryDayer>()
+        val picture = File(Globals.goodCacheDir.path + "/pictures/" + dayer.currentDay)
         picture.mkdirs()
         val file = File(picture, "pic_" + WeekDateUtil.currentHHmmssSSS() + ".png")
         val uri = FileProvider.getUriForFile(

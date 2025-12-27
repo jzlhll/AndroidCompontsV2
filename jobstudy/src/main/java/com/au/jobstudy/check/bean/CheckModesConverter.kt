@@ -4,7 +4,6 @@ import androidx.room.TypeConverter
 import com.au.jobstudy.check.modes.CheckMode
 import com.au.module_android.Globals
 import com.au.module_android.json.fromJsonList
-import java.util.Collections
 
 class CheckModesConverter {
     @TypeConverter
@@ -14,6 +13,6 @@ class CheckModesConverter {
 
     @TypeConverter
     fun stringToListCheckMode(json:String) : List<CheckMode> {
-        return json.fromJsonList<CheckMode>() ?: Collections.emptyList()
+        return json.fromJsonList<CheckMode>()
     }
 }
