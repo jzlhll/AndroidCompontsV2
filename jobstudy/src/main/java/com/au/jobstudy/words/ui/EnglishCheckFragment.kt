@@ -7,8 +7,8 @@ import com.au.jobstudy.UiNames
 import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
 import com.au.jobstudy.words.constants.WordsManager
 import com.au.jobstudy.words.domain.TTSNative
-import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.ui.namedLaunch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
@@ -24,9 +24,8 @@ class EnglishCheckFragment(
         private const val ARG_TOTAL_WORDS = "total_words"
 
         fun start(context: Context, currentIndex: Int, totalWords: Int) {
-            FragmentShellActivity.start(
+            UiNames.ENGLISH_CHECK.namedLaunch(
                 context,
-                UiNames.ENGLISH_CHECK,
                 Bundle().apply {
                     putInt(ARG_WORD_INDEX, currentIndex)
                     putInt(ARG_TOTAL_WORDS, totalWords)

@@ -69,26 +69,6 @@ open class FragmentShellActivity : ViewActivity() {
          * 把一个Fragment放到本Activity当做唯一的界面。
          *
          * @param context Context
-         * @param koinFragmentName 使用koin做Fragment名
-         * @param arguments 用来透传给Fragment
-         * @param optionsCompat 是startActivity的参数
-         * @param enterAnim 与android标准不同的是，这里给出的anim都是限定即将打开的activity进入时候的动画
-         * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
-         */
-        fun start(context: Context,
-                  koinFragmentName:String,
-                  arguments: Bundle? = null,
-                  optionsCompat: ActivityOptionsCompat? = null,
-                  enterAnim:Int? = null,
-                  exitAnim:Int? = null,
-                  activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
-            startRoot(context, FragmentShellActivity::class.java, koinFragmentName, null, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
-        }
-
-        /**
-         * 把一个Fragment放到本Activity当做唯一的界面。
-         *
-         * @param context Context
          * @param fragmentClass 需要显示的fragment的类
          * @param activityResult 如果传入了非空对象，则会通过它启动，会携带返回；否则就是默认启动。
          * @param arguments 用来透传给Fragment
@@ -105,28 +85,6 @@ open class FragmentShellActivity : ViewActivity() {
                   exitAnim:Int? = null,
                   activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
             startRoot(context, FragmentShellActivity::class.java, fragmentClass, activityResult, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
-        }
-
-        /**
-         * 把一个Fragment放到本Activity当做唯一的界面。
-         *
-         * @param context Context
-         * @param koinFragmentName 使用koin做Fragment名
-         * @param activityResult 如果传入了非空对象，则会通过它启动，会携带返回；否则就是默认启动。
-         * @param arguments 用来透传给Fragment
-         * @param optionsCompat 是startActivity的参数
-         * @param enterAnim 与android标准不同的是，这里给出的anim都是限定即将打开的activity进入时候的动画
-         * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
-         */
-        fun startForResult(context: Context,
-                           koinFragmentName:String,
-                           activityResult:ActivityForResult,
-                           arguments: Bundle? = null,
-                           optionsCompat: ActivityOptionsCompat? = null,
-                           enterAnim:Int? = null,
-                           exitAnim:Int? = null,
-                           activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
-            startRoot(context, FragmentShellActivity::class.java, koinFragmentName, activityResult, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
         }
 
         internal fun startRoot(context: Context,

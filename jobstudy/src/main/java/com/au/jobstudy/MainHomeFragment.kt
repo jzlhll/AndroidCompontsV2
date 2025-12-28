@@ -12,6 +12,7 @@ import com.au.jobstudy.words.ui.EnglishCheckFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.ui.namedLaunch
 import com.au.module_android.utils.launchOnThread
 import org.koin.android.ext.android.inject
 
@@ -32,7 +33,7 @@ class MainHomeFragment : BindingFragment<FragmentMainHomeBinding>() {
                 EnglishCheckFragment.start(requireActivity(), 0, 100)
             } else {
                 // 如果未导入，先跳转到加载页面进行导入
-                FragmentShellActivity.start(requireActivity(), UiNames.EXCEL_LOADING)
+                UiNames.EXCEL_LOADING.namedLaunch(requireActivity())
             }
         }
         lifecycleScope.launchOnThread {
