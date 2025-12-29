@@ -1,5 +1,5 @@
 // 引入SparkMD5库（需确保该库在Worker作用域可用）
-self.importScripts('spark-md5.min.js');
+self.importScripts('./spark-md5.js');
 
 let spark = new self.SparkMD5.ArrayBuffer();
 

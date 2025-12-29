@@ -58,7 +58,7 @@ class MyDroidHttpServer(httpPort: Int,
         return when (session.method) {
             Method.GET -> handleGetRequest(session)
             Method.POST -> handlePostRequest(session)
-            else -> newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "404")
+            else -> newFixedLengthResponse(Status.NOT_FOUND, mimePlain, "404")
         }
     }
 
@@ -72,7 +72,7 @@ class MyDroidHttpServer(httpPort: Int,
      */
 
     private fun handleOptionRequest(): Response {
-        val response = newFixedLengthResponse(Status.OK, MIME_PLAINTEXT, "")
+        val response = newFixedLengthResponse(Status.OK, mimePlain, "")
         response.addHeader("Access-Control-Allow-Origin", "*")
         response.addHeader("Access-Control-Allow-Methods", "GET, POST")
         response.addHeader("Access-Control-Allow-Headers", "Content-Type")
@@ -89,13 +89,13 @@ class MyDroidHttpServer(httpPort: Int,
             url == "/" -> {
                 when (MyDroidConst.currentDroidMode) {
                     MyDroidMode.Send -> {
-                        return serveAssetFile("transfer/ReceiveFromPhone.html")
+                        return serveAssetFile("transfer/ReceiveFromPhone.html", mimeHtml)
                     }
                     MyDroidMode.Receiver -> {
-                        return serveAssetFile("transfer/SendToPhone.html")
+                        return serveAssetFile("transfer/SendToPhone.html", mimeHtml)
                     }
                     MyDroidMode.Middle -> {
-                        return serveAssetFile("transfer/MiddleServer.html")
+                        return serveAssetFile("transfer/MiddleServer.html", mimeHtml)
                     }
                     else -> {
                         error = Globals.getString(R.string.server_not_support) + "(E02)"
@@ -111,16 +111,20 @@ class MyDroidHttpServer(httpPort: Int,
                 return fileDownload(url.substring("/file_download_uuid/".length))
             }
             // JS / html 文件请求
-            url.endsWith(".js") || url.endsWith(".html") -> {
+            url.endsWith(".html") -> {
                 val jsName = url.substring(1)
-                return serverAssetTextFile("transfer/$jsName")
+                return serveAssetFile("transfer/$jsName", mimeHtml)
+            }
+            url.endsWith(".js") -> {
+                val jsName = url.substring(1)
+                return serveAssetFile("transfer/$jsName", mimeJson)
             }
             else -> {
                 error = Globals.getString(R.string.server_not_support) + "(E01)"
             }
         }
 
-        return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, error)
+        return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, error)
     }
 
 
@@ -137,7 +141,7 @@ class MyDroidHttpServer(httpPort: Int,
 
             if (!ShareInUrisObj.isHostThisUri(info)) {
                 logdNoFile { "file Download this uri is donot has permission." }
-                return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "No permission yet todo translate.")
+                return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "No permission yet todo translate.")
             }
             val inputStream = Globals.app.contentResolver.openInputStream(uri)
             logdNoFile { "file Download2 $uri ${inputStream?.available()}" }
@@ -167,23 +171,23 @@ class MyDroidHttpServer(httpPort: Int,
         } catch (e: FileNotFoundException) {
             e.printStackTrace()
             logdNoFile { "file Download error1" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 1.")
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 1.")
         } catch (e: IOException) {
             e.printStackTrace()
             logdNoFile { "file Download error2" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 2.")
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 2.")
         } catch (e: Exception) {
             e.printStackTrace()
             logdNoFile { "file Download error3" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error reading file 3.")
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 3.")
         }
     }
 
     private fun fileNotFoundResponse() : NanoHTTPD.Response {
-        return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "File not found.")
+        return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, "File not found.")
     }
     private fun fileSizeIs0Response() : NanoHTTPD.Response {
-        return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "File size is 0.")
+        return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, "File size is 0.")
     }
 
     private fun handlePostRequest(session: IHTTPSession): Response {
@@ -216,7 +220,7 @@ class MyDroidHttpServer(httpPort: Int,
             return getWebsocketIpPort()
         } else {
             val error = Globals.getString(R.string.server_is_not_textchat)
-            return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, error)
+            return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, error)
         }
     }
 
@@ -225,7 +229,7 @@ class MyDroidHttpServer(httpPort: Int,
         logdNoFile { "get websocket ip port $data" }
         if (data == null) {
             val error = Globals.getString(R.string.invalid_request_from_appserver)
-            return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, error)
+            return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, error)
         }
 
         val ip = data.ip
@@ -241,25 +245,19 @@ class MyDroidHttpServer(httpPort: Int,
         }
     }
 
-    private fun serveAssetFile(assetFile: String, replacementBlock:((String)->String) = { it }) : Response {
+    val mimePlain = "text/plain"
+    val mimeHtml = "text/html"
+    val mimeJson = "application/javascript"
+    private fun serveAssetFile(assetFile: String,
+                               mimeType:String,
+                               replacementBlock:((String)->String) = { it }) : Response {
         return try {
             val text = AppNative.asts(Globals.app, assetFile)
-            val response = newFixedLengthResponse(replacementBlock(text))
+            val response =  newFixedLengthResponse(Status.OK, mimeType, replacementBlock(text))
             logdNoFile { "serve Asset File read success $assetFile." }
             return response
         } catch (_: FileNotFoundException) {
             newFixedLengthResponse(Status.INTERNAL_ERROR, "application/json", """"{"error": "File $assetFile not found"}""")
-        }
-    }
-
-    private fun serverAssetTextFile(jsAssetFile:String) : Response{
-        try {
-            val text = AppNative.asts(Globals.app, jsAssetFile)
-            val response = newFixedLengthResponse(text)
-            logdNoFile { "serve Asset File read success $jsAssetFile." }
-            return response
-        } catch (_: IOException) {
-            return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "404 Not Found")
         }
     }
 
