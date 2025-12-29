@@ -8,6 +8,9 @@ import com.allan.mydroid.nanohttp.WebsocketServer
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.init.InterestActivityCallbacks
+import com.au.module_android.scopes.MainAppScope
+import com.au.module_android.simpleflow.createStatusStateFlow
+import com.au.module_android.simpleflow.setSuccess
 import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
@@ -16,53 +19,58 @@ import com.au.module_android.utils.loge
 import com.au.module_android.utils.logt
 import com.au.module_androidui.toast.ToastBuilder
 import fi.iki.elonen.NanoHTTPD
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import org.koin.core.component.inject
+import org.koin.core.parameter.parametersOf
 import java.io.IOException
 import java.net.ServerSocket
 
-object MyDroidConstServer : InterestActivityCallbacks() {
+class GlobalDroidServer(
+    private val mainScope : MainAppScope
+) : InterestActivityCallbacks(), KoinComponent, IDroidServerAliveTrigger {
+
+    private val networkMonitor: GlobalNetworkMonitor by inject()
+
     private var httpServer: MyDroidHttpServer?= null
     var websocketServer: WebsocketServer?= null
 
     private var mLastHttpServerPort = 15555
     private var mLastWsServerPort = 16555
 
-    private const val ALIVE_DEAD_TIME = 5 * 60 * 1000L //N分钟不活跃主动关闭服务
-    private const val ALIVE_TS_TOO_FAST = 6 * 1000L //n秒内的更新，只干一次就好。很严谨来讲需要考虑再次post，但是由于相去很远忽略这几秒。
+    private val aliveDeadTime = 5 * 60 * 1000L //N分钟不活跃主动关闭服务
+    private val aliveTsTooFastTime = 6 * 1000L //n秒内的更新，只干一次就好。很严谨来讲需要考虑再次post，但是由于相去很远忽略这几秒。
 
     /**
      * 端口信息：左值httpPort，右值websocketPort
      * 状态容器（重放最新状态）
      */
-    val portsFlow = MutableSharedFlow<Pair<Int, Int>>(
-        replay = 1, // 新订阅者立即获得最新状态
-        extraBufferCapacity = 0,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST // 确保缓冲区始终只有最新的一个状态
-    )
+    val portsFlow = createStatusStateFlow<Pair<Int, Int>>()
 
     /**
      * 如果很久没有从html端请求接口，则主动关闭服务
      */
     private var aliveTs = SystemClock.elapsedRealtime()
     private val aliveCheckRun = Runnable {
-        if (SystemClock.elapsedRealtime() - aliveTs > ALIVE_DEAD_TIME) {
+        if (SystemClock.elapsedRealtime() - aliveTs > aliveDeadTime) {
             logd { "alive Ts timeout, stop server." }
             MyDroidConst.aliveStoppedData.setValueSafe(Unit)
         }
     }
 
-    fun updateAliveTs(from:String) {
+    override fun updateAliveTs(from:String) {
         val cur = SystemClock.elapsedRealtime()
-        if (cur - aliveTs < ALIVE_TS_TOO_FAST) {
+        if (cur - aliveTs < aliveTsTooFastTime) {
             logd { "Update alive Ts too fast ignore: $from" }
             return
         }
         aliveTs = cur
         logd { "Update alive Ts: $from" }
         Globals.mainHandler.removeCallbacks(aliveCheckRun)
-        Globals.mainHandler.postDelayed(aliveCheckRun, ALIVE_DEAD_TIME)
+        Globals.mainHandler.postDelayed(aliveCheckRun, aliveDeadTime)
     }
 
     private fun findAvailablePort(): Int {
@@ -103,10 +111,9 @@ object MyDroidConstServer : InterestActivityCallbacks() {
     private fun startServer(errorCallback:(String)->Unit) {
         val p = findAvailablePort()
         val wsPort = findAvailableWsPort()
-        httpServer = MyDroidHttpServer(p)
-        websocketServer = WebsocketServer(wsPort)
-
         logd { "start server with port: $p, wsPort: $wsPort" }
+        httpServer = get<MyDroidHttpServer> { parametersOf(p) }
+        websocketServer = get<WebsocketServer>{ parametersOf(wsPort) }
 
         try {
             httpServer?.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
@@ -114,7 +121,7 @@ object MyDroidConstServer : InterestActivityCallbacks() {
 
             MyDroidConst.serverIsOpen = true
             logt { "start server and websocket success and setPort $p to $wsPort" }
-            portsFlow.tryEmit( p to wsPort)
+            portsFlow.setSuccess( p to wsPort)
 
             //检查并清理过期temp文件
             Globals.mainScope.launchOnIOThread {
@@ -141,20 +148,24 @@ object MyDroidConstServer : InterestActivityCallbacks() {
         if (isObserverIpChanged) {
             return
         }
-        isObserverIpChanged = true
-        MyDroidConst.networkStatusData.observeForever { netSt->
-            when (netSt) {
-                is NetworkObserverObj.NetworkStatus.Connected -> {
-                    logd { "network status change to connected." }
-                    startServerWrap()
-                }
 
-                NetworkObserverObj.NetworkStatus.Disconnected,
-                NetworkObserverObj.NetworkStatus.Uninitialized -> {
-                    stopServer()
+        networkMonitor.networkFlow
+            .onEach { netSt->
+                when (netSt) {
+                    is GlobalNetworkMonitor.NetworkStatus.Connected -> {
+                        logd { "network status change to connected." }
+                        startServerWrap()
+                    }
+
+                    GlobalNetworkMonitor.NetworkStatus.Disconnected,
+                    GlobalNetworkMonitor.NetworkStatus.Uninitialized -> {
+                        stopServer()
+                    }
                 }
             }
-        }
+            .launchIn(mainScope)
+
+        isObserverIpChanged = true
     }
 
     override fun onLifeOpen() {

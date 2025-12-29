@@ -40,7 +40,7 @@ class EnglishCheckFragment(
 
     private fun tts() : TTSNative {
         if (mTts == null) {
-            mTts = TTSNative(requireContext()).also {
+            mTts = TTSNative().also {
                 it.setOnDoneCallback {
                     binding.playBtn.setImageResource(com.au.jobstudy.R.drawable.ic_tts_play)
                     mIsTtsing = false
@@ -56,7 +56,7 @@ class EnglishCheckFragment(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewLifecycleOwner.lifecycle.addObserver(tts())
+        lifecycle.addObserver(tts())
 
         // 获取传递的参数
         arguments?.let { bundle ->

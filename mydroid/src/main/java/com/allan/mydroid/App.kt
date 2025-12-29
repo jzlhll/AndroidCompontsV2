@@ -1,9 +1,12 @@
 package com.allan.mydroid
 
 import com.allan.mydroid.api.Api
-import com.allan.mydroid.globals.MyDroidConstServer
-import com.allan.mydroid.globals.NetworkObserverObj
+import com.allan.mydroid.globals.GlobalDroidServer
+import com.allan.mydroid.globals.GlobalNetworkMonitor
+import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.cacheImportCopyDir
+import com.allan.mydroid.nanohttp.MyDroidHttpServer
+import com.allan.mydroid.nanohttp.WebsocketServer
 import com.au.logsystem.DefaultActivitiesFollowCallback
 import com.au.module_android.Globals
 import com.au.module_android.InitApplication
@@ -18,6 +21,12 @@ import com.au.module_okhttp.interceptors.PretreatmentInterceptor
 import com.au.module_okhttp.interceptors.SimpleRetryInterceptor
 import com.modulenative.AppNative
 import dagger.hilt.android.HiltAndroidApp
+import org.koin.android.ext.android.get
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.binds
+import org.koin.dsl.module
 
 /**
  * @author allan
@@ -26,6 +35,7 @@ import dagger.hilt.android.HiltAndroidApp
  */
 @HiltAndroidApp
 class App : InitApplication() {
+
     override fun initBeforeAttachBaseContext() {
     }
 
@@ -60,10 +70,31 @@ class App : InitApplication() {
             }
         })
 
-        registerActivityLifecycleCallbacks(MyDroidConstServer)
-        registerActivityLifecycleCallbacks(DefaultActivitiesFollowCallback())
+        val globalModule = module {
+            //app架构单例
+            single { Globals.mainScope }        //两个单例的scope
+            single { Globals.backgroundScope }  //两个单例的scope
 
-        NetworkObserverObj.initial()
+            singleOf(::GlobalNetworkMonitor)
+            singleOf(::GlobalDroidServer) binds arrayOf(IDroidServerAliveTrigger::class)
+
+            factory { (httpPort:Int)->
+                MyDroidHttpServer(httpPort, get(), get())
+            }
+            factory { (wsPort:Int)->
+                WebsocketServer(wsPort, get())
+            }
+        }
+        startKoin {
+            modules(globalModule)
+            androidContext(this@App)
+        }
+
+        //初始化监听Activity变化，用于创建server
+        registerActivityLifecycleCallbacks(get<GlobalDroidServer>())
+
+        //日志按钮显示监听
+        registerActivityLifecycleCallbacks(DefaultActivitiesFollowCallback())
 
         //一上来直接强制移除所有临时import的文件。
         Globals.mainScope.launchOnIOThread {

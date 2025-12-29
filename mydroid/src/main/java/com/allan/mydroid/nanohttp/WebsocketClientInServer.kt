@@ -1,17 +1,17 @@
 package com.allan.mydroid.nanohttp
 
+import com.allan.mydroid.AppGlobals
 import com.allan.mydroid.R
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_CLIENT_INIT_CALLBACK
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_INIT
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_LEFT_SPACE
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_PING
+import com.allan.mydroid.api.toName
+import com.allan.mydroid.beans.WSResultBox
 import com.allan.mydroid.beans.wsdata.LeftSpaceData
 import com.allan.mydroid.beans.wsdata.MyDroidModeData
-import com.allan.mydroid.beans.WSResultBox
-import com.allan.mydroid.api.toName
 import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidConstServer
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.json.toJsonString
@@ -101,7 +101,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
         val json = JSONObject(text)
         val api = json.optString("api")
 
-        MyDroidConstServer.updateAliveTs("when ws on message $api")
+        AppGlobals.droidServerLiveTrigger.updateAliveTs("when ws on message $api")
         when (api) {
             API_WS_INIT -> {
                 val targetName = json.optString("wsName")

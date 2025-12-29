@@ -100,6 +100,9 @@ dependencies {
     //hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
 }
 
 apply(from = "../plugin-gradle-preaction/preSourceStringEncypt.gradle")

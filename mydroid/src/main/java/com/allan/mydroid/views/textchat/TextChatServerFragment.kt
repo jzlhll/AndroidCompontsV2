@@ -6,18 +6,24 @@ import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentTextChatBinding
+import com.allan.mydroid.globals.GlobalDroidServer
+import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidConstServer
-import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.allan.mydroid.views.send.SendListSelectorDialog
 import com.allan.mydroid.views.textchat.uibean.NormalItem
 import com.au.module_android.Globals
 import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.utils.gone
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.unsafeLazy
+import org.koin.android.ext.android.get
+import org.koin.android.ext.android.inject
 
 class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendListSelectorDialog.ISelectItemClick {
+    private val globalNetworkMonitor : GlobalNetworkMonitor by inject()
+    private val droidServer : GlobalDroidServer by inject()
+
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.PaddingNavigationBar
     }
@@ -26,7 +32,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
         object : TextChatCommon(this, binding) {
             override fun createBean(content: WSChatMessageBean.Content): WSChatMessageBean {
                 val sender = WSChatMessageBean.Sender().apply {
-                    name = NetworkObserverObj.getServerName()
+                    name = globalNetworkMonitor.networkInfoFlow.value?.ipHttpPortStr
                     color = Globals.getString(com.au.module_androidcolor.R.string.color_text_normal_str)
                     isServer = true
                     platform = "androidApp" //todo 增加服务平台
@@ -36,7 +42,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
 
             override fun buttonSend(bean: WSChatMessageBean) {
                 //我自己的点击消息
-                MyDroidConstServer.websocketServer?.serverSendTextChatMessage(bean)
+                droidServer.websocketServer?.serverSendTextChatMessage(bean)
             }
         }
     }
@@ -45,7 +51,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
         super.onStart()
         MyDroidConst.currentDroidMode = MyDroidMode.TextChat
         //接收中转的msg
-        MyDroidConstServer.websocketServer?.onTransferBothMsgCallback = { bean->
+        droidServer.websocketServer?.onTransferBothMsgCallback = { bean->
             val isMe = bean.sender.isServer //这里就是服务器收到的消息，直接判断sender是不是服务器的消息类型，就认为是自己即可
             val bean = NormalItem(isMe).also { it.message = bean }
             common.onAddChatItem(bean)
@@ -54,7 +60,7 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
 
     override fun onStop() {
         super.onStop()
-        MyDroidConstServer.websocketServer?.onTransferBothMsgCallback = null
+        droidServer.websocketServer?.onTransferBothMsgCallback = null
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
@@ -78,14 +84,13 @@ class TextChatServerFragment : AbsLiveFragment<FragmentTextChatBinding>(), SendL
 
     private fun initIpShow() {
         //必须通过监听来显示。开启server后，才会变更参数。
-        MyDroidConst.networkStatusData.observe(this) { netSt->
-            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
+        launchRepeatOnStarted(get<GlobalNetworkMonitor>().networkInfoFlow) { netInfo->
+            if (netInfo == null) {
                 binding.descTitle.setText(R.string.connect_wifi_or_hotspot)
             } else {
                 if (MyDroidConst.serverIsOpen) {
                     val fmt = getString(R.string.not_close_window)
-                    val ipInfo = netSt.ipInfo
-                    binding.descTitle.text = String.format(fmt, ipInfo.ip + ":" + ipInfo.httpPort)
+                    binding.descTitle.text = String.format(fmt, netInfo.ip + ":" + netInfo.httpPort)
                 } else {
                     binding.descTitle.setText(R.string.something_error)
                 }

@@ -10,9 +10,9 @@ import com.allan.mydroid.api.TEXT_CHAT_READ_WEBSOCKET_IP_PORT
 import com.allan.mydroid.api.UPLOAD_CHUNK
 import com.allan.mydroid.beans.httpdata.IpPortResult
 import com.allan.mydroid.globals.CODE_SUC
+import com.allan.mydroid.globals.GlobalNetworkMonitor
+import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidConstServer
-import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
@@ -25,6 +25,7 @@ import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import kotlinx.coroutines.runBlocking
+import org.koin.core.component.KoinComponent
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URLEncoder
@@ -35,19 +36,15 @@ interface IChunkMgr {
     fun handleAbortChunk(session: NanoHTTPD.IHTTPSession) : Response
 }
 
-interface IMyDroidHttpServer {
-    /**
-     * 启动一些周期性活动。
-     */
-    fun startPeriodWork()
-}
+class MyDroidHttpServer(httpPort: Int,
+                        private val aliveTrigger: IDroidServerAliveTrigger,
+                        private val globalNetworkMonitor: GlobalNetworkMonitor,
+    ) : NanoHTTPD(httpPort), KoinComponent {
+    private val chunksMgr: IChunkMgr = MyDroidHttpChunksMgr()
 
-class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer {
     init {
         tempFileManagerFactory = MyDroidTempFileMgrFactory()
     }
-
-    private val chunksMgr: IChunkMgr = MyDroidHttpChunksMgr()
 
     override fun serve(session: IHTTPSession): Response {
         // 处理跨域预检请求 (OPTIONS)
@@ -56,7 +53,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
         }
 
         val ct = ContentType(session.headers["content-type"]).tryUTF8()
-        session.headers.put("content-type", ct.contentTypeHeader)
+        session.headers["content-type"] = ct.contentTypeHeader
 
         return when (session.method) {
             Method.GET -> handleGetRequest(session)
@@ -85,7 +82,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
     private fun handleGetRequest(session: IHTTPSession): Response {
         val url = session.uri ?: ""
         logdNoFile { "handle Get Request $url" }
-        MyDroidConstServer.updateAliveTs("http get request")
+        aliveTrigger.updateAliveTs("http get request")
         val error:String
         when {
             // 主页面请求
@@ -190,7 +187,7 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
     }
 
     private fun handlePostRequest(session: IHTTPSession): Response {
-        MyDroidConstServer.updateAliveTs("http post request")
+        aliveTrigger.updateAliveTs("http post request")
         return when (session.uri) {
             UPLOAD_CHUNK -> chunksMgr.handleUploadChunk(session)
             MERGE_CHUNKS -> chunksMgr.handleMergeChunk(session)
@@ -224,19 +221,19 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
     }
 
     private fun getWebsocketIpPort() : Response{
-        val data = MyDroidConst.networkStatusData.value!!
-        if (data !is NetworkObserverObj.NetworkStatus.Connected) {
+        val data = globalNetworkMonitor.networkInfoFlow.value
+        logdNoFile { "get websocket ip port $data" }
+        if (data == null) {
             val error = Globals.getString(R.string.invalid_request_from_appserver)
             return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, error)
         }
 
-        val v = data.ipInfo
-        val ip = v.ip
-        val wsPort = v.webSocketPort
-        val httpPort = v.httpPort
+        val ip = data.ip
+        val wsPort = data.wsPort
+        val httpPort = data.httpPort
 
         return if (wsPort != null && httpPort != null) {
-            val info = IpPortResult(ip, wsPort, httpPort)
+            val info = IpPortResult(ip ?: "", wsPort, httpPort)
             logdNoFile { "get websocket ipPort $info" }
             ResultBean(CODE_SUC, "Success!", info).okJsonResponse()
         } else {
@@ -264,11 +261,6 @@ class MyDroidHttpServer(httpPort: Int) : NanoHTTPD(httpPort), IMyDroidHttpServer
         } catch (_: IOException) {
             return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "404 Not Found")
         }
-    }
-
-    override fun startPeriodWork() {
-//        handle.removeCallbacks(mPeriodSpaceRun)
-//        handle.post(mPeriodSpaceRun)
     }
 
     override fun stop() {

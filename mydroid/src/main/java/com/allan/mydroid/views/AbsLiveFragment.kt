@@ -7,12 +7,14 @@ import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
 import com.allan.mydroid.R
+import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.NetworkObserverObj
 import com.au.module_android.Globals
 import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
+import org.koin.android.ext.android.inject
 
 abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
     companion object {
@@ -37,6 +39,8 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
 
     var waitDialog:ConfirmBottomSingleDialog? = null
 
+    private val networkMonitor : GlobalNetworkMonitor by inject()
+
     @CallSuper
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         if (alwaysScreenOn) {
@@ -54,9 +58,9 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
         }
 
         if (whenIpNullShowExitDialog) {
-            MyDroidConst.networkStatusData.observe(viewLifecycleOwner) { networkStatus ->
-                val ipInfo = networkStatus.asOrNull<NetworkObserverObj.NetworkStatus.Connected>()?.ipInfo
-                if (ipInfo?.ip.isNullOrEmpty()) {
+            launchRepeatOnStarted(networkMonitor.networkInfoFlow) { networkInfo->
+                val ip = networkInfo?.ip
+                if (ip.isNullOrEmpty()) {
                     if (waitDialog == null) {
                         ConfirmBottomSingleDialog.show(childFragmentManager, getString(R.string.tips),
                             getString(R.string.exit_with_wifi_reminder),

@@ -1,21 +1,29 @@
 package com.au.jobstudy.words.domain
 
-import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.au.module_android.utils.logdNoFile
+import com.au.module_android.utils.tryGetContext
 import java.util.Locale
 import java.util.UUID
 
 // 在 MainActivity 类内部或外部定义这个接口类：
-class TTSNative(private val context: Context) : DefaultLifecycleObserver {
+class TTSNative() : DefaultLifecycleObserver {
     private var tts: TextToSpeech? = null
     private var mDoneCb: () -> Unit = {}
+
+    private val logTag = UUID.randomUUID().toString().substring(0, 8)
+
+    fun showLog() {
+        logdNoFile { "${this@TTSNative}: $logTag" }
+    }
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
         if (tts == null) {
+            val context = owner.tryGetContext()!!
             tts = TextToSpeech(context) { status ->
                 if (status == TextToSpeech.SUCCESS) {
                     tts?.let {

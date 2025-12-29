@@ -3,8 +3,8 @@ package com.allan.mydroid.nanohttp
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.beansinner.WebSocketClientInfo
+import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.MyDroidConstServer
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
 import com.au.module_android.json.toJsonString
@@ -21,7 +21,10 @@ import kotlinx.coroutines.cancel
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 
-class WebsocketServer(port:Int) : NanoWSD(port) {
+class WebsocketServer(
+        wsPort:Int,
+        private val aliveTrigger: IDroidServerAliveTrigger
+    ) : NanoWSD(wsPort) {
     companion object {
         /**
          * 心跳时间
@@ -52,7 +55,7 @@ class WebsocketServer(port:Int) : NanoWSD(port) {
     var onTransferBothMsgCallback:((message: WSChatMessageBean)->Unit)? = null
 
     fun addIntoConnections(websocket: WebsocketClientInServer) {
-        MyDroidConstServer.updateAliveTs("when new client add")
+        aliveTrigger.updateAliveTs("when new client add")
         clients.add(websocket)
         triggerConnectionsList()
     }

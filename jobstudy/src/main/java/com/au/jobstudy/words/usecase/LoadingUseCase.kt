@@ -7,6 +7,7 @@ import com.au.jobstudy.words.domain.IImportExcelRepository
 import com.au.jobstudy.words.domain.IWordRepository
 import com.au.jobstudy.words.domain.beans.DBTableMode
 import com.au.jobstudy.words.domain.beans.RowInfo
+import com.au.jobstudy.words.ui.LoadingTest
 import com.au.module_android.Globals
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
@@ -14,6 +15,7 @@ import com.au.module_android.utils.logdNoFile
 class LoadingUseCase(
     val wordsManager: WordsManager,
     val importExcelRepository: IImportExcelRepository,
+    val loadingTest: LoadingTest,
     val wordRepository: IWordRepository) {
 
     private val excelParser = wordsManager.createExcelParser(Globals.app)
@@ -112,5 +114,7 @@ class LoadingUseCase(
 
     fun close() {
         excelParser.close()
+        logdNoFile { "loadingTest close 11" }
+        loadingTest.add()
     }
 }

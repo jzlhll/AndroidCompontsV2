@@ -8,8 +8,8 @@ import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendFilesBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
+import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
@@ -21,6 +21,7 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnThread
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.logd
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
@@ -29,6 +30,7 @@ import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.MediaTypeUtil
 import com.au.module_androidcolor.R
 import com.bumptech.glide.request.target.Target
+import org.koin.android.ext.android.get
 
 class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     override fun immersiveMode(): ImmersiveMode {
@@ -103,22 +105,20 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
         val fmt = getString(com.allan.mydroid.R.string.not_close_window)
         binding.descTitle.text = String.format(fmt, "")
 
-        MyDroidConst.networkStatusData.observe(this) { netSt->
-            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
+        launchRepeatOnStarted(get<GlobalNetworkMonitor>().networkInfoFlow) { netInfo->
+            if (netInfo == null) {
                 binding.descTitle.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
             } else {
                 val fmt = getString(com.allan.mydroid.R.string.not_close_window)
-                val info = netSt.ipInfo
-                if (info.httpPort == null) {
-                    binding.descTitle.text = info.ip
+                if (netInfo.httpPort == null) {
+                    binding.descTitle.text = netInfo.ip
                 } else if (MyDroidConst.serverIsOpen) {
-                    binding.descTitle.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), info.ip, "" + info.httpPort)
+                    binding.descTitle.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
                 } else {
-                    binding.descTitle.text = String.format(fmt, info.ip + ":" + info.httpPort)
+                    binding.descTitle.text = String.format(fmt, netInfo.ip + ":" + netInfo.httpPort)
                 }
             }
         }
-
         common.onCreated()
     }
 

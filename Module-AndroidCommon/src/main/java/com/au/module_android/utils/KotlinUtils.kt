@@ -1,10 +1,13 @@
 package com.au.module_android.utils
 
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Build.VERSION
 import android.os.Bundle
 import android.os.Parcelable
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -180,4 +183,16 @@ inline fun <reified T : Parcelable> Intent.parcelableExtraCompat(key: String): T
         return getParcelableExtra<T>(key, T::class.java)
     }
     return getParcelableExtra(key) as? T
+}
+
+fun LifecycleOwner.tryGetContext() : Context? {
+    when (this) {
+        is Fragment  -> {
+            return context
+        }
+         is Activity -> {
+            return this
+        }
+    }
+    return null
 }

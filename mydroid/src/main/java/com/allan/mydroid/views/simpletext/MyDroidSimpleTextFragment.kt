@@ -4,14 +4,16 @@ import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.databinding.FragmentMyDroidSimpleTextBinding
+import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.NetworkObserverObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidcolor.R
+import org.koin.android.ext.android.get
 
 class MyDroidSimpleTextFragment : AbsLiveFragment<FragmentMyDroidSimpleTextBinding>() {
     private lateinit var adapter: SimpleTextAdapter
@@ -40,21 +42,19 @@ class MyDroidSimpleTextFragment : AbsLiveFragment<FragmentMyDroidSimpleTextBindi
         val fmt = getString(com.allan.mydroid.R.string.not_close_window)
         binding.descTitle.text = String.format(fmt, "")
 
-        MyDroidConst.networkStatusData.observe(this) { netSt->
-            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
+        launchRepeatOnStarted(get<GlobalNetworkMonitor>().networkInfoFlow) { netInfo->
+            if (netInfo == null) {
                 binding.title.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
             } else {
-                val info = netSt.ipInfo
-                if (info.httpPort == null) {
-                    binding.title.text = info.ip
+                if (netInfo.httpPort == null) {
+                    binding.title.text = netInfo.ip
                 } else if (MyDroidConst.serverIsOpen) {
-                    binding.title.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), info.ip, "" + info.httpPort)
+                    binding.title.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
                 } else {
-                    binding.title.text = info.ip + ":" + info.httpPort
+                    binding.title.text = netInfo.ip + ":" + netInfo.httpPort
                 }
             }
         }
-
         binding.rcv.adapter = SimpleTextAdapter().also { adapter = it }
         binding.rcv.layoutManager = LinearLayoutManager(requireContext()).apply {
             orientation = LinearLayoutManager.VERTICAL

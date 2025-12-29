@@ -3,13 +3,10 @@ package com.allan.mydroid.globals
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beansinner.ReceivingFileInfo
 import com.allan.mydroid.beansinner.WebSocketClientInfo
-import com.allan.mydroid.globals.NetworkObserverObj.NetworkStatus
 import com.au.module_android.simplelivedata.NoStickLiveData
 import java.io.File
 
 object MyDroidConst {
-    val networkStatusData: NoStickLiveData<NetworkStatus> = NoStickLiveData(NetworkStatus.Uninitialized)
-
     var serverIsOpen = false
     var currentDroidMode = MyDroidMode.None
 

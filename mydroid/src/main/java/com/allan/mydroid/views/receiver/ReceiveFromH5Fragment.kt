@@ -5,10 +5,10 @@ import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import com.allan.mydroid.R
-import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.databinding.FragmentReceiveFromH5Binding
-import com.allan.mydroid.globals.NetworkObserverObj
+import com.allan.mydroid.globals.GlobalNetworkMonitor
+import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.json.toJsonString
@@ -16,10 +16,12 @@ import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.ui.ToolbarMenuManager
 import com.au.module_android.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utilsmedia.getExternalFreeSpace
+import org.koin.android.ext.android.get
 
 class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
 
@@ -68,17 +70,16 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         val leftStr = getString(R.string.storage_remaining)
         binding.descTitle.text = String.format(fmt, leftStr + getExternalFreeSpace(requireActivity()))
 
-        MyDroidConst.networkStatusData.observe(this) { netSt->
-            if (netSt !is NetworkObserverObj.NetworkStatus.Connected) {
+        launchRepeatOnStarted(get<GlobalNetworkMonitor>().networkInfoFlow) { netInfo->
+            if (netInfo == null) {
                 binding.title.setText(R.string.connect_wifi_or_hotspot)
             } else {
-                val ipInfo = netSt.ipInfo
-                if (ipInfo.httpPort == null) {
-                    binding.title.text = ipInfo.ip
+                if (netInfo.httpPort == null) {
+                    binding.title.text = netInfo.ip
                 } else if (MyDroidConst.serverIsOpen) {
-                    binding.title.text = String.format(getString(R.string.lan_access_fmt), ipInfo.ip, "" + ipInfo.httpPort)
+                    binding.title.text = String.format(getString(R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
                 } else {
-                    binding.title.text = ipInfo.ip + ":" + ipInfo.httpPort
+                    binding.title.text = netInfo.ip + ":" + netInfo.httpPort
                 }
             }
         }

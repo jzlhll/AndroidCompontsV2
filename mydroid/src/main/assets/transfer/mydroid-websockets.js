@@ -1,6 +1,6 @@
 (function() {
     let wsCntCount = 0;
-    let wsCntInterval = 1000;
+    let wsCntInterval = 2000;
     let wsCntIntervalId = null;
 
     let wsHeartBeatIntervalId = null;

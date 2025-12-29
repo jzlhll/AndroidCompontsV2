@@ -15,25 +15,31 @@ enum class NetworkType {
     AP_IPV6,
     UNKNOWN
 }
+
 /**
- * 返回的是ip to netType
+ * 获取设备的IP地址和网络类型
+ * 返回 Pair<IP地址, 网络类型>，IP地址可为空
  */
-fun getIpAddress() : Pair<String?, NetworkType>{
+fun getIpAddress(): Pair<String?, NetworkType> {
     try {
         val interfaces = NetworkInterface.getNetworkInterfaces()
         while (interfaces.hasMoreElements()) {
             val netInterface = interfaces.nextElement()
-            val isWifi = netInterface.displayName.equals("wlan0")
-            val isAp = netInterface.name.startsWith("ap")
+            val isWifi = netInterface.displayName.equals("wlan0", ignoreCase = true)
+            val isAp = netInterface.name.startsWith("ap", ignoreCase = true)
+
             if (isWifi || isAp) {
-                for (addr in netInterface.getInterfaceAddresses()) {
-                    val inetAddr = addr.address
-                    if (inetAddr is Inet4Address) {
-                        val ip = inetAddr.hostAddress
-                        return ip to (if(isWifi) NetworkType.WIFI_IPV4 else NetworkType.AP_IPV4)
-                    } else if (inetAddr is Inet6Address) {
-                        val ip = inetAddr.hostAddress
-                        return ip to (if(isWifi) NetworkType.WIFI_IPV6 else NetworkType.AP_IPV6)
+                for (addr in netInterface.inetAddresses) {
+                    val result = getIPAddress(addr)
+                    if (result != null) {
+                        val (ip, type) = result
+                        // 根据接口类型调整NetworkType
+                        val adjustedType = when (type) {
+                            NetworkType.WIFI_IPV4 -> if (isWifi) NetworkType.WIFI_IPV4 else NetworkType.AP_IPV4
+                            NetworkType.WIFI_IPV6 -> if (isWifi) NetworkType.WIFI_IPV6 else NetworkType.AP_IPV6
+                            else -> type
+                        }
+                        return ip to adjustedType
                     }
                 }
             }
@@ -44,7 +50,10 @@ fun getIpAddress() : Pair<String?, NetworkType>{
     return null to NetworkType.UNKNOWN
 }
 
-fun getIPAddress(nsd: NsdServiceInfo) : String?{
+/**
+ * 从NsdServiceInfo获取IP地址
+ */
+fun getIPAddress(nsd: NsdServiceInfo): String? {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.TIRAMISU) >= 7) {
         getIPAddress(nsd.hostAddresses)
     } else {
@@ -52,41 +61,41 @@ fun getIPAddress(nsd: NsdServiceInfo) : String?{
     }
 }
 
+/**
+ * 从InetAddress列表获取IP地址
+ */
 fun getIPAddress(addresses: List<InetAddress>): String? {
     for (addr in addresses) {
-        val r = getIPAddress(addr)
-        if (r != null) {
-            return r
+        val result = getIPAddress(addr)
+        if (result != null) {
+            return result.first
         }
     }
     return null
 }
 
 /**
- * 获取IP地址，优先返回IPv4地址。
- * 自动过滤回环地址(127.0.0.1, ::1)、链路本地地址(169.254.x.x, fe80::)、多播地址等不可用地址。
- * 对于 IPv4 映射的 IPv6 地址，会自动转换为 IPv4 格式。
- * 对于 IPv6 地址，会去除 scope id (如 %wlan0)。
+ * 获取IP地址，优先返回IPv4地址
+ * 返回 Pair<IP地址, 网络类型> 或 null
  */
-private fun getIPAddress(address: InetAddress?): String? {
-    if (address == null || address.isLoopbackAddress  //回环
+private fun getIPAddress(address: InetAddress?): Pair<String?, NetworkType>? {
+    if (address == null || address.isLoopbackAddress  // 回环地址
         || address.isAnyLocalAddress  // 任意本地地址
-        || address.isMulticastAddress // 多播
-        || address.isLinkLocalAddress // 排除链路本地地址 (169.254.x.x) (fe80::/10)
+        || address.isMulticastAddress // 多播地址
+        || address.isLinkLocalAddress // 链路本地地址 (169.254.x.x, fe80::)
     ) {
         return null
     }
 
-    // 2. IPv4 处理
+    // IPv4 处理
     if (address is Inet4Address) {
-        return address.hostAddress
+        return address.hostAddress to NetworkType.WIFI_IPV4
     }
 
-    // 3. IPv6 处理
+    // IPv6 处理
     if (address is Inet6Address) {
         val bytes = address.address
         // 检查是否是 IPv4 映射的 IPv6 地址 (::ffff:x.x.x.x)
-        // 格式：80 bits of 0, followed by 16 bits of 0xFFFF, followed by 32 bits of IPv4
         if (bytes.size == 16 &&
             bytes.take(10).all { it == 0.toByte() } &&
             bytes[10] == (-1).toByte() &&
@@ -95,17 +104,18 @@ private fun getIPAddress(address: InetAddress?): String? {
             // 提取 IPv4 部分
             val ipv4 = bytes.copyOfRange(12, 16)
                 .joinToString(".") { (it.toInt() and 0xFF).toString() }
-            return ipv4
+            return ipv4 to NetworkType.WIFI_IPV6
         }
 
         // 纯 IPv6：去掉 Scope ID (例如 %wlan0)
         val fullAddress = address.hostAddress ?: return null
         val percentIndex = fullAddress.indexOf('%')
-        return if (percentIndex != -1) {
+        val ip = if (percentIndex != -1) {
             fullAddress.take(percentIndex)
         } else {
             fullAddress
         }
+        return ip to NetworkType.WIFI_IPV6
     }
 
     return null

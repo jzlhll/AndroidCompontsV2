@@ -8,9 +8,14 @@ package com.au.module_android.simpleflow
  *    第四步：界面上collect并响应三类StatusState。
  */
 sealed class StatusState<out T> {
+    object Uninitialized : StatusState<Nothing>()
+    data class Success<T>(val data: T) : StatusState<T>()
+    data class Error(val throwable: Throwable) : StatusState<Nothing>()
     object Loading : StatusState<Nothing>()
 
-    //不使用data class，避免同内容equals
-    class Success<T>(val data :T) : StatusState<T>()
-    class Error(val message: String?) : StatusState<Nothing>()
+    // 辅助函数
+    val isUninitialized get() = this is Uninitialized
+    val isSuccess get() = this is Success<T>
+    val isError get() = this is Error
+    val isLoading get() = this is Loading
 }

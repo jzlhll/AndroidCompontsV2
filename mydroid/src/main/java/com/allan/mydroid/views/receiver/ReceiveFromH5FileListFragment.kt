@@ -31,7 +31,6 @@ import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_nested.decoration.VertPaddingItemDecoration
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
-import kotlin.getValue
 
 class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveListBinding>() {
     lateinit var receivedFileListTab: TabLayout.Tab
@@ -115,7 +114,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mViewModel.historyState.collectStatusState(
-                    success = {
+                    onSuccess = {
                         val colorNormal = getString(com.au.module_androidcolor.R.string.color_text_normal_str)
                         val colorGray = getString(com.au.module_androidcolor.R.string.color_text_desc_str)
 
@@ -125,7 +124,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                         )
                         updateTabsTitle(false)
                     },
-                    error = {
+                    onError = {
                     }
                 )
             }
@@ -133,12 +132,12 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 ShareInUrisObj.fileListState.collectStatusState(
-                    success = { fileList->
+                    onSuccess = { fileList->
                         mAdapter.submitList(fileList, false)
                         updateTabsTitle(true)
                         changeRcvEmptyTextVisible()
                     },
-                    error = {
+                    onError = {
                     }
                 )
             }

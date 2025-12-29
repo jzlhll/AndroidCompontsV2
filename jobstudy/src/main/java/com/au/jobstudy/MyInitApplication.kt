@@ -22,6 +22,7 @@ import com.au.jobstudy.words.domain.IWordRepository
 import com.au.jobstudy.words.ui.CheckViewModel
 import com.au.jobstudy.words.ui.EnglishCheckFragment
 import com.au.jobstudy.words.ui.ExcelLoadingFragment
+import com.au.jobstudy.words.ui.LoadingTest
 import com.au.jobstudy.words.ui.LoadingViewModel
 import com.au.jobstudy.words.usecase.LoadingUseCase
 import com.au.module_android.Globals
@@ -37,6 +38,7 @@ import com.au.module_okhttp.creator.AbsCookieJar
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.scope.dsl.activityScope
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -81,6 +83,7 @@ class MyInitApplication : InitApplication() {
             factory<IFactoryDayer> { (anyDay:Int)->
                 Dayer(anyDay)
             }
+            viewModelOf(::CompletedViewModel)
         }
 
         val dbModule = module {
@@ -132,9 +135,23 @@ class MyInitApplication : InitApplication() {
             factoryOf(::ImportExcelRepositoryImpl) bind IImportExcelRepository::class
             factoryOf(::WordsRepositoryImpl) bind IWordRepository::class
             factoryOf(::LoadingUseCase)
-            viewModelOf(::CompletedViewModel)
             viewModelOf(::LoadingViewModel)
             viewModelOf(::CheckViewModel)
+
+            activityScope {
+                scoped { LoadingTest() }
+            }
+//
+//            fragmentScope {
+//                scoped { LoadingTest() }
+//            }
+//            fragmentScope {
+//                factory { LoadingTest() }
+//            }
+//
+//            scope<ExcelLoadingFragment> {
+//                scoped { LoadingTest() }
+//            }
         }
 
         startKoin {
