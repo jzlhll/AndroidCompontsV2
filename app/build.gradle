@@ -77,10 +77,7 @@ dependencies {
     implementation project(':Module-AndroidLogSystem')
     ksp project(':ClassNameAnnotations-ksp')
 
-    implementation libs.lassi
 //    kapt project(':ClassNameAnnotations-compiler')
-
-
 }
 
 // 获取所有的.so文件的打包路径

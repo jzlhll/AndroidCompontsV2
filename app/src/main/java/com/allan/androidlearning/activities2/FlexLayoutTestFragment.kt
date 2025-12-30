@@ -4,6 +4,6 @@ import com.allan.androidlearning.databinding.FragmentFlexLayoutTestBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.ui.bindings.BindingFragment
 
-@EntryFrgName(priority = 10)
+@EntryFrgName
 class FlexLayoutTestFragment : BindingFragment<FragmentFlexLayoutTestBinding>() {
 }

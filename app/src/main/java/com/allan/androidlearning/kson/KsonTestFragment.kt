@@ -32,7 +32,7 @@ class KsonItem(override val itemName: String,
                override val onItemClick: () -> Unit) : SimpleItem() {
 }
 
-@EntryFrgName(priority = 100)
+@EntryFrgName
 class KsonTestFragment(
     override val title: String = "KsonTest",
 ) : SimpleListFragment<KsonItem>() {

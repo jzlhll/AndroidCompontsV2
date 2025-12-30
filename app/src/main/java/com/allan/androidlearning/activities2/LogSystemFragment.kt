@@ -14,7 +14,7 @@ import com.au.module_android.ui.views.ViewFragment
 import com.au.module_android.utils.dp
 import com.au.module_android.widget.CustomButton
 
-@EntryFrgName(priority = 11)
+@EntryFrgName
 class LogSystemFragment : ViewFragment() {
     override fun onUiCreateView(
         inflater: LayoutInflater,

@@ -26,7 +26,7 @@ class EntryActivity : BindingActivity<ActivityEntryBinding>() {
     var mHelper : EntryHelper = EntryHelper(AnotherData(), this)
 
     @SuppressLint("MissingSuperCall")
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         logd { "onNewIntent $intent" }
         setIntent(intent)

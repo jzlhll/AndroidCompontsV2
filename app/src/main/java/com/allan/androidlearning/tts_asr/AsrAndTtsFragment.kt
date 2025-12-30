@@ -124,10 +124,10 @@ class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.currentAsrFlow.collectStatusState(
-                    loading = {
+                    onLoading = {
                         binding.loading.visible()
                     },
-                    success = { bean->
+                    onSuccess = { bean->
                         when (bean) {
                             is AsrAndTtsViewModel.UiBean -> {
                                 currentASRText.append(bean.asr).append(" ")
@@ -140,7 +140,7 @@ class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
                             }
                         }
                     },
-                    error = {
+                    onError = {
                     }
                 )
             }

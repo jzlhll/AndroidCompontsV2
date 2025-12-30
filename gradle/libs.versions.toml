@@ -6,11 +6,10 @@ cameraCamera2 = "1.3.1"
 flexbox = "3.0.0"
 hiltAndroid = "2.57.2"
 hiltAndroidCompiler = "2.57.2"
-lassi = "1.4.2"
 lubanCompress = "v3.11.3"
 constraintlayout = "2.2.1"
 coreKtx = "1.17.0"
-coreSplashscreen = "1.0.1"
+coreSplashscreen = "1.2.0"
 datastorePreferences = "1.2.0"
 espressoCore = "3.6.1"
 glide = "5.0.5"
@@ -19,7 +18,7 @@ gson = "2.13.2"
 jsbridgev2 = "1.0.13"
 junit = "4.13.2"
 junitVersion = "1.2.1"
-lifecycleLivedataKtx = "2.9.4"
+lifecycleLivedataKtx = "2.10.0"
 material = "1.13.0"
 nanohttpd = "2.3.1"
 navigationFragmentKtx = "2.9.0"
@@ -76,7 +75,6 @@ blurview = { module = "com.github.Dimezis:BlurView", version.ref = "blurview" }
 flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
-lassi = { module = "com.github.Mindinventory:Lassi", version.ref = "lassi" }
 lubanCompress = { module = "io.github.lucksiege:compress", version.ref = "lubanCompress" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }

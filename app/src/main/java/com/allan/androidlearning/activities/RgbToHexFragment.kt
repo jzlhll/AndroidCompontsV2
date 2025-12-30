@@ -16,7 +16,7 @@ import com.au.module_android.utils.hideImeNew
 import okhttp3.internal.toHexString
 import kotlin.math.min
 
-@EntryFrgName(priority = 10)
+@EntryFrgName
 class RgbToHexFragment : BindingFragment<FragmentRgb2HexBinding>() {
     private var doOncePaddingTop = false
 

@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
  * @date :2024/7/29 10:50
  * @description:
  */
-@EntryFrgName(priority = 10)
+@EntryFrgName
 class CoroutineFragment(override val title: String = "Coroutine")
         : SelectListFragment<KotlinCoroutineSelectListItem>() {
 
