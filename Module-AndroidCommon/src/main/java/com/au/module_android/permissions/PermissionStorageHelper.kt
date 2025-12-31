@@ -68,7 +68,7 @@ class PermissionStorageHelper {
         val permissions: MutableList<String> = ArrayList()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 14+
-            // Android 14+需额外声明READ_MEDIA_VISUAL_USER_SELECTED
+            // Android 14+需额外声明
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
             }

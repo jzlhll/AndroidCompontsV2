@@ -14,5 +14,4 @@ plugins {
 
     //id 'org.jetbrains.kotlin.multiplatform' version '2.2.0'
     alias(libs.plugins.jetbrains.kotlin.serialization)
-    alias(libs.plugins.kotzilla) apply false
 }
