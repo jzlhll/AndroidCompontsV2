@@ -10,7 +10,7 @@ import com.au.module_android.ui.createViewBinding
 import com.au.module_android.ui.views.ViewToolbarFragment
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/7/10
  * Description 基础Fragment的通用
  */

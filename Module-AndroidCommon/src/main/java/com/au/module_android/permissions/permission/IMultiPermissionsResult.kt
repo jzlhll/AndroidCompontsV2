@@ -17,7 +17,7 @@ abstract class IMultiPermissionsResult(val permissions:Array<String>,
      *
      * 因为block放在了这里设置。
      */
-    abstract fun safeRun(block:()->Unit, notGivePermissionBlock:(()->Unit)? = null, option: ActivityOptionsCompat? = null)
+    abstract fun safeRun(notGivePermissionBlock:(()->Unit)? = null, option: ActivityOptionsCompat? = null, block:()->Unit)
 
     override fun start(input: Array<String>, callback: ActivityResultCallback<Map<String, @JvmSuppressWildcards Boolean>>?) {
         throw RuntimeException("not support 请使用safeRun.")

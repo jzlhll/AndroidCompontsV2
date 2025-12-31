@@ -102,9 +102,9 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
     }
 
     //反射拿到父类的field mObservers。
-    private var mObservers:(Iterable<Map.Entry<*, *>>)? = null
+    private var mObservers:(java.lang.Iterable<java.util.Map.Entry<*, *>>)? = null
 
-    private fun requireMObservers() : Iterable<Map.Entry<*, *>> {
+    private fun requireMObservers() : java.lang.Iterable<java.util.Map.Entry<*, *>> {
         val mOb = mObservers
         if (mOb == null) {
             var superClass: Class<*>? = javaClass.superclass
@@ -113,7 +113,7 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
                     val field = superClass.getDeclaredField("mObservers")
                     field.isAccessible = true
                     val o = field.get(this)
-                    mObservers = o as Iterable<Map.Entry<*, *>>
+                    mObservers = o as java.lang.Iterable<java.util.Map.Entry<*, *>>
                     break
                 }
                 superClass = superClass.superclass
@@ -153,7 +153,7 @@ open class NoStickLiveData<T> : RealValueLiveData<T> {
     private class NoStickWrapObserver<D>(val self: NoStickLiveData<D>,
                                          val initVersion:Long,
                                          val observer: Observer<in D>)
-        : Observer<D> {
+            : Observer<D> {
         override fun onChanged(value: D) {
             if (initVersion < self.mVersion) {
                 observer.onChanged(value)

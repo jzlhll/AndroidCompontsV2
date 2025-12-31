@@ -13,7 +13,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 private var lastLauncherApp = 0L
 
 /**
- * @author au
+ * @author Allan
  * @date :2023/11/7 9:33
  * @description:
  */

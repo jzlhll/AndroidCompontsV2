@@ -9,7 +9,7 @@ import com.au.module_android.ui.base.IUi
 import com.au.module_android.widget.YourToolbar
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/7/4
  * Description 指导基础类模板
  */

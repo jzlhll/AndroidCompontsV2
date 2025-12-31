@@ -10,7 +10,7 @@ import kotlin.math.ceil
 import kotlin.math.max
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/8/24
  */
 open class CustomWrapEnFontText : MaterialTextView {

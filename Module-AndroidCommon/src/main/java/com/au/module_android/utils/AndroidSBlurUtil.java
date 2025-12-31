@@ -2,15 +2,12 @@ package com.au.module_android.utils;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.graphics.Outline;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
 
 import androidx.annotation.ColorInt;
 
@@ -28,7 +25,7 @@ public final class AndroidSBlurUtil {
     private static final int DARK_BLUR_COLOR = isS ? 0xcc000000 : 0xd8000000;
 
     private static final int DEFAULT_RADIUS_DARK = 12;
-    private static final int DEFAULT_RADIUS_LIGHT = 100;
+    private static final int DEFAULT_RADIUS_LIGHT = 24;
 
     private static boolean isDark(Context context) {
         var mode = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
@@ -55,7 +52,9 @@ public final class AndroidSBlurUtil {
             float radiusY
     ) {
         var isDark = isDark(beBlurView.getContext());
-        applyBlurEffect(beBlurView, radiusX, radiusY, Shader.TileMode.DECAL, isDark);
+        if (isS) {
+            applyBlurEffect(beBlurView, radiusX, radiusY, Shader.TileMode.DECAL, isDark);
+        }
     }
 
     public static void applyBlurEffect(

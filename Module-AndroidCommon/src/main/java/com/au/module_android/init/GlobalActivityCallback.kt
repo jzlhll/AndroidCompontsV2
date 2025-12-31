@@ -7,7 +7,7 @@ import com.au.module_android.BuildConfig
 import com.au.module_android.Globals.activityList
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/8/18
  * Description 全局监听activity变化
  */

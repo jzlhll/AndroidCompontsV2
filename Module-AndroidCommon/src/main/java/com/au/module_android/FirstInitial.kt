@@ -1,12 +1,12 @@
 package com.au.module_android
 
-import android.app.Application
-import androidx.lifecycle.ProcessLifecycleOwner
 import com.au.module_android.crash.UncaughtExceptionHandlerObj
 import com.au.module_android.init.GlobalActivityCallback
 import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.init.optimizeSpTask
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
+import android.app.Application
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.gson.Gson
 import kotlinx.serialization.json.Json
 

@@ -1,5 +1,6 @@
 package com.au.module_android.permissions
 
+import com.au.module_android.utils.startActivityFix
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -10,12 +11,11 @@ import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
 import androidx.core.net.toUri
-import com.au.module_android.utils.startActivityFix
 
 /**
  * 兼容到android14+的权限申请策略
  */
-class PermissionStorageHelper {
+class PermissionMediaHelper {
     enum class MediaType {
         IMAGE,
         VIDEO,
@@ -68,7 +68,7 @@ class PermissionStorageHelper {
         val permissions: MutableList<String> = ArrayList()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 14+
-            // Android 14+需额外声明
+            // Android 14+需额外声明READ_MEDIA_VISUAL_USER_SELECTED
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
             }

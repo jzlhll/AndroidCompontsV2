@@ -1,8 +1,8 @@
 package com.au.module_android.utilsmedia
 
+import com.au.module_android.json.UriSerializer
 import android.net.Uri
 import android.webkit.MimeTypeMap
-import com.au.module_android.json.UriSerializer
 import kotlinx.serialization.Serializable
 
 @Serializable

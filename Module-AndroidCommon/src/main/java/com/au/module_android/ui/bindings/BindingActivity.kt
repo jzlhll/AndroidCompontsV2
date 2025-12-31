@@ -9,7 +9,7 @@ import com.au.module_android.ui.createViewBinding
 import com.au.module_android.ui.views.ViewToolbarActivity
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/7/4
  * Description 指导基础类模板
  */

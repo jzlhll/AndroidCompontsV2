@@ -3,7 +3,7 @@ package com.au.module_android.utils
 import android.widget.ImageView
 
 /**
- * @author au
+ * @author Allan
  * @date :2024/3/11 10:04
  * @description:
  */

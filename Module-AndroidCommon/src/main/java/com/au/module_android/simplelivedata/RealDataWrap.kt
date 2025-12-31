@@ -1,7 +1,7 @@
 package com.au.module_android.simplelivedata
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/2/17
  * Description 将真实类型T data，包装在被包装的数据类型中。
  */

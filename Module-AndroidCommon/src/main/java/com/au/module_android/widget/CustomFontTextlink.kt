@@ -5,7 +5,7 @@ import android.graphics.Paint
 import android.util.AttributeSet
 
 /**
- * @author au
+ * @author Allan
  * @date :2023/11/7 15:41
  * @description:
  */

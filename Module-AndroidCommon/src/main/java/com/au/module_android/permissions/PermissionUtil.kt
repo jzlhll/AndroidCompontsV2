@@ -13,17 +13,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import com.au.module_android.Globals
-import com.au.module_android.permissions.activity.ActivityForResult
-import com.au.module_android.permissions.activity.GetMultipleContentsForResult
-import com.au.module_android.permissions.activity.OpenMultipleDocsForResult
-import com.au.module_android.permissions.permission.SelectSysDirForResult
-import com.au.module_android.permissions.activity.SystemTakePictureForResult
-import com.au.module_android.permissions.activity.SystemTakeVideoFaceForResult
-import com.au.module_android.permissions.activity.SystemTakeVideoForResult
-import com.au.module_android.permissions.permission.IMultiPermissionsResult
-import com.au.module_android.permissions.permission.IOnePermissionResult
-import com.au.module_android.permissions.permission.PermissionForResult
-import com.au.module_android.permissions.permission.PermissionsForResult
+import com.au.module_android.permissions.activity.*
+import com.au.module_android.permissions.permission.*
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.startActivityFix
 
@@ -58,9 +49,9 @@ fun LifecycleOwner.createMultiPermissionForResult(permissions:Array<String>)
         : IMultiPermissionsResult
     = PermissionsForResult(this, permissions)
 
-fun LifecycleOwner.createStoragePermissionForResult(types:Array<PermissionStorageHelper.MediaType>)
+fun LifecycleOwner.createMediaPermissionForResult(types:Array<PermissionMediaHelper.MediaType>)
         : IMultiPermissionsResult
-    = createMultiPermissionForResult(PermissionStorageHelper().getRequiredPermissions(types))
+    = createMultiPermissionForResult(PermissionMediaHelper().getRequiredPermissions(types))
 
 
 /**

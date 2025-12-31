@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import com.au.module_android.utils.asOrNull
 
 /**
- * @author au
+ * @author Allan
  * @date :2023/12/13 10:52
  */
 abstract class IContractResult<I, O> (cxt:Any, val resultContract:ActivityResultContract<I, O>) {

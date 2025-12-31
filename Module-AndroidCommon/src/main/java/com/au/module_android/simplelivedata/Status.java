@@ -6,7 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/2/15
  * Description 设计运行的模式
  */

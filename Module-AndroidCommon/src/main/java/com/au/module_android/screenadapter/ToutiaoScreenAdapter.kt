@@ -5,6 +5,7 @@ import android.app.Application
 import android.app.Dialog
 import android.content.ComponentCallbacks
 import android.content.res.Configuration
+import android.util.DisplayMetrics.DENSITY_MEDIUM
 
 /**
  * 头条适配方案
@@ -34,7 +35,7 @@ object ToutiaoScreenAdapter {
 
     private var targetDensity:Float = 1f
     private var targetScaleDensity:Float = 1f
-    private var targetDensityDpi:Int = 160
+    private var targetDensityDpi:Int = DENSITY_MEDIUM
 
     private var ueExceptWidthPx = DEFAULT_UE_SIZE
 

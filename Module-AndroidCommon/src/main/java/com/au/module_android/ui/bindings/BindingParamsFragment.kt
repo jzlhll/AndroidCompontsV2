@@ -5,7 +5,7 @@ import com.au.module_android.utils.asOrNull
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * @author au
+ * @author Allan
  * 简化和传入复杂的参数类型。
  * 主要使用场景为做为整个activity的唯一。而且不能跨进程。
  */

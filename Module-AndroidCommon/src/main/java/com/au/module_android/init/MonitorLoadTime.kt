@@ -21,7 +21,7 @@ fun monitorActivityLoadTime(activity: Activity) {
 
                 contentView.post {
                     val loadTime = System.currentTimeMillis() - startTime
-                    "".logdNoFile {
+                    logdNoFile(GlobalActivityCallback::class.java) {
                         "$name loadTime: $loadTime ms"
                     }
                 }
@@ -43,7 +43,7 @@ fun monitorFragmentLoadTime(fragment: Fragment) {
 
                     view.post {
                         val loadTime = System.currentTimeMillis() - startTime
-                        "".logdNoFile {
+                        logdNoFile(GlobalActivityCallback::class.java) {
                             "$name loadTime: $loadTime ms"
                         }
                     }

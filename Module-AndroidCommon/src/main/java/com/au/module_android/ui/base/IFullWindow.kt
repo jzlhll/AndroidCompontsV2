@@ -1,7 +1,7 @@
 package com.au.module_android.ui.base
 
 /**
- * @author au
+ * @author Allan
  * @date :2025/11/14
  */
 interface IFullWindow {

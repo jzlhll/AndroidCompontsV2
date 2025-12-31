@@ -1,11 +1,6 @@
 package com.au.module_android.viewmodel
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 

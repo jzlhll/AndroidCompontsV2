@@ -3,7 +3,7 @@ package com.au.module_android.simplelivedata
 import android.os.Looper
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/2/17
  * Description 重新设计带状态的LiveData。简化之前一堆额外代码。
  * 传入的泛型是T，监听到的是RealDataWrap。

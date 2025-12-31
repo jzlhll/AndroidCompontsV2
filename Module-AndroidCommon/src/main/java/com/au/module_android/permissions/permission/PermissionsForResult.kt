@@ -9,7 +9,7 @@ internal class PermissionsForResult(cxt:Any,
                                     permissions: Array<String>)
         : IMultiPermissionsResult(permissions, cxt, ActivityResultContracts.RequestMultiplePermissions()) {
 
-    override fun safeRun(block: () -> Unit, notGivePermissionBlock: (() -> Unit)?, option: ActivityOptionsCompat?) {
+    override fun safeRun(notGivePermissionBlock: (() -> Unit)?, option: ActivityOptionsCompat?, block: () -> Unit) {
         if (hasPermission(*permissions)) {
             block.invoke()
         } else {

@@ -134,7 +134,7 @@ fun EditText.makeNoAutoFill() {
 }
 
 fun View.findWindow() : Window?{
-    var curContext: Context? = context
+    var curContext:Context? = context
     var count = 0
     while (curContext is ContextWrapper && count <= 3) {
         if (curContext is Activity) {

@@ -89,4 +89,3 @@ fun <T> Flow<T>.asStatusState(
         .onStart { emit(initialValue) }
         .catch { emit(StatusState.Error(it)) }
 }
-

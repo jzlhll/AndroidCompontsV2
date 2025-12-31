@@ -1,14 +1,14 @@
 package com.au.module_android
 
+import com.au.module_android.utils.logdNoFile
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import androidx.annotation.EmptySuper
-import com.au.module_android.utils.logdNoFile
 
 /**
- * @author au
+ * @author allan
  * @date :2023/11/7 14:32
  * @description: 使用InitApplication做为基础的application父类或者直接使用
  */

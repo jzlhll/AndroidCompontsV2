@@ -1,7 +1,7 @@
 package com.au.module_android.simplelivedata
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/2/17
  * Description 普通的liveData的设置
  */

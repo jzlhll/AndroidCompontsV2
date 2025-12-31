@@ -1,11 +1,11 @@
 package com.au.module_android.utilsmedia
 
+import com.au.module_android.utils.startActivityFix
 import com.au.module_android.utilsmedia.MediaTypeUtil.Companion.getMimeTypePath
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
-import com.au.module_android.utils.startActivityFix
 import java.io.File
 
 /**

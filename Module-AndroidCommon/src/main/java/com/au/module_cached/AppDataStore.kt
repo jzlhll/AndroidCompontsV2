@@ -1,19 +1,11 @@
 package com.au.module_cached
 
-import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.byteArrayPreferencesKey
-import androidx.datastore.preferences.core.doublePreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.au.module_android.Globals
 import com.au.module_android.utils.asOrNull
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -35,8 +27,9 @@ object AppDataStore {
         val dataStore = context.mDataStore
     }
 
+    //对应最终件:/data/data/xxxx/files/datastore/globalDataStore.preferences_pb
     val Context.globalDataStore by preferencesDataStore(
-        name = "global_data_store",//指定名称  //对应最终件:/data/data/xxxx/files/datastore/global_data_store.preferences_pb
+        name = "global_data_store",//指定名称
 //    produceMigrations = {context ->  //指定要恢复的sp文件，无需恢复可不写
 //        listOf(SharedPreferencesMigration(context, SP_PREFERENCES_NAME))
 //    }

@@ -15,7 +15,7 @@ abstract class AbstractChain<T> : IChain<T> {
      *
      * 具体的实现需要在内部调用next的处理。
      */
-    override final fun handle(params:T) : ChainReturn {
+    final override fun handle(params:T) : ChainReturn {
         val isInterrupt = interrupt?.interrupt(params, this) == true
         if (isInterrupt) {
             return ChainReturn.Interrupt

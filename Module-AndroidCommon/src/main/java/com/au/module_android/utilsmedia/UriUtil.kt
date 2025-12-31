@@ -1,5 +1,7 @@
 package com.au.module_android.utilsmedia
 
+import com.au.module_android.Globals
+import com.au.module_android.utils.logt
 import android.content.ContentResolver
 import android.content.Context
 import android.content.res.AssetFileDescriptor
@@ -12,8 +14,6 @@ import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Log
 import androidx.annotation.WorkerThread
-import com.au.module_android.Globals
-import com.au.module_android.utils.logt
 import java.io.*
 
 fun File.myParse() = UriParseHelper(this).parseFile()

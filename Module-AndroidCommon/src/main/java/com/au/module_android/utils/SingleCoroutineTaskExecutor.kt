@@ -7,7 +7,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 import java.util.concurrent.Executors
 
 class SingleCoroutineTaskExecutor(threadName: String) {

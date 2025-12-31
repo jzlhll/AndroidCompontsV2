@@ -1,7 +1,7 @@
 package com.au.module_android.widget
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/8/24
  */
 enum class FontMode(val mode:String) {

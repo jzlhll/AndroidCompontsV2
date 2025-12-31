@@ -9,7 +9,7 @@ import com.au.module_android.ui.base.AbsFragment
 import com.au.module_android.ui.base.IUi
 
 /**
- * @author au
+ * @author Allan
  * Date: 2023/7/10
  * Description 基础Fragment的通用
  */

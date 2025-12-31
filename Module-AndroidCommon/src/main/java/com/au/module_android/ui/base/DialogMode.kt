@@ -6,7 +6,7 @@ import androidx.fragment.app.Fragment
 import com.au.module_android.R
 
 /**
- * @author au
+ * @author Allan
  * @date :2024/2/19 17:45
  * @description:
  */

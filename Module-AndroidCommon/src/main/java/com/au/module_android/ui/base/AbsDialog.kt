@@ -20,7 +20,7 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.transparentStatusBar
 
 /**
- * @author au
+ * @author Allan
  * @date :2023/11/8 10:59
  * @description: 从中间弹出的样式Dialog
  */
@@ -170,7 +170,7 @@ abstract class AbsDialog(private val mode: DialogMode) : AppCompatDialogFragment
 
 
 /**
- * @author au
+ * @author Allan
  * @date :2024/2/19 15:02
  * @description:
  */

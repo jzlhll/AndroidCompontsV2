@@ -3,7 +3,6 @@ package com.au.module_android.utilsmedia
 import android.media.MediaMetadataRetriever
 import android.util.Log
 import android.webkit.MimeTypeMap
-import com.au.module_android.utilsmedia.MediaType
 
 /**
  * @author Allan
@@ -86,7 +85,7 @@ class MediaTypeUtil private constructor() {
             return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
         }
 
-        fun mediaTypeTo(mimeType:String) : MediaType {
+        fun mediaTypeTo(mimeType:String) : MediaType{
             if (mimeType.contains("video")) {
                 return MediaType.Video
             } else if (mimeType.contains("image")) {
