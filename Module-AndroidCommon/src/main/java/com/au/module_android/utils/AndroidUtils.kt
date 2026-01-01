@@ -1,25 +1,34 @@
 package com.au.module_android.utils
 
-import com.au.module_android.Globals
-import com.au.module_android.Globals.app
-import com.au.module_android.ui.FragmentShellActivity
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.ActivityManager.RunningAppProcessInfo
 import android.app.Dialog
 import android.app.KeyguardManager
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
-import android.os.*
+import android.os.Build
 import android.os.Build.VERSION
+import android.os.Bundle
+import android.os.Looper
+import android.os.Process
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.au.module_android.Globals
+import com.au.module_android.Globals.app
+import com.au.module_android.log.ALogJ.TAG
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.net.URLDecoder
@@ -339,16 +348,6 @@ fun findActivity(activityCls: Class<*>): Boolean {
     return found != null
 }
 
-/**
- * 如果是我们框架的代码，则可以用Fragment的来判断
- */
-fun findCustomFragmentGetActivity(customFragment: Class<*>): Activity? {
-    val found = Globals.activityList.find {
-        it.javaClass == FragmentShellActivity::class.java && (it as FragmentShellActivity).fragmentClass == customFragment
-    }
-    return found
-}
-
 fun displayRotation(context: Context) : Int {
     val rotation = if (VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         context.display.rotation
@@ -386,4 +385,22 @@ fun convertMillisToMMSS(ts: Long): String {
         minutes = 99
     }
     return String.format("%02d:%02d", minutes, seconds)
+}
+
+fun Context.startActivityFix(intent: Intent, opts:Bundle? = null) {
+    if (this !is Activity) {
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    try {
+        startActivity(intent, opts)
+    } catch (e:Exception) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            // Android 10 或更高版本
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        } else {
+            // Android 10 以下版本
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        startActivity(intent, opts)
+    }
 }

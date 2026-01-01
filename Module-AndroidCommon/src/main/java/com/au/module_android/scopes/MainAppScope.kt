@@ -1,6 +1,6 @@
 package com.au.module_android.scopes
 
-import com.au.module_android.utils.logEx
+import com.au.module_android.log.logEx
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -1,9 +1,5 @@
 package com.au.module_android.utilsmedia
 
-import com.au.module_android.Globals
-import com.au.module_android.permissions.hasPermission
-import com.au.module_android.utils.ignoreError
-import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -11,10 +7,11 @@ import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.provider.MediaStore
+import com.au.module_android.Globals
+import com.au.module_android.utils.ignoreError
 import kotlinx.coroutines.delay
 import java.io.File
 import java.io.IOException
-
 
 /**
  * 导出到download目录。
@@ -27,7 +24,6 @@ suspend fun exportFileToDownload(outputFileName: String, sourceFile: File): Stri
     }
 
     // 获取下载目录
-    val has = hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 
     val generateUniqueFileName = fun(directory: File, originalName: String): File {

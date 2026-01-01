@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_marginTop="4dp"
-        android:text="Sorry it is crashed!\nScreenshot and feedback!"
+        android:text="Sorry!\nScreenshot and feedback!"
         android:textSize="16sp"
         android:textStyle="bold" />
 
@@ -60,16 +60,16 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/ui_padding_edge"
-            android:text="清理缓存"/>
+            android:layout_marginHorizontal="16dp"
+            android:text="Clear cache"/>
 
         <Button
             android:id="@+id/restartBtn"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/ui_padding_edge"
-            android:text="重启应用"/>
+            android:layout_marginHorizontal="16dp"
+            android:text="Restart"/>
     </LinearLayout>
 
     <LinearLayout
@@ -80,14 +80,14 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/ui_padding_edge"
-            android:text="检查并升级"/>
+            android:layout_marginHorizontal="16dp"
+            android:text="Check and Update"/>
     </LinearLayout>
 
     <TextView
         android:id="@+id/feedbackText"
         android:layout_marginTop="6dp"
-        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

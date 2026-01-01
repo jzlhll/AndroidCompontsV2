@@ -7,7 +7,7 @@ import com.au.module_android.Globals
 import com.au.module_android.crash.UncaughtExceptionHandlerObj.TAG
 import com.au.module_android.glide.clearAppCache
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 
 /**
  * @author allan

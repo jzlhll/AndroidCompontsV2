@@ -9,7 +9,7 @@ import android.os.LocaleList
 import androidx.annotation.IntDef
 import androidx.appcompat.app.AppCompatDelegate
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import java.util.Locale
 
 @IntDef(*[Configuration.UI_MODE_NIGHT_NO, Configuration.UI_MODE_NIGHT_YES])

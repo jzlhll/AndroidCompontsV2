@@ -4,6 +4,7 @@
 .gradle
 /local.properties
 /.idea
+.vscode/settings.json
 .DS_Store
 /build
 ClassNameAnnotations/build/

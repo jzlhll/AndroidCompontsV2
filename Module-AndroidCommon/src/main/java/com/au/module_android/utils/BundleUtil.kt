@@ -1,4 +1,4 @@
-package com.au.module_android.json
+package com.au.module_android.utils
 
 import android.os.Bundle
 import android.util.Log

@@ -14,11 +14,11 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import com.au.module_android.Globals
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.log.logt
 import com.au.module_android.utils.getAppIntent
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
-import com.au.module_android.utils.logt
 import com.au.module_android.utils.startActivityFix
 import java.io.PrintWriter
 import java.io.StringWriter

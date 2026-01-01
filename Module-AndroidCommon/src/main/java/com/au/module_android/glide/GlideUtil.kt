@@ -1,12 +1,13 @@
 package com.au.module_android.glide
 
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.media.MediaMetadataRetriever
 import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.WorkerThread
+import androidx.core.graphics.drawable.toDrawable
 import com.au.module_android.Globals
+import com.au.module_android.R
 import com.au.module_android.utils.deleteAll
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.withIoThread
@@ -18,7 +19,6 @@ import com.bumptech.glide.load.resource.bitmap.VideoDecoder
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import androidx.core.graphics.drawable.toDrawable
 
 /**
  * 清除或者取消加载
@@ -89,7 +89,7 @@ fun ImageView.glideSetAnyWithDefault(
     load: String?,
     @ColorInt colorGray:Int? = null
 ) {
-    val c = colorGray ?: Globals.getColor(com.au.module_androidcolor.R.color.color_glide_gray_default)
+    val c = colorGray ?: Globals.getColor(R.color.color_glide_gray_default)
     val resInt = c.toDrawable()
     if (load == null) {
         setImageDrawable(resInt)

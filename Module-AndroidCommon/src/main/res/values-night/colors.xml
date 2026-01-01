@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- glide 的基础颜色 -->
+    <color name="color_glide_gray_default">#343434</color>
+
     <color name="ripple_default">#1FFFFFFF</color>
 </resources>

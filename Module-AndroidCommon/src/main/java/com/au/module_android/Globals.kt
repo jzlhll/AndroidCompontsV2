@@ -1,5 +1,6 @@
 package com.au.module_android
 
+//import com.github.gzuliyujiang.oaid.DeviceIdentifier
 import android.app.Activity
 import android.app.Application
 import android.graphics.drawable.Drawable
@@ -10,15 +11,10 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import com.au.module_android.scopes.BackAppScope
 import com.au.module_android.scopes.MainAppScope
 import com.au.module_android.simplelivedata.NoStickLiveData
-import com.au.module_android.ui.FragmentShellActivity
 import com.au.module_android.utils.unsafeLazy
-//import com.github.gzuliyujiang.oaid.DeviceIdentifier
-import com.google.gson.Gson
-import kotlinx.serialization.json.Json
 import java.io.File
 
 object Globals {
@@ -46,15 +42,6 @@ object Globals {
     val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
     val backgroundHandler by lazy { createBackgroundHandler() }
-
-    /**
-     * gson对象
-     */
-    lateinit var gson: Gson
-        internal set
-
-    lateinit var kson: Json
-        internal set
 
     /**
      * 选择合适的cacheDir
@@ -92,17 +79,6 @@ object Globals {
     fun finishActivity(clz:Class<out Activity>) {
         activityList.forEach {
             if (it.javaClass == clz) {
-                it.finish()
-            }
-        }
-    }
-
-    /**
-     * 退出某个fragment承载的activity
-     */
-    fun finishFragment(clz: Class<out Fragment>) {
-        activityList.forEach {
-            if (it is FragmentShellActivity && it.fragmentClass == clz) {
                 it.finish()
             }
         }

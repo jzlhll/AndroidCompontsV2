@@ -1,7 +1,7 @@
 package com.au.module_android.utilsmedia
 
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.MediaStore

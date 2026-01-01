@@ -1,9 +1,8 @@
-package com.au.module_android.utils
+package com.au.module_android.log
 
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
-import android.util.Log
 import androidx.annotation.WorkerThread
 import com.au.module_android.Globals
 import java.io.BufferedWriter
@@ -59,12 +58,12 @@ object FileLog {
     }
 
     private fun getRootPath() = Globals.goodFilesDir.absolutePath + File.separator + "Log"
-    val logDir by unsafeLazy { getRootPath() + File.separatorChar }
+    val logDir by _root_ide_package_.com.au.module_android.utils.unsafeLazy { getRootPath() + File.separatorChar }
 
     private val memCachedFileItemsLock = Any()
     private const val CAPACITY_OF_FIXED_FILE_ITEMS = 1000
-    private val memCachedFileItems by unsafeLazy {
-        FixedSizeLinkedList<FileItem>(CAPACITY_OF_FIXED_FILE_ITEMS)
+    private val memCachedFileItems by _root_ide_package_.com.au.module_android.utils.unsafeLazy {
+        _root_ide_package_.com.au.module_android.utils.FixedSizeLinkedList<FileItem>(CAPACITY_OF_FIXED_FILE_ITEMS)
     }
 
     private var _ignoreWrite = false
@@ -139,12 +138,12 @@ object FileLog {
         }
     }
 
-    private val timestampFmt by unsafeLazy { SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()) }
+    private val timestampFmt by _root_ide_package_.com.au.module_android.utils.unsafeLazy { SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()) }
 
     data class LogParserInfo(val time:String, val threadProcess:String, val level:String, val tag:String, val msg:String)
 
     fun logParser(s:String) : LogParserInfo? {
-        return ignoreError {
+        return _root_ide_package_.com.au.module_android.utils.ignoreError {
             val ss = s.split(" ")
             val tag = ss[3]
             val cutTag = tag.substring(0, tag.length - 1)

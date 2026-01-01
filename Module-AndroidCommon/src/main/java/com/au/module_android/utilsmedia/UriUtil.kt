@@ -1,7 +1,7 @@
 package com.au.module_android.utilsmedia
 
 import com.au.module_android.Globals
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logt
 import android.content.ContentResolver
 import android.content.Context
 import android.content.res.AssetFileDescriptor

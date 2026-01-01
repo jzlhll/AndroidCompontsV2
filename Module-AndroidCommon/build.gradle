@@ -57,14 +57,11 @@ android {
         targetCompatibility=gradle.ext.targetCompatibility
     }
     buildFeatures {
-        viewBinding=true
         buildConfig=true
     }
 }
 
 dependencies {
-    implementation project(":Module-AndroidColor")
-
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat
     implementation libs.androidx.window
@@ -81,8 +78,6 @@ dependencies {
     api libs.material
     api libs.androidx.startup.runtime
 
-    api libs.gson
-
     api libs.androidx.recyclerview
 
     // define a BOM and its version
@@ -94,17 +89,8 @@ dependencies {
     api libs.glide
     api libs.okhttp3.integration
 
-    //implementation libs.mmkv.static
-    //implementation files('libs/mmkv.aar')
-
     api libs.androidx.datastore.preferences
 
-    api libs.kotlinx.serialization.json
-    api libs.kotlin.reflect
-
     implementation libs.androidx.core.splashscreen
-
-    implementation(platform(libs.koin.bom))
-    implementation(libs.koin.android)
     //implementation libs.android.cn.oaid
 }

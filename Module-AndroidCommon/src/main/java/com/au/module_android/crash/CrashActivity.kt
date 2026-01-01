@@ -11,7 +11,7 @@ import com.au.module_android.R
 import com.au.module_android.click.onClick
 import com.au.module_android.crash.UncaughtExceptionHandlerObj.killAndRestart
 import com.au.module_android.glide.clearAppCache
-import com.au.module_android.utils.FileLog
+import com.au.module_android.log.FileLog
 import com.au.module_android.utils.openUrlByBrowser
 
 /**

@@ -1,15 +1,14 @@
-package com.au.module_android.utils
+package com.au.module_android.log
 
 import android.util.Log
 import com.au.module_android.BuildConfig
-
-const val TAG:String = "au"
-var ALWAYS_FILE_LOG = BuildConfig.ENABLE_FILE_LOG_DEFAULT
+import com.au.module_android.log.ALogJ.ALWAYS_FILE_LOG
+import com.au.module_android.log.ALogJ.TAG
+import kotlin.math.min
 
 /**
  * 之所以定义这些，是综合考虑了反编译的字节码长度，避免inline过多膨胀
  */
-
 inline fun <THIS : Any> THIS.loge(tag:String = TAG, javaClass: Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
     val str = block(this)
     val log = ALogJ.log("E", str, tag, javaClass)
@@ -91,4 +90,19 @@ fun logStace(tag:String = TAG, s: String) {
     val ex = Exception()
     ex.printStackTrace()
     Log.d(tag, "$s...end!")
+}
+
+fun logLargeLine(tag:String, str:String) {
+    val len = str.length
+    val maxLine = 300
+    var i = 0
+    while (i < len) {
+        var lineIndex = str.indexOf("\n", i + maxLine)
+        if (lineIndex == -1) {
+            lineIndex = len
+        }
+        val log = str.substring(i, min(lineIndex, len))
+        Log.d(tag, log)
+        i = lineIndex + 1
+    }
 }
