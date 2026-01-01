@@ -37,7 +37,7 @@
         android:layout_height="0dp"
         tools:listitem="@layout/holder_receive_file_item"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/receiveRcvEmptyTv"
         android:visibility="gone"
         tools:visibility="visible"
@@ -61,7 +61,7 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_height="0dp">
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/exportHistoryTv"
             android:layout_marginHorizontal="8dp"
             style="@style/StyleAuTextThin"

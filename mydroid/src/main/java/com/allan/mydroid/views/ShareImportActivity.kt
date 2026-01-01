@@ -13,15 +13,15 @@ import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.MY_DROID_SHARE_IMPORT_URIS
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
-import com.au.module_android.ui.bindings.BindingActivity
-import com.au.module_android.utils.findCustomFragmentGetActivity
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.findLaunchActivity
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.parcelableArrayListExtraCompat
 import com.au.module_android.utils.parcelableExtraCompat
-import com.au.module_android.utils.startActivityFix
 import com.au.module_android.utilsmedia.isFromMyApp
+import com.au.module_androidui.ui.bindings.BindingActivity
+import com.au.module_androidui.ui.findCustomFragmentGetActivity
+import com.au.module_androidui.ui.startActivityFix
 import kotlinx.coroutines.launch
 
 class ShareImportActivity : BindingActivity<ActivityImportBinding>() {

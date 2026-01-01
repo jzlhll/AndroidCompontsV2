@@ -4,7 +4,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.tryGetContext
 import java.util.Locale
 import java.util.UUID

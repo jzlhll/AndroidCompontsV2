@@ -1,7 +1,7 @@
 编写xml布局，遵守如下规则：
 
 # 控件
-全路径 com.au.module_android.widget.XXX
+全路径 com.au.module_androidui.widget.XXX
 文本：CustomFontText (全称标签)
 按钮：CustomButton
 输入框：CustomEditText

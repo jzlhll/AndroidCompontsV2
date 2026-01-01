@@ -7,8 +7,8 @@ import com.au.jobstudy.UiNames
 import com.au.jobstudy.databinding.FragmentEnglishCheckBinding
 import com.au.jobstudy.words.constants.WordsManager
 import com.au.jobstudy.words.domain.TTSNative
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.namedLaunch
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.namedLaunch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**

@@ -7,7 +7,7 @@ import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import com.au.module_android.utils.serializableCompat
 import com.au.module_android.utilsmedia.myParseSuspend
 import com.au.module_android.utilsmedia.saveFileToPublicDirectory

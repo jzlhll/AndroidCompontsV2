@@ -6,8 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import com.au.module_android.ui.base.AbsDialog
-import com.au.module_android.ui.base.DialogMode
+import com.au.module_androidui.ui.base.AbsDialog
+import com.au.module_androidui.ui.base.DialogMode
 
 /**
  * @author au

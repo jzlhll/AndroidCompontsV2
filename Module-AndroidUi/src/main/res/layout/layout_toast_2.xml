@@ -20,7 +20,7 @@
         android:layout_height="22dp"
         tools:src="@drawable/ic_successful"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/desc"
         app:layout_constraintStart_toEndOf="@id/icon"
@@ -34,7 +34,7 @@
         android:maxLines="1"
         tools:text="The title" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         app:layout_constraintTop_toBottomOf="@id/text"
         app:layout_constraintStart_toEndOf="@id/icon"
         app:layout_constraintEnd_toStartOf="@id/closeBtn"

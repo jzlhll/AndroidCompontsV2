@@ -31,4 +31,8 @@ android {
 dependencies {
     implementation project(':Module-AndroidCommon')
     implementation project(":Module-AndroidColor")
+    implementation project(":Module-AuSimplePermission")
+
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.android)
 }

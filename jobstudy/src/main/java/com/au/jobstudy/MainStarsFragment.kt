@@ -10,7 +10,7 @@ import com.au.jobstudy.star.StarConsts
 import com.au.jobstudy.star.StarHeadBean
 import com.au.jobstudy.star.StarItemBean
 import com.au.jobstudy.star.StarMarkupBean
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
 import org.koin.android.ext.android.inject

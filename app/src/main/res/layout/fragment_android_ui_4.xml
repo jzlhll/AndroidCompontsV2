@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="58dp"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/scaleText"
         android:textColor="#ffffff"
         app:layout_constraintStart_toStartOf="parent"

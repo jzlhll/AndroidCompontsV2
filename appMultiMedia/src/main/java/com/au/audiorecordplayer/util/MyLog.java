@@ -3,7 +3,7 @@ package com.au.audiorecordplayer.util;
 import android.util.Log;
 
 import com.au.module_android.BuildConfig;
-import com.au.module_android.utils.ALogJ;
+import com.au.module_android.log.ALogJ;
 
 public class MyLog {
     private static final String TAG = "au";

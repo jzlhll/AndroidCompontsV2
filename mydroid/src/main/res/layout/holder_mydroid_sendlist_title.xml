@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <com.au.module_android.widget.BgBuildView
+    <com.au.module_androidui.widget.BgBuildView
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="@id/arrowIcon"
         android:layout_marginStart="16dp"
@@ -28,7 +28,7 @@
         android:layout_width="18dp"
         android:layout_height="18dp" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/title"
         style="@style/StyleAuTextThin"
         android:paddingHorizontal="16dp"

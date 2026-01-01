@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.au.module_android.widget.BgBuildConstraintLayout
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
         android:layout_width="match_parent"
         android:minHeight="234dp"
         android:layout_height="wrap_content"
@@ -31,7 +31,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/titleTv"
             style="@style/StyleAuBTextTitle2"
             app:layout_constraintTop_toBottomOf="@id/icon"
@@ -43,7 +43,7 @@
             android:gravity="center"
             tools:text="fir" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/contentTv"
             style="@style/StyleAuTextNormalDesc"
             app:layout_constraintTop_toBottomOf="@id/titleTv"
@@ -55,7 +55,7 @@
             android:gravity="center"
             tools:text="Your customiz" />
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/cancelButton"
             style="@style/StyleButtonSecondary"
             app:customFontMode="mid"
@@ -70,7 +70,7 @@
             app:layout_constraintHorizontal_chainStyle="packed"
             android:layout_marginTop="32dp"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/sureButton"
             app:customFontMode="mid"
             style="@style/StyleButtonPrimary"
@@ -84,7 +84,7 @@
             android:layout_width="0dp"
             android:layout_height="50dp"
             tools:text="delete"/>
-    </com.au.module_android.widget.BgBuildConstraintLayout>
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
 
     <android.widget.Space
         android:layout_width="1dp"

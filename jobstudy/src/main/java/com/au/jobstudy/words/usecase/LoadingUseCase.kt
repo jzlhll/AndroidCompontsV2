@@ -9,8 +9,8 @@ import com.au.jobstudy.words.domain.beans.DBTableMode
 import com.au.jobstudy.words.domain.beans.RowInfo
 import com.au.jobstudy.words.ui.LoadingTest
 import com.au.module_android.Globals
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 
 class LoadingUseCase(
     val wordsManager: WordsManager,

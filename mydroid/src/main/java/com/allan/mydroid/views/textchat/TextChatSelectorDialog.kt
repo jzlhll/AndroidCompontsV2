@@ -6,9 +6,9 @@ import androidx.fragment.app.Fragment
 import com.allan.mydroid.databinding.TextchatSelectorDialogBinding
 import com.allan.mydroid.views.MyDroidAllFragment
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.base.findDialog
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.base.findDialog
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 

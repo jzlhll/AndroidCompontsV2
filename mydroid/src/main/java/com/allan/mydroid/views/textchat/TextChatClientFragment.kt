@@ -10,11 +10,11 @@ import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.textchat.uibean.NormalItem
-import com.au.module_android.json.toJsonString
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_gson.toJsonString
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.launchRepeatOnStarted
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog

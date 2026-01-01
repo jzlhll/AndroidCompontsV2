@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/mediaPlayTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -148,20 +148,20 @@
             android:layout_width="wrap_content"
             android:background="@color/color_line"
             android:layout_height="1dp"/>
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/fileListTextView"
             style="@style/StyleAuTextNormalDesc"
             android:layout_marginTop="18dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/selectedFileTextView"
             style="@style/StyleAuTextNormal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonSecondary"
             android:id="@+id/roundOneAudioFileBtn"
             android:layout_marginTop="6dp"

@@ -7,7 +7,7 @@ import com.allan.autoclickfloat.activities.startup.PermissionsHelper
 import com.allan.autoclickfloat.consts.Const
 import com.allan.autoclickfloat.databinding.AutoContinuousClickAPointBinding
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 import com.au.module_androidui.dialogs.ConfirmCenterDialog

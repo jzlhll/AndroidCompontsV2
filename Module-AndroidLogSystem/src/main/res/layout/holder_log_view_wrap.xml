@@ -4,10 +4,10 @@
     android:paddingVertical="4dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/tv"
         style="@style/StyleAuTextNormal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-    </com.au.module_android.widget.CustomFontText>
+    </com.au.module_androidui.widget.CustomFontText>
 </FrameLayout>

@@ -11,24 +11,20 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
-import com.allan.androidlearning.BuildConfig
 import com.allan.androidlearning.databinding.ActivityEchartsBinding
 import com.allan.androidlearning.recordview.ContinuousBitmapRecorderManager
 import com.au.module_android.Globals
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_android.utils.UnzipHelper
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logd
 import com.au.module_android.utils.unsafeLazy
-import com.github.lzyzsd.jsbridge.BridgeWebViewExFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 
 

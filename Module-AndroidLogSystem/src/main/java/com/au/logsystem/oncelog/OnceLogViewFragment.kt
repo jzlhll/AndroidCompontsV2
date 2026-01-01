@@ -1,7 +1,6 @@
 package com.au.logsystem.oncelog
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
@@ -9,19 +8,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.au.logsystem.R
 import com.au.logsystem.databinding.FragmentLogViewBinding
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.FileLog
+import com.au.module_android.log.FileLog
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.myHideSystemUI
 import com.au.module_android.utils.myShowSystemUI
 import com.au.module_android.utils.serializableCompat
 import com.au.module_android.utils.unsafeLazy
-import com.au.module_cached.delegate.AppDataStoreJsonCache
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_gson.cache.AppDataStoreJsonCache
 import java.io.File
 
 class OnceLogViewFragment : BindingFragment<FragmentLogViewBinding>() {
@@ -51,9 +50,11 @@ class OnceLogViewFragment : BindingFragment<FragmentLogViewBinding>() {
         }
     }
 
-    private var mShowInfo by AppDataStoreJsonCache("logSysShownInfo",
-        LogViewShownInfo(isWrap = false, fullScreen = true, time=true, threadProcess=true, level=true, tag=true),
-        LogViewShownInfo::class.java)
+    private var mShowInfo by AppDataStoreJsonCache(
+        "logSysShownInfo",
+        LogViewShownInfo(isWrap = false, fullScreen = true, time = true, threadProcess = true, level = true, tag = true),
+        LogViewShownInfo::class.java
+    )
 
     private fun loadMore() {
         mRcv.post {

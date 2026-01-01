@@ -1,5 +1,6 @@
 package com.au.audiorecordplayer.particle
 
+import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
@@ -11,13 +12,13 @@ import com.au.audiorecordplayer.recorder.IWaveDetectRecord
 import com.au.audiorecordplayer.recorder.a2AudioRecord.WavePcmAudioRecord
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.createPermissionForResult
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_simplepermission.createPermissionForResult
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding>() {
-    val permissionHelper = createPermissionForResult(android.Manifest.permission.RECORD_AUDIO)
+    val permissionHelper = createPermissionForResult(Manifest.permission.RECORD_AUDIO)
 
     private var mWave : ScreenEffectParticleWaveView? = null
 

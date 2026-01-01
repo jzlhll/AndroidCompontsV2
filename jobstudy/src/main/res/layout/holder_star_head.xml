@@ -15,7 +15,7 @@
                     android:src="@drawable/ic_red_flover"
                     android:layout_height="30dp"/>
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/info"
                     android:layout_width="match_parent"
                     android:layout_marginStart="49dp"

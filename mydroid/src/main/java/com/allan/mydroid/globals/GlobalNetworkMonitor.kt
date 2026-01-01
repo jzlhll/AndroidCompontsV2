@@ -12,9 +12,9 @@ import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.scopes.BackAppScope
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.getIpAddress
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.log.logt
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted

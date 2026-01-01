@@ -20,26 +20,28 @@ import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.permissions.getMultipleContentsForResult
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.ToolbarMenuManager
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.NotificationUtil
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.isPhotoPickerAvailable
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.MediaTypeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.toast.ToastBuilder
-import com.au.module_imagecompressed.PickerType
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.ToolbarMenuManager
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.finishFragment
 import com.au.module_imagecompressed.compatMultiUriPickerForResult
+import com.au.module_simplepermission.PickerType
+import com.au.module_simplepermission.getMultipleContentsForResult
+import com.au.module_simplepermission.notification.createPostNotificationPermissionResult
+import com.au.module_simplepermission.requestNotificationPermission
 import com.bumptech.glide.request.target.Target
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -52,7 +54,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         const val MY_DROID_SHARE_IMPORT_URIS = "myDroidShareReceiverUris"
 
         fun start(context: Context, autoEnterSendView: Boolean) {
-            Globals.finishFragment(SendListSelectorFragment::class.java)
+            finishFragment(SendListSelectorFragment::class.java)
             FragmentShellActivity.start(
                 context, SendListSelectorFragment::class.java,
                 bundleOf(KEY_AUTO_ENTER_SEND_VIEW to autoEnterSendView)
@@ -171,7 +173,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         FragmentShellActivity.start(requireActivity(), SendListFilesFragment::class.java)
     }
 
-    val permissionUtil = NotificationUtil.Companion.createPostNotificationPermissionResult(this)
+    val permissionUtil = createPostNotificationPermissionResult()
 
     override fun onDestroy() {
         super.onDestroy()
@@ -222,8 +224,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        NotificationUtil.Companion.requestPermission(permissionUtil) {
-            MyDroidKeepLiveService.Companion.keepMyDroidAlive()
+        requireActivity().requestNotificationPermission(permissionUtil) {
+            MyDroidKeepLiveService.keepMyDroidAlive()
         }
 
         initActionButtons()
@@ -236,7 +238,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
 
         binding.infoText.onClick {
-            ConfirmBottomSingleDialog.Companion.show(childFragmentManager,
+            ConfirmBottomSingleDialog.show(childFragmentManager,
                 getString(R.string.disclaimer_title),
                     getString(R.string.disclaimer_content),
                 getString(R.string.action_confirm)) {
@@ -266,10 +268,10 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     private fun autoImportAction() {
-        mDelayCancelDialog = ConfirmBottomSingleDialog.Companion.show(childFragmentManager,
+        mDelayCancelDialog = ConfirmBottomSingleDialog.show(childFragmentManager,
             getString(R.string.action_auto_next),
             dialogContent(),
-            getString(com.au.module_android.R.string.cancel),
+            getString(com.au.module_androidui.R.string.cancel),
         ) {
             mAutoNextJob?.cancel()
             it.dismissAllowingStateLoss()

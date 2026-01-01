@@ -1,6 +1,5 @@
 package com.allan.autoclickfloat.nongyao
 
-import android.content.ComponentName
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import androidx.lifecycle.Observer
@@ -10,7 +9,7 @@ import com.allan.autoclickfloat.consts.Const
 import com.allan.autoclickfloat.floats.WindowMgr
 import com.au.module_android.BuildConfig
 import com.au.module_android.Globals
-import com.au.module_android.utils.TAG
+import com.au.module_android.log.ALogJ
 import kotlinx.coroutines.launch
 
 /**
@@ -24,7 +23,7 @@ class AppClickTasksObserver(service: AutoClickFloatAccessService) : AbsAccessSer
     private val mgr = AllNodesMgr()
 
     inline fun log(block:()->String) {
-        if(BuildConfig.DEBUG) Log.d(TAG, "alland " + block())
+        if(BuildConfig.DEBUG) Log.d(ALogJ.TAG, "alland " + block())
     }
 
     private var openObserver = Observer<Boolean> {

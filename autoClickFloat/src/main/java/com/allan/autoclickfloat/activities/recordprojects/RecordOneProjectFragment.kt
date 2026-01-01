@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.autoclickfloat.databinding.RecordProjectOneFragmentBinding
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingParamsFragment
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingParamsFragment
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 

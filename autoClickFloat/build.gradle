@@ -38,6 +38,8 @@ dependencies {
     implementation project(':Module-Nested')
     implementation project(':Module-Native')
     implementation project(':Module-AndroidLogSystem')
+    implementation project(':Module-AuSimplePermission')
+    implementation project(':Module-AuGsonMMKV')
 
     implementation libs.androidx.work.runtime
     implementation libs.androidx.work.runtime.ktx

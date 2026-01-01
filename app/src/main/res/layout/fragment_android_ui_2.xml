@@ -12,7 +12,7 @@
         android:orientation="vertical"
         android:layout_height="wrap_content">
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
             style="@style/StyleAuBTextTitle2"
             android:id="@+id/android_ui_darkmode_title"
@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.FlowLayout
+        <com.au.module_androidui.widget.FlowLayout
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="8dp"
             app:flRowSpacing="8dp"
@@ -58,7 +58,7 @@
                 android:text="sysUiMode"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"/>
-        </com.au.module_android.widget.FlowLayout>
+        </com.au.module_androidui.widget.FlowLayout>
 
         <View
             android:layout_marginTop="32dp"
@@ -66,7 +66,7 @@
             android:layout_width="match_parent"
             android:layout_height="0.5dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             style="@style/StyleAuBTextTitle2"
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="18dp"
@@ -74,7 +74,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.FlowLayout
+        <com.au.module_androidui.widget.FlowLayout
             android:layout_marginTop="8dp"
             android:layout_marginStart="@dimen/ui_padding_edge"
             app:flRowSpacing="8dp"
@@ -99,7 +99,7 @@
                 android:text="toast3"
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"/>
-        </com.au.module_android.widget.FlowLayout>
+        </com.au.module_androidui.widget.FlowLayout>
 
         <View
             android:layout_marginTop="32dp"
@@ -107,7 +107,7 @@
             android:layout_width="match_parent"
             android:layout_height="0.5dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="18dp"
             style="@style/StyleAuBTextTitle2"
@@ -115,7 +115,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.FlowLayout
+        <com.au.module_androidui.widget.FlowLayout
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:layout_marginTop="8dp"
             app:flRowSpacing="8dp"
@@ -165,7 +165,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"/>
 
-        </com.au.module_android.widget.FlowLayout>
+        </com.au.module_androidui.widget.FlowLayout>
 
         <View
             android:layout_marginTop="32dp"
@@ -173,7 +173,7 @@
             android:layout_width="match_parent"
             android:layout_height="0.5dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
             style="@style/StyleAuBTextTitle2"
             android:layout_marginTop="18dp"

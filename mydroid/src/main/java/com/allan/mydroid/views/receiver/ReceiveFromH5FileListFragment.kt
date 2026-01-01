@@ -17,8 +17,8 @@ import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.click.onClick
 import com.au.module_android.simpleflow.collectStatusState
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_android.utils.HtmlPart
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp

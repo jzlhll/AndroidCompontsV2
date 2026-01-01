@@ -21,10 +21,10 @@ import com.au.module_android.utils.setMaxLength
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
-import com.au.module_imagecompressed.CameraPermissionHelp
 import com.au.module_imagecompressed.PickUriWrap
-import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
+import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.PickerType
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -54,7 +54,7 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
     }
 
     val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, PickerType.IMAGE,
-        object : CameraPermissionHelp.Supplier {
+        object : BaseCameraPermissionHelp.Supplier {
             override fun createFileProvider(): Pair<File, Uri> {
                 return createFileProviderMine()
             }

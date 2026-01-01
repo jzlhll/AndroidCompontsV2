@@ -77,8 +77,6 @@
     <!-- toolBar相关 -->
 <!--    <color name="color_toolbar_text">@color/color_text_normal</color>-->
 
-    <!-- glide 的基础颜色 -->
-    <color name="color_glide_gray_default">#343434</color>
 
     <!-- 悬挂提醒DING信息背景色 -->
     <color name="color_ding_bg">#996699</color>

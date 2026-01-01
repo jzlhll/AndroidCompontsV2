@@ -5,7 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import com.allan.autoclickfloat.databinding.AllAppListFragmentBinding
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 
 /**
  * @author allan

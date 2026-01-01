@@ -10,7 +10,7 @@ import androidx.interpolator.view.animation.FastOutLinearInInterpolator
 import com.au.jobstudy.R
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import com.au.module_android.utils.visible
 
 /**

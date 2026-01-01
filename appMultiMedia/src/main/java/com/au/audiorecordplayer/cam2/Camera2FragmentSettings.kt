@@ -8,8 +8,7 @@ import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
 import com.au.audiorecordplayer.cam2.view.gl.FilterType
 import com.au.module_android.click.onClick
 import com.au.module_android.utils.ViewBackgroundBuilder
-import com.au.module_android.utils.logdNoFile
-import com.au.module_android.utils.unsafeLazy
+import com.au.module_android.log.logdNoFile
 
 class Camera2FragmentSettings(private val f: Camera2Fragment) {
     private val currentBg = "#cf3dc4dc"

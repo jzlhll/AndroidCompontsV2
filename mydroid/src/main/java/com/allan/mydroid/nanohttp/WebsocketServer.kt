@@ -7,12 +7,12 @@ import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
-import com.au.module_android.json.toJsonString
+import com.au.module_gson.toJsonString
 import com.au.module_android.utils.isMainThread
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import fi.iki.elonen.NanoWSD
 import kotlinx.coroutines.CoroutineScope

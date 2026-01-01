@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.widget.FrameLayout
 import androidx.annotation.CallSuper
 import androidx.viewbinding.ViewBinding
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_nested.databinding.NestedIndicatorLayoutBinding
-import com.au.module_android.ui.createViewBindingT2
+import com.au.module_androidui.ui.createViewBindingT2
 
 /**
  * @author allan

@@ -15,7 +15,7 @@
         tools:visibility="visible"
         android:layout_height="48dp"/>
 
-    <com.au.module_android.widget.BgBuildCustomFontText
+    <com.au.module_androidui.widget.BgBuildCustomFontText
         android:id="@+id/stepIndex"
         style="@style/StyleAuTextNormal"
         app:layout_constraintStart_toEndOf="@id/checkbox"
@@ -27,7 +27,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/stepIndex"
         app:layout_constraintEnd_toEndOf="parent"

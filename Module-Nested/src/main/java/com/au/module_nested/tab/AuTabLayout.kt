@@ -9,11 +9,11 @@ import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
-import com.au.module_android.fontutil.setFontFromAsset
+import com.au.module_androidui.fontutil.setFontFromAsset
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.forEachChild
-import com.au.module_android.widget.CustomFontText
-import com.au.module_android.widget.FontMode
+import com.au.module_androidui.widget.CustomFontText
+import com.au.module_androidui.widget.FontMode
 import com.au.module_androidcolor.R
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator

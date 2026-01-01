@@ -22,7 +22,7 @@
         android:background="@color/color_normal_block"
         android:layout_height="0dp" />
 
-    <com.au.module_android.widget.AutoResizeEditText
+    <com.au.module_androidui.widget.AutoResizeEditText
         android:id="@+id/edit"
         app:layout_constraintTop_toBottomOf="@id/topLine"
         android:layout_marginTop="12dp"

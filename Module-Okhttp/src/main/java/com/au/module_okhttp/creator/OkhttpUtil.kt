@@ -1,6 +1,6 @@
 package com.au.module_okhttp.creator
 
-import com.au.module_android.json.fromJson
+import com.au.module_gson.fromJson
 import com.au.module_android.utils.awaitOnIoThread
 import com.au.module_okhttp.OkhttpGlobal.okHttpClient
 import com.au.module_okhttp.beans.ParamsStrRequestBody

@@ -10,9 +10,9 @@ import com.allan.androidlearning.databinding.DialogDemoBinding
 import com.allan.androidlearning.databinding.FakeDialogTestBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.views.ViewFragment
+import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_android.utils.dp
-import com.au.module_android.widget.FlowLayout
+import com.au.module_androidui.widget.FlowLayout
 import com.au.module_androidui.dialogs.AbsCenterFakeDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastUtil.toastOnTop

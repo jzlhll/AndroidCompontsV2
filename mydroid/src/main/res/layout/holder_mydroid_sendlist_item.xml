@@ -30,7 +30,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/fileNameTv"
             style="@style/StyleAuTextNormal"
             android:textStyle="bold"
@@ -47,7 +47,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content" />
 
-        <com.au.module_android.widget.BgBuildCustomFontText
+        <com.au.module_androidui.widget.BgBuildCustomFontText
             android:id="@+id/deleteBtn"
             style="@style/StyleAuTextSmallDesc"
             app:cornerRadius="4dp"
@@ -64,7 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/fileSizeAndMD5Tv"
             android:layout_marginStart="10dp"
             style="@style/StyleAuTextThinDesc"

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.au.module_android.widget.BgBuildConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.au.module_androidui.widget.BgBuildConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,7 +8,7 @@
     app:backgroundNormal="@color/color_edit_background"
     android:layout_height="wrap_content">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/timeTv"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/leftTv"
         android:layout_marginStart="8dp"
         app:layout_constraintStart_toEndOf="@id/timeTv"
@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/descTv"
         android:layout_width="wrap_content"
         android:layout_height="26dp"
@@ -51,4 +51,4 @@
         android:layout_width="62dp"
         android:layout_height="33dp"/>
 
-</com.au.module_android.widget.BgBuildConstraintLayout>
+</com.au.module_androidui.widget.BgBuildConstraintLayout>

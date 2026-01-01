@@ -15,9 +15,9 @@ import android.widget.Toast
 import com.au.audiorecordplayer.databinding.FragmentCamera1TextureviewBinding
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.Globals
-import com.au.module_android.permissions.createMultiPermissionForResult
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_simplepermission.createMultiPermissionForResult
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -42,12 +42,12 @@ class Camera1TextureViewFragment : BindingFragment<FragmentCamera1TextureviewBin
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        permissionHelper.safeRun({
-            initCamera()
-        },
+        permissionHelper.safeRun(
             {
                 MainUIManager.get().toastSnackbar(binding.root, "请授予相机和录音权限")
-            })
+            }){
+            initCamera()
+        }
     }
 
     private fun initCamera() {

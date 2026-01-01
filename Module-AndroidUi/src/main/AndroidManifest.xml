@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
+        <activity
+            android:name="com.au.module_androidui.ui.FragmentNavigationActivity"
+            android:configChanges="screenSize|keyboard|orientation|keyboardHidden|fontScale|locale|screenLayout|navigation|uiMode"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.au.module_androidui.ui.FragmentShellActivity"
+            android:configChanges="screenSize|keyboard|orientation|keyboardHidden|fontScale|locale|screenLayout|navigation|uiMode"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.au.module_androidui.ui.FragmentShellTranslucentActivity"
+            android:configChanges="screenSize|keyboard|orientation|keyboardHidden|fontScale|locale|screenLayout|navigation|uiMode"
+            android:exported="false"
+            android:theme="@style/TranslucentActivityTheme"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.au.module_androidui.ui.FragmentShellOrientationActivity"
+            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|locale|screenLayout|navigation|uiMode"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize|stateHidden"/>
     </application>
 </manifest>

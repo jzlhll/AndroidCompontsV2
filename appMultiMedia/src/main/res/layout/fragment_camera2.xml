@@ -24,7 +24,7 @@
         android:layout_width="33dp"
         android:layout_height="33dp"/>
 
-    <com.au.module_android.widget.ExpandableLayout
+    <com.au.module_androidui.widget.ExpandableLayout
         android:id="@+id/expandSettings"
         app:el_duration="200"
         app:el_expanded="false"
@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.au.module_android.widget.BgBuildLinearLayout
+        <com.au.module_androidui.widget.BgBuildLinearLayout
             app:backgroundNormal="#8f333333"
             android:orientation="vertical"
             android:padding="8dp"
@@ -44,14 +44,14 @@
             android:layout_height="wrap_content">
 
 
-            <com.au.module_android.widget.BgBuildLinearLayout
+            <com.au.module_androidui.widget.BgBuildLinearLayout
                 android:orientation="horizontal"
                 app:backgroundNormal="#8f333333"
                 android:padding="4dp"
                 app:cornerRadius="8dp"
                 android:layout_width="match_parent"
                 android:layout_height="42dp">
-                <com.au.module_android.widget.BgBuildCustomFontText
+                <com.au.module_androidui.widget.BgBuildCustomFontText
                     android:id="@+id/previewViewSurface"
                     style="@style/StyleAuTextThinDp"
                     android:text="Surface"
@@ -62,7 +62,7 @@
                     android:layout_weight="1"
                     android:layout_marginHorizontal="4dp"
                     android:layout_height="match_parent" />
-                <com.au.module_android.widget.BgBuildCustomFontText
+                <com.au.module_androidui.widget.BgBuildCustomFontText
                     android:id="@+id/previewViewTexture"
                     style="@style/StyleAuTextThinDp"
                     android:paddingHorizontal="6dp"
@@ -73,7 +73,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent" />
-                <com.au.module_android.widget.BgBuildCustomFontText
+                <com.au.module_androidui.widget.BgBuildCustomFontText
                     android:id="@+id/previewViewGL"
                     style="@style/StyleAuTextThinDp"
                     android:paddingHorizontal="6dp"
@@ -84,9 +84,9 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent" />
-            </com.au.module_android.widget.BgBuildLinearLayout>
+            </com.au.module_androidui.widget.BgBuildLinearLayout>
 
-            <com.au.module_android.widget.BgBuildLinearLayout
+            <com.au.module_androidui.widget.BgBuildLinearLayout
                 android:orientation="vertical"
                 app:backgroundNormal="#8f333333"
                 android:padding="4dp"
@@ -99,7 +99,7 @@
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <com.au.module_android.widget.BgBuildCustomFontText
+                    <com.au.module_androidui.widget.BgBuildCustomFontText
                         android:id="@+id/shaderOriginal"
                         style="@style/StyleAuTextThinDp"
                         android:text="无滤镜"
@@ -110,7 +110,7 @@
                         android:layout_weight="1"
                         android:layout_marginHorizontal="4dp"
                         android:layout_height="match_parent" />
-                    <com.au.module_android.widget.BgBuildCustomFontText
+                    <com.au.module_androidui.widget.BgBuildCustomFontText
                         android:id="@+id/shaderGray"
                         style="@style/StyleAuTextThinDp"
                         android:paddingHorizontal="6dp"
@@ -121,7 +121,7 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent" />
-                    <com.au.module_android.widget.BgBuildCustomFontText
+                    <com.au.module_androidui.widget.BgBuildCustomFontText
                         android:id="@+id/shaderInvert"
                         style="@style/StyleAuTextThinDp"
                         android:paddingHorizontal="6dp"
@@ -132,7 +132,7 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent" />
-                    <com.au.module_android.widget.BgBuildCustomFontText
+                    <com.au.module_androidui.widget.BgBuildCustomFontText
                         android:id="@+id/shaderSepia"
                         style="@style/StyleAuTextThinDp"
                         android:paddingHorizontal="6dp"
@@ -150,7 +150,7 @@
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-                    <com.au.module_android.widget.BgBuildCustomFontText
+                    <com.au.module_androidui.widget.BgBuildCustomFontText
                         android:id="@+id/shaderGaussian"
                         style="@style/StyleAuTextThinDp"
                         android:text="模糊"
@@ -161,7 +161,7 @@
                         android:layout_weight="1"
                         android:layout_marginHorizontal="4dp"
                         android:layout_height="match_parent" />
-                    <com.au.module_android.widget.BgBuildCustomFontText
+                    <com.au.module_androidui.widget.BgBuildCustomFontText
                         android:id="@+id/shaderSharpen"
                         style="@style/StyleAuTextThinDp"
                         android:paddingHorizontal="6dp"
@@ -172,7 +172,7 @@
                         android:layout_width="0dp"
                         android:layout_weight="1"
                         android:layout_height="match_parent" />
-                    <com.au.module_android.widget.BgBuildCustomFontText
+                    <com.au.module_androidui.widget.BgBuildCustomFontText
                         android:id="@+id/shaderBrightness"
                         style="@style/StyleAuTextThinDp"
                         android:paddingHorizontal="6dp"
@@ -185,14 +185,14 @@
                         android:layout_height="match_parent" />
                 </LinearLayout>
 
-            </com.au.module_android.widget.BgBuildLinearLayout>
+            </com.au.module_androidui.widget.BgBuildLinearLayout>
 
 
-        </com.au.module_android.widget.BgBuildLinearLayout>
+        </com.au.module_androidui.widget.BgBuildLinearLayout>
 
-    </com.au.module_android.widget.ExpandableLayout>
+    </com.au.module_androidui.widget.ExpandableLayout>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/timeTv"
         style="@style/StyleAuTextNormal"
         android:textColor="#ff0000"
@@ -244,7 +244,7 @@
         android:layout_marginBottom="@dimen/btn_margin_bottom"
         android:elevation="2dp" />
 
-    <com.au.module_android.widget.BgBuildCustomFontText
+    <com.au.module_androidui.widget.BgBuildCustomFontText
         android:id="@+id/toastInfo"
         style="@style/StyleAuTextNormal"
         app:backgroundNormal="#55f0f0f0"

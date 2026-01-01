@@ -12,7 +12,7 @@
             android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="80dp">
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/name"
                     android:layout_width="88dp"
                     android:text="JTJ"
@@ -26,7 +26,7 @@
                     android:src="@drawable/ic_star"
                     android:layout_height="20dp"/>
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/starCount"
                     android:layout_width="42dp"
                     tools:text="10"
@@ -40,7 +40,7 @@
                     android:layout_marginStart="18dp"
                     android:src="@drawable/ic_b_good"/>
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/dingCount"
                     android:layout_marginStart="8dp"
                     android:layout_width="42dp"

@@ -90,7 +90,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/selectedImageButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

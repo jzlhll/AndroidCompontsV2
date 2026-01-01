@@ -1,0 +1,24 @@
+package com.au.module_androidui.ui.bindings
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.viewbinding.ViewBinding
+import com.au.module_androidui.ui.createViewBinding
+import com.au.module_androidui.ui.views.ViewToolbarActivity
+
+/**
+ * @author Allan
+ * Date: 2023/7/4
+ * Description 指导基础类模板
+ */
+abstract class BindingActivity<VB: ViewBinding> : ViewToolbarActivity() {
+    lateinit var binding:VB private set
+
+    final override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val vb = createViewBinding(javaClass, inflater, container, false) as VB
+        binding = vb
+        return vb.root
+    }
+}

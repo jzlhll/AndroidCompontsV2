@@ -73,7 +73,12 @@ dependencies {
     //my apt
     implementation project(':ClassNameAnnotations')
     implementation project(':Module-AndroidLogSystem')
+    implementation project(':Module-AuSimplePermission')
     ksp project(':ClassNameAnnotations-ksp')
+    implementation project(':Module-AuKson')
+    implementation project(':Module-AuGsonMMKV')
+
+    implementation libs.kotlinx.serialization.json
 
 //    kapt project(':ClassNameAnnotations-compiler')
 }

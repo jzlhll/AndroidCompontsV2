@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent">
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonMainColor"
         android:layout_marginStart="@dimen/ui_padding_edge"
         android:paddingVertical="8dp"
@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:text="刷新"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonMainColor"
         android:paddingVertical="8dp"
         android:paddingHorizontal="12dp"
@@ -31,7 +31,7 @@
         app:layout_constraintEnd_toStartOf="@id/selectBtn"
         android:text="压缩分享"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonMainColor"
         android:paddingVertical="8dp"
         android:paddingHorizontal="12dp"
@@ -80,7 +80,7 @@
         android:background="#30000000"
         android:layout_height="match_parent"/>
 
-    <com.au.module_android.widget.BgBuildConstraintLayout
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
         android:id="@+id/uploadHost"
         android:layout_width="match_parent"
         app:layout_constraintTop_toTopOf="@id/rcv"
@@ -90,7 +90,7 @@
         app:backgroundNormal="#ffffff"
         app:cornerRadius="16dp"
         android:layout_height="0dp">
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/uploadTitleTv"
             style="@style/StyleAuBTextHeadline"
             android:layout_marginTop="12dp"
@@ -101,7 +101,7 @@
             android:layout_height="wrap_content"
             android:text="压缩中, 尽量不要关闭"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             style="@style/StyleAuBTextTitle1"
             android:textSize="42dp"
             android:paddingHorizontal="24dp"
@@ -115,7 +115,7 @@
             android:text="0%"
             android:layout_height="wrap_content" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             style="@style/StyleAuTextNormal"
             android:id="@+id/progressText"
             android:layout_marginTop="12dp"
@@ -128,7 +128,7 @@
             android:layout_height="wrap_content"
             tools:text="infos...fdafdfdsdfafjkadjf32128393rjkadfjkd812398jkfdaf89123jkfd89123jkd89fjkf\ndfjd"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonSecondary"
             android:id="@+id/uploadCloseBtn"
             android:layout_width="220dp"
@@ -138,7 +138,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="24dp"
             android:text="关闭"/>
-    </com.au.module_android.widget.BgBuildConstraintLayout>
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/uploadGroup"

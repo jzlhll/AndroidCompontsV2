@@ -9,10 +9,10 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.allan.androidlearning.databinding.ActivityDrawerLayoutBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
-import com.au.module_android.widget.CustomFontText
+import com.au.module_androidui.widget.CustomFontText
 import com.google.android.material.navigation.NavigationView
 
 @EntryFrgName()

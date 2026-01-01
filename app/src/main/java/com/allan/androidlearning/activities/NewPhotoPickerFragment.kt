@@ -9,18 +9,19 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.permissions.selectSysDirForResult
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
 import com.au.module_imagecompressed.PickUriWrap
-import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
 import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
 import com.au.module_imagecompressed.compatMultiUriPickerForResult
 import com.au.module_imagecompressed.photoPickerForResult
 import com.au.module_imagecompressed.uriPickerForResult
+import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.PickerType
+import com.au.module_simplepermission.selectSysDirForResult
 import java.io.File
 
 @EntryFrgName
@@ -34,13 +35,13 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     val selectDirResult = selectSysDirForResult()
 
-    val cameraHelper = CameraPermissionHelp(this, object : CameraPermissionHelp.Supplier {
+    val cameraHelper = CameraPermissionHelp(this, object : BaseCameraPermissionHelp.Supplier {
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }
     })
 
-    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this, supplier = object : CameraPermissionHelp.Supplier {
+    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this, supplier = object : BaseCameraPermissionHelp.Supplier {
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }

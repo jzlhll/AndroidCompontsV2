@@ -1,5 +1,6 @@
 package com.au.audiorecordplayer
 
+import android.Manifest
 import android.media.AudioFormat
 import android.os.Bundle
 import android.view.View
@@ -9,18 +10,18 @@ import androidx.lifecycle.lifecycleScope
 import com.au.audiorecordplayer.databinding.AudioRecordsBinding
 import com.au.audiorecordplayer.recorder.IRecord
 import com.au.audiorecordplayer.recorder.ISimpleRecord
-import com.au.audiorecordplayer.recorder.a2AudioRecord.ResumeWavAudioRecord3_1
 import com.au.audiorecordplayer.recorder.a1mediaRecord.MediaRecordAudio
-import com.au.audiorecordplayer.util.CacheFileGenerator
+import com.au.audiorecordplayer.recorder.a2AudioRecord.ResumeWavAudioRecord3_1
 import com.au.audiorecordplayer.recorder.a2AudioRecord.SimplePCMAudioRecord
 import com.au.audiorecordplayer.recorder.a2AudioRecord.SimpleWavAudioRecord
 import com.au.audiorecordplayer.recorder.a2AudioRecord.SimpleWavAudioRecord2_0
+import com.au.audiorecordplayer.util.CacheFileGenerator
 import com.au.audiorecordplayer.util.FileUtil
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.createPermissionForResult
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
+import com.au.module_simplepermission.createPermissionForResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -32,7 +33,7 @@ class AudioRecorderTestFragment : BindingFragment<AudioRecordsBinding>() {
         return YourToolbarInfo.Defaults("Audio Recorders")
     }
 
-    val permissionHelper = createPermissionForResult(android.Manifest.permission.RECORD_AUDIO)
+    val permissionHelper = createPermissionForResult(Manifest.permission.RECORD_AUDIO)
 
     private val decorView : View
         get() = requireActivity().window.decorView

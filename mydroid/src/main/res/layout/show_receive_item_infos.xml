@@ -4,20 +4,20 @@
     android:paddingHorizontal="20dp"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/text1"
         android:gravity="center_vertical"
         style="@style/StyleAuTextNormal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:layout_marginTop="12dp"
         android:id="@+id/text2"
         android:gravity="center_vertical"
         style="@style/StyleAuTextNormal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:layout_marginTop="12dp"
         android:id="@+id/text3"
         style="@style/StyleAuTextNormal"

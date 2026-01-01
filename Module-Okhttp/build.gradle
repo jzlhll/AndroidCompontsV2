@@ -36,4 +36,5 @@ dependencies {
     implementation libs.androidx.appcompat
     ksp libs.glideKsp
     implementation project(':Module-AndroidCommon')
+    implementation project(':Module-AuGsonMMKV')
 }

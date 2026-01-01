@@ -28,7 +28,7 @@
                 android:layout_height="36dp"/>
         </androidx.cardview.widget.CardView>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/mineScholl"
             app:layout_constraintStart_toEndOf="@id/mineHeadImageHost"
             app:layout_constraintTop_toTopOf="@id/mineHeadImageHost"
@@ -59,7 +59,7 @@
             android:src="@drawable/ic_checkpoint"
             android:layout_height="36dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/mineWeeklyText"
             app:layout_constraintStart_toEndOf="@id/mineCheckPointImage"
             app:layout_constraintTop_toTopOf="@id/mineCheckPointImage"
@@ -81,7 +81,7 @@
             android:src="@drawable/ic_star"
             android:layout_height="30dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/mineStarText"
             app:layout_constraintStart_toEndOf="@id/mineStarImage"
             app:layout_constraintTop_toTopOf="@id/mineStarImage"
@@ -102,7 +102,7 @@
             android:src="@drawable/ic_b_good"
             android:layout_height="26dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/mineDingCount"
             app:layout_constraintStart_toEndOf="@id/mineDingImage"
             app:layout_constraintTop_toTopOf="@id/mineDingImage"

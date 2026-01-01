@@ -11,9 +11,9 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.views.ViewFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.databinding.LeftIconAndTextBinding
+import com.au.module_androidui.ui.views.ViewFragment
 
 /**
  * 左边文字，右边勾勾，点击一项立刻dismiss的对话框基类

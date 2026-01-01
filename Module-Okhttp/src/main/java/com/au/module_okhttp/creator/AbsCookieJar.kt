@@ -1,8 +1,8 @@
 package com.au.module_okhttp.creator
 
 import androidx.annotation.Keep
-import com.au.module_android.json.fromJson
-import com.au.module_android.json.toJsonString
+import com.au.module_gson.fromJson
+import com.au.module_gson.toJsonString
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl

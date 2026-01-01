@@ -6,7 +6,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="wrap_content">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/titleTv"
         app:layout_constraintTop_toTopOf="parent"
         android:textSize="20sp"
@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="142dp">
 
-        <com.au.module_android.widget.BgBuildView
+        <com.au.module_androidui.widget.BgBuildView
             app:backgroundNormal="@color/color_line"
             app:cornerRadius="4dp"
             android:layout_marginTop="3dp"
@@ -46,7 +46,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent">
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/hourUnit"
                     style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
@@ -59,7 +59,7 @@
                     android:gravity="center_vertical"
                     android:text="时"/>
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/minuteUnit"
                     style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
@@ -72,7 +72,7 @@
                     android:layout_height="match_parent"
                     android:text="分"/>
 
-                <com.au.module_android.widget.ViewStubPro
+                <com.au.module_androidui.widget.ViewStubPro
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/pickerSpace"
                     android:paddingHorizontal="19dp"
@@ -91,7 +91,7 @@
                     android:layout_width="2dp"
                     android:layout_height="match_parent"/>
 
-                <com.au.module_android.widget.ViewStubPro
+                <com.au.module_androidui.widget.ViewStubPro
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toEndOf="@id/pickerSpace"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -119,7 +119,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -139,7 +139,7 @@
         android:layout_marginTop="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/plusOffsetBtn"
             style="@style/StyleButtonPrimary"
             android:includeFontPadding="false"
@@ -152,7 +152,7 @@
             android:layout_width="33dp"
             android:layout_height="33dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/plusOffsetText"
             app:layout_constraintStart_toEndOf="@id/plusOffsetBtn"
             android:paddingHorizontal="15dp"
@@ -163,7 +163,7 @@
             android:layout_width="60dp"
             android:layout_height="36dp" />
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/minusOffsetBtn"
             style="@style/StyleButtonPrimary"
             android:includeFontPadding="false"
@@ -204,7 +204,7 @@
         android:layout_marginTop="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/plusADayBtn"
             style="@style/StyleButtonPrimary"
             android:includeFontPadding="false"
@@ -217,7 +217,7 @@
             android:layout_width="33dp"
             android:layout_height="33dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/plusDayText"
             app:layout_constraintStart_toEndOf="@id/plusADayBtn"
             android:paddingHorizontal="15dp"
@@ -228,7 +228,7 @@
             android:layout_width="60dp"
             android:layout_height="36dp" />
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/minusADayBtn"
             style="@style/StyleButtonPrimary"
             android:includeFontPadding="false"
@@ -250,7 +250,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/cancelBtn"
         android:id="@+id/addBtn"
@@ -265,7 +265,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/addBtn"
         android:id="@+id/cancelBtn"

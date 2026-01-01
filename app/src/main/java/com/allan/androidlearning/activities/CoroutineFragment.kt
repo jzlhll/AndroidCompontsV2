@@ -6,25 +6,16 @@ import android.view.View
 import androidx.lifecycle.lifecycleScope
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_android.selectlist.SelectListFragment
-import com.au.module_android.selectlist.SelectListItem
-import com.au.module_android.utils.ALogJ
+import com.au.module_androidui.selectlist.SelectListFragment
+import com.au.module_androidui.selectlist.SelectListItem
+import com.au.module_android.log.ALogJ
 import com.au.module_android.utils.dp
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
-import com.au.module_android.utils.logt
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
 
 /**
  * @author allan

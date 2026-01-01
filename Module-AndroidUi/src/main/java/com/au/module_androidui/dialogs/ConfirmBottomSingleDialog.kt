@@ -3,10 +3,9 @@ package com.au.module_androidui.dialogs
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.FragmentManager
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.base.DialogMode
-import com.au.module_android.ui.bindings.BindingDialog
-import com.au.module_androidui.databinding.ConfirmBottomDialogBinding
 import com.au.module_androidui.databinding.ConfirmBottomDialogSingleBinding
+import com.au.module_androidui.ui.base.DialogMode
+import com.au.module_androidui.ui.bindings.BindingDialog
 
 open class ConfirmBottomSingleDialog : BindingDialog<ConfirmBottomDialogSingleBinding>(mode = DialogMode.Bottom) {
     companion object {

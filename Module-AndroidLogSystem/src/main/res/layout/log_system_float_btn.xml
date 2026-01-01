@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.au.module_android.widget.BgBuildCustomFontText
+    <com.au.module_androidui.widget.BgBuildCustomFontText
         android:paddingHorizontal="8dp"
         android:paddingVertical="4dp"
         app:backgroundNormal="#66CAE1E8"

@@ -2,9 +2,9 @@ package com.au.jobstudy.api
 
 import com.au.jobstudy.api.bean.JobBean
 import com.au.module_android.Globals
-import com.au.module_android.json.fromJson
+import com.au.module_gson.fromJson
 import com.au.module_android.utils.awaitOnIoThread
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import com.au.module_okhttp.OkhttpGlobal
 import com.au.module_okhttp.creator.downloadFile
 import java.io.File

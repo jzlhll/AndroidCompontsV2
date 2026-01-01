@@ -14,7 +14,7 @@
         android:layout_marginBottom="32dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <com.au.module_android.widget.CustomEditText
+        <com.au.module_androidui.widget.CustomEditText
             android:paddingHorizontal="8dp"
             android:id="@+id/nativeEdit"
             style="@style/StyleBlankEditText"
@@ -26,7 +26,7 @@
             android:layout_marginTop="12dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:id="@+id/nativeTtsButton"
                 android:enabled="false"
                 style="@style/StyleButtonPrimary"
@@ -36,7 +36,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="48dp"/>
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:id="@+id/edgeTtsButton"
                 android:enabled="false"
                 style="@style/StyleButtonPrimary"
@@ -50,7 +50,7 @@
 
     </LinearLayout>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/asrText"
         android:layout_below="@id/ttsHost"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"
@@ -68,7 +68,7 @@
         android:layout_marginHorizontal="@dimen/ui_padding_edge"
         android:layout_width="match_parent"
         android:layout_height="50dp">
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/stopAsrBtn"
             style="@style/StyleButtonWarn"
             android:text="stop native Vosk ASR..."
@@ -76,7 +76,7 @@
             android:layout_marginBottom="0dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/asrButton"
             style="@style/StyleButtonPrimary"
             android:text="native Vosk ASR"

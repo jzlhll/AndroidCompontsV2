@@ -2,8 +2,8 @@ package com.au.module_androidui.dialogs
 
 import androidx.fragment.app.FragmentManager
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.bindings.BindingDialog
 import com.au.module_androidui.databinding.ConfirmCenterDialogBinding
+import com.au.module_androidui.ui.bindings.BindingDialog
 
 open class ConfirmCenterDialog : BindingDialog<ConfirmCenterDialogBinding>() {
     companion object {

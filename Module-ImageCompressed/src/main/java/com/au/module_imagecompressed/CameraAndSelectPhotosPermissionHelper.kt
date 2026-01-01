@@ -1,6 +1,8 @@
 package com.au.module_imagecompressed
 
 import androidx.fragment.app.Fragment
+import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.PickerType
 
 /**
  * 为了webView的拍照，选择图片，当TakePhotoActionDialog不论是否经历过选择，拍照，或者权限失败等原因，
@@ -8,7 +10,7 @@ import androidx.fragment.app.Fragment
  */
 class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
                                             var pickerType : PickerType = PickerType.IMAGE,
-                                            supplier: CameraPermissionHelp.Supplier) {
+                                            supplier: BaseCameraPermissionHelp.Supplier) {
 
     var takePhotoCallback: TakePhotoActionDialog.ITakePhotoActionDialogCallback? = null
 

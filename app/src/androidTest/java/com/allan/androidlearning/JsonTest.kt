@@ -2,10 +2,10 @@ package com.allan.androidlearning
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.au.module_android.json.fromJson
-import com.au.module_android.json.fromJsonList
-import com.au.module_android.json.toJsonString
-import com.au.module_android.utils.logd
+import com.au.module_gson.fromJson
+import com.au.module_gson.fromJsonList
+import com.au.module_gson.toJsonString
+import com.au.module_android.log.logd
 
 import org.junit.Test
 import org.junit.runner.RunWith

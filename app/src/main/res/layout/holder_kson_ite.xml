@@ -5,7 +5,7 @@
     android:paddingVertical="8dp"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
-    <com.au.module_android.widget.BgBuildCustomFontText
+    <com.au.module_androidui.widget.BgBuildCustomFontText
         android:id="@+id/text"
         app:backgroundNormal="#eeeeee"
         android:paddingHorizontal="8dp"

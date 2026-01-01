@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="4dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,7 +35,7 @@
         app:layout_constraintEnd_toEndOf="@id/endGuide"
         android:layout_width="0dp"
         android:layout_height="0dp">
-        <com.au.module_android.widget.BgBuildLinearLayout
+        <com.au.module_androidui.widget.BgBuildLinearLayout
             android:id="@+id/logicBtnsHost"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -43,7 +43,7 @@
             app:backgroundNormal="@color/color_normal_block"
             app:cornerRadius="24dp">
 
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:elevation="4dp"
                 android:id="@+id/receiveFileLogicBtn"
                 android:layout_width="match_parent"
@@ -57,7 +57,7 @@
                 app:backgroundNormal="@color/logic_receiver"
                 app:cornerRadius="16dp" />
 
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:elevation="4dp"
                 android:id="@+id/sendFileLogicBtn"
                 android:layout_width="match_parent"
@@ -71,7 +71,7 @@
                 app:backgroundNormal="@color/logic_send"
                 app:cornerRadius="16dp" />
 
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:elevation="4dp"
                 android:id="@+id/middleLogicBtn"
                 android:layout_width="match_parent"
@@ -85,7 +85,7 @@
                 app:backgroundNormal="@color/logic_middle"
                 app:cornerRadius="16dp" />
 
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:elevation="4dp"
                 android:id="@+id/seeImageBtn"
                 android:layout_width="match_parent"
@@ -99,7 +99,7 @@
                 app:backgroundNormal="@color/logic_watch_picture"
                 app:cornerRadius="16dp" />
 
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:elevation="4dp"
                 android:id="@+id/seeVideoBtn"
                 android:layout_width="match_parent"
@@ -113,7 +113,7 @@
                 app:backgroundNormal="@color/logic_watch_video"
                 app:cornerRadius="16dp" />
 
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:elevation="4dp"
                 android:id="@+id/textChatBtn"
                 android:layout_width="match_parent"
@@ -130,6 +130,6 @@
             <Space
                 android:layout_width="wrap_content"
                 android:layout_height="21dp"/>
-        </com.au.module_android.widget.BgBuildLinearLayout>
+        </com.au.module_androidui.widget.BgBuildLinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

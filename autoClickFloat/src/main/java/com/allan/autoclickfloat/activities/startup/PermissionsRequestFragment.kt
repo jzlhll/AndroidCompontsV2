@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.allan.autoclickfloat.AllPermissionActivity
 import com.allan.autoclickfloat.databinding.PermissionsFragmentBinding
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.gotoFloatWindowPermission
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_simplepermission.gotoFloatWindowPermission
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.visible
 

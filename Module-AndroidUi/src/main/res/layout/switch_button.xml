@@ -9,7 +9,7 @@
     android:background="@drawable/switch_btn_closed"
     android:padding="@dimen/switch_button_padding">
 
-    <com.au.module_android.widget.BgBuildView
+    <com.au.module_androidui.widget.BgBuildView
         app:layout_constraintTop_toTopOf="parent"
         android:id="@+id/select_bg_view"
         android:layout_gravity="center_vertical"

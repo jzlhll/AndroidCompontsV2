@@ -6,8 +6,8 @@ import com.allan.androidlearning.crashtest.debugEntryActivityCreateCrash
 import com.allan.androidlearning.crashtest.debugEntryActivityPostMainThreadCrash
 import com.au.module_android.crash.UncaughtExceptionHandlerObj
 import com.au.module_android.init.AbsSplashActivity
-import com.au.module_android.utils.logdNoFile
-import com.au.module_android.utils.startActivityFix
+import com.au.module_android.log.logdNoFile
+import com.au.module_androidui.ui.startActivityFix
 
 /**
  * @author allan

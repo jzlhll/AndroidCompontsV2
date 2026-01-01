@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:text="MediaRecord" />
 
-        <com.au.module_android.widget.FlowLayout
+        <com.au.module_androidui.widget.FlowLayout
             app:flChildSpacing="8dp"
             android:layout_marginTop="8dp"
             android:layout_width="match_parent"
@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="恢复" />
-        </com.au.module_android.widget.FlowLayout>
+        </com.au.module_androidui.widget.FlowLayout>
 
         <TextView
             android:layout_marginTop="28dp"
@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"
             android:text="SimplePCMAudioRecord 录制PCM" />
 
-        <com.au.module_android.widget.FlowLayout
+        <com.au.module_androidui.widget.FlowLayout
             android:layout_marginTop="8dp"
             app:flChildSpacing="8dp"
             android:layout_width="match_parent"
@@ -72,7 +72,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="停止" />
-        </com.au.module_android.widget.FlowLayout>
+        </com.au.module_androidui.widget.FlowLayout>
 
         <TextView
             android:layout_marginTop="28dp"
@@ -80,7 +80,7 @@
             android:layout_height="wrap_content"
             android:text="SimpleWavAudioRecord 录制PCM并转wav" />
 
-        <com.au.module_android.widget.FlowLayout
+        <com.au.module_androidui.widget.FlowLayout
             android:layout_marginTop="8dp"
             app:flChildSpacing="8dp"
             android:layout_width="match_parent"
@@ -98,7 +98,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="停止" />
-        </com.au.module_android.widget.FlowLayout>
+        </com.au.module_androidui.widget.FlowLayout>
 
         <TextView
             android:layout_marginTop="28dp"
@@ -173,7 +173,7 @@
             android:layout_marginTop="24dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-            <com.au.module_android.widget.BgBuildCustomFontText
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/fileObBtn"
                 style="@style/StyleAuTextNormal"
                 app:backgroundNormal="@color/color_edit_background"
@@ -183,7 +183,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <com.au.module_android.widget.BgBuildCustomFontText
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/deleteAllBtn"
                 style="@style/StyleAuTextNormal"
                 app:backgroundNormal="@color/color_edit_background"
@@ -195,7 +195,7 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/fileObTextView"
             style="@style/StyleAuTextNormal"
             android:layout_marginTop="4dp"

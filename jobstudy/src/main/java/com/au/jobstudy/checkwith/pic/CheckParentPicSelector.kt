@@ -11,7 +11,7 @@ import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.permissions.systemTakePictureForResult
+import com.au.module_simplepermission.systemTakePictureForResult
 import com.au.module_android.utils.invisible
 import com.au.module_android.utils.visible
 import com.au.module_nested.recyclerview.BindRcvAdapter

@@ -7,7 +7,7 @@ import com.allan.autoclickfloat.database.AppDatabase
 import com.allan.autoclickfloat.database.Project
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logt
 
 class RecordProjectsAllViewModel : ViewModel() {
     val allProjectsData = NoStickLiveData<List<Project>>()

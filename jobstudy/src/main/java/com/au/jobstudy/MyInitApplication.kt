@@ -26,11 +26,11 @@ import com.au.jobstudy.words.ui.LoadingTest
 import com.au.jobstudy.words.ui.LoadingViewModel
 import com.au.jobstudy.words.usecase.LoadingUseCase
 import com.au.module_android.Globals
-import com.au.module_android.InitApplication
+import com.au.module_androidui.InitApplication
 import com.au.module_android.init.GlobalBackgroundCallback
-import com.au.module_android.ui.base.AbsFragment
+import com.au.module_androidui.ui.base.AbsFragment
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import com.au.module_cached.AppDataStore
 import com.au.module_okhttp.OkhttpGlobal
 import com.au.module_okhttp.beans.OkhttpInitParams

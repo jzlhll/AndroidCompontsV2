@@ -9,10 +9,10 @@ import android.widget.FrameLayout
 import com.allan.classnameanno.EntryFrgName
 import com.au.logsystem.LogSystemFragment
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.views.ViewFragment
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_android.utils.dp
-import com.au.module_android.widget.CustomButton
+import com.au.module_androidui.widget.CustomButton
 
 @EntryFrgName
 class LogSystemFragment : ViewFragment() {

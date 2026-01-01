@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/weekBtn"
         android:text="查看周任务"
         android:textSize="22sp"
@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/dayButton"
         android:text="查看每日任务"
         android:textSize="22sp"

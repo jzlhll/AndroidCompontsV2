@@ -18,7 +18,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/title"
         style="@style/StyleAuTextNormal"
         android:textStyle="bold"
@@ -31,7 +31,7 @@
         app:layout_constraintTop_toTopOf="@id/backBtn"
         app:layout_constraintBottom_toBottomOf="@id/backBtn"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/desc"
         style="@style/StyleAuBTextHeadline"
         android:layout_width="wrap_content"
@@ -42,7 +42,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         app:layout_constraintTop_toTopOf="@id/desc"
         style="@style/StyleAuBTextHeadline"
         android:id="@+id/saveText"
@@ -51,7 +51,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonSecondary"
         android:id="@+id/showFloatViewBtn"
         android:layout_width="0dp"
@@ -63,7 +63,7 @@
         app:layout_constraintEnd_toStartOf="@id/closeFloatViewBtn"
         app:layout_constraintTop_toBottomOf="@id/saveText" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonSecondary"
         android:id="@+id/closeFloatViewBtn"
         android:layout_width="0dp"
@@ -74,7 +74,7 @@
         app:layout_constraintEnd_toEndOf="@id/desc"
         app:layout_constraintTop_toTopOf="@id/showFloatViewBtn" />
 
-    <com.au.module_android.widget.CustomEditText
+    <com.au.module_androidui.widget.CustomEditText
         style="@style/StyleEditInInputLayout"
         android:id="@+id/inputMs"
         android:inputType="number"
@@ -87,7 +87,7 @@
         app:layout_constraintEnd_toStartOf="@id/msText"
         android:layout_height="54dp"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         style="@style/StyleAuTextNormalDesc"
         android:id="@+id/msText"
         app:layout_constraintTop_toTopOf="@id/inputMs"
@@ -97,7 +97,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonPrimary"
         android:id="@+id/startAutoClickBtn"
         android:layout_width="0dp"
@@ -108,7 +108,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonWarn"
         android:layout_marginStart="0dp"
         android:layout_marginEnd="0dp"

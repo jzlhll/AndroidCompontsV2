@@ -19,7 +19,7 @@
         android:layout_height="0dp"
         />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/button"
         style="@style/StyleButtonPrimary"
         android:text="select photo &amp; crop"

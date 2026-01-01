@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".activities.autooneclick.AutoContinuousClickActivityFragment">
 
-    <com.au.module_android.widget.BgBuildLinearLayout
+    <com.au.module_androidui.widget.BgBuildLinearLayout
         android:orientation="vertical"
         app:backgroundNormal="@color/color_normal_block"
         app:cornerRadius="8dp"
@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:paddingVertical="32dp"
         android:layout_height="match_parent">
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonPrimary"
             android:layout_marginBottom="0dp"
             android:id="@+id/recordModeBtn"
@@ -26,7 +26,7 @@
             android:layout_height="50dp"
             android:text="录制方案"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:layout_marginTop="24dp"
             style="@style/StyleButtonPrimary"
             android:layout_marginBottom="0dp"
@@ -37,7 +37,7 @@
             android:layout_height="50dp"
             android:text="自动点击"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonPrimary"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="0dp"
@@ -48,7 +48,7 @@
             android:layout_height="50dp"
             android:text="AutoWorkTg"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonPrimary"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="0dp"
@@ -59,7 +59,7 @@
             android:layout_height="50dp"
             android:text="auto fs work"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonPrimary"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="0dp"
@@ -70,7 +70,7 @@
             android:layout_height="50dp"
             android:text="cover screen"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonPrimary"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="0dp"
@@ -81,7 +81,7 @@
             android:layout_height="50dp"
             android:text="Debug"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonPrimary"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="0dp"
@@ -91,6 +91,6 @@
             android:layout_gravity="center_vertical"
             android:layout_height="50dp"
             android:text="logSys"/>
-    </com.au.module_android.widget.BgBuildLinearLayout>
+    </com.au.module_androidui.widget.BgBuildLinearLayout>
 
 </FrameLayout>

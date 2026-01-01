@@ -11,12 +11,12 @@ import com.au.module_android.init.InterestActivityCallbacks
 import com.au.module_android.scopes.MainAppScope
 import com.au.module_android.simpleflow.createStatusStateFlow
 import com.au.module_android.simpleflow.setSuccess
-import com.au.module_android.ui.FragmentShellActivity
+import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.loge
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logd
+import com.au.module_android.log.loge
+import com.au.module_android.log.logt
 import com.au.module_androidui.toast.ToastBuilder
 import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.flow.launchIn

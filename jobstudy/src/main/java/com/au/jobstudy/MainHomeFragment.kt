@@ -10,9 +10,9 @@ import com.au.jobstudy.utils.WeekDateUtil
 import com.au.jobstudy.utils.WeekDateUtil.currentTimeToHelloGood
 import com.au.jobstudy.words.ui.EnglishCheckFragment
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.namedLaunch
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.namedLaunch
 import com.au.module_android.utils.launchOnThread
 import org.koin.android.ext.android.inject
 

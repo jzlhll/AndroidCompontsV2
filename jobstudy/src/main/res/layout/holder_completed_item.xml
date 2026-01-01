@@ -29,7 +29,7 @@
             android:layout_width="15dp"
             android:layout_height="15dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             app:layout_constraintStart_toEndOf="@id/subjectColor"
             app:layout_constraintTop_toTopOf="@id/subjectColor"
             app:layout_constraintBottom_toBottomOf="@id/subjectColor"
@@ -43,7 +43,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/sucImage"
             app:layout_constraintTop_toBottomOf="@id/subjectText"

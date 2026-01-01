@@ -7,8 +7,8 @@ import androidx.lifecycle.lifecycleScope
 import com.allan.androidlearning.R
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.utils.logd
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_android.log.logd
 import kotlinx.coroutines.launch
 
 @EntryFrgName

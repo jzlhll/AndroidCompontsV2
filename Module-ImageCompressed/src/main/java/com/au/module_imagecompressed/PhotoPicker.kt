@@ -1,6 +1,8 @@
 package com.au.module_imagecompressed
 
 import androidx.fragment.app.Fragment
+import com.au.module_simplepermission.CompatMultiPickVisualMedia
+import com.au.module_simplepermission.MultiUriPickerContractResult
 
 /**
  * google新要求：尽量不要使用自定义的图片选择器，使用系统的。

@@ -6,7 +6,7 @@
     android:background="@color/white"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <com.au.module_android.widget.CustomToolbar
+    <com.au.module_androidui.widget.CustomToolbar
         android:id="@+id/toolBar"
         android:layout_width="match_parent"
         android:layout_height="48dp"/>
@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 style="@style/StyleAuTextNormal"
                 app:layout_constraintTop_toTopOf="parent"
                 android:includeFontPadding="false"
@@ -46,7 +46,7 @@
                 android:layout_height="0dp"
                 app:layout_constraintDimensionRatio="h,9:16" />
 
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 app:layout_constraintTop_toBottomOf="@id/videoView"
                 android:visibility="gone"
                 tools:visibility="visible"
@@ -59,7 +59,7 @@
                 android:text="remove it"
                 android:textSize="12sp" />
 
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 android:id="@+id/title2"
                 app:layout_constraintTop_toBottomOf="@id/redRemoveText"
                 style="@style/StyleAuTextThin"
@@ -78,7 +78,7 @@
                 android:layout_marginTop="4dp"
                 android:layout_height="wrap_content">
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     style="@style/StyleAuTextNormal"
                     android:id="@+id/desc2Text"
                     android:includeFontPadding="false"
@@ -117,7 +117,7 @@
         android:layout_width="match_parent"
         android:layout_height="90dp"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/btCommit"
         android:text="Next"
         style="@style/StyleButtonPrimary"

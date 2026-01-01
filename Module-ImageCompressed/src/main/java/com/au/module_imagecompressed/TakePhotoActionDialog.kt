@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.views.ViewFragment
+import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_androidui.R

@@ -6,17 +6,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.autoclickfloat.databinding.FragmentAutoStartupNewBinding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.log.logd
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.hideImeNew
-import com.au.module_android.utils.logd
 import com.au.module_android.utils.visible
 import com.au.module_androidui.dialogs.ConfirmBottomDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastUtil
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_cached.AppDataStore
 import com.au.module_nested.decoration.VertPaddingItemDecoration
 import kotlinx.coroutines.delay
@@ -44,7 +44,7 @@ class AutoStartAlarmFragment : BindingFragment<FragmentAutoStartupNewBinding>(),
             }
             ActionDialog.ActionMode.Delete -> {
                 ConfirmCenterDialog.show(childFragmentManager,
-                    "删除闹钟", "确定删除闹钟吗？", getString(com.au.module_android.R.string.ok)) {
+                    "删除闹钟", "确定删除闹钟吗？", getString(com.au.module_androidui.R.string.ok)) {
                     AutoFsObj.removeAlarmUi(Globals.app, autoFsId)
                     it.dismissAllowingStateLoss()
                 }

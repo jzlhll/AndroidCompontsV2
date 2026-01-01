@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.au.module_android.widget.BgBuildConstraintLayout
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
         android:layout_width="match_parent"
         android:minHeight="224dp"
         android:layout_height="wrap_content"
@@ -30,7 +30,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/titleTv"
             style="@style/StyleAuBTextTitle2"
             android:textColor="@color/color_text_normal"
@@ -44,7 +44,7 @@
             android:gravity="center"
             tools:text="fir" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/contentTv"
             style="@style/StyleAuTextNormalDesc"
             app:layout_constraintTop_toBottomOf="@id/titleTv"
@@ -57,7 +57,7 @@
             android:layout_marginBottom="20dp"
             tools:text="Your customiz" />
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/cancelButton"
             style="@style/StyleButtonSecondary"
             android:background="@drawable/corner_btn_secondary"
@@ -72,7 +72,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="6dp" />
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/sureButton"
             style="@style/StyleButtonPrimary"
             android:layout_marginBottom="0dp"
@@ -92,5 +92,5 @@
             app:layout_constraintTop_toBottomOf="@id/cancelButton"
             android:layout_width="0.5dp"
             android:layout_height="20dp"/>
-    </com.au.module_android.widget.BgBuildConstraintLayout>
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
 </LinearLayout>

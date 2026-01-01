@@ -4,7 +4,7 @@ import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_MSG
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.nanohttp.AbsWebSocketClientMessenger
 import com.allan.mydroid.nanohttp.WebsocketClientInServer
-import com.au.module_android.json.fromJson
+import com.au.module_gson.fromJson
 import org.json.JSONObject
 
 /**

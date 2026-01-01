@@ -1,6 +1,6 @@
 package com.au.jobstudy.words.ui
 
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import java.util.UUID
 
 class LoadingTest {

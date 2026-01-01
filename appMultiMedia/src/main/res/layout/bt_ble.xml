@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/startScan"
             style="@style/StyleButtonPrimary"
             android:text="Start Scan"
@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/stopScan"
             style="@style/StyleButtonPrimary"
             android:text="Stop Scan"
@@ -32,13 +32,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/textView"
             android:layout_marginTop="24dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/classicStartTransferBtn"
             style="@style/StyleButtonPrimary"
             android:text="client开始通信"
@@ -47,7 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/classicStartServerBtn"
             style="@style/StyleButtonPrimary"
             android:text="server准备通信"
@@ -56,7 +56,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/classicCloseTransferBtn"
             style="@style/StyleButtonPrimary"
             android:text="关闭通信"
@@ -66,12 +66,12 @@
             android:layout_height="wrap_content"/>
 
 
-        <com.au.module_android.widget.FlowLayout
+        <com.au.module_androidui.widget.FlowLayout
             app:flChildSpacing="12dp"
             android:id="@+id/bleConnectHost"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:id="@+id/bleConnectBtn"
                 style="@style/StyleButtonPrimary"
                 android:paddingHorizontal="12dp"
@@ -80,7 +80,7 @@
                 android:layout_marginBottom="0dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:id="@+id/bleDisConnectBtn"
                 style="@style/StyleButtonPrimary"
                 android:paddingHorizontal="12dp"
@@ -89,7 +89,7 @@
                 android:layout_marginBottom="0dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
-            <com.au.module_android.widget.CustomButton
+            <com.au.module_androidui.widget.CustomButton
                 android:id="@+id/bleReadBtn"
                 style="@style/StyleButtonPrimary"
                 android:paddingHorizontal="12dp"
@@ -98,6 +98,6 @@
                 android:layout_marginBottom="0dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
-        </com.au.module_android.widget.FlowLayout>
+        </com.au.module_androidui.widget.FlowLayout>
     </LinearLayout>
 </ScrollView>

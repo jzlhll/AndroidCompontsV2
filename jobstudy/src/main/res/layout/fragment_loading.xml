@@ -23,14 +23,14 @@
             android:layout_marginBottom="20dp"
             android:indeterminate="true" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/loadingText"
             style="@style/StyleAuBTextTitle2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="正在导入单词数据..."/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/progressText"
             style="@style/StyleAuTextBig"
             android:layout_width="wrap_content"

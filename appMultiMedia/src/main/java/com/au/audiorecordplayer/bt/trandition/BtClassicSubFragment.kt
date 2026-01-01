@@ -55,7 +55,10 @@ class BtClassicSubFragment : AbsSubBleTestFragment() {
             MainUIManager.get().toastSnackbar(requireActivity().window.decorView, "蓝牙未打开！")
             return
         }
-        blePermissionHelp.safeRun {
+        blePermissionHelp.safeRun(notGivePermissionBlock = {
+            MainUIManager.get().toastSnackbar(requireActivity().window.decorView, "请打开蓝牙权限！")
+        }
+        ) {
             MyLog.d("start discovery..$bluetoothAdapter")
             bluetoothAdapter?.startDiscovery()
         }
@@ -84,10 +87,10 @@ class BtClassicSubFragment : AbsSubBleTestFragment() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mReceiver.uiState.collectStatusState(
-                    success = {
+                    onSuccess = {
                         updateInfo(if(it.address != null) "${it.name} ${it.address}" else it.log)
                     },
-                    error = {}
+                    onError = {}
                 )
             }
         }

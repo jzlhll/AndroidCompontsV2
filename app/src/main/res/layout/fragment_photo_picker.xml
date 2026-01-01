@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.FlowLayout
+    <com.au.module_androidui.widget.FlowLayout
         app:flChildSpacing="8dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
@@ -33,7 +33,7 @@
             android:text="actionDialog 3个视频"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-    </com.au.module_android.widget.FlowLayout>
+    </com.au.module_androidui.widget.FlowLayout>
 
     <LinearLayout
         android:layout_marginTop="12dp"
@@ -144,7 +144,7 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <com.au.module_android.widget.FlowLayout
+    <com.au.module_androidui.widget.FlowLayout
         android:orientation="horizontal"
         android:layout_marginTop="8dp"
         app:flChildSpacing="8dp"
@@ -174,5 +174,5 @@
             android:id="@+id/pic5"
             android:layout_width="80dp"
             android:layout_height="80dp"/>
-    </com.au.module_android.widget.FlowLayout>
+    </com.au.module_androidui.widget.FlowLayout>
 </LinearLayout>

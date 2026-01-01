@@ -8,10 +8,10 @@ import com.au.jobstudy.databinding.FragmentCompletedBinding
 import com.au.jobstudy.utils.ISingleDayer
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
-import com.au.module_android.json.fromJson
-import com.au.module_android.permissions.createActivityForResult
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
+import com.au.module_gson.fromJson
+import com.au.module_simplepermission.createActivityForResult
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_android.utils.unsafeLazy
 import org.koin.android.ext.android.get
 import org.koin.androidx.viewmodel.ext.android.viewModel

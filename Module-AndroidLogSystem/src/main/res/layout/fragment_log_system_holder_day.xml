@@ -7,7 +7,7 @@
     android:orientation="horizontal"
     android:layout_height="wrap_content">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         style="@style/StyleAuTextNormalDesc"
         android:id="@+id/title"
         android:layout_gravity="center_vertical"

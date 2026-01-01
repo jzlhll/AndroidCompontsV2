@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import com.github.lzyzsd.jsbridge.BridgeWebView
 import com.github.lzyzsd.jsbridge.BridgeWebViewClient
 

@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.au.jobstudy.databinding.ActivityMainBinding
 import com.au.jobstudy.databinding.BottomPageMenuBinding
 import com.au.module_android.Globals.app
-import com.au.module_android.ui.bindings.BindingActivity
+import com.au.module_androidui.ui.bindings.BindingActivity
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_nested.bottom_nav.BottomNavAdapter
 import com.au.module_nested.bottom_nav.BottomPageBean

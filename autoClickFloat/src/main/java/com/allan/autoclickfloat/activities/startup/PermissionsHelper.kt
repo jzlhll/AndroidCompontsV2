@@ -6,8 +6,8 @@ import android.view.accessibility.AccessibilityManager
 import androidx.fragment.app.Fragment
 import com.allan.autoclickfloat.BuildConfig
 import com.allan.autoclickfloat.activities.startup.OnlyFloatPermissionViewModel.Companion.isFloatWindowEnabled
-import com.au.module_android.permissions.gotoAccessibilityPermission
-import com.au.module_android.permissions.gotoFloatWindowPermission
+import com.au.module_simplepermission.gotoAccessibilityPermission
+import com.au.module_simplepermission.gotoFloatWindowPermission
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 
 /**

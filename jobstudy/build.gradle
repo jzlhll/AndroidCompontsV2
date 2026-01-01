@@ -39,7 +39,9 @@ dependencies {
     implementation project(':Module-AndroidUi')
     implementation project(":Module-Nested")
     implementation project(":Module-Okhttp")
-//    implementation project(':AuLiteSql')
+    implementation project(":Module-AuGsonMMKV")
+    implementation project(":Module-AuSimplePermission")
+    implementation(libs.gson)
 
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat

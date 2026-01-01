@@ -6,8 +6,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.au.jobstudy.MainActivity
 import com.au.jobstudy.databinding.FragmentLoadingBinding
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
+import com.au.module_androidui.ui.bindings.BindingFragment
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.android.inject
@@ -19,7 +19,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class ExcelLoadingFragment : BindingFragment<FragmentLoadingBinding>() {
     private val viewModel : LoadingViewModel by viewModel()
     private val activityScope = getKoin().createScope<MainActivity>()
-    private val activityService2 = activityScope.get<ActivityScopedService>()
 
     private val loadingTest : LoadingTest by inject()
 

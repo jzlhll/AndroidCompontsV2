@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:id="@+id/currentTime"
@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:id="@+id/addBtn"
@@ -29,7 +29,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -48,7 +48,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.BgBuildLinearLayout
+    <com.au.module_androidui.widget.BgBuildLinearLayout
         android:id="@+id/dingInfoHost"
         android:visibility="gone"
         tools:visibility="visible"
@@ -68,7 +68,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:paddingHorizontal="8dp"
             style="@style/StyleAuTextSmallDesc"
             android:ellipsize="end"
@@ -77,7 +77,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"/>
 
-    </com.au.module_android.widget.BgBuildLinearLayout>
+    </com.au.module_androidui.widget.BgBuildLinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcv"
@@ -95,7 +95,7 @@
         android:background="@color/windowBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/inputTitle"
             android:layout_gravity="center"
             android:layout_marginTop="24dp"
@@ -103,19 +103,19 @@
             android:text="请输入密码"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
-        <com.au.module_android.widget.CustomEditText
+        <com.au.module_androidui.widget.CustomEditText
             android:id="@+id/inputEdit"
             android:layout_marginTop="4dp"
             android:layout_gravity="center"
             android:layout_width="200dp"
             android:layout_height="wrap_content"/>
-        <com.au.module_android.widget.CustomEditText
+        <com.au.module_androidui.widget.CustomEditText
             android:id="@+id/inputEdit2"
             android:layout_marginTop="4dp"
             android:layout_gravity="center"
             android:layout_width="200dp"
             android:layout_height="wrap_content"/>
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             style="@style/StyleButtonPrimary"
             android:id="@+id/inputOkBtn"
             android:layout_gravity="center"

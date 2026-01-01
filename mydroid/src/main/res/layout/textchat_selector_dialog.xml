@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/titleTv"
         style="@style/StyleAuBTextHeadline"
         android:layout_width="match_parent"
@@ -24,13 +24,13 @@
         android:orientation="horizontal"
         android:layout_height="48dp">
 
-        <com.au.module_android.widget.BgBuildView
+        <com.au.module_androidui.widget.BgBuildView
             app:backgroundNormal="@color/logic_text_chat_server"
             app:cornerRadius="12dp"
             android:layout_width="24dp"
             android:layout_height="24dp"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/asServerBtn"
             style="@style/StyleAuTextNormal"
             android:layout_marginStart="12dp"
@@ -53,13 +53,13 @@
         android:orientation="horizontal"
         android:layout_height="48dp">
 
-        <com.au.module_android.widget.BgBuildView
+        <com.au.module_androidui.widget.BgBuildView
             app:backgroundNormal="@color/logic_text_chat_client"
             app:cornerRadius="12dp"
             android:layout_width="24dp"
             android:layout_height="24dp"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/asClientBtn"
             style="@style/StyleAuTextNormal"
             android:layout_marginStart="12dp"
@@ -82,13 +82,13 @@
         android:orientation="horizontal"
         android:layout_height="48dp">
 
-        <com.au.module_android.widget.BgBuildView
+        <com.au.module_androidui.widget.BgBuildView
             app:backgroundNormal="@color/color_text_desc"
             app:cornerRadius="12dp"
             android:layout_width="24dp"
             android:layout_height="24dp"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/cancelBtn"
             style="@style/StyleAuTextNormal"
             android:layout_marginStart="12dp"

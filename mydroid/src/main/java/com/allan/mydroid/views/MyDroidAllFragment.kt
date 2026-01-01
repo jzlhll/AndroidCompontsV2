@@ -12,13 +12,14 @@ import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.parseShar
 import com.allan.mydroid.views.textchat.TextChatSelectorDialog
 import com.allan.mydroid.views.transferserver.MyDroidTransferServerFragment
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.PermissionStorageHelper
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
+import com.au.module_simplepermission.gotoMgrAll
+import com.au.module_simplepermission.ifGotoMgrAll
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.get
 
@@ -66,13 +67,12 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
         }
         binding.sendFileLogicBtn.onClick {
             if (CHECK_NEED_ALL_MANAGER) {
-                val helper = PermissionStorageHelper()
-                if (helper.ifGotoMgrAll {
-                        ConfirmCenterDialog.Companion.show(childFragmentManager,
+                if (ifGotoMgrAll {
+                        ConfirmCenterDialog.show(childFragmentManager,
                             getString(R.string.app_management_permission),
                             getString(R.string.global_permission_prompt),
                             "OK") {
-                            helper.gotoMgrAll(requireActivity())
+                            gotoMgrAll(requireActivity())
                             it.dismissAllowingStateLoss()
                         }
                     }) {

@@ -3,7 +3,7 @@ package com.au.audiorecordplayer.cam2.impl
 import android.os.HandlerThread
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 
 class MyCamViewModel : ViewModel() {
     val camManager:MyCamManager

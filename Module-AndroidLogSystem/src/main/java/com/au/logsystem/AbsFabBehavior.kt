@@ -7,9 +7,8 @@ import android.view.View
 import androidx.annotation.Keep
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlinx.coroutines.Runnable
 
 @Keep
 abstract class AbsFabBehavior : FloatingActionButton.Behavior {

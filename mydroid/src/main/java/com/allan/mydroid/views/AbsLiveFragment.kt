@@ -10,7 +10,7 @@ import com.allan.mydroid.R
 import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
 import com.au.module_android.Globals
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog

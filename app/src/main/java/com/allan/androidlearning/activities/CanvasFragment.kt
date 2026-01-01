@@ -10,7 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.allan.classnameanno.EntryFrgName
-import com.au.module_android.ui.views.ViewFragment
+import com.au.module_androidui.ui.views.ViewFragment
 import kotlin.math.abs
 import kotlin.math.max
 

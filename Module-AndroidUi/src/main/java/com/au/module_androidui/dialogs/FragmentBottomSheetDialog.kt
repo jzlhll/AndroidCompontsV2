@@ -8,13 +8,13 @@ import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
-import com.au.module_android.ui.base.AbsBottomDialog
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.serializableCompat
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.R
+import com.au.module_androidui.ui.base.AbsBottomDialog
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlin.math.min
 

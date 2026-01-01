@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"/>
 
-    <com.au.module_android.widget.CustomToolbar
+    <com.au.module_androidui.widget.CustomToolbar
         app:title="@string/app_simple_text"
         android:id="@+id/toolbar"
         app:titleCentered="true"
@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/descTitle"
         android:layout_marginTop="4dp"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -33,7 +33,7 @@
         android:layout_width="match_parent"
         android:layout_height="26dp"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/title"
         style="@style/StyleAuTextThin"
         android:layout_marginTop="8dp"
@@ -42,7 +42,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/desc"
         style="@style/StyleAuTextThinDesc"
         android:paddingHorizontal="@dimen/ui_padding_edge"
@@ -61,7 +61,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"/>
 
-    <com.au.module_android.widget.CustomEditText
+    <com.au.module_androidui.widget.CustomEditText
         android:id="@+id/edit"
         style="@style/StyleBlankEditText"
         android:paddingHorizontal="6dp"
@@ -77,7 +77,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/sendBtn"
         style="@style/StyleButtonPrimary"
         android:paddingHorizontal="16dp"

@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"/>
 
-    <com.au.module_android.widget.CustomToolbar
+    <com.au.module_androidui.widget.CustomToolbar
         android:id="@+id/toolbar"
         app:title="@string/send_list"
         app:titleCentered="true"
@@ -40,7 +40,7 @@
             android:layout_width="33dp"
             android:layout_height="match_parent" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/selectImageAndVideoText"
             style="@style/StyleAuTextSmallDesc"
             android:textColor="@color/white"
@@ -59,7 +59,7 @@
             android:layout_width="33dp"
             android:layout_height="match_parent" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/selectDocumentText"
             style="@style/StyleAuTextSmallDesc"
             android:textColor="@color/white"
@@ -77,7 +77,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/empty"
         android:visibility="gone"
         tools:visibility="visible"
@@ -122,7 +122,7 @@
             android:layout_width="16dp"
             android:layout_height="16dp"/>
 
-        <com.au.module_android.widget.CustomFontTextlink
+        <com.au.module_androidui.widget.CustomFontTextlink
             style="@style/StyleAuTextSmallDesc"
             android:text="@string/disclaimer_title"
             android:layout_marginStart="6dp"

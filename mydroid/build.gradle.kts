@@ -94,6 +94,8 @@ dependencies {
     implementation(project(":Module-Okhttp"))
     implementation(project(":Module-AndroidLogSystem"))
     implementation(project(":Module-Native"))
+    implementation(project(":Module-AuGsonMMKV"))
+    implementation(project(":Module-AuSimplePermission"))
 
     implementation(libs.jsbridgev2)
 

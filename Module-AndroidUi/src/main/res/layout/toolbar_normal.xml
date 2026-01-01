@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.au.module_androidui.widget.CustomFontText
+        android:id="@+id/toolbarTitle"
+        android:layout_width="match_parent"
+        style="@style/StyleAuBTextTitle2"
+        android:textSize="20dp"
+        android:paddingHorizontal="60dp"
+        android:gravity="center"
+        tools:text="Toolbar title"
+        android:paddingBottom="2dp"
+        android:layout_height="@dimen/toolbar_height" />
+
+    <ImageView
+        android:contentDescription="Back"
+        android:id="@+id/backIcon"
+        android:src="@drawable/icon_back"
+        android:padding="4dp"
+        android:layout_width="@dimen/toolbar_height"
+        android:layout_height="@dimen/toolbar_height" />
+</FrameLayout>

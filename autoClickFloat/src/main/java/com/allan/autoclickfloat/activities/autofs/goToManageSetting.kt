@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
-import com.au.module_android.utils.startActivityFix
+import com.au.module_androidui.ui.startActivityFix
 import java.util.Locale
 
 fun goToManageSetting(context: Context) {

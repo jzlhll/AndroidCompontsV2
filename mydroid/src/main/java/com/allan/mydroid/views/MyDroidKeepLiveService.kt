@@ -7,7 +7,7 @@ import android.os.Build
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.service.AutoStopService
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 
 class MyDroidKeepLiveService : AutoStopService() {
     companion object {

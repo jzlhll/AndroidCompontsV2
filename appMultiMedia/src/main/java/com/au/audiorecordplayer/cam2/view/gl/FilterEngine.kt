@@ -3,7 +3,7 @@ package com.au.audiorecordplayer.cam2.view.gl
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import com.au.audiorecordplayer.cam2.impl.DataRepository
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer

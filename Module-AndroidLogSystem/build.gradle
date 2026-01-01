@@ -39,4 +39,5 @@ dependencies {
     implementation project(":Module-AndroidUi")
     implementation project(":Module-AndroidColor")
     implementation project(":Module-Nested")
+    implementation project(":Module-AuGsonMMKV")
 }

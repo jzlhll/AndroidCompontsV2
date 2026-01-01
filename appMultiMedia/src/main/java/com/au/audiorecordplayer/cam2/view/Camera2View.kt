@@ -13,7 +13,7 @@ import com.au.audiorecordplayer.cam2.view.gl.CamGLSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamSurfaceView
 import com.au.audiorecordplayer.cam2.view.cam.CamTextureView
 import com.au.audiorecordplayer.cam2.view.cam.PreviewMode
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import kotlin.math.roundToInt
 
 class Camera2View : FrameLayout, Camera2ViewBase{

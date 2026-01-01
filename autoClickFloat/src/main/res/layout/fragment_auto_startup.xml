@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent">
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:paddingHorizontal="@dimen/ui_padding_edge"
         android:id="@+id/currentTimeTv"
         style="@style/StyleAuTextNormal"
@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="142dp">
 
-        <com.au.module_android.widget.BgBuildView
+        <com.au.module_androidui.widget.BgBuildView
             app:backgroundNormal="@color/color_line"
             app:cornerRadius="4dp"
             android:layout_marginTop="3dp"
@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent">
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/hourUnit"
                     style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
@@ -57,7 +57,7 @@
                     android:gravity="center_vertical"
                     android:text="时"/>
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/minuteUnit"
                     style="@style/StyleAuTextNormal"
                     android:includeFontPadding="false"
@@ -70,7 +70,7 @@
                     android:layout_height="match_parent"
                     android:text="分"/>
 
-                <com.au.module_android.widget.ViewStubPro
+                <com.au.module_androidui.widget.ViewStubPro
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/pickerSpace"
                     android:paddingHorizontal="19dp"
@@ -89,7 +89,7 @@
                     android:layout_width="2dp"
                     android:layout_height="match_parent"/>
 
-                <com.au.module_android.widget.ViewStubPro
+                <com.au.module_androidui.widget.ViewStubPro
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toEndOf="@id/pickerSpace"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -109,7 +109,7 @@
         </LinearLayout>
     </FrameLayout>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:id="@+id/startTimerBtn"
@@ -122,7 +122,7 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         app:layout_constraintStart_toStartOf="parent"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
@@ -136,7 +136,7 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:id="@+id/stopTimerBtn"
@@ -150,20 +150,20 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.BgBuildView
+    <com.au.module_androidui.widget.BgBuildView
         android:background="#f6f6f6"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_width="match_parent"
         android:layout_height="30dp" />
 
-    <com.au.module_android.widget.BgBuildView
+    <com.au.module_androidui.widget.BgBuildView
         android:background="#f6f6f6"
         android:id="@+id/fakeView"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="match_parent"
         android:layout_height="30dp" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/fakeText"
         android:visibility="gone"
         style="@style/StyleAuBTextHeadline"

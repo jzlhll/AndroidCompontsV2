@@ -10,12 +10,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.viewbinding.ViewBinding
-import com.au.module_android.R
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.createViewBinding
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.getScreenFullSize
+import com.au.module_androidui.R
 import com.au.module_androidui.databinding.AbsCenterFakeDialogBinding
+import com.au.module_androidui.ui.createViewBinding
 
 /**
  * 定义一种弹窗，用于输入内容
@@ -23,7 +23,7 @@ import com.au.module_androidui.databinding.AbsCenterFakeDialogBinding
  * 模拟的动画和背景。但是其实是直接添加在 Activity DecorView上。
  *
  * ```xml
- * <com.au.module_android.widget.BgBuildConstraintLayout
+ * <com.au.module_androidui.widget.BgBuildConstraintLayout
  *     xmlns:android="http://schemas.android.com/apk/res/android"
  *     xmlns:app="http://schemas.android.com/apk/res-auto"
  *     android:layout_width="match_parent"
@@ -35,7 +35,7 @@ import com.au.module_androidui.databinding.AbsCenterFakeDialogBinding
  *     app:cornerSizeBottomLeft="12dp"
  *     app:cornerSizeBottomRight="12dp">
  *
- * </com.au.module_android.widget.BgBuildConstraintLayout>
+ * </com.au.module_androidui.widget.BgBuildConstraintLayout>
  * ```
  */
 abstract class AbsCenterFakeDialog<T : ViewBinding> : DefaultLifecycleObserver {

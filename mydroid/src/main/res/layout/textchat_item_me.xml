@@ -30,7 +30,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/nameTv"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/icon"
@@ -41,7 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.BgBuildConstraintLayout
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
         android:id="@+id/contentHost"
         app:layout_constraintEnd_toStartOf="@id/icon"
         app:layout_constraintStart_toStartOf="@id/startGuide"
@@ -53,7 +53,7 @@
         android:layout_marginEnd="4dp"
         android:layout_width="0dp"
         android:layout_height="wrap_content">
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/text"
             android:paddingHorizontal="2dp"
             style="@style/StyleAuTextNormal"
@@ -74,7 +74,7 @@
             android:layout_width="36dp"
             android:layout_height="36dp" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/fileNameTv"
             style="@style/StyleAuTextNormal"
             app:layout_constraintEnd_toStartOf="@id/fileTypeIcon"
@@ -88,7 +88,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content" />
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/fileSizeAndMD5Tv"
             android:paddingHorizontal="4dp"
             style="@style/StyleAuTextSmallDesc"
@@ -109,5 +109,5 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-    </com.au.module_android.widget.BgBuildConstraintLayout>
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

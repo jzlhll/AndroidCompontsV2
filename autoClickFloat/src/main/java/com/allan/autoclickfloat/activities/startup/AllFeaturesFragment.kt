@@ -1,5 +1,6 @@
 package com.allan.autoclickfloat.activities.startup
 
+import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Context.POWER_SERVICE
@@ -20,18 +21,16 @@ import com.allan.autoclickfloat.activities.recordprojects.RecordProjectsAllFragm
 import com.allan.autoclickfloat.consts.Const
 import com.allan.autoclickfloat.databinding.AllFeaturesFragmentBinding
 import com.au.logsystem.LogSystemFragment
-import com.au.logsystem.oncelog.OnceLogViewFragment
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.gotoFloatWindowPermission
-import com.au.module_android.permissions.hasFloatWindowPermission
-import com.au.module_android.permissions.hasPermission
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.FragmentShellOrientationActivity
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.startActivityFix
+import com.au.module_android.log.logd
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
-import java.io.File
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.FragmentShellOrientationActivity
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.startActivityFix
+import com.au.module_simplepermission.gotoFloatWindowPermission
+import com.au.module_simplepermission.hasFloatWindowPermission
+import com.au.module_simplepermission.hasPermission
 
 class AllFeaturesFragment : BindingFragment<AllFeaturesFragmentBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -94,7 +93,7 @@ class AllFeaturesFragment : BindingFragment<AllFeaturesFragmentBinding>() {
             binding.autoFsBtn.tag = null
 
             val alarmManager: AlarmManager = requireContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val hasBootReceiverPermission = hasPermission(android.Manifest.permission.RECEIVE_BOOT_COMPLETED)
+            val hasBootReceiverPermission = requireContext().hasPermission(Manifest.permission.RECEIVE_BOOT_COMPLETED)
             logd { "allanAlarm hasBootReceiverPermission $hasBootReceiverPermission" }
 
             if (alarmManager.canScheduleExactAlarms()) {

@@ -1,7 +1,7 @@
 package com.au.audiorecordplayer.bt.trandition
 
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logt
 import kotlinx.coroutines.delay
 import java.io.InputStream
 import java.nio.charset.StandardCharsets

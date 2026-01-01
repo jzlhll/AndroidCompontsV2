@@ -3,7 +3,7 @@ package com.allan.androidlearning.androidui
 import android.os.Bundle
 import androidx.core.graphics.toColorInt
 import com.allan.androidlearning.databinding.FragmentAndroidUi4Binding
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.widget.HorizontalScale3View
 
 class AndroidUi4Fragment : BindingFragment<FragmentAndroidUi4Binding>() {

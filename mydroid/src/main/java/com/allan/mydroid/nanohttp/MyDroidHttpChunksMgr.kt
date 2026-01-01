@@ -21,10 +21,10 @@ import com.allan.mydroid.globals.nanoTempCacheMergedDir
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals.resStr
 import com.au.module_android.api.ResultBean
-import com.au.module_android.utils.ALogJ
+import com.au.module_android.log.ALogJ
 import com.au.module_android.utils.getFileMD5
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logd
+import com.au.module_android.log.logt
 import fi.iki.elonen.NanoHTTPD.IHTTPSession
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status

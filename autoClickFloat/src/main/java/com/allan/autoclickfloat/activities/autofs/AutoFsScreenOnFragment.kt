@@ -12,11 +12,11 @@ import com.allan.autoclickfloat.activities.autofs.spider.checkhtml.CheckHtmlArgs
 import com.allan.autoclickfloat.activities.autofs.spider.filter.DnSpiderWebViewFilter
 import com.allan.autoclickfloat.databinding.FragmentFsScreenOnBinding
 import com.au.module_android.Globals
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.myHideSystemUI
-import com.au.module_android.utils.startOutActivity
+import com.au.module_androidui.ui.startOutActivity
 
 class AutoFsScreenOnFragment : BindingFragment<FragmentFsScreenOnBinding>() {
     private var jump = true

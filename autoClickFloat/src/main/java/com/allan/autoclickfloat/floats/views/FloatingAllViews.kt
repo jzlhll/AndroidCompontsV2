@@ -5,7 +5,7 @@ import android.widget.TextView
 import com.allan.autoclickfloat.AllPermissionActivity
 import com.allan.autoclickfloat.R
 import com.au.module_android.Globals
-import com.au.module_android.utils.startActivityFix
+import com.au.module_androidui.ui.startActivityFix
 
 class FloatingStepView : BaseFloatingView( R.layout.view_floating_step) {
     private var stepIndexTv :TextView? = null

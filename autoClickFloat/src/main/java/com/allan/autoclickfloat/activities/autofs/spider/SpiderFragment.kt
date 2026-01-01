@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import com.au.module_android.ui.views.ViewFragment
+import com.au.module_androidui.ui.views.ViewFragment
 
 class SpiderFragment : ViewFragment() {
     lateinit var webView: SpiderWebView

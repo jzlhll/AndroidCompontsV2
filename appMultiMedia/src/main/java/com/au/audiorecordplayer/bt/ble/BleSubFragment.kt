@@ -2,19 +2,16 @@ package com.au.audiorecordplayer.bt.ble
 
 import android.bluetooth.le.BluetoothLeScanner
 import android.os.Bundle
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.au.audiorecordplayer.bt.AbsSubBleTestFragment
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.audiorecordplayer.util.MyLog
-import com.au.module_android.Globals
-import com.au.module_android.json.formatJsonBeautiful
+import com.au.module_android.log.logt
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logt
+import com.au.module_gson.formatJsonBeautiful
 import kotlinx.coroutines.launch
 
 class BleSubFragment : AbsSubBleTestFragment(), BluetoothCallbackListener {
@@ -28,10 +25,10 @@ class BleSubFragment : AbsSubBleTestFragment(), BluetoothCallbackListener {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mMyBleScanner.uiState.collectStatusState(
-                    success = {
+                    onSuccess = {
                         updateInfo(it)
                     },
-                    error = {}
+                    onError = {}
                 )
             }
         }
@@ -53,7 +50,9 @@ class BleSubFragment : AbsSubBleTestFragment(), BluetoothCallbackListener {
             MainUIManager.get().toastSnackbar(requireActivity().window.decorView, "蓝牙未打开！")
             return
         }
-        blePermissionHelp.safeRun {
+        blePermissionHelp.safeRun(notGivePermissionBlock = {
+            MainUIManager.get().toastSnackbar(requireActivity().window.decorView, "请打开蓝牙权限！")
+        }) {
             MyLog.d("start le scan")
             mMyBleScanner.startLeScan(bluetoothLeScanner)
         }

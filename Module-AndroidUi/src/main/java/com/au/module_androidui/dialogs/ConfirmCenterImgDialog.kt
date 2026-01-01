@@ -4,7 +4,7 @@ import android.content.res.ColorStateList
 import androidx.annotation.ColorInt
 import androidx.fragment.app.FragmentManager
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.bindings.BindingDialog
+import com.au.module_androidui.ui.bindings.BindingDialog
 import com.au.module_androidui.databinding.ConfirmCenterImgDialogBinding
 
 open class ConfirmCenterImgDialog : BindingDialog<ConfirmCenterImgDialogBinding>() {

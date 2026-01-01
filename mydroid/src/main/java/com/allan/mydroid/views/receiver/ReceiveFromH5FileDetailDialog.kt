@@ -3,7 +3,7 @@ package com.allan.mydroid.views.receiver
 import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.databinding.ShowReceiveItemInfosBinding
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.serializableCompat
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 

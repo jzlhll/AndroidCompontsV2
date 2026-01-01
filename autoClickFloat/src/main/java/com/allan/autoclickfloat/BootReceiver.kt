@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.allan.autoclickfloat.activities.autofs.AutoFsObj
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {

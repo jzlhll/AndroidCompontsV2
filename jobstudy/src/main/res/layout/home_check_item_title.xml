@@ -24,7 +24,7 @@
         android:background="@drawable/corner_title_bar"
         tools:ignore="MissingDefaultResource">
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/subjectText"
             android:id="@+id/workTitle"

@@ -10,9 +10,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.allan.androidlearning.databinding.FragmentAsrAndTtsBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.createPermissionForResult
+import com.au.module_simplepermission.createPermissionForResult
 import com.au.module_android.simpleflow.collectStatusState
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.unsafeLazy

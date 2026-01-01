@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.au.module_android.Globals
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import com.au.module_androidui.widget.disableAndStyle
 import com.au.module_androidui.widget.enableAndStyle
 

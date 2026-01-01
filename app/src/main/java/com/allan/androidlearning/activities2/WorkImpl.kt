@@ -1,6 +1,6 @@
 package com.allan.androidlearning.activities2
 
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 
 class WorkImpl : IWork {
     override fun doWork() {

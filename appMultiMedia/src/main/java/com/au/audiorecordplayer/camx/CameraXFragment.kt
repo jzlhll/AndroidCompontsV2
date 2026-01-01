@@ -12,10 +12,10 @@ import com.au.audiorecordplayer.databinding.FragmentCameraxBinding
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.createPermissionForResult
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_simplepermission.createPermissionForResult
 import java.io.File
 
 class CameraXFragment : BindingFragment<FragmentCameraxBinding>() {

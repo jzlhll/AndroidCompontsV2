@@ -1,10 +1,10 @@
 package com.allan.androidlearning.kson
 
-import com.au.module_android.json.fromKson
-import com.au.module_android.json.toKsonString
-import com.au.module_android.json.toKsonStringLimited
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logdNoFile
+import com.au.module_kson.fromKson
+import com.au.module_kson.toKsonString
+import com.au.module_kson.toKsonStringLimited
 
 class JsonUtilTestFunctions {
 

@@ -10,7 +10,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/title"
             android:layout_marginStart="20dp"
             android:textSize="20sp"
@@ -23,7 +23,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/weather"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/title"
@@ -44,7 +44,7 @@
             android:layout_height="32dp"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:layout_marginTop="48dp"
         android:textSize="20sp"
         android:text="英语单词萝卜斩!"
@@ -63,7 +63,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/corner_title_bar">
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/subjectText"
             android:id="@+id/workTitle"
@@ -84,7 +84,7 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp">
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -93,7 +93,7 @@
                     android:textColor="#ffffff"
                     android:textSize="21sp" />
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -113,7 +113,7 @@
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp">
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:layout_width="0dp"
                     android:layout_height="65dp"
                     android:layout_weight="1"
@@ -123,7 +123,7 @@
                     android:textSize="34sp"
                     android:textStyle="bold" />
 
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     android:layout_width="0dp"
                     android:layout_height="65dp"
                     android:layout_weight="1"
@@ -136,7 +136,7 @@
     </LinearLayout>
 
     <!-- 第三行：长条按钮 -->
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/startBtn"
         style="@style/StyleButtonPrimary"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"

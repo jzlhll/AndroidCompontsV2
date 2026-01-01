@@ -1,7 +1,7 @@
 package com.allan.androidlearning.dialogs
 
 import com.allan.androidlearning.databinding.DialogDemoBinding
-import com.au.module_android.ui.bindings.BindingBottomDialog
+import com.au.module_androidui.ui.bindings.BindingBottomDialog
 
 /**
  * @author au

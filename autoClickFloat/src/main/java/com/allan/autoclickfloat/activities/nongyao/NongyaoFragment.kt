@@ -6,7 +6,7 @@ import com.allan.autoclickfloat.activities.startup.PermissionsHelper.Companion.s
 import com.allan.autoclickfloat.consts.Const
 import com.allan.autoclickfloat.databinding.FragmentNongyaoBinding
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 

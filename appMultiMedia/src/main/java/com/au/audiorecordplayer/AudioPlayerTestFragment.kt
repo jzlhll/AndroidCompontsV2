@@ -13,8 +13,8 @@ import com.au.audiorecordplayer.util.CacheFileGenerator
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
 import java.io.File
 
 

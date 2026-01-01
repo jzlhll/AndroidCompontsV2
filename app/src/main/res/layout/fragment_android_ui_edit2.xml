@@ -12,7 +12,7 @@
         android:orientation="vertical"
         android:layout_height="match_parent">
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
             style="@style/StyleAuBTextTitle2"
             android:text="edit input"
@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:layout_marginStart="@dimen/ui_padding_edge"
             android:id="@+id/infoText"
             style="@style/StyleAuTextNormal"
@@ -39,7 +39,7 @@
                 android:background="@drawable/edit_board_bg"
                 android:layout_width="300dp"
                 android:layout_height="52dp">
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     style="@style/StyleAuTextNormal"
                     android:layout_marginStart="12dp"
                     android:layout_gravity="center_vertical"
@@ -55,7 +55,7 @@
                 android:layout_height="52dp"
                 android:layout_width="300dp">
 
-                <com.au.module_android.widget.CustomEditText
+                <com.au.module_androidui.widget.CustomEditText
                     android:id="@+id/editText"
                     style="@style/StyleEditInInputLayout"
                     android:clickable="true"
@@ -83,7 +83,7 @@
                 android:layout_height="52dp"
                 android:layout_width="300dp">
 
-                <com.au.module_android.widget.CustomEditText
+                <com.au.module_androidui.widget.CustomEditText
                     android:id="@+id/editText3"
                     style="@style/StyleEditInInputLayout"
                     android:layout_width="match_parent"
@@ -106,7 +106,7 @@
                 android:layout_height="52dp"
                 android:layout_width="300dp">
 
-                <com.au.module_android.widget.CustomEditText
+                <com.au.module_androidui.widget.CustomEditText
                     android:id="@+id/editText1"
                     style="@style/StyleEditInInputLayout"
                     android:layout_width="match_parent"
@@ -131,7 +131,7 @@
                 app:endIconDrawable="@drawable/icon_eye"
                 app:endIconMode="password_toggle">
 
-                <com.au.module_android.widget.CustomEditText
+                <com.au.module_androidui.widget.CustomEditText
                     android:id="@+id/editText4"
                     style="@style/StyleEditInInputLayout"
                     android:layout_width="match_parent"
@@ -146,7 +146,7 @@
 
             </com.au.module_androidui.widget.CustomTextInputLayout>
 
-            <com.au.module_android.widget.CustomEditText
+            <com.au.module_androidui.widget.CustomEditText
                 style="@style/StyleBlankEditText"
                 android:layout_marginTop="24dp"
                 android:paddingStart="12dp"

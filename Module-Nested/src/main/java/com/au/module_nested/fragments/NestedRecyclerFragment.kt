@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.au.module_nested.decoration.LinearLineItemDecoration
 import com.au.module_nested.layout.NestedRecyclerViewLayout
 import com.au.module_nested.recyclerview.BaseAdapter
-import com.au.module_android.ui.views.ViewFragment
+import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.dpInt
 import com.au.module_android.utils.unsafeLazy

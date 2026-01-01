@@ -9,7 +9,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.RequiresApi
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 
 /**
  * 带圆角矩形和渐变效果的边缘氛围光效

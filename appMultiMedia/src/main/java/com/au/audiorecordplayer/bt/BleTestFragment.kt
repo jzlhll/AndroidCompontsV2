@@ -13,11 +13,12 @@ import com.au.audiorecordplayer.bt.trandition.BtClassicSubFragment
 import com.au.audiorecordplayer.databinding.BtBleBinding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
+import com.au.module_simplepermission.BtPermissionHelp
 
 class BleTestFragment : BindingFragment<BtBleBinding>() {
     companion object {
@@ -96,7 +97,7 @@ abstract class AbsSubBleTestFragment : androidx.fragment.app.Fragment() {
         }
     }
 
-    val blePermissionHelp:BtPermissionHelp
+    val blePermissionHelp: BtPermissionHelp
         get() = (parentFragment as BleTestFragment).blePermissionHelp
 
     val bluetoothAdapter: BluetoothAdapter?

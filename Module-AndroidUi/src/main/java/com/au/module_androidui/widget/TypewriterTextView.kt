@@ -9,7 +9,7 @@ import android.os.Looper
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
-import com.au.module_android.widget.CustomFontText
+import com.au.module_androidui.widget.CustomFontText
 
 class TypewriterTextView @JvmOverloads constructor(
     context: Context,

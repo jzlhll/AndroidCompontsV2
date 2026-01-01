@@ -13,7 +13,7 @@ import com.allan.mydroid.views.AbsLiveFragment
 import com.allan.mydroid.views.send.SendListSelectorDialog
 import com.allan.mydroid.views.textchat.uibean.NormalItem
 import com.au.module_android.Globals
-import com.au.module_android.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.unsafeLazy

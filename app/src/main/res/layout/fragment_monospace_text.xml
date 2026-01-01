@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.MonospaceTimeView
+    <com.au.module_androidui.widget.MonospaceTimeView
         android:id="@+id/firstMonoText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
@@ -25,7 +25,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.MonospaceTimeView
+    <com.au.module_androidui.widget.MonospaceTimeView
         android:id="@+id/secondMonoText"
         android:layout_marginTop="4dp"
         android:layout_below="@id/two"
@@ -42,7 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.MonospaceTimeView
+    <com.au.module_androidui.widget.MonospaceTimeView
         android:id="@+id/thirdMonoText"
         android:layout_marginTop="100dp"
         android:layout_width="wrap_content"

@@ -5,10 +5,10 @@ import com.allan.androidlearning.databinding.FragmentFontTestBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_android.log.logd
 import com.au.module_android.utils.UIStepExecutor
-import com.au.module_android.utils.logd
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingFragment
 
 @EntryFrgName
 class FontTestFragment : BindingFragment<FragmentFontTestBinding>() {
@@ -17,8 +17,8 @@ class FontTestFragment : BindingFragment<FragmentFontTestBinding>() {
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.jumpBtn.onClick {
             FragmentShellActivity.start(requireActivity(), ActivityJumpFragment::class.java,
-                enterAnim = com.au.module_android.R.anim.dialog_bottom_in_p,
-                exitAnim = com.au.module_android.R.anim.dialog_bottom_out_p)
+                enterAnim = com.au.module_androidui.R.anim.dialog_bottom_in_p,
+                exitAnim = com.au.module_androidui.R.anim.dialog_bottom_out_p)
         }
 
         logd { "alland onCreate1" }

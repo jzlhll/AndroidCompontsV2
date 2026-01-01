@@ -8,7 +8,7 @@ import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
-import com.au.module_android.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.transparentStatusBar

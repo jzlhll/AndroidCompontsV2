@@ -1,6 +1,6 @@
 package com.au.logsystem.oncelog
 
-import com.au.module_android.utils.FileLog
+import com.au.module_android.log.FileLog
 
 data class LogViewShownInfo(var isWrap: Boolean, var fullScreen: Boolean, var time: Boolean,
                             var threadProcess: Boolean, var level: Boolean, var tag: Boolean)

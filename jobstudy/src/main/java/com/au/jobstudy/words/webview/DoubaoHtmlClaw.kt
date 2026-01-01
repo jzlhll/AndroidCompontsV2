@@ -3,7 +3,7 @@ package com.au.jobstudy.words.webview
 import android.os.Handler
 import android.os.Looper
 import android.webkit.WebView
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 
 class DoubaoHtmlClaw(private val webView: WebView) {
     private val TAG = "HtmlClaw"

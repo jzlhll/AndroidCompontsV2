@@ -4,7 +4,7 @@ import androidx.annotation.DrawableRes
 import com.allan.mydroid.R
 import com.au.module_android.Globals
 import com.au.module_android.api.ResultBean
-import com.au.module_android.json.toJsonString
+import com.au.module_gson.toJsonString
 import com.au.module_android.utilsmedia.MediaTypeUtil
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status

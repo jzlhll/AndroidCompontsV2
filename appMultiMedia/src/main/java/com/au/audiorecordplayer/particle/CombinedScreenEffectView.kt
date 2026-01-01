@@ -10,7 +10,7 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.RequiresApi
 import com.au.audiorecordplayer.recorder.WaveRmsDbSample
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 open class CombinedScreenEffectView @JvmOverloads constructor(

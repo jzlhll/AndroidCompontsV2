@@ -6,7 +6,7 @@ import androidx.core.graphics.toColorInt
 import com.allan.autoclickfloat.databinding.FragmentAutoStartupNewHolderItemBinding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
+import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.dialogs.ConfirmBottomDialog
 import com.au.module_nested.recyclerview.BindRcvAdapter

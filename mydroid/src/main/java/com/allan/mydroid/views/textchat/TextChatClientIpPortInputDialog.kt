@@ -4,8 +4,8 @@ import android.os.Bundle
 import com.allan.mydroid.databinding.TextchatIpportInputDialogBinding
 import com.au.module_android.click.onClick
 import com.au.module_android.postToMainHandler
-import com.au.module_android.ui.base.findDialog
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.base.findDialog
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.toast.ToastBuilder

@@ -1,7 +1,7 @@
 package com.allan.autoclickfloat.taks
 
 import android.content.Context
-import com.au.module_android.utils.startActivityFix
+import com.au.module_androidui.ui.startActivityFix
 
 /**
  * @author allan

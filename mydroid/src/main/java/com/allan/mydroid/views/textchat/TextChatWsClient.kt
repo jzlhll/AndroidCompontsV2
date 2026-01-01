@@ -8,10 +8,10 @@ import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.beans.wsdata.WSInitData
 import com.allan.mydroid.nanohttp.WebsocketServer.Companion.WS_CODE_CLOSE_BY_CLIENT
 import com.au.module_android.Globals
-import com.au.module_android.json.fromJson
-import com.au.module_android.json.toJsonString
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
+import com.au.module_gson.fromJson
+import com.au.module_gson.toJsonString
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.unsafeLazy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

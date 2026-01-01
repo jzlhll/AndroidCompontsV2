@@ -12,7 +12,7 @@
     app:backgroundNormal="@color/color_switch_block_bg"
     app:cornerRadius="2dp">
 
-    <com.au.module_android.widget.BgBuildView
+    <com.au.module_androidui.widget.BgBuildView
         app:layout_constraintStart_toStartOf="parent"
         android:id="@+id/select_bg_view"
         android:layout_width="0dp"

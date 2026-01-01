@@ -16,7 +16,7 @@
         android:paddingBottom="@dimen/btn_margin_bottom"
         android:layout_height="0dp" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/empty"
         android:visibility="gone"
         tools:visibility="visible"

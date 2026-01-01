@@ -6,7 +6,7 @@ import android.view.View
 import androidx.core.view.ViewCompat
 import com.au.jobstudy.check.NameList
 import com.au.jobstudy.databinding.FragmentMainMineBinding
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import org.koin.android.ext.android.get
 
 

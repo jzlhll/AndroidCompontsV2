@@ -8,7 +8,7 @@
     android:paddingEnd="40dp"
     tools:context=".activities.autooneclick.AutoContinuousClickActivityFragment">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/title"
         style="@style/StyleAuTextNormal"
         android:textStyle="bold"
@@ -20,7 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/desc"
         style="@style/StyleAuBTextHeadline"
         android:layout_width="wrap_content"

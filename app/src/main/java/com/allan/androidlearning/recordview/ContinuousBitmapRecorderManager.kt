@@ -2,8 +2,8 @@ package com.allan.androidlearning.recordview
 
 import android.graphics.Bitmap
 import android.media.MediaRecorder
-import com.au.module_android.utils.logStace
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logStace
+import com.au.module_android.log.logd
 import java.io.File
 import java.io.IOException
 

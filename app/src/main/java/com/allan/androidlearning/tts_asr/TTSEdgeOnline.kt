@@ -1,7 +1,7 @@
 package com.allan.androidlearning.tts_asr
 
 import com.au.module_android.Globals
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import io.github.whitemagic2014.tts.TTS
 import io.github.whitemagic2014.tts.TTSVoice
 import kotlinx.coroutines.launch

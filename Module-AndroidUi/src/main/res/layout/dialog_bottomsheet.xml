@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.au.module_android.widget.BgBuildLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.au.module_androidui.widget.BgBuildLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -8,7 +8,7 @@
     app:cornerSizeTopLeft="16dp"
     android:orientation="vertical">
 
-    <com.au.module_android.widget.BgBuildView
+    <com.au.module_androidui.widget.BgBuildView
         android:id="@+id/headLine"
         android:layout_width="36dp"
         android:layout_height="4dp"
@@ -30,4 +30,4 @@
         android:layout_width="match_parent"
         android:layout_height="8dp"/>
 
-</com.au.module_android.widget.BgBuildLinearLayout>
+</com.au.module_androidui.widget.BgBuildLinearLayout>

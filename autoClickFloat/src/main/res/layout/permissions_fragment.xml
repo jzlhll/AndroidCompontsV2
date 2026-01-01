@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonPrimary"
         android:id="@+id/requestPermissionsBtn"
         android:layout_width="match_parent"

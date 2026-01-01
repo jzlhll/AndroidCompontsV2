@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent">
-    <com.au.module_android.widget.CustomToolbar
+    <com.au.module_androidui.widget.CustomToolbar
         android:id="@+id/toolBar"
         android:layout_width="match_parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -11,7 +11,7 @@
         app:navigationIcon="@drawable/icon_back"
         android:layout_height="48dp" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonPrimary"
         android:id="@+id/startAutoClickBtn"
         android:layout_width="0dp"
@@ -24,7 +24,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         style="@style/StyleButtonWarn"
         android:id="@+id/stopAutoClickBtn"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"

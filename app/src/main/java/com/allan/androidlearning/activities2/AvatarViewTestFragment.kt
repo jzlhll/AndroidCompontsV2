@@ -4,7 +4,7 @@ import android.os.Bundle
 import com.allan.androidlearning.databinding.FragmentAvatarViewTestBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 
 @EntryFrgName
 class AvatarViewTestFragment : BindingFragment<FragmentAvatarViewTestBinding>() {

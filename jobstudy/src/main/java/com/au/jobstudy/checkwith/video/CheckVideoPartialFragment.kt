@@ -9,8 +9,8 @@ import com.au.jobstudy.utils.IFactoryDayer
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.activity.SystemTakeVideoFaceForResult
-import com.au.module_android.permissions.systemTakeVideo2FrontForResult
+import com.au.module_simplepermission.activity.SystemTakeVideoFaceForResult
+import com.au.module_simplepermission.systemTakeVideo2FrontForResult
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 import org.koin.android.ext.android.get

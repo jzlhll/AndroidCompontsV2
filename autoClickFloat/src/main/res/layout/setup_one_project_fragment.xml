@@ -9,7 +9,7 @@
     android:paddingHorizontal="20dp"
     tools:context=".activities.autooneclick.AutoContinuousClickActivityFragment">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

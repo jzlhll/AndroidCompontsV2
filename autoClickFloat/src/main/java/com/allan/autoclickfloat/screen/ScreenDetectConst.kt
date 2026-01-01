@@ -9,7 +9,7 @@ import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.util.Log
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors

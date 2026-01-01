@@ -8,8 +8,8 @@ import com.allan.androidlearning.databinding.ActivityJsHtmlBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.logd
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_android.log.logd
 import com.au.module_androidui.toast.ToastUtil.toastOnTop
 import com.github.lzyzsd.jsbridge.BridgeUtil
 import com.github.lzyzsd.jsbridge.DefaultHandler

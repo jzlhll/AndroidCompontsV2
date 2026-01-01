@@ -4,13 +4,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent">
 
-    <com.au.module_android.widget.CustomToolbar
+    <com.au.module_androidui.widget.CustomToolbar
         android:id="@+id/toolBar"
         android:layout_width="match_parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_height="48dp" />
 
-    <com.au.module_android.widget.CustomImageFontText
+    <com.au.module_androidui.widget.CustomImageFontText
         android:id="@+id/deleteStepBtn"
         app:layout_constraintTop_toBottomOf="@id/toolBar"
         app:drawableStartCompat="@drawable/ic_delete"
@@ -27,7 +27,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/descBottom"
         android:paddingHorizontal="@dimen/ui_padding_edge"
         android:layout_marginBottom="12dp"
@@ -39,7 +39,7 @@
         android:text="点击【添加】额外步骤；点击【删除】选择并删除某个步骤；长按拖动来移动步骤的位置。"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/descCenter"
         android:paddingHorizontal="@dimen/ui_padding_edge"
         android:layout_marginBottom="12dp"
@@ -51,7 +51,7 @@
         android:text="点击【添加应用】按钮开始选择一个应用，然后开始点击吧！"
         android:layout_height="wrap_content"/>
 
-    <com.au.module_android.widget.CustomImageFontText
+    <com.au.module_androidui.widget.CustomImageFontText
         android:background="@drawable/corner_btn_secondary"
         android:id="@+id/addStepCenterBtn"
         app:layout_constraintTop_toBottomOf="@id/descCenter"

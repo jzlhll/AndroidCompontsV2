@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     tools:parentTag="androidx.cardview.widget.CardView">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/textAvatar"
         style="@style/StyleAuBTextHeadline"
         android:textSize="24dp"

@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
+import com.au.module_androidui.ui.FragmentShellActivity
 
 abstract class AllActivityFollowCallback : Application.ActivityLifecycleCallbacks {
     /**

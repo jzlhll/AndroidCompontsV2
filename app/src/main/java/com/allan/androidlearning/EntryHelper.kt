@@ -1,7 +1,7 @@
 package com.allan.androidlearning
 
 import android.content.Context
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 
 class EntryHelper constructor(private val data:AnotherData,
                                      private val context: Context

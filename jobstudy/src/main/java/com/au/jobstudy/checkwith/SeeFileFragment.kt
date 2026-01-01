@@ -10,7 +10,7 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.ui.views.ViewFragment
+import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.unsafeLazy

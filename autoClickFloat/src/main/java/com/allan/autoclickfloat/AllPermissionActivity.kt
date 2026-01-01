@@ -1,5 +1,6 @@
 package com.allan.autoclickfloat
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -13,11 +14,11 @@ import com.allan.autoclickfloat.activities.startup.OnlyFloatPermissionViewModel
 import com.allan.autoclickfloat.activities.startup.PermissionsRequestFragment
 import com.allan.autoclickfloat.consts.Const
 import com.allan.autoclickfloat.databinding.RootActivityBinding
-import com.au.module_android.permissions.hasPermission
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingActivity
+import com.au.module_simplepermission.hasPermission
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingActivity
 import com.au.module_android.utils.launchOnUi
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
 import com.au.module_android.utils.replaceFragment
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import kotlinx.coroutines.Job
@@ -95,7 +96,7 @@ class AllPermissionActivity : BindingActivity<RootActivityBinding>() {
 
     override fun onResume() {
         super.onResume()
-        val hasBootReceiverPermission = hasPermission(android.Manifest.permission.RECEIVE_BOOT_COMPLETED)
+        val hasBootReceiverPermission = hasPermission(Manifest.permission.RECEIVE_BOOT_COMPLETED)
         logd { "onResume All permissionActivity hasBootReceiverPermission $hasBootReceiverPermission" }
         viewModel.getPermission(this)
     }

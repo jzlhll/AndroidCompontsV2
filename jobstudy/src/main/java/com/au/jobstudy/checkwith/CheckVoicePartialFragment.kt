@@ -1,7 +1,7 @@
 package com.au.jobstudy.checkwith
 
 import com.au.jobstudy.databinding.PartialPicturesBinding
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 
 /**
  * @author allan

@@ -7,8 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.au.module_android.Globals
 import com.au.module_android.utils.UnzipHelper
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logd
-import com.github.lzyzsd.jsbridge.BridgeWebViewExFragment
+import com.au.module_android.log.logd
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File

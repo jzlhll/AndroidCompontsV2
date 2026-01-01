@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.res.Configuration
 import android.hardware.camera2.CameraManager
-import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.os.Looper
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -13,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.au.audiorecordplayer.cam2.Camera2FragmentSettings
 import com.au.audiorecordplayer.cam2.bean.UiPictureBean
 import com.au.audiorecordplayer.cam2.bean.UiRecordBean
 import com.au.audiorecordplayer.cam2.bean.UiStateBean
@@ -30,21 +28,21 @@ import com.au.audiorecordplayer.util.MainUIManager
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.permissions.createMultiPermissionForResult
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.simpleflow.collectStatusState
-import com.au.module_android.ui.base.ImmersiveMode
-import com.au.module_android.ui.bindings.BindingFragment
 import com.au.module_android.utils.ViewVisibilityDebounce
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_simplepermission.createMultiPermissionForResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -128,7 +126,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 //2. 收集到了用户的 数据
                 viewModel.camManager.uiState.collectStatusState(
-                    success = { bean->
+                    onSuccess = { bean->
                         MyLog.d("uiState collected! $bean")
                         val picture = bean.pictureTokenBean
                         val record = bean.recordBean
@@ -185,7 +183,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
                             openCameraSafety(binding.previewView.surfaceFixSizeUnion)
                         }
                     },
-                    error = { exMsg->
+                    onError = { exMsg->
                     }
                 )
             }
@@ -264,11 +262,11 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
         changePreviewNeedSize(requireActivity())
 
         logdNoFile { "open camera safety" }
-        permissionHelper.safeRun({
-            viewModel.camManager.openCamera()
-        }, notGivePermissionBlock = {
+        permissionHelper.safeRun(notGivePermissionBlock = {
             MainUIManager.get().toastSnackbar(view, "请授予相机和录音权限。")
-        })
+        }){
+            viewModel.camManager.openCamera()
+        }
     }
 
     /**

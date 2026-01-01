@@ -37,7 +37,7 @@
         android:layout_width="56dp"
         android:layout_height="56dp" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:layout_marginStart="10dp"
         android:id="@+id/fileNameTv"
         style="@style/StyleAuTextNormal"
@@ -53,7 +53,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/fileSizeAndMD5Tv"
         android:layout_marginStart="10dp"
         style="@style/StyleAuTextThinDesc"

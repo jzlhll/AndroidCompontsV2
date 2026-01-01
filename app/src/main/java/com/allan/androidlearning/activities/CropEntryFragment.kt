@@ -5,15 +5,15 @@ import android.os.Build
 import android.os.Bundle
 import com.allan.androidlearning.databinding.FragmentCropEntryBinding
 import com.allan.classnameanno.EntryFrgName
-import com.au.module_nested.fragments.AbsNestedIndicatorFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAnyAsCircleCrop
-import com.au.module_android.permissions.createActivityForResult
+import com.au.module_android.log.logd
 import com.au.module_android.utils.iteratorPrint
-import com.au.module_android.utils.logd
 import com.au.module_imagecompressed.CropCircleImageFragment
-import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.photoPickerForResult
+import com.au.module_nested.fragments.AbsNestedIndicatorFragment
+import com.au.module_simplepermission.PickerType
+import com.au.module_simplepermission.createActivityForResult
 import java.io.File
 
 /**

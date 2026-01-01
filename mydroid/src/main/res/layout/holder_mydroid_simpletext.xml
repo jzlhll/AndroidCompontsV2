@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:paddingEnd="40dp"
         android:paddingStart="20dp">
-        <com.au.module_android.widget.BgBuildCustomFontText
+        <com.au.module_androidui.widget.BgBuildCustomFontText
             android:id="@+id/leftTv"
             style="@style/StyleAuTextNormal"
             android:layout_width="wrap_content"
@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:paddingEnd="20dp"
         android:paddingStart="40dp">
-        <com.au.module_android.widget.BgBuildCustomFontText
+        <com.au.module_androidui.widget.BgBuildCustomFontText
             android:id="@+id/rightTv"
             style="@style/StyleAuTextNormal"
             android:layout_width="wrap_content"

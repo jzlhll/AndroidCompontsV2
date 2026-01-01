@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.au.module_android.widget.FlowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.au.module_androidui.widget.FlowLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:flChildSpacing="8dp"
@@ -39,4 +39,4 @@
         app:cardCornerRadius="30dp"
         android:layout_width="60dp"
         android:layout_height="60dp"/>
-</com.au.module_android.widget.FlowLayout>
+</com.au.module_androidui.widget.FlowLayout>

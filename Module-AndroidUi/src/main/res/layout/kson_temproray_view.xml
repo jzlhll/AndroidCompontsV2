@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.au.module_android.widget.BgBuildLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.au.module_androidui.widget.BgBuildLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
@@ -8,7 +8,7 @@
     app:backgroundNormal="#ffffff"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:padding="16dp"
         android:id="@+id/font"
         tools:text="xxxxxxx"
@@ -16,4 +16,4 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-</com.au.module_android.widget.BgBuildLinearLayout>
+</com.au.module_androidui.widget.BgBuildLinearLayout>

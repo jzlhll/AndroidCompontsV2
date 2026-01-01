@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.au.jobstudy.words.usecase.LoadingUseCase
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logd
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 

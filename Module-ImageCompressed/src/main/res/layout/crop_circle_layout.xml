@@ -26,7 +26,7 @@
             android:layout_width="0dp"
             android:layout_height="1dp"/>
 
-        <com.au.module_android.widget.CustomButton
+        <com.au.module_androidui.widget.CustomButton
             android:id="@+id/save2Btn"
             android:visibility="gone"
             tools:visibility="visible"
@@ -44,7 +44,7 @@
             android:text="save" />
     </LinearLayout>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:layout_alignParentBottom="true"
         android:id="@+id/saveBtn"
         style="@style/StyleButtonPrimary"

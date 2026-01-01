@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.allan.androidlearning.databinding.FragmentLiveDataBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.simplelivedata.NoStickLiveData
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

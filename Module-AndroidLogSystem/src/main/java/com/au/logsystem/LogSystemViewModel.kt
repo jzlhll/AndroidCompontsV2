@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.au.module_android.Globals
 import com.au.module_android.simplelivedata.NoStickLiveData
-import com.au.module_android.utils.FileLog
+import com.au.module_android.log.FileLog
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import kotlinx.coroutines.delay
 import okio.IOException
 import java.io.File

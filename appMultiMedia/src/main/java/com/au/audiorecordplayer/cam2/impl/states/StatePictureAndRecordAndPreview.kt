@@ -23,7 +23,7 @@ import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 
 class StatePictureAndRecordAndPreview(mgr: MyCamManager) : StatePictureAndPreview(mgr), MediaRecorder.OnErrorListener, MediaRecorder.OnInfoListener, IActionRecord {
     private var mMediaRecorder: MediaRecorder? = null

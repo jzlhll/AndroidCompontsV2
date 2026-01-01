@@ -9,13 +9,12 @@ import com.allan.androidlearning.BuildConfig
 import com.allan.androidlearning.databinding.ActivityJsHtmlBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.Globals
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.utils.logd
+import com.au.module_android.log.logd
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
-import com.au.module_imagecompressed.CameraPermissionHelp
-import com.au.module_imagecompressed.MultiPhotoPickerContractResult
-import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.TakePhotoActionDialog
+import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.PickerType
 import java.io.File
 
 /**
@@ -29,7 +28,7 @@ class WebUploadFragment : BindingFragment<ActivityJsHtmlBinding>(), TakePhotoAct
     private var selectValueCallback:(ValueCallback<Array<Uri>>)? = null
 
     val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this,
-        supplier = object : CameraPermissionHelp.Supplier {
+        supplier = object : BaseCameraPermissionHelp.Supplier {
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }

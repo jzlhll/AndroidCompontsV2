@@ -7,9 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.au.module_android.Globals.getColor
-import com.au.module_android.ui.AndroidBug5497Workaround
-import com.au.module_android.ui.base.IFullWindow
-import com.au.module_android.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.AndroidBug5497Workaround
+import com.au.module_androidui.ui.base.IFullWindow
+import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.transparentStatusBar
 import com.github.lzyzsd.jsbridge.BridgeWebViewExFragment

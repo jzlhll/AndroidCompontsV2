@@ -1,7 +1,7 @@
 package com.au.logsystem.oncelog
 
-import com.au.module_android.utils.FileLog
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.FileLog
+import com.au.module_android.log.logdNoFile
 import kotlinx.coroutines.delay
 import java.io.BufferedReader
 import java.io.File

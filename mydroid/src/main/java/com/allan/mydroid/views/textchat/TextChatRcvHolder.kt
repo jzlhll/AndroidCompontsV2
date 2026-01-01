@@ -12,7 +12,7 @@ import com.allan.mydroid.views.textchat.uibean.StatusItem
 import com.au.module_android.click.onClick
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder

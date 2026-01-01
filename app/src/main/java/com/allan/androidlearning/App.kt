@@ -4,7 +4,7 @@ import com.allan.androidlearning.crashtest.debugApplicationCreateCrash
 import com.allan.androidlearning.crashtest.debugApplicationPostMainThreadCrash
 import com.allan.androidlearning.crashtest.debugSubThreadCrash
 import com.au.module_android.DarkModeAndLocalesConst
-import com.au.module_android.InitApplication
+import com.au.module_androidui.InitApplication
 import java.util.Locale
 
 /**

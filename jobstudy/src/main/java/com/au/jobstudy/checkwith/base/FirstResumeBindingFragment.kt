@@ -2,7 +2,7 @@ package com.au.jobstudy.checkwith.base
 
 import androidx.viewbinding.ViewBinding
 import com.au.jobstudy.checkwith.CheckWithFragment
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
 import java.io.File
 

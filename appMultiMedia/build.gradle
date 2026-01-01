@@ -36,6 +36,10 @@ dependencies {
     implementation project(":Module-AndroidUi")
     implementation project(':Module-AndroidCommon')
     implementation project(":Module-ImageCompressed")
+    implementation project(":Module-AuSimplePermission")
+    implementation project(":Module-AuGsonMMKV")
+    implementation project(":Module-AuKson")
+
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat
     implementation libs.material

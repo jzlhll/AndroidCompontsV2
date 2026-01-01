@@ -5,12 +5,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent">
-    <com.au.module_android.widget.CustomToolbar
+    <com.au.module_androidui.widget.CustomToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/toolbar_height" />
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:layout_marginStart="@dimen/ui_padding_edge"
         style="@style/StyleAuTextNormal"
         app:customFontMode="mid"
@@ -34,7 +34,7 @@
             android:paddingBottom="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 style="@style/StyleAuTextNormal"
                 android:layout_gravity="center_vertical"
                 android:id="@+id/followSystemTitle"
@@ -70,7 +70,7 @@
             android:paddingBottom="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 style="@style/StyleAuTextNormal"
                 android:layout_gravity="center_vertical"
                 android:textSize="16sp"
@@ -106,7 +106,7 @@
             android:paddingBottom="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 style="@style/StyleAuTextNormal"
                 android:layout_gravity="center_vertical"
                 android:text="@string/language_tw"
@@ -141,7 +141,7 @@
             android:paddingBottom="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 style="@style/StyleAuTextNormal"
                 android:layout_gravity="center_vertical"
                 android:text="@string/language_en"
@@ -171,7 +171,7 @@
         android:layout_width="match_parent"
         android:layout_height="2dp"/>
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:layout_marginStart="@dimen/ui_padding_edge"
         android:layout_marginTop="24dp"
         style="@style/StyleAuBTextHeadline"
@@ -196,12 +196,12 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content">
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     style="@style/StyleAuTextNormal"
                     android:text="@string/follow_system"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     style="@style/StyleAuTextSmallDesc"
                     android:textColor="@color/color_text_desc"
                     android:text="@string/automatic_desc"
@@ -229,7 +229,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.au.module_android.widget.CustomFontText
+            <com.au.module_androidui.widget.CustomFontText
                 style="@style/StyleAuTextSmallDesc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -247,7 +247,7 @@
                 android:paddingBottom="16dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     style="@style/StyleAuTextNormal"
                     android:layout_gravity="center_vertical"
                     android:text="@string/light"
@@ -284,7 +284,7 @@
                 android:id="@+id/darkHost"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                <com.au.module_android.widget.CustomFontText
+                <com.au.module_androidui.widget.CustomFontText
                     style="@style/StyleAuTextNormal"
                     android:layout_gravity="center_vertical"
                     android:text="@string/dark"

@@ -9,7 +9,7 @@ import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
 import com.au.logsystem.DefaultActivitiesFollowCallback
 import com.au.module_android.Globals
-import com.au.module_android.InitApplication
+import com.au.module_androidui.InitApplication
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
 import com.au.module_androidui.toast.ToastBuilder

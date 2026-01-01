@@ -10,7 +10,7 @@ import android.view.View
 import androidx.annotation.RequiresApi
 import android.os.Build
 import com.au.audiorecordplayer.recorder.WaveRmsDbSample
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import kotlin.math.max
 import kotlin.math.min
 

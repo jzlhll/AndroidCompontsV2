@@ -13,7 +13,7 @@ import com.au.audiorecordplayer.bt.ble.BleUtil.SUBTYPE_CUSTOM_DATA
 import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.Globals
 import com.au.module_android.utils.SingleCoroutineTaskExecutor
-import com.au.module_android.utils.logt
+import com.au.module_android.log.logt
 import com.au.module_android.utils.unsafeLazy
 import okhttp3.internal.toHexString
 import java.util.Arrays

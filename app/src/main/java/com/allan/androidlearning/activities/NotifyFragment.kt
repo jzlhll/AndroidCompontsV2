@@ -18,9 +18,10 @@ import com.allan.androidlearning.R
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.views.ViewFragment
-import com.au.module_android.utils.NotificationUtil
 import com.au.module_android.utils.dp
+import com.au.module_androidui.ui.views.ViewFragment
+import com.au.module_simplepermission.notification.createPostNotificationPermissionResult
+import com.au.module_simplepermission.requestNotificationPermission
 
 /**
  * @author allan
@@ -34,10 +35,10 @@ class NotifyFragment : ViewFragment() {
         val NO_SOUND = false
     }
 
-    val permissionUtil = NotificationUtil.createPostNotificationPermissionResult(this)
+    val permissionUtil = createPostNotificationPermissionResult()
 
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        NotificationUtil.requestPermission(permissionUtil)
+        requireContext().requestNotificationPermission(permissionUtil)
 
         return LinearLayout(inflater.context).also {
             it.addView(Button(inflater.context).also {

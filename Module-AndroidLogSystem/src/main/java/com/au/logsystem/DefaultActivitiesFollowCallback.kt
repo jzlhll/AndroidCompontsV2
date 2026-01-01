@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.widget.FrameLayout
 import com.au.logsystem.oncelog.OnceLogViewFragment
-import com.au.module_android.ui.FragmentShellActivity
+import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_android.utils.dp
 
 class DefaultActivitiesFollowCallback : AllActivityFollowCallback() {

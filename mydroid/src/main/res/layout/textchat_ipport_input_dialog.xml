@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.au.module_android.widget.CustomFontText
+    <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/titleTv"
         style="@style/StyleAuBTextHeadline"
         android:layout_width="match_parent"
@@ -23,14 +23,14 @@
         android:orientation="horizontal"
         android:layout_height="48dp">
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:layout_gravity="center_vertical"
             style="@style/StyleAuTextNormal"
             android:text="IP:"
             android:layout_width="50dp"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomEditText
+        <com.au.module_androidui.widget.CustomEditText
             android:id="@+id/ipInput"
             android:paddingHorizontal="8dp"
             style="@style/StyleBlankEditText"
@@ -49,14 +49,14 @@
         android:orientation="horizontal"
         android:layout_height="48dp">
 
-        <com.au.module_android.widget.CustomFontText
+        <com.au.module_androidui.widget.CustomFontText
             android:layout_gravity="center_vertical"
             style="@style/StyleAuTextNormal"
             android:text="@string/port_m"
             android:layout_width="50dp"
             android:layout_height="wrap_content"/>
 
-        <com.au.module_android.widget.CustomEditText
+        <com.au.module_androidui.widget.CustomEditText
             android:id="@+id/portInput"
             style="@style/StyleBlankEditText"
             android:layout_marginStart="8dp"
@@ -69,7 +69,7 @@
             android:layout_height="42dp"/>
     </LinearLayout>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/sureBtn"
         style="@style/StyleButtonPrimary"
         android:layout_marginTop="36dp"
@@ -79,7 +79,7 @@
         android:layout_height="wrap_content"
         android:text="OK"/>
 
-    <com.au.module_android.widget.CustomButton
+    <com.au.module_androidui.widget.CustomButton
         android:id="@+id/cancelBtn"
         style="@style/StyleButtonSecondary"
         android:layout_marginTop="16dp"

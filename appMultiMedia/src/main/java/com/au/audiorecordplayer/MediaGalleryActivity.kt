@@ -18,9 +18,9 @@ import com.au.audiorecordplayer.imgprocess.ReturnYourFaceFragment
 import com.au.audiorecordplayer.particle.TransparentParticleFragment
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.FragmentShellTranslucentActivity
-import com.au.module_android.widget.FlowLayout
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.FragmentShellTranslucentActivity
+import com.au.module_androidui.widget.FlowLayout
 import com.au.module_cached.delegate.AppDataStoreIntCache
 import com.au.module_cached.delegate.AppDataStoreStringCache
 import kotlinx.coroutines.launch

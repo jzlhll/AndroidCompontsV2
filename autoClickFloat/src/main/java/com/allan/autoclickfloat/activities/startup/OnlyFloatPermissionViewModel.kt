@@ -3,7 +3,7 @@ package com.allan.autoclickfloat.activities.startup
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import com.allan.autoclickfloat.AllPermissionActivity
-import com.au.module_android.permissions.hasFloatWindowPermission
+import com.au.module_simplepermission.hasFloatWindowPermission
 import com.au.module_android.simplelivedata.NoStickLiveData
 
 /**

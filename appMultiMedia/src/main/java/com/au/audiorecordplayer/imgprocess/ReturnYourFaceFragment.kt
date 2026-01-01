@@ -10,19 +10,19 @@ import androidx.core.net.toFile
 import com.au.audiorecordplayer.databinding.FragmentReturnYourFaceBinding
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.json.fromJson
-import com.au.module_android.json.toJsonString
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_gson.fromJson
+import com.au.module_gson.toJsonString
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.visible
-import com.au.module_android.widget.SuitScreenHelper
+import com.au.module_androidui.widget.SuitScreenHelper
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_cached.delegate.AppDataStoreStringCache
 import com.au.module_imagecompressed.PickUriWrap
-import com.au.module_imagecompressed.PickerType
 import com.au.module_imagecompressed.photoPickerForResult
+import com.au.module_simplepermission.PickerType
 import java.io.File
 import java.io.FileInputStream
 

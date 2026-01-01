@@ -6,7 +6,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.ImageView
 import androidx.cardview.widget.CardView
-import com.au.module_android.widget.CustomFontText
+import com.au.module_androidui.widget.CustomFontText
 import com.au.module_androidui.R
 import com.au.module_androidui.databinding.AvatarViewBinding
 import kotlin.math.absoluteValue

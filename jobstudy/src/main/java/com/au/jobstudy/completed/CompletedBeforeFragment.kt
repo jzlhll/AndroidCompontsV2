@@ -3,8 +3,8 @@ package com.au.jobstudy.completed
 import android.os.Bundle
 import com.au.jobstudy.databinding.FragmentCompletedBeforeBinding
 import com.au.module_android.click.onClick
-import com.au.module_android.ui.FragmentShellActivity
-import com.au.module_android.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.bindings.BindingFragment
 
 class CompletedBeforeFragment : BindingFragment<FragmentCompletedBeforeBinding>() {
     override fun onBindingCreated(savedInstanceState: Bundle?) {

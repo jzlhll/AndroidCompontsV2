@@ -1,6 +1,6 @@
 package com.au.module_okhttp.interceptors
 
-import com.au.module_android.utils.logdNoFile
+import com.au.module_android.log.logdNoFile
 import com.au.module_okhttp.exceptions.AuTimestampErrorException
 import com.au.module_okhttp.exceptions.AuTokenExpiredException
 import okhttp3.Interceptor

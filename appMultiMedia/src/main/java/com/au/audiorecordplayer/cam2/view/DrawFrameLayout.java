@@ -13,7 +13,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.au.module_android.utils.ALogJ;
+import com.au.module_android.log.ALogJ;
 
 /**
  * Draw demo：

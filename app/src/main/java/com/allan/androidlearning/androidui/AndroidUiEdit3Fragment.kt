@@ -3,8 +3,8 @@ package com.allan.androidlearning.androidui
 import android.os.Bundle
 import android.view.WindowManager
 import com.allan.androidlearning.databinding.FragmentAndroidUiEdit3Binding
-import com.au.module_android.ui.bindings.BindingFragment
-import com.au.module_android.ui.views.YourToolbarInfo
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.widget.CustomTextInputLayout
 
