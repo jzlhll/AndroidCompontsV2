@@ -1,0 +1,25 @@
+package com.au.module_simplepermission.permission
+
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.core.app.ActivityOptionsCompat
+import com.au.module_simplepermission.IContractResult
+
+abstract class IMultiPermissionsResult(val permissions:Array<String>,
+                                       cxt: Any,
+                                       contract: ActivityResultContract<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>) :
+    IContractResult<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>(cxt, contract) {
+    /**
+     * 使用
+     * createMultiPermissionForResult(permissions)
+     * createPermissionForResult(permission)
+     * 创建，不用传入第二参数。
+     *
+     * 因为block放在了这里设置。
+     */
+    abstract fun safeRun(notGivePermissionBlock:(()->Unit)? = null, option: ActivityOptionsCompat? = null, block:()->Unit)
+
+    override fun start(input: Array<String>, callback: ActivityResultCallback<Map<String, @JvmSuppressWildcards Boolean>>?) {
+        throw RuntimeException("not support 请使用safeRun.")
+    }
+}
