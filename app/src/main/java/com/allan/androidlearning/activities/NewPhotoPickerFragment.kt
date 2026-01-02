@@ -19,7 +19,7 @@ import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
 import com.au.module_imagecompressed.compatMultiUriPickerForResult
 import com.au.module_imagecompressed.photoPickerForResult
 import com.au.module_imagecompressed.uriPickerForResult
-import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.selectSysDirForResult
 import java.io.File
@@ -35,13 +35,13 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     val selectDirResult = selectSysDirForResult()
 
-    val cameraHelper = CameraPermissionHelp(this, object : BaseCameraPermissionHelp.Supplier {
+    val cameraHelper = CameraPermissionHelp(this, object : ICameraFileProviderSupply {
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }
     })
 
-    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this, supplier = object : BaseCameraPermissionHelp.Supplier {
+    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this, supplier = object : ICameraFileProviderSupply {
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }

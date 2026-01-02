@@ -2,8 +2,8 @@ package com.au.module_androidui.ui
 
 import android.content.res.TypedArray
 import android.view.View
-import com.au.module_androidui.R
 import com.au.module_android.utils.ViewBackgroundBuilder
+import com.au.module_androidui.R
 
 data class AnyViewIds(
     val backgroundAlpha: Int,

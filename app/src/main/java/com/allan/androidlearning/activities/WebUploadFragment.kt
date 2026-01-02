@@ -13,7 +13,7 @@ import com.au.module_android.log.logd
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.TakePhotoActionDialog
-import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
 import java.io.File
 
@@ -28,7 +28,7 @@ class WebUploadFragment : BindingFragment<ActivityJsHtmlBinding>(), TakePhotoAct
     private var selectValueCallback:(ValueCallback<Array<Uri>>)? = null
 
     val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this,
-        supplier = object : BaseCameraPermissionHelp.Supplier {
+        supplier = object : ICameraFileProviderSupply {
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }

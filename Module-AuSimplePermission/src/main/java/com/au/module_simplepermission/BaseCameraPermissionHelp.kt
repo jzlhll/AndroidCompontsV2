@@ -12,34 +12,33 @@ import com.au.module_simplepermission.permission.IOnePermissionResult
 import java.io.File
 
 /**
+ * 文件提供者的接口FileProvider.getUriForFile(
+ * 参考createFileProvider()注释
+ */
+interface ICameraFileProviderSupply {
+    /**
+     * 参考代码
+     *             val picture = File(Globals.goodCacheDir.path)
+     *             picture.mkdirs()
+     *             val file = File(picture, "pic_" + System.currentTimeMillis() + ".jpg")
+     *             val uri = FileProvider.getUriForFile(
+     *                 Globals.app,
+     *                 "${applicationId}.fileprovider",
+     *                 file
+     *             )
+     *             return file to uri
+     */
+    fun createFileProvider() : Pair<File, Uri>
+}
+
+/**
  * 封装了请求camera的一系列动作。
  * 使用规则：直接在fragment或者Activity中全局变量申明。使用的时候，只有safeRun调用即可。
  */
 open class BaseCameraPermissionHelp {
-
-    /**
-     * 文件提供者的接口FileProvider.getUriForFile(
-     * 参考createFileProvider()注释
-     */
-    interface Supplier {
-        /**
-         * 参考代码
-         *             val picture = File(Globals.goodCacheDir.path)
-         *             picture.mkdirs()
-         *             val file = File(picture, "pic_" + System.currentTimeMillis() + ".jpg")
-         *             val uri = FileProvider.getUriForFile(
-         *                 Globals.app,
-         *                 "${applicationId}.fileprovider",
-         *                 file
-         *             )
-         *             return file to uri
-         */
-        fun createFileProvider() : Pair<File, Uri>
-    }
-
     private val f: Fragment?
     private val fa: FragmentActivity?
-    private val supplier : Supplier
+    private val supplier : ICameraFileProviderSupply
 
     private val permissionStr = Manifest.permission.CAMERA
     private val cameraPermissionResult: IOnePermissionResult
@@ -48,7 +47,7 @@ open class BaseCameraPermissionHelp {
     private val realActivity: FragmentActivity
         get() = f?.requireActivity() ?: fa!!
 
-    constructor(f: Fragment, supplier:Supplier) {
+    constructor(f: Fragment, supplier:ICameraFileProviderSupply) {
         this.f = f
         this.supplier = supplier
         cameraPermissionResult = f.createPermissionForResult(permissionStr)
@@ -56,7 +55,7 @@ open class BaseCameraPermissionHelp {
         fa = null
     }
 
-    constructor(fa: FragmentActivity, supplier:Supplier) {
+    constructor(fa: FragmentActivity, supplier:ICameraFileProviderSupply) {
         this.fa = fa
         this.supplier = supplier
         cameraPermissionResult = fa.createPermissionForResult(permissionStr)

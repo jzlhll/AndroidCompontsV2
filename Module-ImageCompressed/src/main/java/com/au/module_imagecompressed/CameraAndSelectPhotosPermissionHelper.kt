@@ -1,7 +1,7 @@
 package com.au.module_imagecompressed
 
 import androidx.fragment.app.Fragment
-import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
 
 /**
@@ -10,7 +10,7 @@ import com.au.module_simplepermission.PickerType
  */
 class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
                                             var pickerType : PickerType = PickerType.IMAGE,
-                                            supplier: BaseCameraPermissionHelp.Supplier) {
+                                            supplier: ICameraFileProviderSupply) {
 
     var takePhotoCallback: TakePhotoActionDialog.ITakePhotoActionDialogCallback? = null
 

@@ -8,6 +8,7 @@ import com.au.module_android.utils.ignoreError
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_simplepermission.BaseCameraPermissionHelp
+import com.au.module_simplepermission.ICameraFileProviderSupply
 import java.io.File
 
 /**
@@ -15,8 +16,8 @@ import java.io.File
  * 使用规则：直接在fragment或者Activity中全局变量申明。使用的时候，只有safeRun调用即可。
  */
 class CameraPermissionHelp : BaseCameraPermissionHelp {
-    constructor(f: Fragment, supplier:Supplier) : super(f, supplier)
-    constructor(fa: FragmentActivity, supplier:Supplier) : super(fa, supplier)
+    constructor(f: Fragment, supplier: ICameraFileProviderSupply) : super(f, supplier)
+    constructor(fa: FragmentActivity, supplier:ICameraFileProviderSupply) : super(fa, supplier)
 
     /**
      * 相比safeRunTakePic，是必定callback有回调的。适用于H5WebView请求必须有回调回去的场景
