@@ -1,7 +1,7 @@
 package com.au.module_nested.mgr
 
 /**
- * @author au
+ * @author allan
  * Date: 2023/2/27
  */
 interface INestedPullManager {

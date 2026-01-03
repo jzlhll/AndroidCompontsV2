@@ -29,7 +29,7 @@ internal class NotificationUtil(private val context: Context) : INotification {
         permissionHelper: IOnePermissionResult,
         block: () -> Unit
     ) {
-        permissionHelper.safeRun(block)
+        permissionHelper.safeRun(block = block)
     }
 
     override fun notification(
@@ -181,4 +181,8 @@ internal class NotificationUtil(private val context: Context) : INotification {
  * 申请通知权限
  */
 fun LifecycleOwner.createPostNotificationPermissionResult() =
-    createPermissionForResult(Manifest.permission.POST_NOTIFICATIONS)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        createPermissionForResult(Manifest.permission.POST_NOTIFICATIONS)
+    } else {
+        null
+    }

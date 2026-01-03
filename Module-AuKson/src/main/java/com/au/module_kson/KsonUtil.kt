@@ -27,7 +27,7 @@ bean类对象要求必须@Serializable注解；
     不支持转成Map<String, Any?>。一般只是单向序列化传给后台，我们不需要转成它。
 
 1.  单个@Serializable注解的_1SerializableBean
-        toKsonString()/toKsonStringLimited()/toKsonStringTyped(_1XBean.serialized())/fromJson
+        toKsonString()/toKsonStringLimited()/toKsonStringTyped(_1XBean.serialized())/fromKson
 
 2.  List<_1SerializableBean>, Array<_1SerializableBean>, Set<_1SerializableBean>
         toKsonString()/listToKsonStringLimited()/toKsonStringTyped(_1XBean.serialized())/fromKson/fromKsonList
@@ -46,19 +46,19 @@ bean类对象要求必须@Serializable注解；
 6.  Map<String, Any?>（Any为简单类型）
         toKsonStringLimited()
         toKsonString() 💔不支持 ，toKsonStringTyped 💔不支持，因为不知道怎么传serialized()
-        fromJson 💔不支持, 因为泛型不知道传什么，需要序列化注解
+        fromKson 💔不支持, 因为泛型不知道传什么，需要序列化注解
 6.1  List<Any>
         toKsonStringLimited()
         toKsonString() 💔不支持 ，toKsonStringTyped 💔不支持，因为不知道怎么传serialized()
-        fromJson 💔不支持, 因为泛型不知道传什么，需要序列化注解
+        fromKson 💔不支持, 因为泛型不知道传什么，需要序列化注解
 
 7.  BaseResultBean<T>（T为_1SerializableBean或_2NormalBean）
-        toKsonString()/toKsonStringTyped(BaseResultBean.serialized(_1XBean.serialized()))/fromJson<BaseResultBean<_1XBean>>()
+        toKsonString()/toKsonStringTyped(BaseResultBean.serialized(_1XBean.serialized()))/fromKson<BaseResultBean<_1XBean>>()
         toKsonStringLimited()💔不支持，提示缺乏泛型；因为是Any的做法，无法知道类型
         普通类型T，都是失败
 
 8.  BaseResultBean<List<_1SerializableBean>>
-        toKsonString()/toKsonStringTyped(BaseResultBean.serialized(ListSerializer(_1XBean.serialized())))/fromJson<BaseResultBean<List<_1XBean>>>()
+        toKsonString()/toKsonStringTyped(BaseResultBean.serialized(ListSerializer(_1XBean.serialized())))/fromKson<BaseResultBean<List<_1XBean>>>()
         toKsonStringLimited()💔不支持，提示缺乏泛型；因为是Any的做法，无法知道类型
 
 9.  BaseResultBean<Map<String, _1SerializableBean>>                                   暂时忽略
@@ -72,7 +72,7 @@ bean类对象要求必须@Serializable注解；
 12. List<BaseResultBean<_1SerializableBean>>
         toKsonString()/toKsonStringTyped(BaseResultBean.serialized(_1XBean.serialized()))
         toKsonStringLimited()💔不支持，提示缺乏泛型；因为是Any的做法，无法知道类型
-        fromJson<List<BaseResultBean<_1XBean>>>() / fromJsonList<BaseResultBean<_1XBean>>()
+        fromKson<List<BaseResultBean<_1XBean>>>() / fromKsonList<BaseResultBean<_1XBean>>()
 
 13. _3SerializableNestBean内部包含一个字段_1SerializableBean
         均支持

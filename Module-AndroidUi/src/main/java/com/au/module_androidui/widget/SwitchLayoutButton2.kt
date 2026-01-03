@@ -4,7 +4,7 @@ import com.au.module_android.click.onClick
 import com.au.module_android.utils.invisible
 import com.au.module_android.utils.visible
 import com.au.module_androidui.R
-import com.au.module_androidui.databinding.LayoutSwitchButtonsBinding
+import com.au.module_androidui.databinding.LayoutSwitchButtons2Binding
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.util.AttributeSet
@@ -16,10 +16,9 @@ import android.widget.TextView
 import androidx.annotation.EmptySuper
 
 /**
- * 自定义SwitchView 全新设计。 滑块。
- * 请注意：width必须设置为wrap_content。代码内部会让2个文字一样宽，与preview不同。请注意。
+ * 自定义SwitchView 简化版本。支持外部约束宽度和高度，内容左右分半显示。
  */
-open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     FrameLayout(
         context, attrs, defStyleAttr
     ) {
@@ -34,8 +33,6 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
      */
     var valueCallback : ((isLeft:Boolean)->Unit)? = null
 
-    private var isPost = false
-
     private val textColor:Int
     private val textSelectColor:Int
     private val textColorDisable:Int
@@ -43,20 +40,18 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
 
     private var isDisabled = false
 
-    lateinit var root: ViewGroup
-    lateinit var leftTv: TextView
-    lateinit var rightTv: TextView
-    lateinit var padding : View
-    lateinit var selectBgView : View
-    lateinit var selectBgViewDisable : View
+    protected lateinit var root: ViewGroup
+    protected lateinit var leftTv: TextView
+    protected lateinit var rightTv: TextView
+    protected lateinit var selectBgView : View
+    protected lateinit var selectBgViewDisable : View
 
     @EmptySuper
-    open fun initLayoutBinding() {
-        LayoutSwitchButtonsBinding.inflate(LayoutInflater.from(context), this, true).let {
+    protected open fun initLayoutBinding() {
+        LayoutSwitchButtons2Binding.inflate(LayoutInflater.from(context), this, true).let {
             leftTv = it.leftTv
             rightTv = it.rightTv
             root = it.root
-            padding = it.padding
             selectBgView = it.selectBgView
             selectBgViewDisable = it.selectBgViewDisable
         }
@@ -85,50 +80,37 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
         typedArray.recycle()
 
         initLayoutBinding()
-        leftTv.setPadding(textPaddingHorz, 0, textPaddingHorz, 0)
-        rightTv.setPadding(textPaddingHorz, 0, textPaddingHorz, 0)
+        
+        // 设置内边距
+        if (textPaddingHorz > 0) {
+            leftTv.setPadding(textPaddingHorz, 0, textPaddingHorz, 0)
+            rightTv.setPadding(textPaddingHorz, 0, textPaddingHorz, 0)
+        }
+        
+        // 设置文本
         leftTv.text = leftStr
         rightTv.text = rightStr
-
+        
+        // 点击事件
         root.onClick {
             if(isDisabled) return@onClick
-
-            val newIsLeft = !isLeft
-            setValue(newIsLeft)
-            valueCallback?.invoke(newIsLeft)
+            switchIt()
         }
+    }
 
-        post {
-            if (paddingInner == 0) {
-                padding.visibility = View.GONE
-            } else if (paddingInner > 0) {
-                padding.layoutParams = padding.layoutParams.apply {
-                    width = paddingInner
-                }
-            }
-
-            val leftWidth = leftTv.width
-            val rightWidth = rightTv.width
-            if (leftWidth > rightWidth) {
-                rightTv.layoutParams = rightTv.layoutParams.apply {
-                    width = leftWidth
-                }
-            } else if (leftWidth < rightWidth) {
-                leftTv.layoutParams = leftTv.layoutParams.apply {
-                    width = rightWidth
-                }
-            }
-            if (!isLeft) { //如果initValue比我们post要早。在这里初始化。
-                padding.post { //需要2层post才能确定位置。第一次post设置后，第二post才能得到selectBgView的变化
-                    selectBgView.translationX = (selectBgView.width + padding.width).toFloat()
-                    selectBgViewDisable.translationX = (selectBgView.width + padding.width).toFloat()
-                    isPost = true
-                }
-            } else {
-                isPost = true
-            }
-            changeTextColor()
+    private fun updateSelectionState() {
+        // 更新背景位置
+        if (!isLeft) {
+            val halfWidth = selectBgView.width
+            selectBgView.translationX = halfWidth.toFloat()
+            selectBgViewDisable.translationX = halfWidth.toFloat()
+        } else {
+            selectBgView.translationX = 0f
+            selectBgViewDisable.translationX = 0f
         }
+        
+        // 更新文本颜色
+        changeTextColor()
     }
 
     private fun changeTextColor() {
@@ -140,6 +122,8 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
                 rightTv.setTextColor(textSelectColorDisable)
                 leftTv.setTextColor(textColorDisable)
             }
+            selectBgViewDisable.visible()
+            selectBgView.invisible()
         } else {
             if (isLeft) {
                 leftTv.setTextColor(textSelectColor)
@@ -148,57 +132,53 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
                 leftTv.setTextColor(textColor)
                 rightTv.setTextColor(textSelectColor)
             }
-        }
-
-        if (isDisabled) {
-            selectBgViewDisable.visible()
-            selectBgView.invisible()
+            selectBgViewDisable.invisible()
+            selectBgView.visible()
         }
     }
 
     fun initValue(isLeft:Boolean, disable:Boolean, leftRightStrs:Pair<String, String>? = null) {
-        isInit = true
         this.isLeft = isLeft
-
         isDisabled = disable
+        isInit = true
 
         if (leftRightStrs != null) {
             leftTv.text = leftRightStrs.first
             rightTv.text = leftRightStrs.second
         }
 
-        if (isPost) {
-            if (!isLeft) { //我们默认true。初始化为false。则需要特殊处理移动下block向右。
-                selectBgView.translationX = (selectBgView.width + padding.width).toFloat()
-                selectBgViewDisable.translationX = (selectBgView.width + padding.width).toFloat()
-            }
-            changeTextColor()
-        }
+        // 更新状态
+        updateSelectionState()
     }
 
     fun setValue(isLeft: Boolean) {
-        if (!isInit) throw RuntimeException()
+        if (!isInit) throw RuntimeException("SwitchLayoutButton2 not initialized. Call initValue() first.")
         if (isDisabled) return
-        //后续也可能后台改动，进而触发notifyItemChange bindData，则动画
+        if (this.isLeft == isLeft) return
+        
         this.isLeft = isLeft
-        if (isPost) {
-            handleAnimal()
-            changeTextColor()
-        }
-    }
-
-    private fun handleAnimal() {
-        val bgAnimator: ObjectAnimator
-        val newIsLeftOn = isLeft
-        bgAnimator = if (newIsLeftOn) {  //从 右边 -> 左边
-            ObjectAnimator.ofFloat(selectBgView, "translationX", 0f)
-        } else { //从 true - false
-            ObjectAnimator.ofFloat(
-                selectBgView, "translationX",
-                0f, (selectBgView.width + padding.width).toFloat()
-            )
-        }
+        
+        // 执行动画
+        val halfWidth = selectBgView.width
+        val targetX = if (isLeft) 0f else halfWidth.toFloat()
+        
+        val bgAnimator = ObjectAnimator.ofFloat(selectBgView, "translationX", targetX)
         bgAnimator.duration = 160
         bgAnimator.start()
+        
+        // 同步更新禁用状态下的背景位置
+        selectBgViewDisable.translationX = targetX
+        
+        // 更新文本颜色
+        changeTextColor()
+    }
+
+    /*
+     * 点击
+     */
+    fun switchIt() {
+        val newIsLeft = !isLeft
+        setValue(newIsLeft)
+        valueCallback?.invoke(newIsLeft)
     }
 }

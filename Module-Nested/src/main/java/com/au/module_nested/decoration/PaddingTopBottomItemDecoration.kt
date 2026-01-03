@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 
 /**
- * @author: au
+ * @author: allan
  * @date: 2022/9/19 10:38
  * @description: 用于处理clipToPadding失效时，上下边距绘制
  */

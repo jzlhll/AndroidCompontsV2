@@ -116,9 +116,9 @@ open class BaseCameraPermissionHelp {
             return 0
         } else {
             if (canShowRequestDialogUi(realActivity)) {
-                cameraPermissionResult.safeRun(block = {
+                cameraPermissionResult.safeRun(notGivePermissionBlock) {
                     realRunTakePic(callback)
-                }, notGivePermissionBlock)
+                }
                 return -1
             } else {
                 return -2

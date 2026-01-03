@@ -50,7 +50,7 @@ abstract class AbsCenterFakeDialog<T : ViewBinding> : DefaultLifecycleObserver {
     /**
      * 每次显示时调用，设置内容文字等参数
      */
-    abstract fun onShow(activity: ComponentActivity, binding: T)
+    abstract fun onShow(activity: ComponentActivity, binding: T, desc:String?)
 
     /**
      * 0～3的取值。
@@ -105,15 +105,15 @@ abstract class AbsCenterFakeDialog<T : ViewBinding> : DefaultLifecycleObserver {
         hide()
     }
 
-    fun pop(fragment: Fragment) {
-        pop(fragment.requireActivity())
+    fun pop(fragment: Fragment, desc : String? = null) {
+        pop(fragment.requireActivity(), desc)
     }
 
     open fun createBinding(activity: Activity) : T{
         return createViewBinding(this@AbsCenterFakeDialog.javaClass, activity.layoutInflater, null, false)
     }
 
-    fun pop(activity: ComponentActivity) {
+    fun pop(activity: ComponentActivity, desc : String? = null) {
         if (!isInited) {
             isInited = true
             activity.lifecycle.addObserver(this)
@@ -150,7 +150,7 @@ abstract class AbsCenterFakeDialog<T : ViewBinding> : DefaultLifecycleObserver {
             }
         }
 
-        onShow(activity, mContentBinding)
+        onShow(activity, mContentBinding, desc)
     }
 
 }

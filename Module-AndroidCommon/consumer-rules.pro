@@ -33,10 +33,10 @@ androidx.recyclerview.widget.LinearLayoutManager mLayoutManager;
 
 
 # lifecycle
--keep class androidx.lifecycle.** { *;}
+#-keep class androidx.lifecycle.** { *;}
 
--flattenpackagehierarchy
--allowaccessmodification
+#-flattenpackagehierarchy
+#-allowaccessmodification
 -keepattributes Exceptions,InnerClasses,Signature,SourceFile,LineNumberTable
 -ignorewarnings
 

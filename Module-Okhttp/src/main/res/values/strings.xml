@@ -13,5 +13,10 @@
     <string name="http_503">The server is being upgraded</string>
     <string name="http_504">The server, acting as a gateway or proxy, did not receive a timely request from the upstream server</string>
     <string name="http_505">The server does not support the HTTP version protocol used in the request</string>
+    <string name="http_413">File size exceeds limit</string>
+    <string name="http_415">Unsupported file type</string>
+    <string name="http_429">Rate limit exceeded</string>
     <string name="http_unknown">Unknown error</string>
+
+    <string name="network_not_available">Unable to connect to network. Please check your network connection.</string>
 </resources>

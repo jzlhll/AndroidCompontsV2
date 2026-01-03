@@ -8,7 +8,7 @@ internal class PermissionForResult(cxt: Any,
                                    permission: String) :
     IOnePermissionResult(permission, cxt, ActivityResultContracts.RequestPermission()) {
 
-    override fun safeRun(block: () -> Unit, notGivePermissionBlock: (() -> Unit)?, option: ActivityOptionsCompat?) {
+    override fun safeRun(notGivePermissionBlock: (() -> Unit)?, option: ActivityOptionsCompat?, block: () -> Unit) {
         if(toContext().hasPermission(permission)) {
             block.invoke()
         } else {

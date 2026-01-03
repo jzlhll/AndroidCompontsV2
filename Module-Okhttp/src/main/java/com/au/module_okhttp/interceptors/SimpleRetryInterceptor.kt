@@ -6,8 +6,9 @@ import com.au.module_okhttp.exceptions.AuTokenExpiredException
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.internal.connection.RouteException
+import okhttp3.internal.connection.RealCall
 import okhttp3.internal.http2.ConnectionShutdownException
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.net.ProtocolException
@@ -33,16 +34,21 @@ class SimpleRetryInterceptor(
         var request = chain.request()
         var errorException: Exception? = null
         var isTimestampAlreadyRetry = false
+        val call = chain.call() as? RealCall
 
         while (true) {
             var response: Response
             try {
+                if (call?.isCanceled() == true) {
+                    throw IOException("Canceled")
+                }
                 response = chain.proceed(request)
                 return response
-            } catch (e: RouteException) {
+            }  catch (e: IOException) {
                 errorException = e
-                // The attempt to connect via a route failed. The request will not have been sent.
-                if (!isRecoverable(e.lastConnectException, requestSendStarted = false)) {
+                // An attempt to communicate with a server failed. The request may have been sent.
+                val isRecoverable = recover(e,  call, request)
+                if (!isRecoverable) {
                     break
                 }
             } catch (e: IOException) {
@@ -76,8 +82,38 @@ class SimpleRetryInterceptor(
                 break
             }
         }
-        throw errorException ?: Exception("No way")
+        throw errorException
     }
+
+    private fun requestIsOneShot(
+        e: IOException,
+        userRequest: Request,
+    ): Boolean {
+        val requestBody = userRequest.body
+        return (requestBody != null && requestBody.isOneShot()) ||
+                e is FileNotFoundException
+    }
+
+    private fun recover(
+        e: IOException,
+        call:RealCall?,
+        userRequest: Request,
+    ): Boolean {
+        val requestSendStarted = e !is ConnectionShutdownException
+
+        // We can't send the request body again.
+        if (requestSendStarted && requestIsOneShot(e, userRequest)) return false
+
+        // No more routes to attempt.
+        if (call != null && !call.retryAfterFailure()) return false
+
+        // This exception is fatal.
+        if (!isRecoverable(e, requestSendStarted)) return false
+
+        // For failure recovery, use the same route selector with a new connection.
+        return true
+    }
+
 
     private fun isRecoverable(e: IOException, requestSendStarted: Boolean): Boolean {
         // If there was a protocol problem, don't recover.

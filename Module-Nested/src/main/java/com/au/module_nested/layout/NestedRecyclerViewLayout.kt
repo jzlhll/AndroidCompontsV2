@@ -14,7 +14,7 @@ import com.au.module_nested.R
 import com.google.android.material.progressindicator.CircularProgressIndicator
 
 /**
- * @author au
+ * @author allan
  * Date: 2023/2/17
  * Description 使用NestedCoordinatorLayout包裹住RecyclerView，能下拉动作的转圈圈进度指示器。
  *

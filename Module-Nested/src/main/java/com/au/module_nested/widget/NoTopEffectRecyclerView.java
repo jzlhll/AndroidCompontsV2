@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * @author au
+ * @author allan
  * @date 2024/8/7 11:54
  * 研究许久，如果想要下拉刷新的嵌套RecyclerView的Layout，则禁用内部的RecyclerView的edge效果即可。
  * rcv1.3.2的库，额外处理了edge consume掉了nest的距离。因此，我们这里搞一个假的空Effect进去，也符合我们

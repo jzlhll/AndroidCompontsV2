@@ -9,7 +9,7 @@ import com.au.module_android.utils.dp
 import com.au.module_android.utils.unsafeLazy
 
 /**
- * @author au
+ * @author allan
  * @date :2023/11/9 15:29
  * @description: 其实类似RecyclerView，ListView 不需要回收机制的简易，几条items的layout.
  */

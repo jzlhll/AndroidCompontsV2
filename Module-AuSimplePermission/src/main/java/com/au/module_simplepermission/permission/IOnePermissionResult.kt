@@ -17,7 +17,7 @@ abstract class IOnePermissionResult(val permission:String,
      *
      * 因为block放在了这里设置。
      */
-    abstract fun safeRun(block:()->Unit, notGivePermissionBlock:(()->Unit)? = null, option: ActivityOptionsCompat? = null)
+    abstract fun safeRun(notGivePermissionBlock:(()->Unit)? = null, option: ActivityOptionsCompat? = null, block:()->Unit)
 
     override fun start(input: String, callback: ActivityResultCallback<Boolean>?) {
         throw IllegalAccessException("not support please call safeRun.")
