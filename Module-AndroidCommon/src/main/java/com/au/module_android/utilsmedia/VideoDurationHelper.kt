@@ -1,6 +1,6 @@
 package com.au.module_android.utilsmedia
 
-import com.au.module_android.utilsmedia.MediaTypeUtil.Companion.isUriVideo
+import com.au.module_android.utilsmedia.ExtensionMimeUtil.Companion.isUriVideo
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer

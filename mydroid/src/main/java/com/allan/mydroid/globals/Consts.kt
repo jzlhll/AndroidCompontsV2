@@ -3,9 +3,9 @@ package com.allan.mydroid.globals
 import androidx.annotation.DrawableRes
 import com.allan.mydroid.R
 import com.au.module_android.Globals
-import com.au.module_android.api.ResultBean
+import com.au.module_okhttp.api.ResultBean
 import com.au.module_gson.toJsonString
-import com.au.module_android.utilsmedia.MediaTypeUtil
+import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
@@ -110,11 +110,11 @@ fun getIcon(fileName: String?): Int {
         "mp4" -> R.drawable.ic_filetype_mp4
         // 其他类型
         else ->
-            if (MediaTypeUtil.isImageFileSimple(extension)) {
+            if (ExtensionMimeUtil.isImageFileSimple(extension)) {
                 R.drawable.ic_filetype_img
-            } else if (MediaTypeUtil.isAudioFileSimple(extension)) {
+            } else if (ExtensionMimeUtil.isAudioFileSimple(extension)) {
                 R.drawable.ic_filetype_audio
-            } else if (MediaTypeUtil.isVideoFileSimple(extension)) {
+            } else if (ExtensionMimeUtil.isVideoFileSimple(extension)) {
                 R.drawable.ic_filetype_video
             } else {
                 R.drawable.ic_filetype_other

@@ -27,7 +27,7 @@ import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utils.replaceFragment
 import com.au.module_android.utils.visible
-import com.au.module_android.utilsmedia.MediaTypeUtil
+import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
@@ -182,7 +182,7 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
     private fun alreadyFileListSet(mFiles: List<String>) {
         mFiles.forEach { fileStr ->
             val file = File(fileStr)
-            val mimeType = MediaTypeUtil.getMimeTypePath(fileStr)
+            val mimeType = ExtensionMimeUtil.getMimeTypePath(fileStr)
             if (mimeType.contains("video")) {
                 binding.alreadyFilesList.addView(AlreadyFilesItemBinding.inflate(requireActivity().layoutInflater).also {
                     it.image.setImageResource(R.drawable.ic_b_video_record)

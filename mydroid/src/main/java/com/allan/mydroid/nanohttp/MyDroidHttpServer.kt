@@ -17,7 +17,7 @@ import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
-import com.au.module_android.api.ResultBean
+import com.au.module_okhttp.api.ResultBean
 import com.au.module_gson.toJsonString
 import com.au.module_android.log.logdNoFile
 import com.modulenative.AppNative

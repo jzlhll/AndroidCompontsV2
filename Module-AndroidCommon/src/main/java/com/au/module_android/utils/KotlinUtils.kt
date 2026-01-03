@@ -43,7 +43,7 @@ suspend fun <T> withMainThread(block: suspend () -> T): T {
 /**
  * 始终在io线程运行代码
  */
-suspend inline fun <T> withIoThread(crossinline block: suspend () -> T): T {
+suspend inline fun <T> withIOThread(crossinline block: suspend () -> T): T {
     return if (isMainThread) {
         withContext(Dispatchers.IO) {
             block.invoke()
@@ -92,7 +92,7 @@ suspend fun <T, R> CoroutineScope.awaitAllNotNull(
  * 在io线程操作
  */
 suspend inline fun <T> awaitOnIoThread(crossinline block: (CancellableContinuation<T>) -> Unit): T {
-    return withIoThread {
+    return withIOThread {
         suspendCancellableCoroutine(block)
     }
 }

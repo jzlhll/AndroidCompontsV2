@@ -1,11 +1,11 @@
 package com.au.module_android.utilsmedia
 
-import com.au.module_android.utils.startActivityFix
-import com.au.module_android.utilsmedia.MediaTypeUtil.Companion.getMimeTypePath
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
+import com.au.module_android.utils.startActivityFix
+import com.au.module_android.utilsmedia.ExtensionMimeUtil.Companion.getMimeTypePath
 import java.io.File
 
 /**
@@ -19,7 +19,7 @@ fun shareFile(context: Context, file: File?, title:String) {
         val share = Intent(Intent.ACTION_SEND)
 
         // "项目包名.fileprovider"即是在清单文件中配置的authorities
-        val uri = FileProvider.getUriForFile(context, context.packageName + ".provider", file)
+        val uri = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
         // 给目标应用一个临时授权
 
         share.putExtra(Intent.EXTRA_STREAM, uri)
@@ -37,7 +37,7 @@ fun openWith(context: Context, file: File, buildConfigApplicationId:String, titl
     //第二个参数是manifest中定义的`authorities`
     val uri:Uri = FileProvider.getUriForFile(
         context,
-        "${buildConfigApplicationId}.provider",
+        "${buildConfigApplicationId}.fileprovider",
         file)
     //    intent.putExtra(Intent.EXTRA_STREAM, uri) //No Need
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

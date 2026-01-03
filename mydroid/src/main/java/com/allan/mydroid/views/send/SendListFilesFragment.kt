@@ -27,7 +27,7 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
-import com.au.module_android.utilsmedia.MediaTypeUtil
+import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidcolor.R
 import com.bumptech.glide.request.target.Target
 import org.koin.android.ext.android.get
@@ -45,8 +45,8 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
                 if (mode == CLICK_MODE_ROOT && bean != null) {
                     logd { "click on icon $bean" }
 
-                    val isImg = MediaTypeUtil.isUriImage(bean.mimeType)
-                    val isVideo = MediaTypeUtil.isUriVideo(bean.mimeType)
+                    val isImg = ExtensionMimeUtil.isUriImage(bean.mimeType)
+                    val isVideo = ExtensionMimeUtil.isUriVideo(bean.mimeType)
                     if (isImg || isVideo) {
                         showBigIcon(bean, isVideo)
                     }

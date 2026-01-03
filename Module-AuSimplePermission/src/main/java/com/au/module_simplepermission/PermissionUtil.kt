@@ -64,7 +64,7 @@ fun LifecycleOwner.createMultiPermissionForResult(permissions:Array<String>)
 /**
  * 多媒体权限的申请
  */
-fun LifecycleOwner.createMediaPermissionForResult(types:Array<PermissionMediaHelper.MediaType>)
+fun LifecycleOwner.createMediaPermissionForResult(types:Array<PermissionMediaType>)
         : IMultiPermissionsResult
     = createMultiPermissionForResult(PermissionMediaHelper().getRequiredPermissions(types))
 

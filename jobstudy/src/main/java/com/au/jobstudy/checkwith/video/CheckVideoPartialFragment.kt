@@ -62,7 +62,7 @@ class CheckVideoPartialFragment : FirstResumeBindingFragment<PartialVideoBinding
         val file = File(picture, "vid_" + WeekDateUtil.currentHHmmssSSS() + ".mp4")
         val uri = FileProvider.getUriForFile(
             Globals.app,
-            "${BuildConfig.APPLICATION_ID}.provider",
+            "${BuildConfig.APPLICATION_ID}.fileprovider",
             file
         )
 

@@ -15,10 +15,6 @@ import com.au.module_android.BuildConfig
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
-import com.au.module_android.utilsmedia.CopyMode
-import com.au.module_android.utilsmedia.URI_COPY_PARAM_ANY_TO_JPG
-import com.au.module_android.utilsmedia.URI_COPY_PARAM_HEIC_TO_JPG
-import com.au.module_android.utilsmedia.copyToCacheConvert
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_simplepermission.CompatMultiPickVisualMedia
 import com.au.module_simplepermission.IContractResult

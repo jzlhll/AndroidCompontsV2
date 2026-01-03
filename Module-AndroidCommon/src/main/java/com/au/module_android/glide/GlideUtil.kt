@@ -10,7 +10,6 @@ import com.au.module_android.Globals
 import com.au.module_android.R
 import com.au.module_android.utils.deleteAll
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.withIoThread
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
@@ -33,27 +32,6 @@ fun ImageView.clearByGlide() {
 fun clearGlideImageDiskCache() {
     ignoreError {
         Glide.get(Globals.app).clearDiskCache()
-    }
-}
-
-/**
- * 清除缓存大小
- */
-suspend fun clearAppCacheSize() {
-    withIoThread {
-        clearGlideImageDiskCache()
-        clearAppCache()
-    }
-}
-
-/**
- * 清理cache数据
- */
-@WorkerThread
-fun clearAppCache() {
-    ignoreError {
-        Globals.app.cacheDir?.deleteAll()
-        Globals.app.externalCacheDir?.deleteAll()
     }
 }
 

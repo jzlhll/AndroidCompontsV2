@@ -9,7 +9,7 @@ import com.au.module_android.glide.glideSetAny
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
-import com.au.module_android.utilsmedia.MediaTypeUtil
+import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import java.util.Locale
 import kotlin.math.min
@@ -45,8 +45,8 @@ class SendHolder(binding: HolderMydroidSendlistItemBinding,
         super.bindData(bean)
         if (bean !is ShareInBean) return
 
-        val isImg = MediaTypeUtil.isUriImage(bean.mimeType)
-        val isVideo = MediaTypeUtil.isUriVideo(bean.mimeType)
+        val isImg = ExtensionMimeUtil.isUriImage(bean.mimeType)
+        val isVideo = ExtensionMimeUtil.isUriVideo(bean.mimeType)
 
         val goodName = bean.name
         binding.icon.setImageResource(getIcon(goodName))

@@ -10,7 +10,7 @@ import android.os.Build
 import android.view.Surface
 import androidx.annotation.RequiresApi
 import com.au.audiorecordplayer.util.MyLog
-import com.au.module_android.utils.HandlerExecutor
+import com.au.module_android.utilthread.HandlerExecutor
 import com.au.module_android.log.logdNoFile
 import java.util.concurrent.Executor
 

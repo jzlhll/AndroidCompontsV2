@@ -1,6 +1,9 @@
 package com.au.module_android.utils
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.net.nsd.NsdServiceInfo
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.ext.SdkExtensions
 import java.net.Inet4Address
@@ -119,4 +122,43 @@ private fun getIPAddress(address: InetAddress?): Pair<String?, NetworkType>? {
     }
 
     return null
+}
+
+/**
+ * 获取网络IP地址(优先获取wifi地址)
+ *
+ * @param ctx Context
+ * @return String ip
+ */
+fun getIPAddressWifiManager(ctx: Context): String? {
+    return try {
+        val wifiManager = ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        if (wifiManager.isWifiEnabled) getWifiIP(wifiManager) else getIpAddress().first
+    } catch (e: java.lang.Exception) {
+        e.printStackTrace()
+        ""
+    }
+}
+
+/*
+ * 获取WIFI连接下的ip地址
+ * 者必须要权限ACCESS_NETWORK_STATE，和wifi的权限
+ */
+private fun getWifiIP(wifiManager: WifiManager): String? {
+    return try {
+        @SuppressLint("MissingPermission") val wifiInfo = wifiManager.connectionInfo
+        val ip: String
+        if (wifiInfo != null) {
+            ip = intToIp(wifiInfo.ipAddress)
+            return ip
+        }
+        ""
+    } catch (e: java.lang.Exception) {
+        e.printStackTrace()
+        ""
+    }
+}
+
+private fun intToIp(i: Int): String {
+    return (i and 0xFF).toString() + "." + (i shr 8 and 0xFF) + "." + (i shr 16 and 0xFF) + "." + (i shr 24 and 0xFF)
 }

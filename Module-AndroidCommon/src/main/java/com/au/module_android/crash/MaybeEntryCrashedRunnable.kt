@@ -5,9 +5,10 @@ import android.widget.Toast
 import androidx.annotation.WorkerThread
 import com.au.module_android.Globals
 import com.au.module_android.crash.UncaughtExceptionHandlerObj.TAG
-import com.au.module_android.glide.clearAppCache
-import com.au.module_android.utils.ignoreError
 import com.au.module_android.log.logd
+import com.au.module_android.utils.clearAppCache
+import com.au.module_android.utils.ignoreError
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author allan
@@ -108,7 +109,9 @@ abstract class MaybeEntryCrashedRunnable : Runnable{
             CanUpdate.CheckedFail,
             CanUpdate.CurrentLatest -> {
                 toastAndSleep("清理本地cache数据...", false)
-                clearAppCache() //todo: clearAppFileDir()
+                runBlocking {
+                    clearAppCache() //todo: clearAppFileDir()
+                }
                 toastAndSleep("清理完成! 准备重启...")
                 logd(TAG) { "Maybe Entry crashed kill and restart " }
 

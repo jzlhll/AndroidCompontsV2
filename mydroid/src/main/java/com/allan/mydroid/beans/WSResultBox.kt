@@ -1,7 +1,7 @@
 package com.allan.mydroid.beans
 
 import androidx.annotation.Keep
-import com.au.module_android.api.ResultBean
+import com.au.module_okhttp.api.ResultBean
 
 @Keep
 class WSResultBox<T>(code: String,

@@ -10,14 +10,14 @@ import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.beansinner.MergedFileInfo
 import com.allan.mydroid.beansinner.ShareInBean
 import com.au.module_android.Globals
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.simpleflow.StatusState
+import com.au.module_android.utils.Md5Util
+import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.launchOnThread
+import com.au.module_cached.AppDataStore
 import com.au.module_gson.fromJson
 import com.au.module_gson.toJsonString
-import com.au.module_android.simpleflow.StatusState
-import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.getFileMD5
-import com.au.module_android.utils.launchOnThread
-import com.au.module_android.log.logdNoFile
-import com.au.module_cached.AppDataStore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +27,6 @@ import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import kotlin.collections.forEach
 
 object ShareInUrisObj {
     /**
@@ -194,7 +193,7 @@ object ShareInUrisObj {
         val fileList = ArrayList<MergedFileInfo>()
         if (nanoMergedDir.exists()) {
             nanoMergedDir.listFiles()?.forEach {
-                fileList.add(MergedFileInfo(it, getFileMD5(it.absolutePath), formatSize(it.length())))
+                fileList.add(MergedFileInfo(it, Md5Util.getFileMD5(it.absolutePath), formatSize(it.length())))
             }
         }
         fileList.sortByDescending { it.file.lastModified() }

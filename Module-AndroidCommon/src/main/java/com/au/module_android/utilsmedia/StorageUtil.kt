@@ -209,7 +209,7 @@ fun insertFileToContentResolverUri(
     contentValuesAction: Function1<ContentValues, Unit>? = null
 ) : Uri? {
     val mimeType = UriParseHelper(origUri).parse(context.contentResolver).mimeType
-    val mediaType = MediaTypeUtil.mediaTypeTo(mimeType)
+    val mediaType = ExtensionMimeUtil.mediaTypeTo(mimeType)
     return insertFileToContentResolver(context, mediaType, mimeType, displayName, subPath, contentValuesAction)
 }
 

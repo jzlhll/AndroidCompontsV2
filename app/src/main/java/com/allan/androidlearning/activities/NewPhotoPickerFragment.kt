@@ -51,7 +51,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         val picture = File(Globals.goodCacheDir.path + "/shared")
         picture.mkdirs()
         val file = File(picture, "pic_" + System.currentTimeMillis() + ".jpg")
-        val uri = FileProvider.getUriForFile(Globals.app, "${BuildConfig.APPLICATION_ID}.provider", file)
+        val uri = FileProvider.getUriForFile(Globals.app, "${BuildConfig.APPLICATION_ID}.fileprovider", file)
         return file to uri
     }
 

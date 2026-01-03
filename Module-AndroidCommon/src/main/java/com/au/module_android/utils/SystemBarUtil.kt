@@ -117,6 +117,9 @@ fun Activity.transparentStatusBar(insetsBlock: (
 ) {
     window.run {
         addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         WindowCompat.setDecorFitsSystemWindows(this, false)
         statusBarColor = Color.TRANSPARENT
         navigationBarColor = Color.TRANSPARENT

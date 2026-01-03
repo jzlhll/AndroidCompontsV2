@@ -68,7 +68,7 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
         val file = File(picture, "pic_" + System.currentTimeMillis() + ".jpg")
         val uri = FileProvider.getUriForFile(
             Globals.app,
-            "${BuildConfig.APPLICATION_ID}.provider",
+            "${BuildConfig.APPLICATION_ID}.fileprovider",
             file
         )
         return file to uri

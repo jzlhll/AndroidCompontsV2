@@ -1,6 +1,5 @@
 package com.au.module_android.crash
 
-import android.content.Context
 import android.os.Bundle
 import android.text.Html
 import android.util.Log
@@ -10,9 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import com.au.module_android.R
 import com.au.module_android.click.onClick
 import com.au.module_android.crash.UncaughtExceptionHandlerObj.killAndRestart
-import com.au.module_android.glide.clearAppCache
 import com.au.module_android.log.FileLog
+import com.au.module_android.utils.clearAppCache
 import com.au.module_android.utils.openUrlByBrowser
+import com.au.module_android.utilsandroid.StatusBarUtils
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author allan
@@ -20,15 +21,6 @@ import com.au.module_android.utils.openUrlByBrowser
  * @description:
  */
 class CrashActivity : AppCompatActivity() {
-    fun getStatusBarHeight(context: Context): Int {
-        var result = 0
-        val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result = context.resources.getDimensionPixelSize(resourceId)
-        }
-        return result
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("", "Crash Activity create")
@@ -36,7 +28,7 @@ class CrashActivity : AppCompatActivity() {
 
         val topSpace = findViewById<View>(R.id.topSpace)
         val lp = topSpace.layoutParams
-        lp.height = getStatusBarHeight(this)
+        lp.height = StatusBarUtils.getStatusBarHeight()
         topSpace.layoutParams = lp
 
         val errorInfo = Html.fromHtml(
@@ -62,7 +54,9 @@ class CrashActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.clearupBtn).onClick {
             Thread {
-                clearAppCache()
+                runBlocking {
+                    clearAppCache()
+                }
                 //todo clearAppFileDir()
                 killAndRestart(this)
             }.start()

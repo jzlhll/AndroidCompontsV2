@@ -11,11 +11,11 @@ import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_simplepermission.systemTakePictureForResult
 import com.au.module_android.utils.invisible
 import com.au.module_android.utils.visible
 import com.au.module_nested.recyclerview.BindRcvAdapter
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
+import com.au.module_simplepermission.systemTakePictureForResult
 import org.koin.android.ext.android.get
 import java.io.File
 
@@ -57,7 +57,7 @@ class CheckParentPicSelector(private val f:CheckPicturePartialFragment) {
         val file = File(picture, "pic_" + WeekDateUtil.currentHHmmssSSS() + ".png")
         val uri = FileProvider.getUriForFile(
             Globals.app,
-            "${BuildConfig.APPLICATION_ID}.provider",
+            "${BuildConfig.APPLICATION_ID}.fileprovider",
             file
         )
 

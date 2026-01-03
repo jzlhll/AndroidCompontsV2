@@ -1,6 +1,6 @@
 package com.au.module_okhttp.creator
 
-import com.au.module_android.api.ResultBean
+import com.au.module_okhttp.api.ResultBean
 import com.au.module_gson.fromJson
 import com.au.module_gson.toJsonString
 import com.au.module_okhttp.OkhttpGlobal

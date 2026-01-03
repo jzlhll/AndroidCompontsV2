@@ -6,7 +6,7 @@ import androidx.core.net.toUri
 import com.allan.mydroid.R
 import com.allan.mydroid.utils.JsonUriAdapter
 import com.au.module_android.Globals
-import com.au.module_android.utilsmedia.MediaTypeUtil
+import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_android.utilsmedia.UriParsedInfo
 import com.au.module_android.utilsmedia.VideoDurationHelper
 import com.au.module_android.utilsmedia.formatBytes
@@ -43,7 +43,7 @@ data class ShareInBean(val uriUuid:String,
             val fileLen = formatBytes(fileSize)
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
 
-            val mimeType = MediaTypeUtil.getMimeTypePath(info.file.absolutePath)
+            val mimeType = ExtensionMimeUtil.getMimeTypePath(info.file.absolutePath)
             val videoDuration = VideoDurationHelper().getDurationNormally(info.file.absolutePath, mimeType)
             return ShareInBean(uriUuid,
                 info.file.toUri(),

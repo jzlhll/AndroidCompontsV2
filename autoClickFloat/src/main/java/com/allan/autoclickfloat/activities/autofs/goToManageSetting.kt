@@ -9,8 +9,8 @@ import com.au.module_androidui.ui.startActivityFix
 import java.util.Locale
 
 fun goToManageSetting(context: Context) {
-        context.startActivityFix(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS))
-    }
+    context.startActivityFix(Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS))
+}
 
 /**
  * 是否有权限。

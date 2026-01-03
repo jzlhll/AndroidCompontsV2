@@ -1,6 +1,5 @@
 package com.au.jobstudy
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.ViewCompat
@@ -14,24 +13,6 @@ class MainMineFragment : BindingFragment<FragmentMainMineBinding>() {
     private val androidSdkMapping: AndroidSdkMapping = get()
 
     private var clickDebugCount = 0
-
-    fun getStatusBarHeight(context: Context): Int {
-        var result = 0
-        val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result = context.resources.getDimensionPixelSize(resourceId)
-        }
-        return result
-    }
-
-    fun getNavigationBarHeight(context: Context): Int {
-        var result = 0
-        val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result = context.resources.getDimensionPixelSize(resourceId)
-        }
-        return result
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

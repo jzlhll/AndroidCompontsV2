@@ -1,6 +1,6 @@
 package com.au.module_imagecompressed
 
-import com.au.module_android.utilsmedia.CopyMode
+import com.au.module_imagecompressed.CopyMode
 
 class PickerMediaParams private constructor(
     val copyMode: CopyMode,

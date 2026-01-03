@@ -24,12 +24,11 @@ import com.au.module_android.log.logd
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.isPhotoPickerAvailable
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
-import com.au.module_android.utilsmedia.MediaTypeUtil
+import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_androidui.ui.FragmentShellActivity
@@ -38,6 +37,7 @@ import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.finishFragment
 import com.au.module_imagecompressed.compatMultiUriPickerForResult
+import com.au.module_imagecompressed.isPhotoPickerAvailable
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.getMultipleContentsForResult
 import com.au.module_simplepermission.notification.createPostNotificationPermissionResult
@@ -88,8 +88,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 deleteBean(bean)
             } else if (mode == CLICK_MODE_ROOT && bean != null) {
                 logd { "click on icon $bean" }
-                val isImg = MediaTypeUtil.isUriImage(bean.mimeType)
-                val isVideo = MediaTypeUtil.isUriVideo(bean.mimeType)
+                val isImg = ExtensionMimeUtil.isUriImage(bean.mimeType)
+                val isVideo = ExtensionMimeUtil.isUriVideo(bean.mimeType)
                 if (isImg || isVideo) {
                     showBigIcon(bean, isVideo)
                 }

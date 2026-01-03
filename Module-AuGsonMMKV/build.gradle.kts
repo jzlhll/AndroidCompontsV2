@@ -28,11 +28,11 @@ android {
 }
 
 dependencies {
-    implementation(project(":Module-AndroidCommon"))
-    implementation("com.tencent:mmkv-static:1.3.16")
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+
+    compileOnly(project(":Module-AndroidCommon"))
     implementation(libs.gson)
+    implementation("com.tencent:mmkv-static:1.3.16")
 }

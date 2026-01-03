@@ -11,23 +11,17 @@ import android.util.Log
  * 兼容到android14+的权限申请策略
  */
 class PermissionMediaHelper {
-    enum class MediaType {
-        IMAGE,
-        VIDEO,
-        AUDIO,
-    }
-    
     /**
      * 根据一个uri获取PermissionMediaType。
      */
-    fun getPermissionMediaTypeFromUri(context: Context, uri: Uri): MediaType? {
+    fun getMediaTypeFromUri(context: Context, uri: Uri): PermissionMediaType? {
         val pathSegments = uri.pathSegments
         if (pathSegments.size >= 2) {
             val typeSegment = pathSegments[1] // 路径如 external/images/media/...
             when (typeSegment) {
-                "images" -> return MediaType.IMAGE
-                "video" -> return MediaType.VIDEO
-                "audio" -> return MediaType.AUDIO
+                "images" -> return PermissionMediaType.IMAGE
+                "video" -> return PermissionMediaType.VIDEO
+                "audio" -> return PermissionMediaType.AUDIO
             }
         }
         val projection = arrayOf<String?>(MediaStore.MediaColumns.MIME_TYPE)
@@ -39,11 +33,11 @@ class PermissionMediaHelper {
                         val mimeType: String? = cursor.getString(index)
                         if (mimeType != null) {
                             if (mimeType.startsWith("image/")) {
-                                return MediaType.IMAGE
+                                return PermissionMediaType.IMAGE
                             } else if (mimeType.startsWith("video/")) {
-                                return MediaType.VIDEO
+                                return PermissionMediaType.VIDEO
                             } else if (mimeType.startsWith("audio/")) {
-                                return MediaType.AUDIO
+                                return PermissionMediaType.AUDIO
                             }
                         }
                     }
@@ -59,7 +53,7 @@ class PermissionMediaHelper {
     /**
      * 获取指定媒体类型所需的运行时权限
      */
-    fun getRequiredPermissions(mediaTypes: Array<MediaType>) : Array<String> {
+    fun getRequiredPermissions(mediaTypes: Array<PermissionMediaType>) : Array<String> {
         val permissions: MutableList<String> = ArrayList()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 14+
@@ -69,9 +63,9 @@ class PermissionMediaHelper {
             }
             mediaTypes.forEach {mediaType->
                 when (mediaType) {
-                    MediaType.IMAGE -> permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
-                    MediaType.VIDEO -> permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
-                    MediaType.AUDIO -> permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
+                    PermissionMediaType.IMAGE -> permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+                    PermissionMediaType.VIDEO -> permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+                    PermissionMediaType.AUDIO -> permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
                 }
             }
         } else { // Android 12及以下

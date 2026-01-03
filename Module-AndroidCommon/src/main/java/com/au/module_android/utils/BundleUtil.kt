@@ -1,8 +1,10 @@
 package com.au.module_android.utils
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.core.os.bundleOf
+import com.au.module_android.log.ALogJ.TAG
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -96,4 +98,14 @@ private fun mapToBundle(map: Map<String, Any>) : Bundle {
         bundle.putAny(key, value)
     }
     return bundle
+}
+
+fun Intent.iteratorPrint(tag:String = TAG) {
+    extras?.iteratorPrint(tag)
+}
+
+fun Bundle.iteratorPrint(tag:String = TAG) {
+    keySet()?.forEach {
+        Log.d(tag, "key: " + it + ", value: " + this.get(it))
+    }
 }

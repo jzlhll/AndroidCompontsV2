@@ -14,7 +14,7 @@ import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.MY_DROID_
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utils.findLaunchActivity
+import com.au.module_android.utils.findMyLaunchActivity
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.parcelableArrayListExtraCompat
 import com.au.module_android.utils.parcelableExtraCompat
@@ -93,7 +93,7 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
     private fun jumpNext() {
         val found = findCustomFragmentGetActivity(MyDroidAllFragment::class.java) != null
         if (!found) { //说明app没有启动过。需要先启动下首页，借过一下。
-            val intent = findLaunchActivity(Globals.app).first
+            val intent = findMyLaunchActivity(Globals.app).first
             intent.putExtra(KEY_START_TYPE, MY_DROID_SHARE_IMPORT_URIS)
             logdNoFile { "start entry activity " + intent.extras }
             startActivityFix(intent)
