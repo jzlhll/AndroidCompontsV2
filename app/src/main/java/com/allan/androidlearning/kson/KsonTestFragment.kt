@@ -733,7 +733,7 @@ class TemporaryView : AbsCenterFakeDialog<KsonTemprorayViewBinding>() {
         pop(fragment)
     }
 
-    override fun onShow(activity: ComponentActivity, binding: KsonTemprorayViewBinding) {
+    override fun onShow(activity: ComponentActivity, binding: KsonTemprorayViewBinding, desc:String?) {
         binding.root.onClick {
             hide()
         }
@@ -754,7 +754,7 @@ class TemporarySimpleView : AbsCenterFakeDialog<KsonTemprorayViewBinding>() {
         pop(fragment)
     }
 
-    override fun onShow(activity: ComponentActivity, binding: KsonTemprorayViewBinding) {
+    override fun onShow(activity: ComponentActivity, binding: KsonTemprorayViewBinding, desc:String?) {
         binding.root.onClick {
             hide()
         }

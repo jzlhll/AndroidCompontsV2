@@ -10,14 +10,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.allan.androidlearning.databinding.FragmentAsrAndTtsBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_simplepermission.createPermissionForResult
 import com.au.module_android.simpleflow.collectStatusState
-import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_simplepermission.createPermissionForResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -98,11 +98,11 @@ class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
                 }
             }
         }
-        permissionHelper.safeRun({
-            toastOnTop("录音权限，授权通过！")
-        }, notGivePermissionBlock = {
+        permissionHelper.safeRun(notGivePermissionBlock = {
             toastOnTop("录音权限，授权未通过！")
-        })
+        }){
+            toastOnTop("录音权限，授权通过！")
+        }
 
         initTts()
         initAsr()

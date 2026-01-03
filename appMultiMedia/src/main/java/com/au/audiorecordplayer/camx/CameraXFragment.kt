@@ -33,10 +33,10 @@ class CameraXFragment : BindingFragment<FragmentCameraxBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         permissionHelper.safeRun({
-            startCamera()
-        }, {
             MainUIManager.get().toastSnackbar(binding.root, "请允许相机权限")
-        })
+        }){
+            startCamera()
+        }
 
         binding.cameraBtn.onClick {
             takePhoto()

@@ -12,9 +12,9 @@ import com.au.audiorecordplayer.recorder.IWaveDetectRecord
 import com.au.audiorecordplayer.recorder.a2AudioRecord.WavePcmAudioRecord
 import com.au.audiorecordplayer.util.MainUIManager
 import com.au.module_android.click.onClick
-import com.au.module_simplepermission.createPermissionForResult
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_simplepermission.createPermissionForResult
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding>() {
@@ -25,16 +25,16 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
     var mRecord: ISimpleRecord? = null
 
     private fun startRecord() {
-        permissionHelper.safeRun({
+        permissionHelper.safeRun( notGivePermissionBlock = {
+            MainUIManager.get().toastSnackbar(binding.btn, "没有授予权限")
+        }){
             runCatching {
                 mRecord?.start()
                 mWave?.setVoiceIsRecording(true)
             }.onFailure {
                 MainUIManager.get().toastSnackbar(binding.btn, "开始失败-" + it.message)
             }
-        }, notGivePermissionBlock = {
-            MainUIManager.get().toastSnackbar(binding.btn, "没有授予权限")
-        })
+        }
     }
 
     private fun initAndStartRecord() {

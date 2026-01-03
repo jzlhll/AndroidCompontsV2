@@ -69,6 +69,8 @@ dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
 
+    implementation(libs.okhttp)
+
 //    // Feature module support for Fragments
 //    implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
 //

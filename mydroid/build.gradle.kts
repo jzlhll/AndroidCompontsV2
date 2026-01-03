@@ -103,6 +103,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 
+    implementation(libs.okhttp)
+
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
 }

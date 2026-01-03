@@ -15,7 +15,6 @@ import com.au.module_cached.AppDataStore
 import com.au.module_cached.delegate.AppDataStoreLongCache
 import com.au.module_gson.fromJsonList
 import com.au.module_gson.toJsonString
-import okhttp3.internal.toImmutableList
 import java.util.Calendar
 import java.util.UUID
 import kotlin.random.Random
@@ -204,7 +203,7 @@ object AutoFsObj {
 
         lastCheckAndStartSystemTs = curTs
 
-        val newList = targetTsListData.realValueUnsafe.toImmutableList()
+        val newList = targetTsListData.realValueUnsafe.toMutableList()
 
         val changeList = mutableListOf<TargetTs>()
         newList.forEach {

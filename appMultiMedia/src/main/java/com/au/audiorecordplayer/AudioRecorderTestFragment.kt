@@ -50,15 +50,15 @@ class AudioRecorderTestFragment : BindingFragment<AudioRecordsBinding>() {
     }
 
     private fun startRecord(record: ISimpleRecord) {
-        permissionHelper.safeRun({
+        permissionHelper.safeRun(notGivePermissionBlock = {
+            MainUIManager.get().toastSnackbar(decorView, "没有授予权限")
+        }){
             runCatching {
                 record.start()
             }.onFailure {
                 MainUIManager.get().toastSnackbar(decorView, "开始失败-" + it.message)
             }
-        }, notGivePermissionBlock = {
-            MainUIManager.get().toastSnackbar(decorView, "没有授予权限")
-        })
+        }
     }
 
     private fun stopRecord() {

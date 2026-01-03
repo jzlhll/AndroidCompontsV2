@@ -1,21 +1,19 @@
 package com.allan.androidlearning.dialogs
 
-import android.app.Activity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
-import com.allan.androidlearning.databinding.DialogDemoBinding
 import com.allan.androidlearning.databinding.FakeDialogTestBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_android.utils.dp
-import com.au.module_androidui.widget.FlowLayout
 import com.au.module_androidui.dialogs.AbsCenterFakeDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.ui.views.ViewFragment
+import com.au.module_androidui.widget.FlowLayout
 import com.google.android.material.button.MaterialButton
 
 /**
@@ -65,7 +63,8 @@ class DialogsTestFragment : ViewFragment() {
     class MyCenterFakeDialog : AbsCenterFakeDialog<FakeDialogTestBinding>() {
         override fun onShow(
             activity: ComponentActivity,
-            binding: FakeDialogTestBinding
+            binding: FakeDialogTestBinding,
+            desc:String?
         ) {
             binding.cancelButton.onClick {
                 hide()

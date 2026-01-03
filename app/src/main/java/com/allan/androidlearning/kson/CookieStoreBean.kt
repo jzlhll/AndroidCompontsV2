@@ -41,15 +41,15 @@ object CookieSerializer : KSerializer<Cookie> {
 
     override fun serialize(encoder: Encoder, value: Cookie) {
         encoder.encodeStructure(descriptor) {
-            encodeStringElement(descriptor, 0, value.name)
-            encodeStringElement(descriptor, 1, value.value)
-            encodeLongElement(descriptor, 2, value.expiresAt)
-            encodeStringElement(descriptor, 3, value.domain)
-            encodeStringElement(descriptor, 4, value.path)
-            encodeBooleanElement(descriptor, 5, value.secure)
-            encodeBooleanElement(descriptor, 6, value.httpOnly)
-            encodeBooleanElement(descriptor, 7, value.persistent)
-            encodeBooleanElement(descriptor, 8, value.hostOnly)
+            encodeStringElement(descriptor, 0, value.name())
+            encodeStringElement(descriptor, 1, value.value())
+            encodeLongElement(descriptor, 2, value.expiresAt())
+            encodeStringElement(descriptor, 3, value.domain())
+            encodeStringElement(descriptor, 4, value.path())
+            encodeBooleanElement(descriptor, 5, value.secure())
+            encodeBooleanElement(descriptor, 6, value.httpOnly())
+            encodeBooleanElement(descriptor, 7, value.persistent())
+            encodeBooleanElement(descriptor, 8, value.hostOnly())
         }
     }
 

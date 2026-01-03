@@ -224,8 +224,10 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        requireActivity().requestNotificationPermission(permissionUtil) {
-            MyDroidKeepLiveService.keepMyDroidAlive()
+        permissionUtil?.let {
+            requireActivity().requestNotificationPermission(it) {
+                MyDroidKeepLiveService.keepMyDroidAlive()
+            }
         }
 
         initActionButtons()

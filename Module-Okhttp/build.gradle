@@ -37,4 +37,10 @@ dependencies {
     ksp libs.glideKsp
     implementation project(':Module-AndroidCommon')
     implementation project(':Module-AuGsonMMKV')
+
+    // define a BOM and its version
+    implementation(platform(libs.okhttp.bom))
+    // define any required OkHttp artifacts without version
+    api(libs.okhttp)
+    implementation(libs.okhttp.tls)
 }

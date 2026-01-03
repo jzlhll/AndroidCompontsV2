@@ -15,7 +15,6 @@ import com.au.module_android.Globals
 import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
 import com.au.module_android.log.logt
 import com.au.module_android.utils.unsafeLazy
-import okhttp3.internal.toHexString
 import java.util.Arrays
 import java.util.concurrent.atomic.AtomicInteger
 

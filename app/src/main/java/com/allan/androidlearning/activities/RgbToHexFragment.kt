@@ -13,7 +13,6 @@ import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_android.utils.ImeHelper
 import com.au.module_android.utils.hideImeNew
-import okhttp3.internal.toHexString
 import kotlin.math.min
 
 @EntryFrgName
