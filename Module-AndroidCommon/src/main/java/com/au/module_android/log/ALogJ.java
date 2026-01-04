@@ -30,7 +30,6 @@ public final class ALogJ {
     public static String logFileMask = Globals.INSTANCE.getGoodFilesDir().getAbsolutePath() + File.separator + "logFileMask";
 
     public static final boolean ALWAYS_FILE_LOG = BuildConfig.ENABLE_FILE_LOG_DEFAULT || new File(logFileMask).exists();
-    public static final String TAG = "au";
     private static final int JSON_INDENT = 2;
 
     public static String log(String lvl, String s, Class<?> javaClass) {
@@ -61,7 +60,7 @@ public final class ALogJ {
     }
 
     public static void t(String s) {
-        t(TAG, s);
+        t(LogConstants.TAG, s);
     }
 
     public static void t(String tag, String s) {
@@ -105,7 +104,7 @@ public final class ALogJ {
 
     public void json(@Nullable String json) {
         if (TextUtils.isEmpty(json)) {
-            Log.d(TAG, "Empty/Null json content");
+            Log.d(LogConstants.TAG, "Empty/Null json content");
             return;
         }
         try {
@@ -113,24 +112,24 @@ public final class ALogJ {
             if (json.startsWith("{")) {
                 JSONObject jsonObject = new JSONObject(json);
                 String message = jsonObject.toString(JSON_INDENT);
-                Log.d(TAG, message);
+                Log.d(LogConstants.TAG, message);
                 return;
             }
             if (json.startsWith("[")) {
                 JSONArray jsonArray = new JSONArray(json);
                 String message = jsonArray.toString(JSON_INDENT);
-                Log.d(TAG, message);
+                Log.d(LogConstants.TAG, message);
                 return;
             }
-            Log.e(TAG, "Invalid Json");
+            Log.e(LogConstants.TAG, "Invalid Json");
         } catch (JSONException e) {
-            Log.e(TAG, "Invalid Json");
+            Log.e(LogConstants.TAG, "Invalid Json");
         }
     }
 
     public void xml(@Nullable String xml) {
         if (TextUtils.isEmpty(xml)) {
-            Log.d(TAG, "Empty/Null xml content");
+            Log.d(LogConstants.TAG, "Empty/Null xml content");
             return;
         }
         try {
@@ -140,9 +139,9 @@ public final class ALogJ {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             transformer.transform(xmlInput, xmlOutput);
-            Log.d(TAG, xmlOutput.getWriter().toString().replaceFirst(">", ">\n"));
+            Log.d(LogConstants.TAG, xmlOutput.getWriter().toString().replaceFirst(">", ">\n"));
         } catch (TransformerException e) {
-            Log.e(TAG, "Invalid xml");
+            Log.e(LogConstants.TAG, "Invalid xml");
         }
     }
 }

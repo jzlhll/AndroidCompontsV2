@@ -10,6 +10,7 @@ import com.au.module_android.crash.UncaughtExceptionHandlerObj
 import com.au.module_android.init.GlobalActivityCallback
 import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.init.optimizeSpTask
+import com.au.module_android.log.LogConstants
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 
@@ -23,6 +24,7 @@ open class CommonInitApplication : Application() {
         val isInitSharedPrefHook:Boolean = false,
         val isInitDarkMode:Boolean = true,
         val isEnableToutiaoScreenAdapter:Boolean = false,
+        val tag : String? = null
     )
 
     protected fun init(context: Application, initCfg:FirstInitialConfig? = null): Application {
@@ -35,6 +37,7 @@ open class CommonInitApplication : Application() {
         val initConfig = initCfg ?: FirstInitialConfig()
         if(initConfig.isEnableToutiaoScreenAdapter) { ToutiaoScreenAdapter.init(context) }
         if (initConfig.isInitSharedPrefHook) { optimizeSpTask() }
+        if (initConfig.tag != null) LogConstants.TAG = initConfig.tag
 
         context.registerActivityLifecycleCallbacks(GlobalActivityCallback())
         ProcessLifecycleOwner.get().lifecycle.addObserver(GlobalBackgroundCallback)

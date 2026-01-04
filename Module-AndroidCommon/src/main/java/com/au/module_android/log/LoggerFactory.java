@@ -10,6 +10,6 @@ public class LoggerFactory {
     }
 
     public static Logger getLogger() {
-        return new Logger(ALogJ.TAG);
+        return new Logger(LogConstants.TAG);
     }
 }
