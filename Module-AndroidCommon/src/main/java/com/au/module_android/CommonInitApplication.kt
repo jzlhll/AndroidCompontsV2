@@ -27,14 +27,16 @@ open class CommonInitApplication : Application() {
         val tag : String? = null
     )
 
-    protected fun init(context: Application, initCfg:FirstInitialConfig? = null): Application {
+    open fun config() : FirstInitialConfig? = null
+
+    protected fun init(context: Application): Application {
         Globals.internalApp = context
 
         UncaughtExceptionHandlerObj.init()
 
 //        DeviceIdentifier.register(context)
 
-        val initConfig = initCfg ?: FirstInitialConfig()
+        val initConfig = config() ?: FirstInitialConfig()
         if(initConfig.isEnableToutiaoScreenAdapter) { ToutiaoScreenAdapter.init(context) }
         if (initConfig.isInitSharedPrefHook) { optimizeSpTask() }
         if (initConfig.tag != null) LogConstants.TAG = initConfig.tag
