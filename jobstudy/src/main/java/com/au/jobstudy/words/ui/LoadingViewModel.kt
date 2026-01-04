@@ -3,15 +3,15 @@ package com.au.jobstudy.words.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.au.jobstudy.words.usecase.LoadingUseCase
-import com.au.module_android.utils.launchOnThread
 import com.au.module_android.log.logd
 import com.au.module_android.log.logdNoFile
+import com.au.module_android.utils.launchOnThread
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 class LoadingViewModel(
     private val loadingUseCase : LoadingUseCase,
-    private val loadingTest : LoadingTest
+//    private val loadingTest : LoadingTest
 ) : ViewModel() {
 
     private val TAG = "LoadingViewModel"
@@ -22,7 +22,7 @@ class LoadingViewModel(
 
     fun checkAndImportExcel() {
         logdNoFile { "loadingTest LoadingViewModel 11" }
-        loadingTest.add()
+//        loadingTest.add()
         viewModelScope.launchOnThread {
             logd(TAG) { "check & ImportExcel" }
             loadingUseCase.checkAndImportExcel()

@@ -10,7 +10,6 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_androidui.ui.bindings.BindingFragment
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.getKoin
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
@@ -20,11 +19,11 @@ class ExcelLoadingFragment : BindingFragment<FragmentLoadingBinding>() {
     private val viewModel : LoadingViewModel by viewModel()
     private val activityScope = getKoin().createScope<MainActivity>()
 
-    private val loadingTest : LoadingTest by inject()
+//    private val loadingTest : LoadingTest by inject()
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         logdNoFile { "loadingTest ExcelLoadingFragment 11" }
-        loadingTest.add()
+//        loadingTest.add()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

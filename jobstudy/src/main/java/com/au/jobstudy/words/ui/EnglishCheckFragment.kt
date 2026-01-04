@@ -19,6 +19,7 @@ class EnglishCheckFragment(
     private val wordsManager : WordsManager
 ) : BindingFragment<FragmentEnglishCheckBinding>() {
 
+//    private val loadingTest : LoadingTest by inject()
     companion object {
         private const val ARG_WORD_INDEX = "word_index"
         private const val ARG_TOTAL_WORDS = "total_words"
