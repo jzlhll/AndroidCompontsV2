@@ -60,6 +60,7 @@ dependencies {
 
     implementation libs.flexbox
 
+    implementation libs.pictureselector
     implementation libs.vosk.android
     implementation libs.tts.edge.java
 //    implementation project(":jsbridge")
