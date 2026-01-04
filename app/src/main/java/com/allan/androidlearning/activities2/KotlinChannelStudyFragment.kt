@@ -5,15 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.allan.classnameanno.EntryFrgName
-import com.au.module_androidui.ui.views.ViewToolbarFragment
-import com.au.module_androidui.ui.views.YourToolbarInfo
+import com.au.module_android.log.logd
 import com.au.module_android.log.logt
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_androidui.ui.views.ViewToolbarFragment
+import com.au.module_androidui.ui.views.YourToolbarInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -27,11 +29,16 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlin.getValue
 
 @EntryFrgName()
 class KotlinChannelStudyFragment : ViewToolbarFragment() {
-    //private val mViewModel : ChannelViewModel1 by viewModels()
+    private val mViewModel : ChannelViewModel1 by viewModels() {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return ChannelViewModel1("data1", 1) as T
+            }
+        }
+    }
     private val mViewModel3 by unsafeLazy { ViewModelProvider(this)[ChannelViewModel3::class.java] }
 
     override fun toolbarInfo(): YourToolbarInfo? {
@@ -43,7 +50,9 @@ class KotlinChannelStudyFragment : ViewToolbarFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        logd { "allan on create" }
         init1()  //注册早于
+        mViewModel.test()
         return LinearLayout(inflater.context)
     }
 
@@ -93,8 +102,12 @@ class KotlinChannelStudyFragment : ViewToolbarFragment() {
     }
 }
 
-class ChannelViewModel1 : ViewModel() {
+class ChannelViewModel1(private val data1:String, private val data2:Int) : ViewModel() {
     val channel = Channel<Int>(Channel.UNLIMITED)
+
+    fun test() {
+        logt { "data1: $data1, data2: $data2" }
+    }
 
     fun simpleFlow(): Flow<Int> = flow {
         for (i in 1..3) {

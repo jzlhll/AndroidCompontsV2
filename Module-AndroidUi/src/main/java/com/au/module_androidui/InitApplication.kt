@@ -2,10 +2,17 @@ package com.au.module_androidui
 
 import android.app.Activity
 import android.os.Bundle
+import com.au.module_android.BuildConfig
 import com.au.module_android.CommonInitApplication
 import com.au.module_androidui.ui.monitorActivityLoadTime
 
 open class InitApplication : CommonInitApplication() {
+    override fun config(): FirstInitialConfig {
+        return FirstInitialConfig(
+            isDebug = BuildConfig.DEBUG,
+            hasFileDebug = BuildConfig.DEBUG
+        )
+    }
     override fun onCreate() {
         super.onCreate()
         registerActivityLifecycleCallbacks(MonitorActivityCallback())
