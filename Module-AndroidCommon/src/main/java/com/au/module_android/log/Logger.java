@@ -1,25 +1,18 @@
 package com.au.module_android.log;
 
-
-import com.au.module_android.BuildConfig;
-
 public final class Logger {
     private final String tag;
-
-    private static boolean isTraceEnabled = BuildConfig.DEBUG;
-
-    private static boolean isDebugEnabled = BuildConfig.DEBUG;
 
     Logger(String tag) {
         this.tag = tag;
     }
 
     public void debug(String message, Object... args) {
-        if (isDebugEnabled) android.util.Log.d(tag, formatMessage(message, args));
+        if (LogDebug.ALWAYS_LOG_DEBUG) android.util.Log.d(tag, formatMessage(message, args));
     }
 
     public void d(String message, Object... args) {
-        if (isDebugEnabled) android.util.Log.d(tag, formatMessage(message, args));
+        if (LogDebug.ALWAYS_LOG_DEBUG) android.util.Log.d(tag, formatMessage(message, args));
     }
 
     public void warn(String message, Object... args) {
@@ -59,23 +52,28 @@ public final class Logger {
     }
 
     public void trace(String message, Object... args) {
-        if (isTraceEnabled) android.util.Log.d(tag, formatMessage(message, args));
+        if (LogDebug.ALWAYS_LOG_DEBUG) android.util.Log.d(tag, formatMessage(message, args));
     }
 
     public boolean isTraceEnabled() {
-        return isTraceEnabled;
+        return LogDebug.ALWAYS_LOG_DEBUG;
     }
 
     public boolean isDebugEnabled() {
-        return isDebugEnabled;
+        return LogDebug.ALWAYS_LOG_DEBUG;
     }
 
+    /**
+     * 不允许修改
+     */
+    @Deprecated
     public static void setDebugEnabled(boolean debugEnabled) {
-        isDebugEnabled = debugEnabled;
     }
 
+    /**
+     * 不允许修改
+     */
     public static void setTraceEnabled(boolean traceEnabled) {
-        isTraceEnabled = traceEnabled;
     }
 
     private String formatMessage(String message, Object... args) {

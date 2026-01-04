@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.core.os.bundleOf
-import com.au.module_android.log.ALogJ.TAG
+import com.au.module_android.log.LogTag
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -100,11 +100,11 @@ private fun mapToBundle(map: Map<String, Any>) : Bundle {
     return bundle
 }
 
-fun Intent.iteratorPrint(tag:String = TAG) {
+fun Intent.iteratorPrint(tag:String = LogTag.TAG) {
     extras?.iteratorPrint(tag)
 }
 
-fun Bundle.iteratorPrint(tag:String = TAG) {
+fun Bundle.iteratorPrint(tag:String = LogTag.TAG) {
     keySet()?.forEach {
         Log.d(tag, "key: " + it + ", value: " + this.get(it))
     }

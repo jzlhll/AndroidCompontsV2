@@ -6,14 +6,10 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.au.module_android.BuildConfig;
-import com.au.module_android.Globals;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Locale;
@@ -27,9 +23,6 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 public final class ALogJ {
-    public static String logFileMask = Globals.INSTANCE.getGoodFilesDir().getAbsolutePath() + File.separator + "logFileMask";
-
-    public static final boolean ALWAYS_FILE_LOG = BuildConfig.ENABLE_FILE_LOG_DEFAULT || new File(logFileMask).exists();
     private static final int JSON_INDENT = 2;
 
     public static String log(String lvl, String s, Class<?> javaClass) {
@@ -60,7 +53,7 @@ public final class ALogJ {
     }
 
     public static void t(String s) {
-        t(LogConstants.TAG, s);
+        t(LogTag.TAG, s);
     }
 
     public static void t(String tag, String s) {
@@ -104,7 +97,7 @@ public final class ALogJ {
 
     public void json(@Nullable String json) {
         if (TextUtils.isEmpty(json)) {
-            Log.d(LogConstants.TAG, "Empty/Null json content");
+            Log.d(LogTag.TAG, "Empty/Null json content");
             return;
         }
         try {
@@ -112,24 +105,24 @@ public final class ALogJ {
             if (json.startsWith("{")) {
                 JSONObject jsonObject = new JSONObject(json);
                 String message = jsonObject.toString(JSON_INDENT);
-                Log.d(LogConstants.TAG, message);
+                Log.d(LogTag.TAG, message);
                 return;
             }
             if (json.startsWith("[")) {
                 JSONArray jsonArray = new JSONArray(json);
                 String message = jsonArray.toString(JSON_INDENT);
-                Log.d(LogConstants.TAG, message);
+                Log.d(LogTag.TAG, message);
                 return;
             }
-            Log.e(LogConstants.TAG, "Invalid Json");
+            Log.e(LogTag.TAG, "Invalid Json");
         } catch (JSONException e) {
-            Log.e(LogConstants.TAG, "Invalid Json");
+            Log.e(LogTag.TAG, "Invalid Json");
         }
     }
 
     public void xml(@Nullable String xml) {
         if (TextUtils.isEmpty(xml)) {
-            Log.d(LogConstants.TAG, "Empty/Null xml content");
+            Log.d(LogTag.TAG, "Empty/Null xml content");
             return;
         }
         try {
@@ -139,9 +132,9 @@ public final class ALogJ {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             transformer.transform(xmlInput, xmlOutput);
-            Log.d(LogConstants.TAG, xmlOutput.getWriter().toString().replaceFirst(">", ">\n"));
+            Log.d(LogTag.TAG, xmlOutput.getWriter().toString().replaceFirst(">", ">\n"));
         } catch (TransformerException e) {
-            Log.e(LogConstants.TAG, "Invalid xml");
+            Log.e(LogTag.TAG, "Invalid xml");
         }
     }
 }

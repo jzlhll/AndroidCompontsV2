@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import com.au.module_android.scopes.BackAppScope
 import com.au.module_android.scopes.MainAppScope
 import com.au.module_android.simplelivedata.NoStickLiveData
-import com.au.module_android.utils.unsafeLazy
 import java.io.File
 
 object Globals {
@@ -46,12 +45,14 @@ object Globals {
     /**
      * 选择合适的cacheDir
      */
-    val goodCacheDir : File by unsafeLazy { app.externalCacheDir ?: app.cacheDir }
+    val goodCacheDir : File
+        get() = app.externalCacheDir ?: app.cacheDir
 
     /**
      * 选择合适的filesDir
      */
-    val goodFilesDir : File by unsafeLazy { app.getExternalFilesDir(null) ?: app.filesDir }
+    val goodFilesDir : File
+        get() = app.getExternalFilesDir(null) ?: app.filesDir
 
     /**
      * 全局application

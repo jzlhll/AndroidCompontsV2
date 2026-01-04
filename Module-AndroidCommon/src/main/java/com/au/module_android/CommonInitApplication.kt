@@ -10,8 +10,8 @@ import com.au.module_android.crash.UncaughtExceptionHandlerObj
 import com.au.module_android.init.GlobalActivityCallback
 import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.init.optimizeSpTask
-import com.au.module_android.log.LogConstants
-import com.au.module_android.log.logdNoFile
+import com.au.module_android.log.LogTag
+import com.au.module_android.logdebug.LogDebugInit
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 
 /**
@@ -22,24 +22,33 @@ import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 open class CommonInitApplication : Application() {
     data class FirstInitialConfig(
         val isInitSharedPrefHook:Boolean = false,
-        val isInitDarkMode:Boolean = true,
         val isEnableToutiaoScreenAdapter:Boolean = false,
+        /**
+         * 是否是debug模式，会打印日志。让logdNoFile等能够打印。
+         */
+        val isDebug: Boolean = false,
+        /**
+         * 是否有文件日志打印
+         */
+        val hasFileDebug: Boolean = false,
+        /**
+         * 日志tag
+         */
         val tag : String? = null
     )
 
     open fun config() : FirstInitialConfig? = null
 
     protected fun init(context: Application): Application {
-        Globals.internalApp = context
-
         UncaughtExceptionHandlerObj.init()
 
 //        DeviceIdentifier.register(context)
 
         val initConfig = config() ?: FirstInitialConfig()
         if(initConfig.isEnableToutiaoScreenAdapter) { ToutiaoScreenAdapter.init(context) }
-        if (initConfig.isInitSharedPrefHook) { optimizeSpTask() }
-        if (initConfig.tag != null) LogConstants.TAG = initConfig.tag
+        if(initConfig.isInitSharedPrefHook) { optimizeSpTask() }
+        if(initConfig.tag != null) LogTag.TAG = initConfig.tag
+        if(initConfig.isDebug) LogDebugInit().initAsDebug(true, initConfig.hasFileDebug)
 
         context.registerActivityLifecycleCallbacks(GlobalActivityCallback())
         ProcessLifecycleOwner.get().lifecycle.addObserver(GlobalBackgroundCallback)
@@ -49,14 +58,13 @@ open class CommonInitApplication : Application() {
     }
 
     override fun onCreate() {
+        Globals.internalApp = this
         super.onCreate()
-        logdNoFile("InitApplication") { "init application onCreate" }
         init(this)
         DarkModeAndLocalesConst.appOnCreated(this)
     }
 
     final override fun attachBaseContext(base: Context?) {
-        logdNoFile("InitApplication") { "init application attach BaseContext" }
         initBeforeAttachBaseContext()
         super.attachBaseContext(DarkModeAndLocalesConst.appAttachBaseContext(base))
     }

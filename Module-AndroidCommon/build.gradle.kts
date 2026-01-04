@@ -41,18 +41,12 @@ android {
             // ndk {
             //     debugSymbolLevel = "FULL" // 或者 "SYMBOL_TABLE"
             // }
-
-            buildConfigField("boolean", "ENABLE_LOGCAT", "false")
-            buildConfigField("boolean", "ENABLE_FILE_LOG_DEFAULT", "false")
         }
         debug {
             // 是否混淆
             isMinifyEnabled = false
             // 压缩资源，必须开启isMinifyEnabled才有用
             isShrinkResources = false
-
-            buildConfigField("boolean", "ENABLE_LOGCAT", "true")
-            buildConfigField("boolean", "ENABLE_FILE_LOG_DEFAULT", "true")
         }
     }
 
