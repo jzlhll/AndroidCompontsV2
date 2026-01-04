@@ -41,9 +41,9 @@ androidx.recyclerview.widget.LinearLayoutManager mLayoutManager;
 -ignorewarnings
 
 #kotlin 相关
--dontwarn kotlin.**
--keep class kotlin.** { *; }
--keep interface kotlin.** { *; }
+#-dontwarn kotlin.**
+#-keep class kotlin.** { *; }
+#-keep interface kotlin.** { *; }
 #-keepclassmembers class kotlin.Metadata {
 #    public <methods>;
 #}
@@ -51,13 +51,13 @@ androidx.recyclerview.widget.LinearLayoutManager mLayoutManager;
 #-keepclassmembers class **.WhenMappings {
 #    <fields>;
 #}
--assumenosideeffects class kotlin.jvm.internal.Intrinsics {
-    static void checkParameterIsNotNull(java.lang.Object, java.lang.String);
-}
+#-assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+#    static void checkParameterIsNotNull(java.lang.Object, java.lang.String);
+#}
 
--keep class kotlinx.** { *; }
--keep interface kotlinx.** { *; }
--dontwarn kotlinx.**
+#-keep class kotlinx.** { *; }
+#-keep interface kotlinx.** { *; }
+#-dontwarn kotlinx.**
 
 -keep class org.jetbrains.** { *; }
 -keep interface org.jetbrains.** { *; }

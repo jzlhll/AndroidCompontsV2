@@ -1,7 +1,8 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.serialization")
+
+    id("com.vanniktech.maven.publish") version "0.35.0"
 }
 
 android {
@@ -96,4 +97,39 @@ dependencies {
 
     implementation(libs.androidx.core.splashscreen)
     // implementation(libs.android.cn.oaid)
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+}
+
+mavenPublishing {
+    coordinates("io.github.jzlhll", "module-androidcommon", "0.0.2")
+
+    pom {
+        name = "module-androidcommon"
+        description = "This is my android project some base utils."
+        inceptionYear = "2026"
+        url = "https://github.com/jzlhll/AndroidCompontsV2"
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "jzlhll"
+                name = "jzlhll"
+                url = "https://github.com/jzlhll/"
+            }
+        }
+        scm {
+            url = "https://github.com/jzlhll/AndroidCompontsV2"
+            connection = "scm:git:git://github.com/jzlhll/AndroidCompontsV2.git"
+            developerConnection = "scm:git:ssh://git@github.com/jzlhll/AndroidCompontsV2.git"
+        }
+    }
 }

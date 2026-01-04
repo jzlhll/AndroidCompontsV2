@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    id("org.jetbrains.kotlin.plugin.serialization")
+
+    id("com.vanniktech.maven.publish") version "0.35.0"
 }
 
 android {
@@ -35,4 +38,39 @@ dependencies {
     implementation(libs.material)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlin.reflect)
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+}
+
+mavenPublishing {
+    coordinates("io.github.jzlhll", "module-aukson", "0.0.1")
+
+    pom {
+        name = "module-aukson"
+        description = "Android kotlin serialization libs."
+        inceptionYear = "2026"
+        url = "https://github.com/jzlhll/AndroidCompontsV2"
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "jzlhll"
+                name = "jzlhll"
+                url = "https://github.com/jzlhll/"
+            }
+        }
+        scm {
+            url = "https://github.com/jzlhll/AndroidCompontsV2"
+            connection = "scm:git:git://github.com/jzlhll/AndroidCompontsV2.git"
+            developerConnection = "scm:git:ssh://git@github.com/jzlhll/AndroidCompontsV2.git"
+        }
+    }
 }
