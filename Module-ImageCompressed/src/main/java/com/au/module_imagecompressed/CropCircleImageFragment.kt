@@ -39,9 +39,8 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
             activityResultCallback: ActivityResultCallback<ActivityResult>
         ) {
             // 1、构造可用的裁剪数据源
-            val inputUri: Uri = srcUri
             val bundle = Bundle().apply {
-                this.putString("inputUri", inputUri.toString())
+                this.putString("srcUri", srcUri.toString())
             }
 
             FragmentShellActivity.startForResult(context,
@@ -95,9 +94,13 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
             destFile.createNewFile()
         }
         val destUri = Uri.fromFile(destFile)
-        val uCrop = UCrop.of(
-            Uri.parse(requireArguments().getString("inputUri")),
+        val srcUri = requireArguments().getString("srcUri")
+        val arrayList = ArrayList<String>()
+        srcUri?.let { arrayList.add(it) }
+        val uCrop : UCrop = UCrop.of(
+            Uri.parse(srcUri),
             destUri,
+            arrayList
         )
         //uCrop.setImageEngine(MyUCropImageEngine())
         uCrop.withOptions(UCrop.Options().also {
@@ -119,7 +122,7 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
     }
 
     override fun loadingProgress(showLoader: Boolean) {
-        logd { "loadingprogress $showLoader" }
+        logd { "loading progress $showLoader" }
     }
 
     override fun onCropFinish(result: UCropFragment.UCropResult) {
