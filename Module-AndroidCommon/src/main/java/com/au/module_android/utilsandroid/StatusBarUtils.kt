@@ -1,74 +1,16 @@
 package com.au.module_android.utilsandroid
 
 import android.annotation.SuppressLint
-import android.app.Activity
+import android.content.Context
 import android.content.res.Resources
-import android.graphics.Color
-import android.os.Build
-import android.view.View
-import android.view.Window
-import android.view.WindowManager
-import androidx.annotation.RequiresApi
+import java.lang.reflect.Field
 
 class StatusBarUtils {
     companion object {
-        /**
-         * 沉浸式状态栏
-         */
-        fun immersiveStatusBar(activity: Activity) {
-            transparentStatusBar(activity.window)
-            transparentNavigationBar(activity.window)
-        }
-
-        /**
-         * 透明状态栏
-         */
-        @SuppressLint("ObsoleteSdkInt")
-        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-        fun transparentStatusBar(window: Window) {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            var systemUiVisibility = window.decorView.systemUiVisibility
-            systemUiVisibility =
-                systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            window.decorView.systemUiVisibility = systemUiVisibility
-            window.statusBarColor = Color.TRANSPARENT
-        }
-
-        /**
-         * 透明导航栏
-         */
-        @SuppressLint("ObsoleteSdkInt")
-        @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-        fun transparentNavigationBar(window: Window) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.isNavigationBarContrastEnforced = false
-            }
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            var systemUiVisibility = window.decorView.systemUiVisibility
-            systemUiVisibility = systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            window.decorView.systemUiVisibility = systemUiVisibility
-            window.navigationBarColor = Color.TRANSPARENT
-        }
-
-        /**
-         * 黑色状态栏文字
-         *  设置状态栏文字颜色
-         *  @param isDark true 黑色 false 白色
-         *
-         */
-        @RequiresApi(Build.VERSION_CODES.M)
-        fun setStatusBarFontDark(window: Window, isDark: Boolean) {
-            val decor = window.decorView
-            if (isDark) {
-                decor.systemUiVisibility =
-                    decor.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-            } else {
-                decor.systemUiVisibility =
-                    decor.systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-            }
-        }
+        const val STATUS_BAR_DEFAULT_HEIGHT_DP: Int = 25 // 大部分状态栏都是25dp
+        // 在某些机子上存在不同的density值，所以增加两个虚拟值
+        var sVirtualDensity: Float = -1f
+        var sVirtualDensityDpi: Float = -1f
 
         fun getNavigationHeight(): Int {
             return try {
@@ -97,10 +39,83 @@ class StatusBarUtils {
                 if (resourceId != 0) {
                     height = res.getDimensionPixelSize(resourceId)
                 }
-                height
+                return height
             } catch (e: Exception) {
                 0
             }
+        }
+
+        fun getStatusBarHeight(context: Context) : Int{
+            val height = getStatusBarHeight()
+            return if (height > 0) {
+                height
+            } else {
+                getStatusBarHeight2(context)
+            }
+        }
+
+        private fun getStatusBarHeight2(context: Context): Int {
+            var sStatusbarHeight = 0
+            val clazz: Class<*>?
+            var obj: Any? = null
+            var field: Field? = null
+            try {
+                clazz = Class.forName("com.android.internal.R\$dimen")
+                obj = clazz.newInstance()
+                if (XDeviceHelper.isMeizu()) {
+                    try {
+                        field = clazz.getField("status_bar_height_large")
+                    } catch (t: Throwable) {
+                        t.printStackTrace()
+                    }
+                }
+                if (field == null) {
+                    field = clazz.getField("status_bar_height")
+                }
+            } catch (t: Throwable) {
+                t.printStackTrace()
+            }
+            if (field != null && obj != null) {
+                try {
+                    val id = field.get(obj)?.toString()?.toInt()
+                    if (id != null) {
+                        sStatusbarHeight = context.resources.getDimensionPixelSize(id)
+                    }
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
+            }
+            if (XDeviceHelper.isTablet(context)
+                && sStatusbarHeight > dp2px(context, STATUS_BAR_DEFAULT_HEIGHT_DP)
+            ) {
+                //状态栏高度大于25dp的平板，状态栏通常在下方
+                sStatusbarHeight = 0
+            } else {
+                if (sStatusbarHeight <= 0) {
+                    if (sVirtualDensity == -1f) {
+                        sStatusbarHeight = dp2px(context, STATUS_BAR_DEFAULT_HEIGHT_DP)
+                    } else {
+                        sStatusbarHeight = (STATUS_BAR_DEFAULT_HEIGHT_DP * sVirtualDensity + 0.5f).toInt()
+                    }
+                }
+            }
+            return sStatusbarHeight
+        }
+
+        /**
+         * 将px值转换为dp值
+         */
+        fun px2dp(context: Context, pxValue: Int): Int {
+            val scale = context.resources.displayMetrics.density
+            return (pxValue / scale + 0.5f).toInt()
+        }
+
+        /**
+         * 将dp值转换为px值
+         */
+        fun dp2px(context: Context, dpValue: Int): Int {
+            val scale = context.resources.displayMetrics.density
+            return (dpValue * scale + 0.5f).toInt()
         }
     }
 }
