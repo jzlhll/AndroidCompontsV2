@@ -99,29 +99,25 @@ fun <T : ViewBinding> createViewBindingT2(self: Class<*>, inflater: LayoutInflat
     }
 }
 
-/**
- * 子类调用。将updatePaddingRoot进行padding处理。
- */
-internal fun IFullWindow.postPaddingRootInner(activity: ComponentActivity, updatePaddingRoot: View) {
+internal fun IFullWindow.paddingRootInner(activity: ComponentActivity, updatePaddingRoot: View?) {
+    if (updatePaddingRoot == null) return
     val immersiveMode = immersiveMode()
     val isPaddingNav = immersiveMode.isPaddingNavigationBar()
     val isPaddingStatusBar = immersiveMode.isPaddingStatusBar()
 
     if (isPaddingNav || isPaddingStatusBar) {
-        updatePaddingRoot.post {
-            val pair = activity.currentStatusBarAndNavBarHeight()
-            if (pair != null) {
-                val statusBarsHeight = pair.first
-                val bottomBarHeight = pair.second
-                if (isPaddingStatusBar) {
-                    if (isPaddingNav) {
-                        updatePaddingRoot.updatePadding(top = statusBarsHeight, bottom = bottomBarHeight)
-                    } else {
-                        updatePaddingRoot.updatePadding(top = statusBarsHeight)
-                    }
+        val pair = activity.currentStatusBarAndNavBarHeight()
+        if (pair != null) {
+            val statusBarsHeight = pair.first
+            val bottomBarHeight = pair.second
+            if (isPaddingStatusBar) {
+                if (isPaddingNav) {
+                    updatePaddingRoot.updatePadding(top = statusBarsHeight, bottom = bottomBarHeight)
                 } else {
-                    updatePaddingRoot.updatePadding(bottom = bottomBarHeight)
+                    updatePaddingRoot.updatePadding(top = statusBarsHeight)
                 }
+            } else {
+                updatePaddingRoot.updatePadding(bottom = bottomBarHeight)
             }
         }
     }

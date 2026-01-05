@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.core.app.ActivityOptionsCompat
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_MATCH_ACTIVITY_CLOSE
 import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_MATCH_ACTIVITY_OPEN
@@ -99,6 +100,8 @@ open class FragmentNavigationActivity : ViewActivity() {
         navigateToInner(pageId, clearCurrent, transitionId, false)
     }
 
+    private var mFragment: Fragment? = null
+
     private fun navigateToInner(pageId: String,
                                 clearCurrent: Boolean = false,
                                 transitionId:Int= TRANSIT_FRAGMENT_MATCH_ACTIVITY_OPEN,
@@ -121,14 +124,13 @@ open class FragmentNavigationActivity : ViewActivity() {
         if (!isBack) {
             mBackstackPageIds.add(pageId)
         }
-
-        //1️⃣。
-        // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。
-        //至于padding交给Fragment处理。
-        if (instance is IFullWindow) {
-            instance.postPaddingRootInner(this, fcv)
+        //现在是切换Fragment，则需要重新让下一个页面遵守沉浸式
+        val isOldExist = mFragment != null
+        mFragment = instance
+        //必须在后面
+        if (isOldExist) {
+            onWindowFocusChangedInner(true)
         }
-
         supportFragmentManager.beginTransaction().also {
             it.setTransition(transitionId)
             it.replace(fcv.id, instance)
@@ -175,13 +177,24 @@ open class FragmentNavigationActivity : ViewActivity() {
 //        AndroidBug5497Workaround.assistActivity(this)
 //    }
 
-    final override fun immersiveMode(): ImmersiveMode { //默认全沉浸，因为配合实现沉浸式1️⃣。
-        return ImmersiveMode.FullImmersive
+    final override fun immersiveMode(): ImmersiveMode {
+        return mFragment?.asOrNull<IFullWindow>()?.immersiveMode() ?: ImmersiveMode.PaddingBars
     }
 
     private var mIsAutoHideIme = false
 
     final override fun isAutoHideIme(): Boolean {
         return mIsAutoHideIme
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mFragment = null
+    }
+
+    override fun onWindowFocusChangedInner(hasFocus: Boolean) {
+        super.onWindowFocusChangedInner(hasFocus)
+        //接着你还可以自行处理。因此推荐操作方式为，Fragment重载ImmersiveMode为FullImmersive，然后Fragment实现onWindowFocusChangedInner自行调整
+        mFragment.asOrNull<AbsFragment>()?.onWindowFocusChangedInner(hasFocus)
     }
 }

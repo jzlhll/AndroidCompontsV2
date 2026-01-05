@@ -14,15 +14,14 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import com.au.module_android.BuildConfig
-import com.au.module_androidui.R
-import com.au.module_simplepermission.activity.ActivityForResult
-import com.au.module_androidui.ui.base.AbsFragment
-import com.au.module_androidui.ui.base.IFullWindow
-import com.au.module_androidui.ui.base.ImmersiveMode
-import com.au.module_androidui.ui.views.ViewActivity
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.serializableExtraCompat
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_androidui.R
+import com.au.module_androidui.ui.base.AbsFragment
+import com.au.module_androidui.ui.base.ImmersiveMode
+import com.au.module_androidui.ui.views.ViewActivity
+import com.au.module_simplepermission.activity.ActivityForResult
 import org.koin.android.ext.android.get
 import org.koin.core.qualifier.named
 
@@ -151,6 +150,8 @@ open class FragmentShellActivity : ViewActivity() {
     override val enterAnim: Int?
         get() = mEnterAnim
 
+    private var mFragment : Fragment? = null
+
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val v = FragmentContainerView(inflater.context)
         v.layoutParams = ViewGroup.LayoutParams(
@@ -173,17 +174,10 @@ open class FragmentShellActivity : ViewActivity() {
             }
         }
 
+        mFragment = instance
         instance.arguments = intent.getBundleExtra(KEY_FRAGMENT_ARGUMENTS)
 
         mIsAutoHideIme = instance.asOrNull<AbsFragment>()?.isAutoHideIme() ?: false
-
-
-        //1️⃣。
-        // 作为容器，我们将immersiveMode()返回FullImmersive，得到的结果就是activity完全沉浸。
-        //至于padding交给Fragment处理。
-        if (instance is IFullWindow) {
-            instance.postPaddingRootInner(this, v)
-        }
 
         supportFragmentManager.beginTransaction().also {
             it.replace(v.id, instance)
@@ -197,13 +191,26 @@ open class FragmentShellActivity : ViewActivity() {
 //        AndroidBug5497Workaround.assistActivity(this)
 //    }
 
-    final override fun immersiveMode(): ImmersiveMode { //默认全沉浸，因为配合实现沉浸式1️⃣。
-        return ImmersiveMode.FullImmersive
+    //默认沉浸式，Fragment默认不处理
+    final override fun immersiveMode(): ImmersiveMode {
+        return mFragment?.asOrNull<AbsFragment>()?.immersiveMode() ?: ImmersiveMode.PaddingBars
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mFragment = null
     }
 
     private var mIsAutoHideIme = false
 
     final override fun isAutoHideIme(): Boolean {
         return mIsAutoHideIme
+    }
+
+    final override fun onWindowFocusChangedInner(hasFocus: Boolean) {
+        //这里会按照Fragment的沉浸模式去处理。因此，如果你的Fragment已经按照普通三种传入的方式处理会被调整；如果传入了ImmersiveMode.FullImmersive，则不会处理。
+        super.onWindowFocusChangedInner(hasFocus)
+        //接着你还可以自行处理。因此推荐操作方式为，Fragment重载ImmersiveMode为FullImmersive，然后Fragment实现onWindowFocusChangedInner自行调整
+        mFragment.asOrNull<AbsFragment>()?.onWindowFocusChangedInner(hasFocus)
     }
 }

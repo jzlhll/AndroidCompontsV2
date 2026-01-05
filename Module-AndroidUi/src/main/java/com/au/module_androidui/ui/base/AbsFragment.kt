@@ -1,14 +1,15 @@
 package com.au.module_androidui.ui.base
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.activity.OnBackPressedCallback
-import androidx.annotation.CallSuper
-import androidx.annotation.StringRes
-import androidx.fragment.app.Fragment
-import android.os.Build
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
+import androidx.activity.OnBackPressedCallback
+import androidx.annotation.CallSuper
+import androidx.annotation.EmptySuper
+import androidx.annotation.StringRes
+import androidx.fragment.app.Fragment
 
 /**
  * 这样所有的框架中的Fragment都实现了IFullWindow。但是由于只有在FragmentShellActivity中使用。故而没有问题。
@@ -88,5 +89,19 @@ open class AbsFragment : Fragment(), IFullWindow {
 
     open fun isAutoHideIme() = false
 
-    override fun immersiveMode() = ImmersiveMode.PaddingBars
+    override fun immersiveMode() : ImmersiveMode = ImmersiveMode.PaddingBars
+
+    /**
+     * 如果你想要自行操作padding就返回immersiveMode() = ImmersiveMode.FullImmersive
+     * 然后重载该函数。
+     * 可以调用currentStatusBarAndNavBarHeight()来获取状态栏和导航栏高度。
+     */
+    @EmptySuper
+    open fun onWindowFocusChangedInner(hasFocus: Boolean) {
+    }
+
+    @Deprecated("这个禁用，因为我们自己的框架")
+    final override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode)
+    }
 }

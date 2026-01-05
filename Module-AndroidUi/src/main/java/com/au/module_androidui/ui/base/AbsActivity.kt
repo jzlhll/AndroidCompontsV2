@@ -12,15 +12,16 @@ import android.view.ViewGroup
 import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.CallSuper
+import androidx.annotation.EmptySuper
 import androidx.appcompat.app.AppCompatActivity
 import com.au.module_android.BuildConfig
 import com.au.module_android.DarkModeAndLocalesConst
-import com.au.module_androidui.R
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
-import com.au.module_androidui.ui.postPaddingRootInner
 import com.au.module_android.utils.hideImeNew
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.log.logdNoFile
+import com.au.module_androidui.R
+import com.au.module_androidui.ui.paddingRootInner
 
 @Deprecated("基础框架的一环，请使用BindingActivity或者ViewActivity")
 open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
@@ -62,30 +63,8 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
         mCurrentUiMode = resources.configuration.uiMode
     }
 
-    override fun setContentView(view: View?) {
-        super.setContentView(view)
-        postPaddingRoot(view)
-    }
-
-    override fun setContentView(layoutResID: Int) {
-        super.setContentView(layoutResID)
-        postPaddingRoot(null)
-    }
-
-    override fun setContentView(view: View?, params: ViewGroup.LayoutParams?) {
-        super.setContentView(view, params)
-        postPaddingRoot(view)
-    }
-
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.PaddingBars
-    }
-
-    /**
-     * 进行全屏实现
-     */
-    open fun postPaddingRoot(contentView:View?) {
-        postPaddingRootInner(this, contentView ?: findViewById(android.R.id.content))
     }
 
     override fun setRequestedOrientation(requestedOrientation: Int) {
@@ -111,8 +90,8 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
             v.getLocationInWindow(leftTop)
             val left = leftTop[0]
             val top = leftTop[1]
-            val bottom = top + v.getHeight()
-            val right = left + v.getWidth()
+            val bottom = top + v.height
+            val right = left + v.width
             return !(event.x > left && event.x < right && event.y > top && event.y < bottom)
         }
         return false
@@ -129,14 +108,9 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
 
     private fun removeCachedFragments(outState: Bundle) {
         //清空保存Fragment的状态数据
-        if (false) { //非androidx
-            outState.putParcelable("android:support:fragments", null)
-            outState.putParcelable("android:fragments", null)
-        } else { //androidx
-            outState.getBundle("androidx.lifecycle.BundlableSavedStateRegistry.key")?.let {
-                it.remove("android:support:fragments")
-                it.remove("android:fragments")
-            }
+        outState.getBundle("androidx.lifecycle.BundlableSavedStateRegistry.key")?.let {
+            it.remove("android:support:fragments")
+            it.remove("android:fragments")
         }
     }
 
@@ -180,9 +154,27 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
 
     override fun finish() {
         super.finish()
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             exitAnim?.let { if(it != 0) overridePendingTransition(0, it) }
         }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        onWindowFocusChangedInner(hasFocus)
+    }
+
+    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+        onWindowFocusChangedInner(true)
+    }
+
+    /**
+     * 如果你想自己控制immersive，请重写这个方法。
+     */
+    @CallSuper
+    protected open fun onWindowFocusChangedInner(hasFocus: Boolean) {
+        logdNoFile { "allan on window focus changed $hasFocus" }
+        paddingRootInner(this, findViewById(android.R.id.content))
     }
 }

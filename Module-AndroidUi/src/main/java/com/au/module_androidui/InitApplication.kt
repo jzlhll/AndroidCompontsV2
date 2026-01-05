@@ -13,6 +13,7 @@ open class InitApplication : CommonInitApplication() {
             hasFileDebug = BuildConfig.DEBUG
         )
     }
+
     override fun onCreate() {
         super.onCreate()
         registerActivityLifecycleCallbacks(MonitorActivityCallback())
