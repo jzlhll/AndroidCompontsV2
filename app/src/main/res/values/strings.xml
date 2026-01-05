@@ -106,4 +106,7 @@
     <string name="select_manually">Select manually</string>
     <string name="automatic_desc">When enabled, app will switch dark mode on/off to match your system settings.</string>
     <string name="settings">Settings</string>
+
+    <string name="select_all">Select all</string>
+    <string name="select_all_cancel">Cancel select all</string>
 </resources>

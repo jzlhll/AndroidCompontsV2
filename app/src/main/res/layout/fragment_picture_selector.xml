@@ -20,6 +20,20 @@
         android:text="Select Image" />
 
     <Button
+        android:id="@+id/btnSelectCustomImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Select Custom Image" />
+
+    <Button
+        android:id="@+id/btnSelectSystemImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Select System Image" />
+
+    <Button
         android:id="@+id/btnSelectImageAndVideo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

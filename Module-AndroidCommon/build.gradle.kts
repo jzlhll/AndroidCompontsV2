@@ -99,7 +99,7 @@ mavenPublishing {
 }
 
 mavenPublishing {
-    coordinates("io.github.jzlhll", "module-androidcommon", "0.0.3")
+    coordinates("io.github.jzlhll", "module-androidcommon", "0.0.4")
 
     pom {
         name = "module-androidcommon"
