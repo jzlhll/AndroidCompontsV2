@@ -39,9 +39,19 @@ fun LifecycleOwner.openMultipleDocsForResult() = OpenMultipleDocsForResult(this)
 
 /**
  * 主要用于选择内容（如图片、文件），但返回的Uri权限是临时的，应用进程结束后会失效
+ * 应用重启后，可以通过 takePersistableUriPermission 来尝试重新获取。
  */
 fun LifecycleOwner.getMultipleContentsForResult() = GetMultipleContentsForResult(this)
 
+/**
+ * 这是为了解决 Android 存储访问框架（Storage Access Framework, SAF）的核心问题：
+ * 在 Android 11（API 30）及以上版本，应用无法再通过 WRITE_EXTERNAL_STORAGE 权限随意写入公共存储空间。
+ * 取而代之的，是更安全的、由用户控制的授权方式。
+ * 目标：获取对某个目录（及其所有子目录）的持久访问权限。
+ * 结果：系统返回一个表示该目录的 Uri（通常是一个 DocumentFile 对象），应用此后就可以无需再次询问用户，直接在该目录下创建、读取、写入或删除文件。
+ *
+ * 权限授予后，会记录在系统中。应用重启后，可以通过 takePersistableUriPermission 来尝试重新获取。
+ */
 fun LifecycleOwner.selectSysDirForResult() = SelectSysDirForResult(this)
 
 fun LifecycleOwner.systemTakePictureForResult() = SystemTakePictureForResult(this)
@@ -78,6 +88,21 @@ fun LifecycleOwner.createPermissionForResult(permission:String) : IOnePermission
  * activity 跳转，返回拿结果。
  */
 fun LifecycleOwner.createActivityForResult() : ActivityForResult = ActivityForResult(this)
+
+/**
+ * google新要求：尽量不要使用自定义的图片选择器，使用系统的。
+ * 请求一张系统图片或者视频
+ */
+fun Fragment.pickerForResult() = MultiUriPickerContractResult(this, 1, CompatMultiPickVisualMedia(1))
+
+/**
+ * google新要求：尽量不要使用自定义的图片选择器，使用系统的。
+ * 请求多张系统图片或视频
+ */
+fun Fragment.multiPickerForResult(maxItem:Int)
+        = if(maxItem > 0)
+    MultiUriPickerContractResult(this, maxItem, CompatMultiPickVisualMedia(maxItem))
+else throw RuntimeException("max item must > 0")
 
 /**
  * 跳转到辅助服务

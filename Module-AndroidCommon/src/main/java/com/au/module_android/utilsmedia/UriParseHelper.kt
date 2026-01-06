@@ -6,6 +6,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
+import androidx.core.net.toUri
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.ignoreError
@@ -112,7 +113,7 @@ class UriParseHelper {
         val fileLength = file.length()
         val videoDuration = VideoDurationHelper().getDurationNormally(file.absolutePath, mimeType)
 
-        parsedInfo = UriParsedInfo(uri,
+        parsedInfo = UriParsedInfo(file.toUri(),
             file.name,
             fileLength,
             extension,
