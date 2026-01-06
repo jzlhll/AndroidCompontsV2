@@ -15,25 +15,28 @@ import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
 import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.TakePhotoActionDialog
-import com.au.module_imagecompressed.compatMultiPhotoPickerForResult
-import com.au.module_imagecompressed.compatMultiUriPickerForResult
-import com.au.module_imagecompressed.photoPickerForResult
-import com.au.module_imagecompressed.uriPickerForResult
+import com.au.module_imagecompressed.multiPickUriWrapForResult
+import com.au.module_imagecompressed.pickUriWrapForResult
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
+import com.au.module_simplepermission.getMultipleContentsForResult
+import com.au.module_simplepermission.multiPickerForResult
+import com.au.module_simplepermission.pickerForResult
 import com.au.module_simplepermission.selectSysDirForResult
 import java.io.File
 
 @EntryFrgName
 class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), TakePhotoActionDialog.ITakePhotoActionDialogCallback {
-    val singleResult = photoPickerForResult()
-
-    val multiResult = compatMultiPhotoPickerForResult(3)
-
-    val mutiUriResult = compatMultiUriPickerForResult(8)
-    val uriResult = uriPickerForResult()
+    val singleResult = pickUriWrapForResult()
+    val multiResult = multiPickUriWrapForResult(3)
 
     val selectDirResult = selectSysDirForResult()
+
+    //这2个Uri的选择图片和视频
+    val origMultiUriPickerResult = multiPickerForResult(8)
+    val origUriPickerResult = pickerForResult()
+
+    val shortDocsResult = getMultipleContentsForResult()
 
     val cameraHelper = CameraPermissionHelp(this, object : ICameraFileProviderSupply {
         override fun createFileProvider(): Pair<File, Uri> {
@@ -56,6 +59,17 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        binding.selectShortAudioBtn.onClick {
+            shortDocsResult.start("audio/*") {
+
+            }
+        }
+        binding.selectShortPdfBtn.onClick {
+            shortDocsResult.start("application/pdf") {
+
+            }
+        }
+
         binding.takeActionDialog1Btn.onClick {
             cameraAndSelectHelper.showTakeActionDialog(1, PickerType.IMAGE)
         }
@@ -144,16 +158,32 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
 
         binding.multiUri1.onClick {
-            uriResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
-                logd { "file allan uri: $uris" }
+            origUriPickerResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
+                logd{"single picker: file uris ${uris.size}"}
+                for (uri in uris) {
+                    logd { "file allan uri: $uri" }
+                }
             }
         }
 
         binding.multiUri2.onClick {
-            mutiUriResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
-                logd { "file allan uri: $uris" }
+            origMultiUriPickerResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
+                logd{"multi picker: file uris ${uris.size}"}
+                for (uri in uris) {
+                    logd { "file allan uri: $uri" }
+                }
             }
         }
+
+        binding.multiUri3.onClick {
+            origMultiUriPickerResult.launchByAll(PickerType.IMAGE, null) { uris->
+                logd{"multi picker: file uris ${uris.size}"}
+                for (uri in uris) {
+                    logd { "file allan uri: $uri" }
+                }
+            }
+        }
+
         binding.selectDirBtn.onClick {
             selectDirResult.start(null) {
 

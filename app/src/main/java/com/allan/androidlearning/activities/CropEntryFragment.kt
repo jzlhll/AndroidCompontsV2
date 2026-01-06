@@ -10,7 +10,7 @@ import com.au.module_android.glide.glideSetAnyAsCircleCrop
 import com.au.module_android.log.logd
 import com.au.module_android.utils.iteratorPrint
 import com.au.module_imagecompressed.CropCircleImageFragment
-import com.au.module_imagecompressed.photoPickerForResult
+import com.au.module_imagecompressed.pickUriWrapForResult
 import com.au.module_nested.fragments.AbsNestedIndicatorFragment
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.createActivityForResult
@@ -24,7 +24,7 @@ import java.io.File
 @EntryFrgName
 class CropEntryFragment : AbsNestedIndicatorFragment<Void, FragmentCropEntryBinding>() {
     private val gotoUcropResult = createActivityForResult()
-    private val photoPickResult = photoPickerForResult()
+    private val photoPickResult = pickUriWrapForResult()
 
     override fun isContentViewMergeXml(): Boolean {
         return true

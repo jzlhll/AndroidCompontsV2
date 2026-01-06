@@ -40,6 +40,7 @@ import com.au.module_imagecompressed.compatMultiUriPickerForResult
 import com.au.module_imagecompressed.isPhotoPickerAvailable
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.getMultipleContentsForResult
+import com.au.module_simplepermission.multiPickerForResult
 import com.au.module_simplepermission.notification.createPostNotificationPermissionResult
 import com.au.module_simplepermission.requestNotificationPermission
 import com.bumptech.glide.request.target.Target
@@ -133,7 +134,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
 
-    val pickerResult = compatMultiUriPickerForResult(9)
+    val pickerResult = multiPickerForResult(9)
     val documentResult = getMultipleContentsForResult()
 
     private var mAutoNextJob: Job? = null

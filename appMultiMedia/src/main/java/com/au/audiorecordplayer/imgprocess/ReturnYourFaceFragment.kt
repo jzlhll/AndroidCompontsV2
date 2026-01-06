@@ -21,7 +21,7 @@ import com.au.module_androidui.widget.SuitScreenHelper
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_cached.delegate.AppDataStoreStringCache
 import com.au.module_imagecompressed.PickUriWrap
-import com.au.module_imagecompressed.photoPickerForResult
+import com.au.module_imagecompressed.pickUriWrapForResult
 import com.au.module_simplepermission.PickerType
 import java.io.File
 import java.io.FileInputStream
@@ -29,7 +29,7 @@ import java.io.FileInputStream
 class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() {
     private var mLastFile by AppDataStoreStringCache("returnYourFaceLastFile", "")
 
-    val singleResult = photoPickerForResult().also { it.paramsBuilder.setNeedLuban(2048) }
+    val singleResult = pickUriWrapForResult().also { it.paramsBuilder.setNeedLuban(2048) }
 
     private val thresholdPadding = 10.dp
 
