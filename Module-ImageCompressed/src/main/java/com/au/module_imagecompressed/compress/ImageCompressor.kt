@@ -1,11 +1,13 @@
-package com.au.module_imagecompressed
+package com.au.module_imagecompressed.compress
 
 import android.content.Context
-import android.graphics.*
-import android.graphics.Bitmap.createBitmap
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Paint
 import android.net.Uri
 import android.provider.OpenableColumns
-import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,15 +28,13 @@ import kotlin.random.Random
  * You can change it according to your wishes. chooseQuality()
  */
 class ImageCompressor {
-
     private val maxHeight = 1920f
     private val maxWidth = 1080f
     private val tempBufferSize = 16 * 1024
 
-    suspend fun compress(context: Context, uriString: String): String? =
+    suspend fun compress(context: Context, sourceUri: Uri): String? =
         withContext(Dispatchers.IO) {
             runCatching {
-                val sourceUri = uriString.toUri()
                 val originalOptions = decodeBounds(context, sourceUri)
 
                 val (targetWidth, targetHeight) = calculateTargetDimensions(
@@ -128,8 +128,6 @@ class ImageCompressor {
         val opts = BitmapFactory.Options().apply {
             inSampleSize = sampleSize
             inJustDecodeBounds = false
-            inPurgeable = true
-            inInputShareable = true
             inTempStorage = ByteArray(tempBufferSize)
         }
         return context.contentResolver.openInputStream(uri)?.use { stream ->
@@ -174,7 +172,7 @@ class ImageCompressor {
                         else -> {}
                     }
                 }
-                createBitmap(this, 0, 0, width, height, rotateMatrix, true)
+                Bitmap.createBitmap(this, 0, 0, width, height, rotateMatrix, true)
             }
         }.getOrDefault(this)
 
@@ -212,7 +210,7 @@ class ImageCompressor {
 
     private fun createOutputFile(context: Context): File {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val randomSuffix = Random.nextInt(100_000, 1_000_000)
+        val randomSuffix = Random.Default.nextInt(100_000, 1_000_000)
         val fileName = "IMG_${timestamp}_${randomSuffix}.jpg"
         val dir = File(context.getExternalFilesDir(null), "Pictures").apply {
             if (!exists()) mkdirs()
