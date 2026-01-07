@@ -3,12 +3,15 @@ package com.au.module_imagecompressed
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.au.module_android.Globals
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_imagecompressed.compressor.systemCompressFile
 import com.au.module_simplepermission.BaseCameraPermissionHelp
 import com.au.module_simplepermission.ICameraFileProviderSupply
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.nio.file.Files
 
@@ -32,16 +35,26 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
             if (createdTmpFile != null) {
                 if (compress) {
                     Globals.backgroundScope.launch {
+                        logdNoFile { "createdTempFile $createdTmpFile size: ${createdTmpFile.length()}" }
                         val compressedFile = systemCompressFile(createdTmpFile)
+                        logdNoFile { "compressedFile $compressedFile size: ${compressedFile?.length()}" }
                         if (compressedFile != null) {
                             //需要再次从压缩文件覆盖createdTmpFile
-                            createdTmpFile.delete()
-                            Files.move(compressedFile.toPath(), createdTmpFile.toPath())
-                            val cvtUri = imageFileConvertToWrap(createdTmpFile)
-                            callback("takePicAndCompressed", cvtUri)
+                            if (false) {
+                                 createdTmpFile.delete()
+                                 logdNoFile { "compressedFile delete $compressedFile and move to compressed" }
+                                 Files.move(compressedFile.toPath(), createdTmpFile.toPath())
+                            }
+
+                            withContext(Dispatchers.Main) {
+                                val cvtUri = imageFileConvertToWrap(createdTmpFile)
+                                callback("takePicAndCompressed", cvtUri)
+                            }
                         } else {
-                            val cvtUri = imageFileConvertToWrap(createdTmpFile)
-                            callback("takePicAndCompressFailUseOrig", cvtUri)
+                            withContext(Dispatchers.Main) {
+                                val cvtUri = imageFileConvertToWrap(createdTmpFile)
+                                callback("takePicAndCompressFailUseOrig", cvtUri)
+                            }
                         }
                     }
                 } else {

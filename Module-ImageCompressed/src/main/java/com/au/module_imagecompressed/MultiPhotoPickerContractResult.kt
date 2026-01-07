@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchOnThread
+import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_simplepermission.CompatMultiPickVisualMedia
 import com.au.module_simplepermission.IContractResult
@@ -104,12 +105,14 @@ class MultiPhotoPickerContractResult(
     }
 
     private fun callback(isAllCallback: Boolean, uriWrap: PickUriWrap, allResults: MutableList<PickUriWrap>, totalNum:Int) {
-        if(!isAllCallback)
-            oneByOneCallback?.invoke(uriWrap)
-        else {
-            allResults.add(uriWrap)
-            if (allResults.size == totalNum) {
-                allCallback?.invoke(allResults.toTypedArray())
+        fragment.lifecycleScope.launchOnUi {
+            if(!isAllCallback)
+                oneByOneCallback?.invoke(uriWrap)
+            else {
+                allResults.add(uriWrap)
+                if (allResults.size == totalNum) {
+                    allCallback?.invoke(allResults.toTypedArray())
+                }
             }
         }
     }

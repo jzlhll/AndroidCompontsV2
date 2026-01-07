@@ -8,11 +8,9 @@ import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.CallSuper
-import androidx.annotation.EmptySuper
 import androidx.appcompat.app.AppCompatActivity
 import com.au.module_android.BuildConfig
 import com.au.module_android.DarkModeAndLocalesConst
@@ -174,7 +172,6 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
      */
     @CallSuper
     protected open fun onWindowFocusChangedInner(hasFocus: Boolean) {
-        logdNoFile { "allan on window focus changed $hasFocus" }
         paddingRootInner(this, findViewById(android.R.id.content))
     }
 }

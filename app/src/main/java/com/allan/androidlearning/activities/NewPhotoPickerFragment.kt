@@ -25,7 +25,7 @@ import com.au.module_simplepermission.pickerForResult
 import com.au.module_simplepermission.selectSysDirForResult
 import java.io.File
 
-@EntryFrgName
+@EntryFrgName(priority = 10)
 class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), TakePhotoActionDialog.ITakePhotoActionDialogCallback {
     val singleResult = pickUriWrapForResult()
     val multiResult = multiPickUriWrapForResult(3)
@@ -83,14 +83,14 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         binding.directTakePicBtn.onClick {
             cameraHelper.safeRunTakePicMust(true)
                 {mode, uriWrap->
-                logd { "take pic mode $mode" }
+                logd { "take pic mode $mode $uriWrap" }
                 showPic(uriWrap)
             }
         }
         binding.directTakePic2Btn.onClick {
             cameraHelper.safeRunTakePicMust(false)
             {mode, uriWrap->
-                logd { "take pic mode $mode" }
+                logd { "#take pic mode $mode $uriWrap" }
                 showPic(uriWrap)
             }
         }

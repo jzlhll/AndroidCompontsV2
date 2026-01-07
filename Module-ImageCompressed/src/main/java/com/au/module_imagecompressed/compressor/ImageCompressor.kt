@@ -30,7 +30,7 @@ internal class ImageCompressor(
 ) {
     data class Config(
         val outputFormat: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
-        val maxWidth: Int = 1080,
+        val maxWidth: Int = 1440,
         val maxHeight: Int = 1920,       // 最大边长限制，防止内存溢出
         var targetSize:Long? = null      /*压缩的目标大小 如果压缩到minQuality还是不行的话，就放弃。*/
     )
@@ -140,6 +140,7 @@ internal class ImageCompressor(
                 // 查询文件大小 放到外面避免多次查询
                 val fileSize = provideFileSize()
                 var quality = chooseQuality(fileSize)
+                Log.d("ImageProcessor", "compress: quality $quality")
                 val targetSize = config.targetSize
 
                 while (true) {
@@ -203,6 +204,16 @@ internal class ImageCompressor(
     private fun Bitmap.scaleTo(width: Int, height: Int) : Bitmap {
         if (width <= 0 || height <= 0) return this
         if (width == this.width && height == this.height) return this
+        Log.d("ImageProcessor", "Scale to $width * $height")
+
+        // 修复点1：将硬件位图转换为软件位图
+        val softwareBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this.getConfig() == Bitmap.Config.HARDWARE) {
+            // 硬件位图转换为软件位图（选择ARGB_8888保证兼容性，也可根据需求用RGB_565）
+            this.copy(Bitmap.Config.ARGB_8888, true)
+        } else {
+            // 非硬件位图直接使用
+            this
+        }
 
         val scaled = createBitmap(width, height, Bitmap.Config.RGB_565)
         val ratioX = width / this.width.toFloat()
@@ -214,11 +225,15 @@ internal class ImageCompressor(
         Canvas(scaled).apply {
             setMatrix(matrix)
             drawBitmap(
-                this@scaleTo,
+                softwareBitmap,
                 midX - this@scaleTo.width / 2f,
                 midY - this@scaleTo.height / 2f,
                 Paint(Paint.FILTER_BITMAP_FLAG)
             )
+        }
+        // 修复点3：如果创建了新的软件位图，回收临时对象（避免内存泄漏）
+        if (softwareBitmap !== this) {
+            softwareBitmap.recycle()
         }
         return scaled
     }
@@ -254,11 +269,11 @@ internal class ImageCompressor(
      */
     private fun chooseQuality(fileSize: Long): Int {
         return when {
-            fileSize > 6_000_000 -> 50    // >5MB → 40%质量
-            fileSize > 4_000_000 -> 60    // >2MB → 50%质量
-            fileSize > 2_000_000 -> 70    // >1MB → 60%质量
-            fileSize > 1_000_000 -> 80    // >500KB → 70%质量
-            fileSize > 500_000 -> 85      // >250KB → 80%质量
+            fileSize > 16_000_000 -> 60    // >5MB → 40%质量
+            fileSize > 8_000_000 -> 70    // >2MB → 50%质量
+            fileSize > 4_000_000 -> 80    // >1MB → 60%质量
+            fileSize > 2_000_000 -> 85    // >500KB → 70%质量
+            fileSize > 1_000_000 -> 90      // >250KB → 80%质量
             else -> 100                   // ≤250KB → 90%质量
         }
     }

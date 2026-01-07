@@ -1,7 +1,7 @@
 package com.au.module_android.utilsfile
 
 import com.au.module_android.Globals
-import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.withIOThread
 import java.io.File
 import java.nio.file.Files
@@ -97,7 +97,7 @@ class SimpleFilesLruCache(
                 // SAVE操作需要文件存在，并记录文件大小
                 if (file.exists()) {
                     val fileTime = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).lastAccessTime().toMillis()
-                    logd { "$operateType ${file.absolutePath} $fileTime" }
+                    logdNoFile { "$operateType ${file.absolutePath} time: $fileTime" }
                     fileMetadata[file.absolutePath] = FileMetadata(
                         accessTime = fileTime,
                         fileSize = file.length(),
@@ -119,7 +119,7 @@ class SimpleFilesLruCache(
                     // 设置为当前时间
                     val newAccessTime = FileTime.fromMillis(Date().time)
                     Files.setAttribute(file.toPath(), "lastAccessTime", newAccessTime)
-                    logd { "$operateType ${file.absolutePath} $newAccessTime" }
+                    logdNoFile { "$operateType ${file.absolutePath} time:$newAccessTime" }
                 } else {
                     // 文件不存在，从记录中移除
                     fileMetadata.remove(file.absolutePath)
