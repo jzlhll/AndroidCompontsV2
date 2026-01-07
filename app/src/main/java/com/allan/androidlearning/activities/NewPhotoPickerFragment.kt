@@ -81,8 +81,15 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         }
 
         binding.directTakePicBtn.onClick {
-            cameraHelper.safeRunTakePicMust(requireContext())
+            cameraHelper.safeRunTakePicMust(true)
                 {mode, uriWrap->
+                logd { "take pic mode $mode" }
+                showPic(uriWrap)
+            }
+        }
+        binding.directTakePic2Btn.onClick {
+            cameraHelper.safeRunTakePicMust(false)
+            {mode, uriWrap->
                 logd { "take pic mode $mode" }
                 showPic(uriWrap)
             }
@@ -211,7 +218,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
     }
 
     override fun onClickTakePic() : Boolean{
-        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(requireContext()) { mode, uriWrap ->
+        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(true) { mode, uriWrap ->
             showPic(uriWrap)
         }
     }

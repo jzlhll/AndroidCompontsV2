@@ -10,16 +10,16 @@ import androidx.core.net.toFile
 import com.au.audiorecordplayer.databinding.FragmentReturnYourFaceBinding
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_gson.fromJson
-import com.au.module_gson.toJsonString
-import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
-import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.visible
-import com.au.module_androidui.widget.SuitScreenHelper
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
+import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_androidui.widget.SuitScreenHelper
 import com.au.module_cached.delegate.AppDataStoreStringCache
+import com.au.module_gson.fromJson
+import com.au.module_gson.toJsonString
 import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.pickUriWrapForResult
 import com.au.module_simplepermission.PickerType
@@ -29,7 +29,7 @@ import java.io.FileInputStream
 class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() {
     private var mLastFile by AppDataStoreStringCache("returnYourFaceLastFile", "")
 
-    val singleResult = pickUriWrapForResult().also { it.paramsBuilder.setNeedLuban(2048) }
+    val singleResult = pickUriWrapForResult().also { it.paramsBuilder.setIgnoreSizeKb(2048) }
 
     private val thresholdPadding = 10.dp
 

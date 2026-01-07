@@ -43,7 +43,7 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
     }
 
     override fun onClickTakePic(): Boolean {
-        cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(f.requireContext()) { info, uriWrap->
+        cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(false) { info, uriWrap->
             uriWrap?.let { onPicGot(it) }
         }
         return true

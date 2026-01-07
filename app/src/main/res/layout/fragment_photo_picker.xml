@@ -17,7 +17,12 @@
             android:layout_height="wrap_content">
             <Button
                 android:id="@+id/directTakePicBtn"
-                android:text="直接拍照"
+                android:text="拍照压缩"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/directTakePic2Btn"
+                android:text="拍照不压缩"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 

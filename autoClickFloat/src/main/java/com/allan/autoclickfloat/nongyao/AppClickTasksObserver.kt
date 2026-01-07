@@ -9,7 +9,7 @@ import com.allan.autoclickfloat.consts.Const
 import com.allan.autoclickfloat.floats.WindowMgr
 import com.au.module_android.BuildConfig
 import com.au.module_android.Globals
-import com.au.module_android.log.ALogJ
+import com.au.module_android.log.LogTag
 import kotlinx.coroutines.launch
 
 /**
@@ -23,7 +23,7 @@ class AppClickTasksObserver(service: AutoClickFloatAccessService) : AbsAccessSer
     private val mgr = AllNodesMgr()
 
     inline fun log(block:()->String) {
-        if(BuildConfig.DEBUG) Log.d(ALogJ.TAG, "alland " + block())
+        if(BuildConfig.DEBUG) Log.d(LogTag.TAG, "alland " + block())
     }
 
     private var openObserver = Observer<Boolean> {

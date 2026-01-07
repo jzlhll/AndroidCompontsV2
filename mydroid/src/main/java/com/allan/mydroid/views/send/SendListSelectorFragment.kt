@@ -36,7 +36,6 @@ import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.finishFragment
-import com.au.module_imagecompressed.compatMultiUriPickerForResult
 import com.au.module_imagecompressed.isPhotoPickerAvailable
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.getMultipleContentsForResult

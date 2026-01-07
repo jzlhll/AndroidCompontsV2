@@ -1,8 +1,9 @@
 package com.au.module_imagecompressed
 
 class PickerMediaParams private constructor(
-    val limitImageSize: Int, //图片最大限制，将不会做转换
-    val shouldTryCompressImageSize:Int, //图片最大限制，将不会做转换，UriWrap beLimitedSize=true
+    val alwaysCopyImage: Boolean,
+    val alwaysCopyVideo: Boolean,
+    val limitImageSize: Int,   //图片最大限制，将不会做转换。如果传入了compressEngine，则会允许2倍的size进行压缩
     val targetImageSize: Int,
     val limitVideoSize: Long,  //视频最大限制，将不会做转换
     val ignoreSizeKb: Int,
@@ -16,12 +17,17 @@ class PickerMediaParams private constructor(
         private var limitVideoSize = 500 * 1024 * 1024L
         private var ignoreSizeKb = 5 * 1024 * 1024
 
+        private var alwaysCopyImage = false
+        private var alwaysCopyVideo = false
+
         private var compressEngine: ICompressEngine? = null
 
         /**
          * 创建一个吝啬的参数
          */
         fun asCopyAndStingy(engine: ICompressEngine?=null) : Builder {
+            alwaysCopyImage = true
+            alwaysCopyVideo = false
             limitImageSize = 25 * 1024 * 1024
             targetImageSize = 2 * 1024 * 1024
             limitVideoSize = 150 * 1024 * 1024L
@@ -33,7 +39,9 @@ class PickerMediaParams private constructor(
         /**
          * 不拷贝的参数
          */
-        fun asNoLimit() : Builder {
+        fun asNoCopy() : Builder {
+            alwaysCopyImage = false
+            alwaysCopyVideo = false
             limitImageSize = Int.MAX_VALUE
             targetImageSize = Int.MAX_VALUE
             limitVideoSize = Long.MAX_VALUE
@@ -48,7 +56,12 @@ class PickerMediaParams private constructor(
         fun setIgnoreSizeKb(ignoreSizeKb: Int) = apply { this.ignoreSizeKb = ignoreSizeKb }
         fun setCompressEngine(compressEngine: ICompressEngine) = apply { this.compressEngine = compressEngine }
 
+        fun setAlwaysCopyImage(alwaysCopy: Boolean) = apply { this.alwaysCopyImage = alwaysCopy }
+        fun setAlwaysCopyVideo(alwaysCopy: Boolean) = apply { this.alwaysCopyVideo = alwaysCopy }
+
         fun build() = PickerMediaParams(
+            alwaysCopyImage,
+            alwaysCopyVideo,
             limitImageSize,
             targetImageSize,
             limitVideoSize,

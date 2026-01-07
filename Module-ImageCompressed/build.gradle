@@ -26,6 +26,5 @@ dependencies {
     implementation project(':Module-AndroidCommon')
     implementation project(":Module-AndroidUi")
     implementation project(':Module-AuSimplePermission')
-    implementation libs.lubanCompress
     implementation libs.yalantis.ucrop
 }

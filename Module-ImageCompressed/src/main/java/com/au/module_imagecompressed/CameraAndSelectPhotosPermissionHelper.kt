@@ -15,7 +15,7 @@ class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
     var takePhotoCallback: TakePhotoActionDialog.ITakePhotoActionDialogCallback? = null
 
     private val multiResult = f.multiPickUriWrapForResult(3).also {
-        it.paramsBuilder.asLoose()
+        it.paramsBuilder.asNoCopy()
     }
     val cameraHelper = CameraPermissionHelp(f, supplier)
 

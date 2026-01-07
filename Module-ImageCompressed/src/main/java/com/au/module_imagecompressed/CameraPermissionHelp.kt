@@ -1,15 +1,11 @@
 package com.au.module_imagecompressed
 
-import android.content.Context
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.au.module_android.Globals
-import com.au.module_android.utils.ignoreError
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_imagecompressed.compressor.systemCompressFile
-import com.au.module_imagecompressed.compressor.systemCompressUri
 import com.au.module_simplepermission.BaseCameraPermissionHelp
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import kotlinx.coroutines.launch
@@ -29,10 +25,9 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
      * @param  callback 一定有回调。null就是失败或者就是没有拍照回来。
      * @return 返回true表示拍照无法弹出授权。返回false则一定是能弹窗或者直接拍照去了。
      */
-    fun safeRunTakePicMust(context: Context,
-                                   compress:Boolean = true,
-                                   errorToastBlock:()->Unit = {ToastBuilder().setOnTop().setIcon("info").setMessage("需要camera权限.").toast() },
-                                   callback: (mode:String, uriWrap: PickUriWrap?)->Unit) : Boolean{
+    fun safeRunTakePicMust(compress:Boolean = true,
+                               errorToastBlock:()->Unit = {ToastBuilder().setOnTop().setIcon("info").setMessage("需要camera权限.").toast() },
+                               callback: (mode:String, uriWrap: PickUriWrap?)->Unit) : Boolean{
         val ret = safeRunTakePic({createdTmpFile->
             if (createdTmpFile != null) {
                 if (compress) {
@@ -73,6 +68,5 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
     private fun imageFileConvertToWrap(file:File) = PickUriWrap(file.myParse(),
         1,
         isImage = true,
-        beLimitedSize = false,
         beCopied = true)
 }

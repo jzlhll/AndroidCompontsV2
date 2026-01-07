@@ -8,15 +8,16 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.os.Build
 import android.util.Log
-import java.io.FileOutputStream
-import java.io.InputStream
-import kotlin.math.roundToInt
 import androidx.core.graphics.createBitmap
 import androidx.exifinterface.media.ExifInterface
 import com.au.module_android.utils.ignoreError
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import kotlin.math.roundToInt
 
 /**
  * 图片压缩类
@@ -126,7 +127,6 @@ internal class ImageCompressor(
     suspend fun compress() : File?{
         return withContext(Dispatchers.IO) {
             val outputFile = CompressCacheConstManager.createCompressOutputFile()
-            var isSuccess = false
 
             ignoreError {
                 val decoded = api.decodeBitmap()
@@ -135,15 +135,16 @@ internal class ImageCompressor(
                 val targetW = decoded.targetW
                 val targetH = decoded.targetH
 
-                var isDownScaleOnce = false //允许尝试两次操作。
-                var isDownQualityOnce = false
+                var isDown = false //允许尝试一次额外操作。
 
                 // 查询文件大小 放到外面避免多次查询
                 val fileSize = provideFileSize()
+                var quality = chooseQuality(fileSize)
+                val targetSize = config.targetSize
 
                 while (true) {
-                    val scaledBitmap =
-                        if (isDownScaleOnce) {
+                    val scaledBitmap = if (isDown) {
+                            quality -= 5
                             bitmap.scaleTo((targetW * 0.8f).toInt(), (targetH * 0.8f).toInt())
                         } else {
                             bitmap.scaleTo(targetW, targetH)
@@ -159,25 +160,28 @@ internal class ImageCompressor(
                     bitmap = targetBitmap
 
                     // 6. 写入输出文件
-                    if (outputFile.exists()) {
-                        outputFile.delete()
-                    }
-                    FileOutputStream(outputFile).use { out ->
-                        var quality = chooseQuality(fileSize)
-                        if (isDownQualityOnce) {
-                            quality -= 10
+                    var count = 3
+                    while (count-- > 0) {
+                        if (outputFile.exists()) {
+                            outputFile.delete()
+                            delay(100)
                         }
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
+                        FileOutputStream(outputFile).use { out ->
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
+                        }
+                        if (!isDown) {
+                            break
+                        }
+                        if (targetSize != null && outputFile.length() > targetSize) {
+                            continue
+                        }
                     }
 
                     //7. 如果目标文件大小超过限制，就继续尝试压缩
-                    if (config.targetSize != null && outputFile.length() > config.targetSize) {
+                    if (targetSize != null && outputFile.length() > targetSize) {
                         Log.d("ImageProcessor", "⚠️ Target file size exceeds limit...")
-                        if (!isDownScaleOnce) { //第一次降低20% scale
-                            isDownScaleOnce = true
-                            continue
-                        } else if (!isDownQualityOnce) { //第二次额外降低10%质量
-                            isDownQualityOnce = true
+                        if (!isDown) { //再给一次机会压缩
+                            isDown = true
                             continue
                         } else {
                             Log.d("ImageProcessor", "❌ compress twice image still not small enough?")
@@ -185,12 +189,11 @@ internal class ImageCompressor(
                     }
 
                     bitmap.recycle()
-                    isSuccess = true
                     break
                 }
             }
 
-            if(isSuccess) outputFile else null
+            outputFile
         }
     }
 
@@ -222,7 +225,6 @@ internal class ImageCompressor(
 
     /**
      * 根据Exif信息旋转Bitmap（适配File输入）
-     * @param file 用于从原文件中提取Exif信息
      */
     private fun Bitmap.rotateByExif(inputStreamProvider: () -> InputStream?): Bitmap {
         ignoreError {

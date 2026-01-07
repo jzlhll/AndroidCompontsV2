@@ -59,7 +59,7 @@ class WebUploadFragment : BindingFragment<ActivityJsHtmlBinding>(), TakePhotoAct
 
     override fun onClickTakePic() : Boolean{
         logd { "onClick TakePic" }
-        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(requireContext()){mode, uriWrap->
+        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(true){mode, uriWrap->
             logd { "on click take pic mode=>$mode" }
             if (uriWrap != null) {
                 updateSelectValueCallback(arrayOf(uriWrap.uriParsedInfo.uri))
