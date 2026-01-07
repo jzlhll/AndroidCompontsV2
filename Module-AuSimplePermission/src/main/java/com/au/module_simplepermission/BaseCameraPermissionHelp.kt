@@ -131,7 +131,7 @@ open class BaseCameraPermissionHelp {
      * @param  callback 一定有回调。null就是失败或者就是没有拍照回来。
      * @return 返回true表示拍照无法弹出授权。返回false则一定是能弹窗或者直接拍照去了。
      */
-    fun safeRunTakePic(errorToastBlock:()->Unit,
+    fun safeRunTakePic2(errorToastBlock:()->Unit,
                            callback: (mode:String, uri: Uri?)->Unit) : Boolean{
         val ret = safeRunTakePic({createdTmpFile->
             if (createdTmpFile != null) {

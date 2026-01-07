@@ -4,12 +4,17 @@ import android.content.Context
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import com.au.module_android.Globals
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_imagecompressed.compressor.systemCompressFile
+import com.au.module_imagecompressed.compressor.systemCompressUri
 import com.au.module_simplepermission.BaseCameraPermissionHelp
 import com.au.module_simplepermission.ICameraFileProviderSupply
+import kotlinx.coroutines.launch
 import java.io.File
+import java.nio.file.Files
 
 /**
  * 封装了请求camera的一系列动作。
@@ -25,34 +30,33 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
      * @return 返回true表示拍照无法弹出授权。返回false则一定是能弹窗或者直接拍照去了。
      */
     fun safeRunTakePicMust(context: Context,
-                                   needLubanCompress:Boolean = true,
+                                   compress:Boolean = true,
                                    errorToastBlock:()->Unit = {ToastBuilder().setOnTop().setIcon("info").setMessage("需要camera权限.").toast() },
                                    callback: (mode:String, uriWrap: PickUriWrap?)->Unit) : Boolean{
         val ret = safeRunTakePic({createdTmpFile->
             if (createdTmpFile != null) {
-                val createdTmpUri = createdTmpFile.toUri()
-                if (needLubanCompress) {
-                    //luban压缩
-                    LubanCompress().setResultCallback { srcPath, resultPath, isSuc ->
-                        val afterCompressPath = if(isSuc) resultPath else srcPath
-                        if (afterCompressPath != null) {
-                            ignoreError {
-                                val afterCompressFile = File(afterCompressPath)
-                                val cvtUri = imageFileConvertToWrap(afterCompressFile)
-                                callback("takePicResultLubanCompressed", cvtUri)
-                            }
+                if (compress) {
+                    Globals.backgroundScope.launch {
+                        val compressedFile = systemCompressFile(createdTmpFile)
+                        if (compressedFile != null) {
+                            //需要再次从压缩文件覆盖createdTmpFile
+                            createdTmpFile.delete()
+                            Files.move(compressedFile.toPath(), createdTmpFile.toPath())
+                            val cvtUri = imageFileConvertToWrap(createdTmpFile)
+                            callback("takePicAndCompressed", cvtUri)
                         } else {
-                            callback("takePicResultLubanCompressedError", null)
+                            val cvtUri = imageFileConvertToWrap(createdTmpFile)
+                            callback("takePicAndCompressFailUseOrig", cvtUri)
                         }
-                    }.compress(context, createdTmpUri) //必须是file的scheme。那个FileProvider提供的则不行。
+                    }
                 } else {
-                    //不压缩
                     val cvtUri = imageFileConvertToWrap(createdTmpFile)
                     callback("takePicResultDirect", cvtUri)
                 }
             } else {
                 callback("takePicNoResult", null)
             }
+            null
         }, notGivePermissionBlock = {
             errorToastBlock()
             callback("notGivePermission", null)

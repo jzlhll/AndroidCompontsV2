@@ -14,22 +14,9 @@ import kotlinx.coroutines.delay
 import java.io.File
 
 class UriParseHelper {
-    private lateinit var uri: Uri
-    private lateinit var file: File
-
-    constructor(uri: Uri) {
-        this.uri = uri
-    }
-
-    constructor(file: File) {
-        this.file = file
-    }
-
-    private lateinit var parsedInfo : UriParsedInfo
-
-    suspend fun parseSuspend(cr: ContentResolver): UriParsedInfo {
+    suspend fun parseSuspend(cr: ContentResolver, uri: Uri): UriParsedInfo {
         delay(0)
-        return parse(cr)
+        return parse(cr, uri)
     }
 
     /**
@@ -46,7 +33,7 @@ class UriParseHelper {
         return paths != null && "root" == paths[0]
     }
 
-    fun parse(cr: ContentResolver) : UriParsedInfo{
+    fun parse(cr: ContentResolver, uri: Uri) : UriParsedInfo{
         logdNoFile { "parse uri: $uri" }
         val path = uri.path
 
@@ -91,41 +78,33 @@ class UriParseHelper {
 //                file = File(path!!.replace("/root", ""))
 //            }
 //        }
-        if (file != null) {
-            parseAsFile(file)
+        return if (file != null) {
+            parse(file)
         } else if (isFileScheme(uri)) {
-            parseAsFile(uri.toFile())
+            parse(uri.toFile())
         } else {
-            parseAsContent(cr)
+            parseAsContent(cr, uri)
         }
-        return parsedInfo
-    }
-
-    fun parseFile(): UriParsedInfo {
-        parseAsFile(file)
-        return parsedInfo
     }
 
     ///////////////必须先调用parse
-    private fun parseAsFile(file: File) : Boolean{
+    fun parse(file: File) : UriParsedInfo{
         val extension = file.extension.lowercase()
         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
         val fileLength = file.length()
         val videoDuration = VideoDurationHelper().getDurationNormally(file.absolutePath, mimeType)
 
-        parsedInfo = UriParsedInfo(file.toUri(),
+        return UriParsedInfo(file.toUri(),
             file.name,
             fileLength,
             extension,
             mimeType,
             file.absolutePath,
             null,
-            videoDuration)
-        logdNoFile { "parseAsFile parsed Info: $parsedInfo" } //todo 是否考虑fileDescriptor
-        return parsedInfo.fileLength > 0
+            videoDuration) //todo 是否考虑fileDescriptor
     }
 
-    private fun parseAsContent(cr: ContentResolver) {
+    private fun parseAsContent(cr: ContentResolver, uri: Uri) : UriParsedInfo {
         var mimeType = ""
         var relativePath:String? = null
         var fullPath:String? = null
@@ -180,7 +159,7 @@ class UriParseHelper {
             }
         }
 
-        parsedInfo = UriParsedInfo(uri,
+        val r = UriParsedInfo(uri,
             name,
             fileLength,
             extension,
@@ -189,7 +168,8 @@ class UriParseHelper {
             relativePath,
             videoDuration)
 
-        logdNoFile { "parseAsContent parsed Info: $parsedInfo" }
+        logdNoFile { "parseAsContent parsed Info: $r" }
+        return r
     }
 
 }

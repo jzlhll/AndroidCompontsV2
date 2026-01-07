@@ -16,4 +16,5 @@ fun Fragment.multiPickUriWrapForResult(maxItem:Int)
  * google新要求：尽量不要使用自定义的图片选择器，使用系统的。
  * 请求一张系统图片或者视频
  */
-fun Fragment.pickUriWrapForResult() = MultiPhotoPickerContractResult(this, 1, CompatMultiPickVisualMedia(1))
+fun Fragment.pickUriWrapForResult()
+        = MultiPhotoPickerContractResult(this, 1, CompatMultiPickVisualMedia(1))

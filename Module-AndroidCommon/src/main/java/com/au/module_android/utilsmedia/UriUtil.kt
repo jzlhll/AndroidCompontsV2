@@ -14,11 +14,11 @@ import com.au.module_android.utilsfile.FileIOUtils
 import java.io.File
 import java.io.FileNotFoundException
 
-fun File.myParse() = UriParseHelper(this).parseFile()
-fun Uri.myParse(context: Context = Globals.app) = UriParseHelper(this).parse(context.contentResolver)
-fun Uri.myParse(cr: ContentResolver) = UriParseHelper(this).parse(cr)
-suspend fun Uri.myParseSuspend(context: Context = Globals.app) = UriParseHelper(this).parseSuspend(context.contentResolver)
-suspend fun Uri.myParseSuspend(cr: ContentResolver) = UriParseHelper(this).parseSuspend(cr)
+fun File.myParse() = UriParseHelper().parse(this)
+fun Uri.myParse(context: Context = Globals.app) = UriParseHelper().parse(context.contentResolver, this)
+fun Uri.myParse(cr: ContentResolver) = UriParseHelper().parse(cr, this)
+suspend fun Uri.myParseSuspend(context: Context = Globals.app) = UriParseHelper().parseSuspend(context.contentResolver, this)
+suspend fun Uri.myParseSuspend(cr: ContentResolver) = UriParseHelper().parseSuspend(cr, this)
 
 fun isUrlHasImage(url: String): Boolean {
     val lowUrl = url.lowercase()

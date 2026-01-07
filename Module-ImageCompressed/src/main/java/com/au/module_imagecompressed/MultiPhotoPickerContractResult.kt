@@ -47,7 +47,7 @@ class MultiPhotoPickerContractResult(
     }
 
     @WorkerThread
-    private fun lubanCompress(uriWrap: PickUriWrap,
+    private fun compress(uriWrap: PickUriWrap,
                               isAllCallback: Boolean,
                               totalNum: Int,
                               allResults: MutableList<PickUriWrap>,
@@ -80,7 +80,7 @@ class MultiPhotoPickerContractResult(
     private val subCacheDir = "luban_disk_cache"
     private val copyFilePrefix = "copy_"
 
-    private fun ifCopy(
+    private fun only(
         uri: Uri,
         totalNum: Int,
         cr: ContentResolver,
@@ -95,23 +95,11 @@ class MultiPhotoPickerContractResult(
             return PickUriWrap(parsedInfo, totalNum, isImage, beLimitedSize = true)
         }
 
+        val compressEngine = params.compressEngine
+
         return when (params.copyMode) {
             CopyMode.COPY_NOTHING -> {
                 PickUriWrap(parsedInfo, totalNum, isImage)
-            }
-
-            CopyMode.COPY_NOTHING_BUT_CVT_HEIC -> {
-                if (parsedInfo.isUriHeic()) {
-                    val size = longArrayOf(-1L)
-                    val copyUri = uri.copyToCacheConvert(cr, URI_COPY_PARAM_HEIC_TO_JPG, subCacheDir, copyFilePrefix, size)
-                    PickUriWrap(
-                        parsedInfo,
-                        totalNum,
-                        isImage,
-                        beCopied = copyUri != uri)
-                } else {
-                    PickUriWrap(parsedInfo, totalNum, isImage)
-                }
             }
 
             CopyMode.COPY_CVT_IMAGE_TO_JPG -> {
@@ -174,7 +162,7 @@ class MultiPhotoPickerContractResult(
                     val uriWrap = ifCopy(uri, totalNum, cr, params)
                     if(BuildConfig.DEBUG) Log.d(logTag, "2>if Copy: $uriWrap")
 
-                    if (!params.needLuban || !uriWrap.isImage) {
+                    if (!params.needCompress() || !uriWrap.isImage) {
                         //3. 回调
                         fragment.lifecycleScope.launchOnUi {
                             if(!isAllCallback)
@@ -188,7 +176,7 @@ class MultiPhotoPickerContractResult(
                         }
                     } else {
                         //3. luban压缩和回调
-                        lubanCompress(uriWrap, isAllCallback, totalNum, allResults, params)
+                        compress(uriWrap, isAllCallback, totalNum, allResults, params)
                     }
                 }
             }
