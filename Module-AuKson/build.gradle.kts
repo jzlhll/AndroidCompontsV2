@@ -46,7 +46,7 @@ mavenPublishing {
 }
 
 mavenPublishing {
-    coordinates("io.github.jzlhll", "module-aukson", "0.0.1")
+    coordinates("io.github.jzlhll", "module-aukson", "0.0.4")
 
     pom {
         name = "module-aukson"
