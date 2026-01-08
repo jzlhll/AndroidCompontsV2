@@ -28,6 +28,20 @@ import kotlin.math.roundToInt
 
 /**
  * 图片压缩类1.1版
+ *
+ *  文件压缩： systemCompressFile
+ *  Uri压缩： systemCompressUri
+ *  失败回退拷贝： systemCompressUriOrCopy
+ *  关键配置 Config :
+ *  maxWidth / maxHeight：最大边长（默认 1440x1920），控制解码与缩放目标尺寸 Config
+ *  qualityType：压缩质量策略 default/deep/shallow，按原图大小自动选质量 chooseQuality
+ *  supportScale / supportScaleRatio：是否缩放及“接近阈值”（默认 1.2），仅在尺寸接近目标时缩放 compressOnce 判定
+ *  secondReduce：二次压缩达标体积（含 targetSize、qualityStep、secondScaleRatio、tryReduceCount） SecondReduce
+ *  outputFormat：期望输出格式（默认 JPEG）；当前写出固定 JPEG，可按需扩展 compressOnce 写出
+ *
+ *  行为简述
+ *  自动解码与采样、按需缩放与Exif旋转，写入压缩文件 compressOnce
+ *  若设定 targetSize，按步长降质量并小幅二次缩放，限次尝试达标 compress
  */
 internal class BestImageCompressor(
     val config : Config,
@@ -94,7 +108,6 @@ internal class BestImageCompressor(
     }
 
     data class Config(
-        val outputFormat: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG,
         /** 最大边长限制，防止内存溢出，也能显著降低图片大小 */
         val maxWidth: Int = 1440,
         /** 最大边长限制，防止内存溢出，也能显著降低图片大小 */
