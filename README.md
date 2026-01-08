@@ -241,13 +241,12 @@ https://developer.android.google.cn/topic/libraries/architecture/paging/v3-overv
 
 #### Module-ImageCompressed
 
-主要是集成`luban`压缩和`android photo picker`;
+基于android的ImageDecoder和BitmapFactory做压缩，效果Best！
+基于android `photo picker`;
 
 以及基于`module-android`的permission请求和Uri处理。
 
 还封装了弹窗选择拍照和选择图片，一直到请求权限，选择回来。
-
-
 
 ### AppMultiMedia
 
