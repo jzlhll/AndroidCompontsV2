@@ -30,6 +30,7 @@ swiperefreshlayout = "1.2.0"
 symbolProcessingApi = "2.2.21-2.0.4"
 ttsEdgeJava = "1.3.2"
 voskAndroid = "0.3.75"
+pictureselector2 = "3.16.0"
 pictureselector = "3.15.1"
 window = "1.5.1"
 lifecycleProcess = "2.10.0"
@@ -96,7 +97,7 @@ symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-ap
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 tts-edge-java = { module = "io.github.whitemagic2014:tts-edge-java", version.ref = "ttsEdgeJava" }
 vosk-android = { module = "com.alphacephei:vosk-android", version.ref = "voskAndroid" }
-pictureselector = { module = "com.github.buhuiming.PictureSelector:PictureSelector", version.ref = "pictureselector" }
+pictureselector = { module = "io.github.jzlhll:pictureselector", version.ref = "pictureselector2" }
 yalantis-ucrop = { module = "com.github.buhuiming.PictureSelector:ucrop", version.ref = "pictureselector" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
