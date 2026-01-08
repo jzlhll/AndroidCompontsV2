@@ -1,11 +1,6 @@
 package com.au.module_kson
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer
 import kotlin.reflect.full.createType
 
@@ -138,6 +133,7 @@ inline fun <reified T> T.toKsonString() : String = kson.encodeToString(this)
 
 inline fun <reified T> String.fromKson() :T? = try {
     kson.decodeFromString<T>(this)
-}  catch (_: Exception) {
+}  catch (e: Exception) {
+    e.printStackTrace()
     null
 }

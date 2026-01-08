@@ -37,8 +37,7 @@ androidx.recyclerview.widget.LinearLayoutManager mLayoutManager;
 
 #-flattenpackagehierarchy
 #-allowaccessmodification
--keepattributes Exceptions,InnerClasses,Signature,SourceFile,LineNumberTable
--ignorewarnings
+-keepattributes Exceptions,InnerClasses,Signature
 
 #kotlin 相关
 #-dontwarn kotlin.**

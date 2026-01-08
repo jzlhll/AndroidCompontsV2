@@ -37,13 +37,6 @@ class PictureSelectorFragment : BindingFragment<FragmentPictureSelectorBinding>(
             PictureSelector.create(this)
                 .openGallery(SelectMimeType.ofImage())
                 .setImageEngine(GlideEngine.createGlideEngine())
-                .setInjectLayoutResourceListener { _, resourceSource ->
-                    if (resourceSource == InjectResourceSource.MAIN_SELECTOR_LAYOUT_RESOURCE) {
-                        R.layout.ps_custom_fragment_selector
-                    } else {
-                        0
-                    }
-                }
                 .forResult(object : OnResultCallbackListener<LocalMedia> {
                     override fun onResult(result: ArrayList<LocalMedia>?) {
                         logd { "image result: $result" }
