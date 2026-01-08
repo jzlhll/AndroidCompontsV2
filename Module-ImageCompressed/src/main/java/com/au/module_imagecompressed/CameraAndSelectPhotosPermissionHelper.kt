@@ -9,14 +9,15 @@ import com.au.module_simplepermission.PickerType
  * 都必须有回调，因此这里添加一个统一回调
  */
 class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
+                                            maxNum:Int = 9,
                                             var pickerType : PickerType = PickerType.IMAGE,
                                             supplier: ICameraFileProviderSupply) {
 
     var takePhotoCallback: TakePhotoActionDialog.ITakePhotoActionDialogCallback? = null
 
-    private val multiResult = f.multiPickUriWrapForResult(3).also {
-        it.paramsBuilder.asNoCopy()
-    }
+    //可以在早期修改
+    val multiResult = f.multiPickUriWrapForResult(maxNum)
+
     val cameraHelper = CameraPermissionHelp(f, supplier)
 
     /**

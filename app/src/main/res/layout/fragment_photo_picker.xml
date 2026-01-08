@@ -8,150 +8,271 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:orientation="vertical"
-        android:padding="20dp"
+        android:padding="16dp"
         android:layout_height="wrap_content">
 
         <com.au.module_androidui.widget.FlowLayout
-            app:flChildSpacing="8dp"
+            app:flChildSpacing="6dp"
+            app:flRowSpacing="3dp"
+            android:layout_marginTop="12dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/directTakePicBtn"
+                app:backgroundNormal="#2cbfff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="拍照压缩"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-            <Button
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
+                android:id="@+id/directTakePicDeepBtn"
+                app:backgroundNormal="#2cbfff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="拍照压缩deep"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
+                android:id="@+id/directTakePicShallowBtn"
+                app:backgroundNormal="#2cbfff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="拍照压缩shallow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/directTakePic2Btn"
-                android:text="拍照不压缩"
+                app:backgroundNormal="#2cbfff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="拍照No压缩"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <Button
-                android:id="@+id/takeActionDialog5Btn"
-                android:text="actionDialog 5个图和视频"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+        </com.au.module_androidui.widget.FlowLayout>
 
-            <Button
+        <View
+            android:layout_marginTop="12dp"
+            android:background="@color/color_line"
+            android:layout_width="match_parent"
+            android:layout_height="0.8dp" />
+
+        <com.au.module_androidui.widget.FlowLayout
+            android:layout_marginTop="12dp"
+            app:flChildSpacing="6dp"
+            app:flRowSpacing="3dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/takeActionDialog1Btn"
-                android:text="actionDialog 1个图"
+                app:backgroundNormal="#cdb2ff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="dialog1图"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-            <Button
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/takeActionDialog3Btn"
-                android:layout_marginStart="4dp"
-                android:text="actionDialog 3个视频"
+                app:backgroundNormal="#cdb2ff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="dialog3视频"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
+                android:id="@+id/takeActionDialog5Btn"
+                app:backgroundNormal="#cdb2ff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="dialog5图和视频"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </com.au.module_androidui.widget.FlowLayout>
 
-        <LinearLayout
+        <com.au.module_androidui.widget.FlowLayout
             android:layout_marginTop="12dp"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
+            app:flChildSpacing="6dp"
+            app:flRowSpacing="3dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/singlePic"
+                app:backgroundNormal="#ff99d1"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="单选图片"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/singleVideo"
+                app:backgroundNormal="#ff99d1"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="单选视频"
-                android:layout_marginStart="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/singlePicAndVideo"
+                app:backgroundNormal="#ff99d1"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="单图片&amp;视频"
-                android:layout_marginStart="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_marginTop="18dp"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/multiPic4"
+                app:backgroundNormal="#f0c5ff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="多选图片"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/multiVideo3"
+                app:backgroundNormal="#f0c5ff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="多选视频"
-                android:layout_marginStart="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/multiPicAndVideo5"
+                app:backgroundNormal="#f0c5ff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="多图片&amp;视频"
-                android:layout_marginStart="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:layout_marginTop="18dp"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/multiPicV2"
+                app:backgroundNormal="#ffb7c6"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="多选图片2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <Button
-                android:id="@+id/multiVideoV2"
-                android:text="多选视频2"
-                android:layout_marginStart="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <Button
+            <com.au.module_androidui.widget.BgBuildCustomFontText
                 android:id="@+id/multiPicAndVideoV2"
+                app:backgroundNormal="#ffb7c6"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
                 android:text="多图片&amp;视频2"
-                android:layout_marginStart="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-
-        <com.au.module_androidui.widget.FlowLayout
-            android:layout_marginTop="18dp"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <Button
-                android:id="@+id/multiUri1"
-                android:text="singleUriPicker"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-            <Button
-                android:id="@+id/multiUri2"
-                android:layout_marginStart="12dp"
-                android:text="MultiUriPicker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <Button
-                android:id="@+id/multiUri3"
-                android:layout_marginStart="12dp"
-                android:text="MultiUriPicPicker"
+            <com.au.module_androidui.widget.BgBuildCustomFontText
+                android:id="@+id/multiVideoV2"
+                app:backgroundNormal="#ffb7c6"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="多选视频2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
         </com.au.module_androidui.widget.FlowLayout>
 
+        <View
+            android:layout_marginTop="12dp"
+            android:background="@color/color_line"
+            android:layout_width="match_parent"
+            android:layout_height="0.8dp" />
+
         <com.au.module_androidui.widget.FlowLayout
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="12dp"
+            app:flChildSpacing="6dp"
+            app:flRowSpacing="3dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
+                android:id="@+id/multiUri1"
+                app:backgroundNormal="#a8aaff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="singleUri\nPicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
+                android:id="@+id/multiUri3"
+                app:backgroundNormal="#a8aaff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="MultiUriPic\nPicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <com.au.module_androidui.widget.BgBuildCustomFontText
+                android:id="@+id/multiUri2"
+                app:backgroundNormal="#a8aaff"
+                android:textSize="18sp"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                app:cornerRadius="6dp"
+                android:text="MultiUri\nPicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </com.au.module_androidui.widget.FlowLayout>
+
+        <View
+            android:layout_marginTop="12dp"
+            android:background="@color/color_line"
+            android:layout_width="match_parent"
+            android:layout_height="0.8dp" />
+
+        <com.au.module_androidui.widget.FlowLayout
+            android:layout_marginTop="12dp"
+            app:flChildSpacing="6dp"
+            app:flRowSpacing="3dp"
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -179,34 +300,62 @@
 
         <com.au.module_androidui.widget.FlowLayout
             android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            app:flChildSpacing="8dp"
+            android:layout_marginTop="12dp"
+            app:flChildSpacing="12dp"
+            app:flRowSpacing="6dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <androidx.appcompat.widget.AppCompatImageView
+            <include
                 android:id="@+id/pic1"
-                android:layout_width="80dp"
-                android:layout_height="80dp"/>
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
 
-            <androidx.appcompat.widget.AppCompatImageView
+            <include
                 android:id="@+id/pic2"
-                android:layout_width="80dp"
-                android:layout_height="80dp"/>
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
 
-            <androidx.appcompat.widget.AppCompatImageView
+            <include
                 android:id="@+id/pic3"
-                android:layout_width="80dp"
-                android:layout_height="80dp"/>
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
 
-            <androidx.appcompat.widget.AppCompatImageView
+            <include
                 android:id="@+id/pic4"
-                android:layout_width="80dp"
-                android:layout_height="80dp"/>
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
 
-            <androidx.appcompat.widget.AppCompatImageView
+            <include
                 android:id="@+id/pic5"
-                android:layout_width="80dp"
-                android:layout_height="80dp"/>
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
+
+            <include
+                android:id="@+id/pic6"
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
+            <include
+                android:id="@+id/pic7"
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
+
+            <include
+                android:id="@+id/pic8"
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
+            <include
+                android:id="@+id/pic9"
+                android:layout_width="90dp"
+                android:layout_height="120dp"
+                layout="@layout/fragment_photo_picker_preview_item"/>
         </com.au.module_androidui.widget.FlowLayout>
     </LinearLayout>
 </ScrollView>

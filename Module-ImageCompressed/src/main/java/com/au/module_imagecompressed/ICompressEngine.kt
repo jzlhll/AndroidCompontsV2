@@ -2,8 +2,8 @@ package com.au.module_imagecompressed
 
 import android.content.Context
 import android.net.Uri
-import com.au.module_imagecompressed.compressor.systemCompressFile
-import com.au.module_imagecompressed.compressor.systemCompressUriOrCopy
+import com.au.module_imagecompressed.compressor.BestImageCompressor.Companion.systemCompressFile
+import com.au.module_imagecompressed.compressor.BestImageCompressor.Companion.systemCompressUriOrCopy
 import java.io.File
 
 interface ICompressEngine {

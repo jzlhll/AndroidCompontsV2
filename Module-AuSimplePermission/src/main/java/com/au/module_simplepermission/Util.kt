@@ -7,8 +7,8 @@ inline fun <T:Any> ignoreError(
 ): T? {
     return try {
         block.invoke()
-    } catch (e: Throwable) {
-        e.printStackTrace()
+    } catch (_: Throwable) {
+        //e.printStackTrace()
         null
     }
 }

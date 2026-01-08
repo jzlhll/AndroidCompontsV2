@@ -6,7 +6,7 @@ import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.toast.ToastBuilder
-import com.au.module_imagecompressed.compressor.systemCompressFile
+import com.au.module_imagecompressed.compressor.BestImageCompressor
 import com.au.module_simplepermission.BaseCameraPermissionHelp
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import kotlinx.coroutines.Dispatchers
@@ -29,14 +29,15 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
      * @return 返回true表示拍照无法弹出授权。返回false则一定是能弹窗或者直接拍照去了。
      */
     fun safeRunTakePicMust(compress:Boolean = true,
-                               errorToastBlock:()->Unit = {ToastBuilder().setOnTop().setIcon("info").setMessage("需要camera权限.").toast() },
-                               callback: (mode:String, uriWrap: PickUriWrap?)->Unit) : Boolean{
+                           qualityType:String = "default",
+                           errorToastBlock:()->Unit = {ToastBuilder().setOnTop().setIcon("info").setMessage("需要camera权限.").toast() },
+                           callback: (mode:String, uriWrap: PickUriWrap?)->Unit) : Boolean{
         val ret = safeRunTakePic({createdTmpFile->
             if (createdTmpFile != null) {
                 if (compress) {
                     Globals.backgroundScope.launch {
                         logdNoFile { "createdTempFile $createdTmpFile size: ${createdTmpFile.length()}" }
-                        val compressedFile = systemCompressFile(createdTmpFile)
+                        val compressedFile = BestImageCompressor.systemCompressFile(createdTmpFile, BestImageCompressor.Config(qualityType = qualityType))
                         logdNoFile { "compressedFile $compressedFile size: ${compressedFile?.length()}" }
                         if (compressedFile != null) {
                             //需要再次从压缩文件覆盖createdTmpFile

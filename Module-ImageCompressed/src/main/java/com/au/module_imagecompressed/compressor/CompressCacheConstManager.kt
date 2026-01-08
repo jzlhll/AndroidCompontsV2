@@ -9,27 +9,30 @@ import kotlin.random.Random
 
 object CompressCacheConstManager {
     const val CACHE_DIR_NAME = "au_compressor"
-    val mgr = SimpleFilesLruCache(CACHE_DIR_NAME, maxSize = 200_000_000)
+    val mgr = SimpleFilesLruCache(CACHE_DIR_NAME, maxSize = 250 * 1024 * 1024)
 
     val cacheDir: File
         get() = mgr.cacheDir
 
     fun createCompressOutputFile(): File {
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val randomSuffix = Random.nextInt(100_000, 1_000_000)
-        val fileName = "compress_${timestamp}_${randomSuffix}.jpg"
-        return File(cacheDir, fileName)
+        val timestamp = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+        do {
+            val randomSuffix = Random.nextLong(1_000_000, 9_999_999)
+            val fileName = "compress${timestamp}_${randomSuffix}.jpg"
+            val file = File(cacheDir, fileName)
+            if (!file.exists()) return file
+        } while(true)
     }
 
     fun createCopyOutputFile(origName: String = "", extension: String = "jpg"): File {
         if (origName.isEmpty()) {
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val randomSuffix = Random.nextInt(100_000, 1_000_000)
-            val fileName = "copy_${timestamp}_${randomSuffix}.$extension"
+            val fileName = "copy${timestamp}_${randomSuffix}.$extension"
             return File(cacheDir, fileName)
         }
 
-        var fileName = "copy_$origName.$extension"
+        var fileName = "$origName.$extension"
         var file = File(cacheDir, fileName)
         if (!file.exists()) return file
 

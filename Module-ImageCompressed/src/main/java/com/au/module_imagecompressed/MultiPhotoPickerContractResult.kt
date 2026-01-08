@@ -72,17 +72,17 @@ class MultiPhotoPickerContractResult(
                         if (isNeedCompress) {
                             val compressedFile = imageEngine.compress(fragment.requireContext(), uri)
                             val uriParsedInfoCompress = compressedFile.myParse()
-                            val uriWrap = PickUriWrap(uriParsedInfoCompress, totalNum, isImage=true, beCopied = true)
+                            val uriWrap = PickUriWrap(uriParsedInfoCompress, totalNum, isImage= true, beCopied = true)
 
                             callback(isAllCallback, uriWrap, allResults, totalNum)
                         } else if (isNeedCopy) {
                             val file = uri.copyToCacheFile(fragment.requireContext())
                             val copyInfo = file.myParse()
-                            val uriWrap = PickUriWrap(copyInfo, totalNum, isImage=true, beCopied = true)
+                            val uriWrap = PickUriWrap(copyInfo, totalNum, isImage= true, beCopied = true)
 
                             callback(isAllCallback, uriWrap, allResults, totalNum)
                         } else {
-                            val uriWrap = PickUriWrap(parsedInfo, totalNum, isImage=true, beCopied = false)
+                            val uriWrap = PickUriWrap(parsedInfo, totalNum, isImage= true, beCopied = false)
                             callback(isAllCallback, uriWrap, allResults, totalNum)
                         }
                     } else {
@@ -91,11 +91,11 @@ class MultiPhotoPickerContractResult(
                         if (isNeedCopy) {
                             val file = uri.copyToCacheFile(fragment.requireContext())
                             val copyInfo = file.myParse()
-                            val uriWrap = PickUriWrap(copyInfo, totalNum, isImage=true, beCopied = true)
+                            val uriWrap = PickUriWrap(copyInfo, totalNum, isImage= false, beCopied = true)
 
                             callback(isAllCallback, uriWrap, allResults, totalNum)
                         } else {
-                            val uriWrap = PickUriWrap(parsedInfo, totalNum, isImage=true, beCopied = false)
+                            val uriWrap = PickUriWrap(parsedInfo, totalNum, isImage= false, beCopied = false)
                             callback(isAllCallback, uriWrap, allResults, totalNum)
                         }
                     }

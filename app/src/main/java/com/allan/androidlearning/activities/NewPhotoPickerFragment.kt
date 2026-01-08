@@ -10,6 +10,8 @@ import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
 import com.au.module_android.log.logd
+import com.au.module_android.utils.gone
+import com.au.module_android.utils.visible
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
@@ -44,11 +46,13 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         }
     })
 
-    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this, supplier = object : ICameraFileProviderSupply {
+    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this, 9, supplier = object : ICameraFileProviderSupply {
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }
-    })
+    }).also {
+        it.multiResult.paramsBuilder.asCopyAndStingy()
+    }
 
     private fun createFileProviderMine(): Pair<File, Uri> {
         val picture = File(Globals.goodCacheDir.path + "/shared")
@@ -83,6 +87,20 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         binding.directTakePicBtn.onClick {
             cameraHelper.safeRunTakePicMust(true)
                 {mode, uriWrap->
+                logd { "take pic mode $mode $uriWrap" }
+                showPic(uriWrap)
+            }
+        }
+        binding.directTakePicDeepBtn.onClick {
+            cameraHelper.safeRunTakePicMust(true, "deep")
+            {mode, uriWrap->
+                logd { "take pic mode $mode $uriWrap" }
+                showPic(uriWrap)
+            }
+        }
+        binding.directTakePicShallowBtn.onClick {
+            cameraHelper.safeRunTakePicMust(true, "shallow")
+            {mode, uriWrap->
                 logd { "take pic mode $mode $uriWrap" }
                 showPic(uriWrap)
             }
@@ -208,13 +226,22 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
             3 -> binding.pic3
             4 -> binding.pic4
             5 -> binding.pic5
+            6 -> binding.pic6
+            7 -> binding.pic7
+            8 -> binding.pic8
+            9 -> binding.pic9
             else -> null
         }
         currentIndex++
-        if (currentIndex == 6) {
+        if (currentIndex == 10) {
             currentIndex = 1
         }
-        pic?.glideSetAny(uriWrap.uriParsedInfo.uri)
+        pic?.picture?.glideSetAny(uriWrap.uriParsedInfo.uri)
+        if (uriWrap.isImage) {
+            pic?.centerIcon?.gone()
+        } else {
+            pic?.centerIcon?.visible()
+        }
     }
 
     override fun onClickTakePic() : Boolean{
