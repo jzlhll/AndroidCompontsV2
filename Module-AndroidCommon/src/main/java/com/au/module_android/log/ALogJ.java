@@ -25,6 +25,10 @@ import javax.xml.transform.stream.StreamSource;
 public final class ALogJ {
     private static final int JSON_INDENT = 2;
 
+    public static String log(String lvl, String s) {
+        return lvl + ": " + s;
+    }
+
     public static String log(String lvl, String s, Class<?> javaClass) {
         var log = javaClass.toString();
         var prefix = log.substring(log.lastIndexOf('.') + 1);

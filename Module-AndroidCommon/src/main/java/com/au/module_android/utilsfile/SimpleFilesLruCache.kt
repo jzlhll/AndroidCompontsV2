@@ -2,7 +2,9 @@ package com.au.module_android.utilsfile
 
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
+import com.au.module_android.scopes.BackAppScope
 import com.au.module_android.utils.withIOThread
+import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
@@ -17,11 +19,13 @@ import java.util.concurrent.ConcurrentHashMap
 class SimpleFilesLruCache(
     dirName: String,
     private val maxSize: Long = 100 * 1024 * 1024, // 默认100MB
-    private val clearToRatio: Float = 0.6f
+    private val clearToRatio: Double = 0.6
 ) {
+    private val scope = BackAppScope()
+
     val cacheDir = File(Globals.goodCacheDir, dirName)
 
-    // 记录文件的访问时间和大小，key为absolutePath
+    // 记录文件的访问时间和大小，key就是全路径
     private val fileMetadata = ConcurrentHashMap<String, FileMetadata>()
 
     // 文件元数据类
@@ -55,13 +59,16 @@ class SimpleFilesLruCache(
         }
 
         scanDirectoryRecursive(cacheDir)
+        scope.launch {
+            // 检查是否需要清理旧文件
+            val size = getTotalSize()
+            logdNoFile { "cache total size: $size max:$maxSize" }
+            if (size > maxSize) {
+                cleanupOldFiles(size)
+            }
 
-        // 检查是否需要清理旧文件
-        if (getTotalSize() > maxSize) {
-            cleanupOldFiles()
+            deleteEmptyDirectoriesInCacheDir()
         }
-
-        deleteEmptyDirectoriesInCacheDir()
     }
 
     /**
@@ -91,44 +98,49 @@ class SimpleFilesLruCache(
      * @param operateType 操作类型
      */
     fun afterFileOperator(file: File, operateType: FileOperateType) {
-        // 计算相对于cacheDir的路径
-        when (operateType) {
-            FileOperateType.SAVE -> {
-                // SAVE操作需要文件存在，并记录文件大小
-                if (file.exists()) {
-                    val fileTime = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).lastAccessTime().toMillis()
-                    logdNoFile { "$operateType ${file.absolutePath} time: $fileTime" }
-                    fileMetadata[file.absolutePath] = FileMetadata(
-                        accessTime = fileTime,
-                        fileSize = file.length(),
-                    )
+        scope.launch {
+            // 计算相对于cacheDir的路径
+            when (operateType) {
+                FileOperateType.SAVE -> {
+                    // SAVE操作需要文件存在，并记录文件大小
+                    if (file.exists()) {
+                        val fileTime = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).lastAccessTime().toMillis()
+                        fileMetadata[file.absolutePath] = FileMetadata(
+                            accessTime = fileTime,
+                            fileSize = file.length(),
+                        )
 
-                    // 检查是否需要清理旧文件
-                    if (getTotalSize() > maxSize) {
-                        cleanupOldFiles()
+                        // 检查是否需要清理旧文件
+                        val total = getTotalSize()
+                        if (total > maxSize) {
+                            logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} need $total / $maxSize" }
+                            cleanupOldFiles(total)
+                        } else {
+                            logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} noNeed $total / $maxSize" }
+                        }
                     }
                 }
-            }
 
-            FileOperateType.READ -> {
-                // READ操作更新访问时间
-                if (file.exists()) {
-                    fileMetadata[file.absolutePath]?.let { metadata ->
-                        metadata.accessTime = System.currentTimeMillis()
+                FileOperateType.READ -> {
+                    // READ操作更新访问时间
+                    if (file.exists()) {
+                        fileMetadata[file.absolutePath]?.let { metadata ->
+                            metadata.accessTime = System.currentTimeMillis()
+                        }
+                        // 设置为当前时间
+                        val newAccessTime = FileTime.fromMillis(Date().time)
+                        Files.setAttribute(file.toPath(), "lastAccessTime", newAccessTime)
+                        logdNoFile { "$operateType ${file.path} , time:$newAccessTime" }
+                    } else {
+                        // 文件不存在，从记录中移除
+                        fileMetadata.remove(file.absolutePath)
                     }
-                    // 设置为当前时间
-                    val newAccessTime = FileTime.fromMillis(Date().time)
-                    Files.setAttribute(file.toPath(), "lastAccessTime", newAccessTime)
-                    logdNoFile { "$operateType ${file.absolutePath} time:$newAccessTime" }
-                } else {
-                    // 文件不存在，从记录中移除
+                }
+
+                FileOperateType.DELETE -> {
+                    // DELETE操作从记录中移除
                     fileMetadata.remove(file.absolutePath)
                 }
-            }
-
-            FileOperateType.DELETE -> {
-                // DELETE操作从记录中移除
-                fileMetadata.remove(file.absolutePath)
             }
         }
     }
@@ -136,24 +148,26 @@ class SimpleFilesLruCache(
     /**
      * 清理旧文件（简单的LRU实现）
      */
-    private fun cleanupOldFiles() {
+    private fun cleanupOldFiles(totalSize: Long) {
         // 按访问时间排序
         val sortedEntries = fileMetadata.entries
             .sortedBy { it.value.accessTime }
             .toList()
 
-        var currentSize = getTotalSize()
+        var currentSize = totalSize
         val clearToSize = maxSize * clearToRatio
 
+        logdNoFile { "deleted totalSize $currentSize , clearToSize: $clearToSize" }
         // 删除最旧的，直到满足大小限制
         for (entry in sortedEntries) {
             if (currentSize <= clearToSize) {
                 break // 删除到指定比例就停止
             }
 
-            val file = File(cacheDir, entry.key)
+            val file = File(entry.key)
             if (file.exists()) {
                 val deleted = file.delete()
+                logdNoFile { "deleted ${entry.key} , size: ${entry.value.fileSize}" }
                 if (deleted) {
                     currentSize -= entry.value.fileSize
                     fileMetadata.remove(entry.key)
@@ -201,7 +215,7 @@ class SimpleFilesLruCache(
     fun getFilesByName(fileName: String): List<File> {
         return fileMetadata.keys
             .filter { it.endsWith(fileName) }
-            .map { File(cacheDir, it) }
+            .map { str-> File(str) }
             .filter { it.exists() }
     }
 
@@ -210,8 +224,8 @@ class SimpleFilesLruCache(
      */
     suspend fun clearAll() {
         withIOThread {
-            fileMetadata.keys.forEach { relativePath ->
-                val file = File(cacheDir, relativePath)
+            fileMetadata.keys.forEach {
+                val file = File(it)
                 if (file.exists()) {
                     file.delete()
                 }
@@ -259,7 +273,7 @@ class SimpleFilesLruCache(
      */
     fun manualCleanupOlds() {
         if (isNeedCleanupOlds()) {
-            cleanupOldFiles()
+            cleanupOldFiles(getTotalSize())
         }
     }
 

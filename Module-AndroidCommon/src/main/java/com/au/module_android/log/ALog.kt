@@ -3,6 +3,7 @@ package com.au.module_android.log
 import android.util.Log
 import com.au.module_android.log.LogDebug.ALWAYS_FILE_LOG
 import com.au.module_android.log.LogDebug.ALWAYS_LOG_DEBUG
+import kotlinx.coroutines.CoroutineScope
 import kotlin.math.min
 
 /**
@@ -58,6 +59,14 @@ inline fun <THIS : Any> THIS.logdNoFile(javaClass:Class<*> = this.javaClass, cro
     if (ALWAYS_LOG_DEBUG) {
         val str = block(this)
         val log = ALogJ.log("D", str, javaClass)
+        Log.d(LogTag.TAG, log)
+    }
+}
+
+inline fun CoroutineScope.logdNoFile(tag:String = "scope", crossinline block: (CoroutineScope) -> String) {
+    if (ALWAYS_LOG_DEBUG) {
+        val str = block(this)
+        val log = ALogJ.log("D", "$tag: $str")
         Log.d(LogTag.TAG, log)
     }
 }
