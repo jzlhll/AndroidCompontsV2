@@ -40,7 +40,7 @@ mavenPublishing {
 }
 
 mavenPublishing {
-    coordinates("io.github.jzlhll", "module-ausimplepermission", "0.0.2")
+    coordinates("io.github.jzlhll", "module-ausimplepermission", "0.0.4")
 
     pom {
         name = "module-ausimplepermission"
