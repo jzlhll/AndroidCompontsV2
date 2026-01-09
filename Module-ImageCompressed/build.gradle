@@ -26,5 +26,5 @@ dependencies {
     implementation project(':Module-AndroidCommon')
     implementation project(":Module-AndroidUi")
     implementation project(':Module-AuSimplePermission')
-    implementation libs.yalantis.ucrop
+    implementation libs.ucrop
 }
