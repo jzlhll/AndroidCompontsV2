@@ -21,6 +21,9 @@ import com.au.module_imagecompressed.multiPickUriWrapForResult
 import com.au.module_imagecompressed.pickUriWrapForResult
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
+import com.au.module_simplepermission.getAudioForResult
+import com.au.module_simplepermission.getAudiosForResult
+import com.au.module_simplepermission.getContentForResult
 import com.au.module_simplepermission.getMultipleContentsForResult
 import com.au.module_simplepermission.multiPickerForResult
 import com.au.module_simplepermission.pickerForResult
@@ -32,13 +35,26 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
     val singleResult = pickUriWrapForResult()
     val multiResult = multiPickUriWrapForResult(3)
 
+    //用于授权存储访问框架（Storage Access Framework, SAF），得到某个目录的长久权限，详情见函数内
     val selectDirResult = selectSysDirForResult()
 
-    //这2个Uri的选择图片和视频
-    val origMultiUriPickerResult = multiPickerForResult(8)
+     //单选图片和视频，通过launchByAll的第一个参数来决定选择的类型
     val origUriPickerResult = pickerForResult()
 
+    //多选图片和视频，通过launchByAll的第一个参数来决定选择的类型
+    val origMultiUriPickerResult = multiPickerForResult(9)
+
+    //选择单文件，自行传入start(参数)，参数传入，文件类型的mimeType
+    val shortDocResult = getContentForResult()
+
+    //选择多文件，自行传入start(参数)，参数传入，文件类型的mimeType
     val shortDocsResult = getMultipleContentsForResult()
+
+    //选择音频
+    val audioResult = getAudioForResult()
+
+    //选择多音频
+    val audiosResult = getAudiosForResult()
 
     val cameraHelper = CameraPermissionHelp(this, object : ICameraFileProviderSupply {
         override fun createFileProvider(): Pair<File, Uri> {
@@ -64,8 +80,8 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.selectShortAudioBtn.onClick {
-            shortDocsResult.start("audio/*") {
-
+            audiosResult.start {
+                logd { "allan uri: $it" }
             }
         }
         binding.selectShortPdfBtn.onClick {

@@ -46,180 +46,158 @@
 
 #### 使用方式
 
-**注意：所有ForResult对象需要在onCreate之前声明为全局变量，然后在具体位置使用。**
+**注意：所有`ForResult`对象需要在`onCreate`之前声明为全局变量（Fragment或Activity成员变量），然后在具体位置使用。**
+
+##### 1. Activity跳转拿结果
+```kotlin
+    //全局变量
+  private val activityForResult = createActivityForResult()
+
+
+  activityResult.start(intent, optionsCompat, activityResultCallback)
+  activityForResult.jumpToAppDetail(context)
+```
+
+##### 2. 基础文件与媒体选择
 
 ```kotlin
-class MainActivity : AppCompatActivity() {
-    // 全局声明ForResult对象
-    private val cameraPermission = createPermissionForResult(Manifest.permission.CAMERA)
-    private val multiPermissions = createMultiPermissionForResult(arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.RECORD_AUDIO
-    ))
-    private val mediaPermissions = createMediaPermissionForResult(arrayOf(
-        PermissionMediaHelper.MediaType.IMAGE,
-        PermissionMediaHelper.MediaType.VIDEO
-    ))
-    private val takePicture = systemTakePictureForResult()
-    private val takeVideo = systemTakeVideoForResult()
-    private val takeVideoFront = systemTakeVideo2FrontForResult(
-        isFront = true,
-        maxSec = 60,
-        isLowQuality = true
-    )
-    private val openDocs = openMultipleDocsForResult()
-    private val getContents = getMultipleContentsForResult()
-    private val selectDir = selectSysDirForResult()
-    private val activityForResult = createActivityForResult()
-    private val notificationPermission = createPostNotificationPermissionResult()
+class MyFragment : Fragment() { //或者Activity也可以
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    // 1. SAF目录授权：获取某个目录的长久读写权限
+    val selectDirResult = selectSysDirForResult()
+
+    // 2. 媒体选择（图片/视频）
+    // 单选
+    val origUriPickerResult = pickerForResult()
+    // 多选
+    val origMultiUriPickerResult = multiPickerForResult(9)
+
+    // 3. 通用文档选择
+    // 单选文件（start的时候，传入mimeType）
+    val shortDocResult = getContentForResult()
+    // 多选文件 （start的时候，传入mimeType）
+    val shortDocsResult = getMultipleContentsForResult()
+
+    // 4. 音频选择
+    val audioResult = getAudioForResult()
+    val audiosResult = getAudiosForResult()
+
+    fun startSelect() {
+        // 使用示例：
         
-        // 在这里使用
-        requestCameraPermission()
+        // 选择目录
+        selectDirResult.start(null) { uri -> 
+            // uri为获取到的目录URI，可以长久使用。
+        }
+
+        // 单选图片/视频
+        // PickerType: IMAGE, VIDEO, IMAGE_AND_VIDEO
+        origUriPickerResult.start(PickerType.IMAGE) { uri ->
+             // uri
+        }
+
+        // 多选图片
+        origMultiUriPickerResult.start(PickerType.IMAGE) { uris ->
+             // List<Uri>
+        }
+
+        // 选择PDF文件
+        shortDocResult.start("application/pdf") { uri -> }
+        
+        // 选择音频
+        audioResult.start(null) { uri -> }
     }
-    
-    private fun requestCameraPermission() {
-        cameraPermission.safeRun(
-            block = {
-                // 权限已授予
-            },
-            notGivePermissionBlock = {
-                // 权限未授予
-            }
+}
+```
+
+##### 2. 相机与相册综合助手
+
+提供了`CameraPermissionHelp`和`CameraAndSelectPhotosPermissionHelper`来简化相机权限申请、FileProvider配置以及拍照/选图流程。
+
+```kotlin
+// 需实现 ICameraFileProviderSupply 接口提供 FileProvider
+val cameraHelper = CameraPermissionHelp(this, object : ICameraFileProviderSupply {
+    override fun createFileProvider(): Pair<File, Uri> {
+        // 返回文件对象和对应的Uri
+        return createFileProviderMine() 
+    }
+})
+
+// 综合助手：包含拍照和多选图功能
+val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(this, 9, supplier = object : ICameraFileProviderSupply {
+    override fun createFileProvider(): Pair<File, Uri> {
+        return createFileProviderMine()
+    }
+}).also {
+    // 可选配置：复制文件到应用私有目录等
+    it.multiResult.paramsBuilder.asCopyAndStingy()
+}
+
+// 使用方式：弹出选择框（拍照/相册）
+// cameraAndSelectHelper.showTakeActionDialog(maxCount, PickerType.IMAGE)
+```
+
+##### 3. 通知与权限
+
+```kotlin
+// 1. 通知权限申请,android13会包裹，android12直接执行
+val notificationResult = createPostNotificationPermissionResult()
+
+// 2. 简易通知工具
+val notificationUtil = NotificationUtil(this)
+
+fun showNotification() {
+    // 申请权限并执行
+    notificationResult.safeRun(notGive = {
+        // 权限未获取，提示用户去设置开启
+        //showToast("请先开启通知权限")
+    }) {
+        // 权限已获取，发送通知
+        notificationUtil.notificationSimpleText(
+            id = 1001,
+            channelId = "default_channel",
+            title = "标题",
+            content = "内容",
+            smallIcon = R.drawable.ic_notification
         )
     }
 }
 ```
 
-##### 权限申请
+##### 4. 特殊系统权限跳转
+
+提供了便捷的扩展函数用于检查和跳转特殊权限设置页。
 
 ```kotlin
-// 单权限申请
-cameraPermission.safeRun(
-    block = {
-        // 权限已授予
-    },
-    notGivePermissionBlock = {
-        // 权限未授予
-    }
-)
-
-// 多权限申请
-multiPermissions.safeRun(
-    notGivePermissionBlock = {
-        // 权限未全部授予
-    }
-) {
-    // 所有权限已授予
-}
-
-// 多媒体权限申请（兼容Android 14+）
-mediaPermissions.safeRun {
-    // 媒体权限已授予
-}
-```
-
-##### 系统功能
-
-```kotlin
-// 系统拍照
-takePicture.start(uri) { success ->
-    if (success) {
-        // 拍照成功
+// 1. 辅助功能权限 (Accessibility)
+fun checkAccessibility() {
+    val ac = requireActivity()
+    // 检查是否开启
+    if (!isAccessibilityEnabled(ac, BuildConfig.APPLICATION_ID)) {
+        // 跳转设置页
+        ac.gotoAccessibilityPermission()
     }
 }
 
-// 系统录像
-takeVideo.start(uri) { success ->
-    if (success) {
-        // 录像成功
+// 2. 悬浮窗权限 (Float Window)
+fun checkFloatWindow() {
+    val ac = requireActivity()
+    // 检查权限
+    if (!ac.hasFloatWindowPermission()) {
+        // 跳转设置页
+        ac.gotoFloatWindowPermission()
     }
 }
 
-// 前置摄像头录像（可配置时长、画质）
-takeVideoFront.start(uri) { success ->
-    if (success) {
-        // 录像成功
+// 3. 管理所有文件权限 (Manage All Files - Android 11+)
+fun checkManageAllFiles() {
+    // 检查并决定是否需要跳转（内部封装了版本判断）
+    if (ifGotoMgrAll {
+        // 回调中执行跳转逻辑，通常配合Dialog提示用户
+        gotoMgrAll(requireActivity())
+    }) {
+        // 已经拥有权限，直接执行业务逻辑
+        doSomething()
     }
-}
-
-// 选择多个文档（持久化权限）
-openDocs.start(arrayOf("*/*")) { uris ->
-    // 处理选中的文档
-}
-
-// 选择多个内容（临时权限）
-getContents.start(arrayOf("image/*", "video/*")) { uris ->
-    // 处理选中的内容
-}
-
-// 选择系统目录
-selectDir.start(uri) { success ->
-    if (success) {
-        // 目录选择成功
-    }
-}
-```
-
-##### Activity跳转
-
-```kotlin
-// 启动Activity并获取结果
-activityForResult.start(intent) { result ->
-    // 处理返回结果
-}
-
-// 跳转到应用详情页
-activityForResult.jumpToAppDetail(context)
-```
-
-##### 特殊权限
-
-```kotlin
-// 辅助功能权限
-gotoAccessibilityPermission()
-
-// 悬浮窗权限
-gotoFloatWindowPermission()
-
-// 存储管理权限（Android 11+）
-gotoMgrAll(context)
-
-// 通知权限（Android 13+）
-notificationPermission.safeRun {
-    // 通知权限已授予
-}
-
-// 检查权限状态
-hasPermission(Manifest.permission.CAMERA)
-hasFloatWindowPermission()
-
-// 判断是否需要跳转到权限管理页面
-ifGotoMgrAll {
-    // 需要跳转
-}
-```
-
-##### 通知功能
-
-```kotlin
-// 请求通知权限
-requestNotificationPermission(notificationPermission) { notification ->
-    notification?.notificationSimpleText(
-        id = 1,
-        channelId = "channel_id",
-        content = "通知内容",
-        smallIcon = R.drawable.ic_notification,
-        largeIcon = null,
-        title = "通知标题",
-        importance = NotificationManagerCompat.IMPORTANCE_HIGH,
-        jumpMainAndClearNotification = true,
-        jumpActivityClass = MainActivity::class.java,
-        channelBuildAction = { /* 自定义渠道配置 */ },
-        notificationBuildAction = { /* 自定义通知配置 */ }
-    )
 }
 ```

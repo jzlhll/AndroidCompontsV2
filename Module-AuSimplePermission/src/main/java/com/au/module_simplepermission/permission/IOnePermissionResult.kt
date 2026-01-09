@@ -9,16 +9,10 @@ abstract class IOnePermissionResult(val permission:String,
                                     cxt: Any,
                                     contract: ActivityResultContract<String, Boolean>)
     : IContractResult<String, Boolean>(cxt, contract) {
-    /**
-     * 使用
-     * createMultiPermissionForResult(permissions)
-     * createPermissionForResult(permission)
-     * 创建，不用传入第二参数。
-     *
-     * 因为block放在了这里设置。
-     */
+
     abstract fun safeRun(notGivePermissionBlock:(()->Unit)? = null, option: ActivityOptionsCompat? = null, block:()->Unit)
 
+    @Deprecated("call safeRun()")
     override fun start(input: String, callback: ActivityResultCallback<Boolean>?) {
         throw IllegalAccessException("not support please call safeRun.")
     }

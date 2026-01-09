@@ -20,8 +20,8 @@ import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.utils.dp
 import com.au.module_androidui.ui.views.ViewFragment
-import com.au.module_simplepermission.notification.createPostNotificationPermissionResult
-import com.au.module_simplepermission.requestNotificationPermission
+import com.au.module_simplepermission.createPostNotificationPermissionResult
+import com.au.module_simplepermission.notification.NotificationUtil
 
 /**
  * @author allan
@@ -35,20 +35,42 @@ class NotifyFragment : ViewFragment() {
         val NO_SOUND = false
     }
 
-    val permissionUtil = createPostNotificationPermissionResult()
+    /**
+     * 通知权限使用范例
+     */
+    val notificationResult = createPostNotificationPermissionResult()
+
+    /**
+     * 内置的简单文案发送通知
+     */
+    val notificationUtil = NotificationUtil(this)
 
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        permissionUtil?.let {
-            requireContext().requestNotificationPermission(it)
-        }
 
         return LinearLayout(inflater.context).also {
             it.addView(Button(inflater.context).also {
-                it.text = "通知啊"
+                it.text = "Custom通知"
                 it.onClick {
-                    Globals.mainHandler.postDelayed({sendNotif()}, 3000)
+                    notificationResult.safeRun {
+                        //safe do something...
+                        Globals.mainHandler.postDelayed({sendNotif()}, 3000)
+                    }
                 }
             }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 60.dp))
+
+            it.addView(Button(inflater.context).also {
+                it.text = "内置简单通知"
+                it.onClick {
+                    notificationUtil.notificationSimpleText(
+                        666,
+                        CHANNEL_ID,
+                        "简单通知",
+                        R.mipmap.ic_launcher,
+                        R.mipmap.ic_launcher,
+                        "简单通知",
+                    )
+                }
+            })
         }
     }
 

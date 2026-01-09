@@ -21,6 +21,7 @@ import com.au.module_android.utils.launchOnUi
 import com.au.module_android.log.logd
 import com.au.module_android.utils.replaceFragment
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
+import com.au.module_simplepermission.hasFloatWindowPermission
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 
@@ -118,7 +119,7 @@ class AllPermissionActivity : BindingActivity<RootActivityBinding>() {
     companion object {
         fun checkGotoAllPermissionActivity(fragment: Fragment) {
             val ac = fragment.requireActivity()
-            if (!OnlyFloatPermissionViewModel.isFloatWindowEnabled(ac)) {
+            if (!ac.hasFloatWindowPermission()) {
                 ConfirmCenterDialog.show(fragment.childFragmentManager,
                     "请授权悬浮窗权限。",
                     "点击回到首页，重新申请权限。",

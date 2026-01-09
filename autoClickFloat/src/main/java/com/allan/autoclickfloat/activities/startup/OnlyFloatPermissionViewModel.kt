@@ -16,13 +16,12 @@ open class OnlyFloatPermissionViewModel : ViewModel() {
         const val STATE_ALL_PERMISSION_ENABLE = 0
         const val STATE_NO_FLOAT_WINDOW = -2
 
-        fun isFloatWindowEnabled(activity: Activity) = activity.hasFloatWindowPermission()
     }
 
     val allPermissionEnabled = NoStickLiveData<Int>()
 
     open fun getPermission(activity: AllPermissionActivity) {
-        val floatWindowEnabled = isFloatWindowEnabled(activity)
+        val floatWindowEnabled = activity.hasFloatWindowPermission()
 
         if (floatWindowEnabled) {
             allPermissionEnabled.setValueSafe(STATE_ALL_PERMISSION_ENABLE)

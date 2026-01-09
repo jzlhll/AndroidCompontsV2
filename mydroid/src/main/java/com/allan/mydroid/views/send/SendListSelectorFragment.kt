@@ -38,10 +38,9 @@ import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.finishFragment
 import com.au.module_imagecompressed.isPhotoPickerAvailable
 import com.au.module_simplepermission.PickerType
+import com.au.module_simplepermission.createPostNotificationPermissionResult
 import com.au.module_simplepermission.getMultipleContentsForResult
 import com.au.module_simplepermission.multiPickerForResult
-import com.au.module_simplepermission.notification.createPostNotificationPermissionResult
-import com.au.module_simplepermission.requestNotificationPermission
 import com.bumptech.glide.request.target.Target
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -224,10 +223,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        permissionUtil?.let {
-            requireActivity().requestNotificationPermission(it) {
-                MyDroidKeepLiveService.keepMyDroidAlive()
-            }
+        permissionUtil.safeRun {
+            MyDroidKeepLiveService.keepMyDroidAlive()
         }
 
         initActionButtons()

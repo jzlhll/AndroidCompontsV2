@@ -6,7 +6,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
-import androidx.fragment.app.Fragment
 
 /**
  * @author allan
@@ -14,10 +13,10 @@ import androidx.fragment.app.Fragment
  * @description:
  */
 open class MultiUriPickerContractResult(
-    fragment: Fragment,
+    cxt: Any,
     var max:Int,
     val resultContract: ActivityResultContract<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>)
-            : IContractResult<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>(fragment, resultContract) {
+            : IContractResult<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>(cxt, resultContract) {
     private var allCallback:((Array<Uri>)->Unit)? = null
 
     fun setCurrentMaxItems(max:Int) : MultiUriPickerContractResult {

@@ -1,6 +1,7 @@
 package com.au.module_simplepermission.notification
 
 import android.Manifest
+import android.app.Activity
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
@@ -14,19 +15,44 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationChannelGroupCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import com.au.module_simplepermission.INotification
-import com.au.module_simplepermission.createPermissionForResult
-import com.au.module_simplepermission.permission.IOnePermissionResult
+import com.au.module_simplepermission.createPostNotificationPermissionResult
 
-internal class NotificationUtil(private val context: Context) : INotification {
-    private val notificationMgr: NotificationManagerCompat = NotificationManagerCompat.from(context)
+/**
+ * 简单文案发送类
+ */
+class NotificationUtil(val lifecycleOwner: LifecycleOwner) : INotification {
+    init {
+        assert(lifecycleOwner is Activity || lifecycleOwner is Fragment)
+    }
+
+    private val context: Context
+        get() = when (lifecycleOwner) {
+            is Activity -> {
+                lifecycleOwner
+            }
+
+            is Fragment -> {
+                lifecycleOwner.requireContext()
+            }
+
+            else -> {
+                throw IllegalArgumentException("context is null")
+            }
+        }
+
+    private val notificationMgr by lazy {
+        NotificationManagerCompat.from(context)
+    }
+
+    private val permissionHelper = lifecycleOwner.createPostNotificationPermissionResult()
 
     /**
     @description 检测权限列表是否授权，如果未授权，遍历请求授权
      */
-    override fun safeRun(
-        permissionHelper: IOnePermissionResult,
+    private fun safeRun(
         block: () -> Unit
     ) {
         permissionHelper.safeRun(block = block)
@@ -36,11 +62,13 @@ internal class NotificationUtil(private val context: Context) : INotification {
         id: Int,/*通知id，唯一*/
         notification: Notification
     ) {
-        val isEnabled = isEnabled()
-        if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                    || ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
-            && isEnabled) {
-            notificationMgr.notify(id, notification)
+        safeRun {
+            val isEnabled = isEnabled()
+            if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                        || ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
+                && isEnabled) {
+                notificationMgr.notify(id, notification)
+            }
         }
     }
 
@@ -176,13 +204,3 @@ internal class NotificationUtil(private val context: Context) : INotification {
     override fun notificationGetChannelGroup(groupId: String) =
         notificationMgr.getNotificationChannelGroupCompat(groupId)
 }
-
-/**
- * 申请通知权限
- */
-fun LifecycleOwner.createPostNotificationPermissionResult() =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        createPermissionForResult(Manifest.permission.POST_NOTIFICATIONS)
-    } else {
-        null
-    }

@@ -4,7 +4,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
 import com.au.module_simplepermission.hasPermission
 
-internal class PermissionForResult(cxt: Any,
+internal open class PermissionForResult(cxt: Any,
                                    permission: String) :
     IOnePermissionResult(permission, cxt, ActivityResultContracts.RequestPermission()) {
 
@@ -19,3 +19,4 @@ internal class PermissionForResult(cxt: Any,
         }
     }
 }
+

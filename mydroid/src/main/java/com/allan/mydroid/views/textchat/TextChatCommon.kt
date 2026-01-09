@@ -53,7 +53,8 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
         //todo file
     }
 
-    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, PickerType.IMAGE,
+    val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, 9,
+        PickerType.IMAGE,
         object : ICameraFileProviderSupply {
             override fun createFileProvider(): Pair<File, Uri> {
                 return createFileProviderMine()

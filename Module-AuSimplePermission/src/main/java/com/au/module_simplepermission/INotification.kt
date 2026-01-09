@@ -9,13 +9,6 @@ import androidx.core.app.NotificationManagerCompat
 import com.au.module_simplepermission.permission.IOnePermissionResult
 
 interface INotification {
-    /**
-    @description 检测权限列表是否授权，如果未授权，遍历请求授权
-     */
-    fun safeRun(
-        permissionHelper: IOnePermissionResult,
-        block: () -> Unit
-    )
 
     /**
      * 发送通知
