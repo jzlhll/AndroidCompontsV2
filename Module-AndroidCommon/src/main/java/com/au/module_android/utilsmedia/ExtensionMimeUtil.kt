@@ -42,11 +42,6 @@ android:resource="@xml/file_paths" />
 
 class ExtensionMimeUtil private constructor() {
     companion object {
-        fun isUriHeic(mimeType:String) : Boolean{
-            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-            return extension?.lowercase() == "heic"
-        }
-
         fun isUriVideo(mimeType:String): Boolean {
             return mimeType.startsWith("video/")
         }

@@ -14,11 +14,6 @@ data class UriParsedInfo(
     val videoDuration:Long? = null) {
     fun isFullPath() : Boolean = fullPath != null
 
-    fun isUriHeic() : Boolean{
-        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-        return extension?.lowercase() == "heic"
-    }
-
     fun isUriVideo(): Boolean {
         return mimeType.startsWith("video/")
     }
