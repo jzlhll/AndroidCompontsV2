@@ -18,7 +18,6 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.serializableExtraCompat
 import com.au.module_android.utils.unsafeLazy
-import com.au.module_androidui.R
 import com.au.module_androidui.ui.base.AbsFragment
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.views.ViewActivity
@@ -41,8 +40,6 @@ open class FragmentShellActivity : ViewActivity() {
         const val KEY_FRAGMENT_CLASS = "FragmentShellActivity_key_fragment"
         const val KEY_FRAGMENT_KOIN_NAME = "FragmentShellActivity_key_fragment_koin_name"
         const val KEY_FRAGMENT_ARGUMENTS = "FragmentShellActivity_key_arguments"
-        const val KEY_EXIT_ANIM = "FragmentShellActivity_key_exit_anim"
-        const val KEY_ENTER_ANIM = "FragmentShellActivity_key_enter_anim"
 
         /**
          * 把一个Fragment放到本Activity当做唯一的界面。
@@ -55,101 +52,47 @@ open class FragmentShellActivity : ViewActivity() {
          * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
          */
         fun start(context: Context,
-                            fragmentClass:Class<out Fragment>,
-                            arguments: Bundle? = null,
-                            optionsCompat: ActivityOptionsCompat? = null,
-                            enterAnim:Int? = null,
-                            exitAnim:Int? = null,
-                            activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
-            startRoot(context, FragmentShellActivity::class.java, fragmentClass, null, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
-        }
-
-        /**
-         * 把一个Fragment放到本Activity当做唯一的界面。
-         *
-         * @param context Context
-         * @param fragmentClass 需要显示的fragment的类
-         * @param activityResult 如果传入了非空对象，则会通过它启动，会携带返回；否则就是默认启动。
-         * @param arguments 用来透传给Fragment
-         * @param optionsCompat 是startActivity的参数
-         * @param enterAnim 与android标准不同的是，这里给出的anim都是限定即将打开的activity进入时候的动画
-         * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
-         */
-        fun startForResult(context: Context,
-                  fragmentClass:Class<out Fragment>,
-                  activityResult:ActivityForResult,
-                  arguments: Bundle? = null,
-                  optionsCompat: ActivityOptionsCompat? = null,
-                  enterAnim:Int? = null,
-                  exitAnim:Int? = null,
-                  activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
-            startRoot(context, FragmentShellActivity::class.java, fragmentClass, activityResult, arguments, optionsCompat, enterAnim, exitAnim, activityResultCallback)
-        }
-
-        internal fun startRoot(context: Context,
-                           showActivityClass:Class<out Activity>,
-                           fragmentClass:Class<out Fragment>,
-                           activityResult:ActivityForResult?,
-                           arguments: Bundle?,
-                           optionsCompat: ActivityOptionsCompat?,
-                           enterAnim:Int? = null,
-                           exitAnim:Int? = null,
-                           activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
-            val intent = Intent(context, showActivityClass)
-            intent.putExtra(KEY_FRAGMENT_CLASS, fragmentClass)
-            if (arguments != null) intent.putExtra(KEY_FRAGMENT_ARGUMENTS, arguments)
-            if (exitAnim != null) intent.putExtra(KEY_EXIT_ANIM, exitAnim)
-            if (enterAnim != null) intent.putExtra(KEY_ENTER_ANIM, enterAnim)
-
-            if (activityResult != null) {
-                activityResult.start(intent, optionsCompat, activityResultCallback)
-
-                if (enterAnim != null && context is Activity) {
-                    context.overridePendingTransition(enterAnim, R.anim.activity_stay)
-                }
-            } else {
-                context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim)
-            }
-        }
-
-        internal fun startRoot(context: Context,
-                               showActivityClass:Class<out Activity>,
-                               koinFragmentName:String,
-                               activityResult:ActivityForResult?,
+                               showActivityClass:Class<out Activity> = FragmentShellActivity::class.java,
+                               fragmentClass:Class<out Fragment>,
                                arguments: Bundle?,
                                optionsCompat: ActivityOptionsCompat?,
                                enterAnim:Int? = null,
                                exitAnim:Int? = null,
+                               activityResult:ActivityForResult?=null,
                                activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
+            val intent = Intent(context, showActivityClass)
+            intent.putExtra(KEY_FRAGMENT_CLASS, fragmentClass)
+            if (arguments != null) intent.putExtra(KEY_FRAGMENT_ARGUMENTS, arguments)
+
+            if (activityResult != null) {
+                activityResult.animStart(context, intent, enterAnim, exitAnim, optionsCompat, activityResultCallback)
+            } else {
+                context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim, exitAnim)
+            }
+        }
+
+        fun startKoin(context: Context,
+                      showActivityClass:Class<out Activity>,
+                      koinFragmentName:String,
+                      arguments: Bundle?,
+                      optionsCompat: ActivityOptionsCompat?,
+                      enterAnim:Int? = null,
+                      exitAnim:Int? = null,
+                      activityResult:ActivityForResult?=null,
+                      activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
             val intent = Intent(context, showActivityClass)
             intent.putExtra(KEY_FRAGMENT_KOIN_NAME, koinFragmentName)
             if (arguments != null) intent.putExtra(KEY_FRAGMENT_ARGUMENTS, arguments)
-            if (exitAnim != null) intent.putExtra(KEY_EXIT_ANIM, exitAnim)
-            if (enterAnim != null) intent.putExtra(KEY_ENTER_ANIM, enterAnim)
-
             if (activityResult != null) {
-                activityResult.start(intent, optionsCompat, activityResultCallback)
-
-                if (enterAnim != null && context is Activity) {
-                    context.overridePendingTransition(enterAnim, R.anim.activity_stay)
-                }
+                activityResult.animStart(context, intent, enterAnim, exitAnim, optionsCompat, activityResultCallback)
             } else {
-                context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim)
+                context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim, exitAnim)
             }
         }
     }
 
     val fragmentClass by unsafeLazy { intent.serializableExtraCompat<Class<Fragment>>(KEY_FRAGMENT_CLASS) }
     val fragmentKoinName by unsafeLazy { intent.getStringExtra(KEY_FRAGMENT_KOIN_NAME) }
-
-    private val mEnterAnim by unsafeLazy { intent.getIntExtra(KEY_ENTER_ANIM, 0) }
-    private val mExitAnim by unsafeLazy { intent.getIntExtra(KEY_EXIT_ANIM, 0) }
-
-    override val exitAnim: Int?
-        get() = mExitAnim
-
-    override val enterAnim: Int?
-        get() = mEnterAnim
 
     private var mFragment : Fragment? = null
 

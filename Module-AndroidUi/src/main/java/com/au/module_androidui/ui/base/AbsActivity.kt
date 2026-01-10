@@ -17,18 +17,15 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.utils.hideImeNew
 import com.au.module_android.utils.ignoreError
-import com.au.module_androidui.R
+import com.au.module_android.utils.unsafeLazy
+import com.au.module_androidui.ui.KEY_ENTER_ANIM
+import com.au.module_androidui.ui.KEY_EXIT_ANIM
 import com.au.module_androidui.ui.immersive
+import kotlin.getValue
 
 @Deprecated("基础框架的一环，请使用BindingActivity或者ViewActivity")
-open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
+open class AbsActivity : AppCompatActivity(), IFullWindow {
     protected open val isNotCacheFragment = true //不进行自动保存Fragment用于恢复。
-
-    override val enterAnim: Int?
-        get() = null
-
-    override val exitAnim: Int?
-        get() = null
 
     /**
      * 给出额外信息的空间1
@@ -46,6 +43,9 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
     //记录Activity resources configuration的uiMode
     private var mCurrentUiMode : Int = Int.MIN_VALUE
 
+    private val enterAnim by unsafeLazy { intent.getIntExtra(KEY_ENTER_ANIM, 0) }
+    private val exitAnim by unsafeLazy { intent.getIntExtra(KEY_EXIT_ANIM, 0) }
+
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
         ToutiaoScreenAdapter.attach(this)
@@ -53,8 +53,9 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
         enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
-            enterAnim?.let { if(it != 0) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, it, R.anim.activity_stay) }
-            exitAnim?.let { if(it != 0) overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, it) }
+            //todo check
+            if(enterAnim != 0) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, enterAnim, 0)
+            if(exitAnim != 0) overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, exitAnim)
         }
 
         mCurrentUiMode = resources.configuration.uiMode
@@ -152,7 +153,8 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
     override fun finish() {
         super.finish()
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU) {
-            exitAnim?.let { if(it != 0) overridePendingTransition(0, it) }
+            //todo check
+            if(exitAnim != 0) overridePendingTransition(0, exitAnim)
         }
     }
 

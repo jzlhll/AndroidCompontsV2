@@ -1,6 +1,5 @@
 package com.au.module_androidui.ui
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -20,9 +19,6 @@ import com.au.module_android.BuildConfig
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.unsafeLazy
-import com.au.module_androidui.R
-import com.au.module_androidui.ui.FragmentShellActivity.Companion.KEY_ENTER_ANIM
-import com.au.module_androidui.ui.FragmentShellActivity.Companion.KEY_EXIT_ANIM
 import com.au.module_androidui.ui.base.AbsFragment
 import com.au.module_androidui.ui.base.IFullWindow
 import com.au.module_androidui.ui.base.ImmersiveMode
@@ -36,39 +32,21 @@ open class FragmentNavigationActivity : ViewActivity() {
     companion object {
         fun start(context: Context,
                   sceneId: String,
-                  activityResult: ActivityForResult? = null,
                   optionsCompat: ActivityOptionsCompat? = null,
                   enterAnim:Int? = null,
                   exitAnim:Int? = null,
+                  activityResult: ActivityForResult? = null,
                   activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
             val intent = Intent(context, FragmentNavigationActivity::class.java)
 
             FragmentNavigationScene.putIntent(intent, FragmentNavigationConfig.getScene(sceneId))
-            if (exitAnim != null) intent.putExtra(KEY_EXIT_ANIM, exitAnim)
-            if (enterAnim != null) intent.putExtra(KEY_ENTER_ANIM, enterAnim)
-
             if (activityResult != null) {
-                activityResult.start(intent, optionsCompat, activityResultCallback)
-
-                if (enterAnim != null && context is Activity) {
-                    context.overridePendingTransition(enterAnim, R.anim.activity_stay)
-                }
+                activityResult.animStart(context, intent, enterAnim, exitAnim, optionsCompat, activityResultCallback)
             } else {
                 context.startActivityFix(intent, optionsCompat?.toBundle(), enterAnim)
             }
         }
     }
-
-    private val mEnterAnim by unsafeLazy { intent.getIntExtra(KEY_ENTER_ANIM, 0) }
-    private val mExitAnim by unsafeLazy { intent.getIntExtra(KEY_EXIT_ANIM, 0) }
-
-    lateinit var fragmentNavigationScene : FragmentNavigationScene
-
-    override val exitAnim: Int?
-        get() = mExitAnim
-
-    override val enterAnim: Int?
-        get() = mEnterAnim
 
     val viewModel by unsafeLazy { ViewModelProvider(this)[FragmentNavigationViewModel::class.java] }
 

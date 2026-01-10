@@ -61,7 +61,7 @@ open class AbsFragment : Fragment(), IFullWindow {
     override fun onDestroyView() {
         super.onDestroyView()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, invokedBack as OnBackInvokedCallback)
+            requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(invokedBack as OnBackInvokedCallback)
         }
     }
 
