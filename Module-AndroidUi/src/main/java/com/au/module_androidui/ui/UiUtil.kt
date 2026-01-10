@@ -4,7 +4,6 @@ import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.ComponentActivity
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
@@ -12,8 +11,7 @@ import com.au.module_android.Globals
 import com.au.module_android.Globals.activityList
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_androidui.ui.base.IFullWindow
-import com.au.module_androidui.ui.base.isPaddingNavigationBar
-import com.au.module_androidui.ui.base.isPaddingStatusBar
+import com.au.module_androidui.ui.base.ImmersiveMode
 import java.lang.reflect.ParameterizedType
 
 /**
@@ -99,30 +97,6 @@ fun <T : ViewBinding> createViewBindingT2(self: Class<*>, inflater: LayoutInflat
     }
 }
 
-internal fun IFullWindow.paddingRootInner(activity: ComponentActivity, updatePaddingRoot: View?) {
-    if (updatePaddingRoot == null) return
-    val immersiveMode = immersiveMode()
-    val isPaddingNav = immersiveMode.isPaddingNavigationBar()
-    val isPaddingStatusBar = immersiveMode.isPaddingStatusBar()
-
-    if (isPaddingNav || isPaddingStatusBar) {
-        val pair = activity.currentStatusBarAndNavBarHeight()
-        if (pair != null) {
-            val statusBarsHeight = pair.first
-            val bottomBarHeight = pair.second
-            if (isPaddingStatusBar) {
-                if (isPaddingNav) {
-                    updatePaddingRoot.updatePadding(top = statusBarsHeight, bottom = bottomBarHeight)
-                } else {
-                    updatePaddingRoot.updatePadding(top = statusBarsHeight)
-                }
-            } else {
-                updatePaddingRoot.updatePadding(bottom = bottomBarHeight)
-            }
-        }
-    }
-}
-
 /**
  * 如果是我们框架的代码，则可以用Fragment的来判断
  */
@@ -140,6 +114,27 @@ fun finishFragment(clz: Class<out Fragment>) {
     activityList.forEach {
         if (it is FragmentShellActivity && it.fragmentClass == clz) {
             it.finish()
+        }
+    }
+}
+
+fun IFullWindow.immersive(activity: Activity, root: View) {
+    val pair = activity.currentStatusBarAndNavBarHeight()
+    val statusBarsHeight = pair?.first ?: 0
+    val bottomBarHeight = pair?.second ?: 0
+
+    when (val immersiveMode = immersiveMode()) {
+        is ImmersiveMode.PaddingBars -> {
+            root.updatePadding(top = statusBarsHeight, bottom = bottomBarHeight)
+        }
+        is ImmersiveMode.PaddingStatusBar -> {
+            root.updatePadding(top = statusBarsHeight)
+        }
+        is ImmersiveMode.PaddingNavigationBar -> {
+            root.updatePadding(bottom = bottomBarHeight)
+        }
+        is ImmersiveMode.FullImmersive -> {
+            immersiveMode.barsHeightCallback(statusBarsHeight, bottomBarHeight)
         }
     }
 }

@@ -167,6 +167,6 @@ class OnceLogViewFragment : BindingFragment<FragmentLogViewBinding>() {
     private var currentIsFull = true
 
     override fun immersiveMode(): ImmersiveMode {
-        return ImmersiveMode.FullImmersive
+        return ImmersiveMode.FullImmersive{ _, _-> }
     }
 }

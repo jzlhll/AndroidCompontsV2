@@ -7,7 +7,6 @@ import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.CallSuper
-import androidx.annotation.EmptySuper
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 
@@ -90,15 +89,6 @@ open class AbsFragment : Fragment(), IFullWindow {
     open fun isAutoHideIme() = false
 
     override fun immersiveMode() : ImmersiveMode = ImmersiveMode.PaddingBars
-
-    /**
-     * 如果你想要自行操作padding就返回immersiveMode() = ImmersiveMode.FullImmersive
-     * 然后重载该函数。
-     * 可以调用currentStatusBarAndNavBarHeight()来获取状态栏和导航栏高度。
-     */
-    @EmptySuper
-    open fun onWindowFocusChangedInner(hasFocus: Boolean) {
-    }
 
     @Deprecated("这个禁用，因为我们自己的框架")
     final override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean) {

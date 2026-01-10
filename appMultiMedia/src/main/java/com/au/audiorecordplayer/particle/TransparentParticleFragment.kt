@@ -95,6 +95,8 @@ class TransparentParticleFragment : BindingFragment<FragmentFloatParticleBinding
     }
 
     override fun immersiveMode(): ImmersiveMode {
-        return ImmersiveMode.FullImmersive
+        return ImmersiveMode.FullImmersive {
+            _,_->
+        }
     }
 }

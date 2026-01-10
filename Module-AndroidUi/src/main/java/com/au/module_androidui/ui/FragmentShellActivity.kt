@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import com.au.module_android.BuildConfig
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.serializableExtraCompat
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.R
@@ -208,9 +209,20 @@ open class FragmentShellActivity : ViewActivity() {
     }
 
     final override fun onWindowFocusChangedInner(hasFocus: Boolean) {
-        //这里会按照Fragment的沉浸模式去处理。因此，如果你的Fragment已经按照普通三种传入的方式处理会被调整；如果传入了ImmersiveMode.FullImmersive，则不会处理。
-        super.onWindowFocusChangedInner(hasFocus)
-        //接着你还可以自行处理。因此推荐操作方式为，Fragment重载ImmersiveMode为FullImmersive，然后Fragment实现onWindowFocusChangedInner自行调整
-        mFragment.asOrNull<AbsFragment>()?.onWindowFocusChangedInner(hasFocus)
+        when (val immersiveMode = immersiveMode()) {
+            is ImmersiveMode.PaddingBars,
+               ImmersiveMode.PaddingStatusBar,
+               ImmersiveMode.PaddingNavigationBar -> {
+                //普通三种将直接处理activity的界面
+                super.onWindowFocusChangedInner(hasFocus)
+            }
+            is ImmersiveMode.FullImmersive -> {
+                //如果是全屏沉浸式，则将处理交给fragment的代码去执行
+                val pair = currentStatusBarAndNavBarHeight()
+                val statusBarHeight = pair?.first ?: 0
+                val navBarHeight = pair?.second ?: 0
+                immersiveMode.barsHeightCallback(statusBarHeight, navBarHeight)
+            }
+        }
     }
 }

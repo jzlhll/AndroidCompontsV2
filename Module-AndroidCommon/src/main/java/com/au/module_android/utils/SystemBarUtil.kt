@@ -100,14 +100,11 @@ fun View.applyWindowInsets(once:Boolean= false, insetsBlock: (
 /**
  * 透明状态栏
  *
- * isAppearLightXXX，true表示让bar的文字是黑色的底是白的；false是bar文字是白色的。
- *
  * 谨慎使用：activity和fragment已经通过基础框架默认限定实现；现在只需要在Dialog或者特殊临时切换调用
  * 如果是Activity或者显示在FragmentShellActivity中的Fragment，
  * 子类覆盖isPaddingNavBar=false   则会让navBar透下去，
  * 子类覆盖isPaddingStatusBar=false则会让statusBar透上去。
  *
- * isAutoDetectDarkMode 如果true，则前2个参数无效。
  */
 fun Activity.transparentStatusBar(insetsBlock: (
     insets: WindowInsetsCompat,

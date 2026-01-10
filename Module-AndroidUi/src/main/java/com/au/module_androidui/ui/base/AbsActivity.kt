@@ -1,6 +1,5 @@
 package com.au.module_androidui.ui.base
 
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
@@ -19,7 +18,7 @@ import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.utils.hideImeNew
 import com.au.module_android.utils.ignoreError
 import com.au.module_androidui.R
-import com.au.module_androidui.ui.paddingRootInner
+import com.au.module_androidui.ui.immersive
 
 @Deprecated("基础框架的一环，请使用BindingActivity或者ViewActivity")
 open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
@@ -54,8 +53,8 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
         enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            enterAnim?.let { if(it != 0) overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, it, R.anim.activity_stay) }
-            exitAnim?.let { if(it != 0) overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, it) }
+            enterAnim?.let { if(it != 0) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, it, R.anim.activity_stay) }
+            exitAnim?.let { if(it != 0) overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, it) }
         }
 
         mCurrentUiMode = resources.configuration.uiMode
@@ -168,10 +167,10 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
     }
 
     /**
-     * 如果你想自己控制immersive，请重写这个方法。
+     * 如果你想自己控制immersive请使用它
      */
     @CallSuper
     protected open fun onWindowFocusChangedInner(hasFocus: Boolean) {
-        paddingRootInner(this, findViewById(android.R.id.content))
+        immersive(this, findViewById(android.R.id.content))
     }
 }
