@@ -52,7 +52,7 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
             enterAnim?.let { if(it != 0) overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, it, R.anim.activity_stay) }
             exitAnim?.let { if(it != 0) overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, it) }
         }
@@ -151,7 +151,7 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
 
     override fun finish() {
         super.finish()
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU) {
             exitAnim?.let { if(it != 0) overridePendingTransition(0, it) }
         }
     }

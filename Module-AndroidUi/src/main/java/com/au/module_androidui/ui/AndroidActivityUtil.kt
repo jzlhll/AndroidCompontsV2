@@ -26,7 +26,7 @@ fun Context.startActivityFix(intent: Intent, opts:Bundle? = null, @AnimRes enter
         startActivity(intent, opts)
     }
 
-    if (enterAnim != null && this is Activity) {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && enterAnim != null && this is Activity) {
         this.overridePendingTransition(enterAnim, R.anim.activity_stay)
     }
 }
@@ -49,7 +49,7 @@ fun Context.startOutActivity(intent: Intent, opts:Bundle? = null, @AnimRes enter
         e.printStackTrace()
     }
 
-    if (enterAnim != null && this is Activity) {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && enterAnim != null && this is Activity) {
         this.overridePendingTransition(enterAnim, R.anim.activity_stay)
     }
 }
