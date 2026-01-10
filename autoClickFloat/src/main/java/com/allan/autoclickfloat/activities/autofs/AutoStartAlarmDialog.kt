@@ -7,7 +7,6 @@ import androidx.lifecycle.lifecycleScope
 import com.allan.autoclickfloat.databinding.FragmentAutoStartupNewAddBinding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_androidui.fontutil.FONT_NUMBER_PATH
 import com.au.module_androidui.fontutil.getOrCreateFontFace
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.base.findDialog
@@ -16,6 +15,7 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.invisible
 import com.au.module_android.utils.visible
+import com.au.module_androidui.BuildConfig.FONT_NUMBER_PATH
 import com.au.module_androidui.widget.ViewStubPro
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import com.au.module_androidui.toast.ToastBuilder

@@ -9,7 +9,6 @@ import androidx.lifecycle.lifecycleScope
 import com.allan.autoclickfloat.databinding.FragmentAutoStartupBinding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_androidui.fontutil.FONT_NUMBER_PATH
 import com.au.module_androidui.fontutil.getOrCreateFontFace
 import com.au.module_android.postToMainHandler
 import com.au.module_androidui.ui.bindings.BindingFragment
@@ -19,6 +18,7 @@ import com.au.module_android.utils.gone
 import com.au.module_android.utils.invisible
 import com.au.module_androidui.ui.startOutActivity
 import com.au.module_android.utils.visible
+import com.au.module_androidui.BuildConfig.FONT_NUMBER_PATH
 import com.au.module_androidui.widget.ViewStubPro
 import com.au.module_androidui.toast.ToastUtil
 import com.au.module_androidui.widget.NumberPickerCompat

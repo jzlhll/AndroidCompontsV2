@@ -7,13 +7,13 @@ import android.view.accessibility.AccessibilityManager
 import com.allan.androidlearning.databinding.FragmentAndroidUi3Binding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_androidui.fontutil.FONT_NUMBER_PATH
 import com.au.module_androidui.fontutil.getOrCreateFontFace
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
+import com.au.module_androidui.BuildConfig.FONT_NUMBER_PATH
 import com.au.module_androidui.widget.ViewStubPro
 import com.au.module_androidui.widget.NumberPickerCompat
 import com.au.module_androidui.widget.SimpleNumberPicker

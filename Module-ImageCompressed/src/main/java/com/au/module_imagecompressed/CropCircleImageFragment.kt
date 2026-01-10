@@ -43,10 +43,10 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
                 this.putString("srcUri", srcUri.toString())
             }
 
-            FragmentShellActivity.startForResult(context,
+            FragmentShellActivity.start(context,
                 CropCircleImageFragment::class.java,
-                activityResult,
                 arguments = bundle,
+                activityResult = activityResult,
                 activityResultCallback = activityResultCallback)
         }
     }

@@ -37,7 +37,8 @@ class AllFeaturesFragment : BindingFragment<AllFeaturesFragmentBinding>() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.autoClickButton.onClick {
-            FragmentShellOrientationActivity.start(requireActivity(), AutoContinuousClickActivityFragment::class.java)
+            FragmentShellActivity.start(requireActivity(), AutoContinuousClickActivityFragment::class.java,
+                showActivityClass = FragmentShellOrientationActivity::class.java)
         }
 
         binding.coverScreenBtn.onClick {
@@ -55,11 +56,13 @@ class AllFeaturesFragment : BindingFragment<AllFeaturesFragmentBinding>() {
         }
 
         binding.recordModeBtn.onClick {
-            FragmentShellOrientationActivity.start(requireActivity(), RecordProjectsAllFragment::class.java)
+            FragmentShellActivity.start(requireActivity(), RecordProjectsAllFragment::class.java,
+                showActivityClass = FragmentShellOrientationActivity::class.java)
         }
 
         binding.nongyaoBtn.onClick {
-            FragmentShellOrientationActivity.start(requireActivity(), NongyaoFragment::class.java)
+            FragmentShellActivity.start(requireActivity(), NongyaoFragment::class.java,
+                showActivityClass = FragmentShellOrientationActivity::class.java)
         }
 
         binding.debugBtn.onClick {

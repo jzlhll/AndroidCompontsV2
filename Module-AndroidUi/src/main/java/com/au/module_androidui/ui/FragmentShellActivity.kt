@@ -52,12 +52,12 @@ open class FragmentShellActivity : ViewActivity() {
          * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
          */
         fun start(context: Context,
-                               showActivityClass:Class<out Activity> = FragmentShellActivity::class.java,
-                               fragmentClass:Class<out Fragment>,
-                               arguments: Bundle?,
-                               optionsCompat: ActivityOptionsCompat?,
+                  fragmentClass:Class<out Fragment>,
+                  arguments: Bundle?=null,
+                               optionsCompat: ActivityOptionsCompat?=null,
                                enterAnim:Int? = null,
                                exitAnim:Int? = null,
+                               showActivityClass:Class<out Activity> = FragmentShellActivity::class.java,
                                activityResult:ActivityForResult?=null,
                                activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
             val intent = Intent(context, showActivityClass)

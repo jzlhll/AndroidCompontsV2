@@ -84,7 +84,8 @@ class MediaGalleryActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.translateParticleFull).onClick {
             Globals.mainScope.launch {
-                FragmentShellTranslucentActivity.start(this@MediaGalleryActivity, TransparentParticleFragment::class.java)
+                FragmentShellActivity.start(this@MediaGalleryActivity, TransparentParticleFragment::class.java,
+                    showActivityClass = FragmentShellTranslucentActivity::class.java)
             }
         }
         findViewById<View>(R.id.translateParticleActivity).onClick {
