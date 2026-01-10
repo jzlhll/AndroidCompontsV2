@@ -5,6 +5,7 @@ import com.allan.androidlearning.crashtest.debugApplicationPostMainThreadCrash
 import com.allan.androidlearning.crashtest.debugSubThreadCrash
 import com.au.module_android.DarkModeAndLocalesConst
 import com.au.module_androidui.InitApplication
+import com.au.module_androidui.fontutil.UiFontConfig
 import java.util.Locale
 
 /**
@@ -23,6 +24,9 @@ class App : InitApplication() {
 
     override fun onCreate() {
         super.onCreate()
+        UiFontConfig.sFontNormalPath = "fonts/SourceHanSansSCNormal.otf"
+        UiFontConfig.sFontMediumPath = "fonts/SourceHanSansSCNormal.otf"
+        UiFontConfig.sFontBoldPath = "fonts/SourceHanSansSCNormal.otf"
 
         debugApplicationCreateCrash()
         debugApplicationPostMainThreadCrash()

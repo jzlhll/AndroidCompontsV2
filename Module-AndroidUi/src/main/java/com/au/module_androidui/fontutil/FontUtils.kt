@@ -8,18 +8,11 @@ import com.au.module_androidui.R
 import com.au.module_androidui.widget.FontMode
 import com.au.module_androidui.widget.TextViewCheckMode
 import androidx.core.content.withStyledAttributes
+import com.au.module_androidui.BuildConfig
 
 /**
  * 全局字体默认文件。可以自行更换任意一项，目前虽然一样。
  */
-
-const val FONT_NORMAL_PATH = "fonts/SourceHanSansSCNormal.otf"
-const val FONT_MEDIUM_PATH = FONT_NORMAL_PATH//"fonts/SourceHanSansSCNormal.otf"
-const val FONT_BOLD_PATH = FONT_NORMAL_PATH//"fonts/SourceHanSansSCNormal.otf"
-
-const val FONT_NUMBER_PATH = FONT_NORMAL_PATH//"fonts/SourceHanSansSCNormal.otf"
-const val FONT_NUMBER_MEDIUM_PATH = FONT_NUMBER_PATH//"fonts/SourceHanSansSCNormal.otf"
-const val FONT_NUMBER_BOLD_PATH = FONT_NUMBER_MEDIUM_PATH//"fonts/SourceHanSansSCNormal.otf"
 
 private val fontFaceMap by lazy { hashMapOf<String, Typeface>() }
 
@@ -105,17 +98,17 @@ fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewC
 
 fun TextView.setFontFromAsset(context: Context, mode: FontMode, isNumber:Boolean, fontName:String) {
     //todo 根据是否存在这些字体，来决定比如mid=bold，或者num=非num。
-    val isSuc = if (isNumber) {
+    val isSuc = if (!isNumber) {
         when (mode) {
-            FontMode.NORMAL -> setFontFromAssets(context, FONT_NUMBER_PATH)
-            FontMode.MID -> setFontFromAssets(context, FONT_NUMBER_MEDIUM_PATH)
-            FontMode.BOLD -> setFontFromAssets(context, FONT_NUMBER_BOLD_PATH)
+            FontMode.NORMAL -> setFontFromAssets(context, BuildConfig.FONT_NORMAL_PATH)
+            FontMode.MID -> setFontFromAssets(context, BuildConfig.FONT_MEDIUM_PATH)
+            FontMode.BOLD -> setFontFromAssets(context, BuildConfig.FONT_BOLD_PATH)
         }
     } else {
         when (mode) {
-            FontMode.NORMAL -> setFontFromAssets(context, FONT_NORMAL_PATH)
-            FontMode.MID -> setFontFromAssets(context, FONT_MEDIUM_PATH)
-            FontMode.BOLD -> setFontFromAssets(context, FONT_BOLD_PATH)
+            FontMode.NORMAL -> setFontFromAssets(context, BuildConfig.FONT_NUMBER_PATH)
+            FontMode.MID -> setFontFromAssets(context, BuildConfig.FONT_NUMBER_MEDIUM_PATH)
+            FontMode.BOLD -> setFontFromAssets(context, BuildConfig.FONT_NUMBER_BOLD_PATH)
         }
     }
 

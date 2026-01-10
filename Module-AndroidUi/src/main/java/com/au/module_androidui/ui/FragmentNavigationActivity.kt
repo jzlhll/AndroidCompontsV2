@@ -206,7 +206,7 @@ open class FragmentNavigationActivity : ViewActivity() {
                 val pair = currentStatusBarAndNavBarHeight()
                 val statusBarHeight = pair?.first ?: 0
                 val navBarHeight = pair?.second ?: 0
-                immersiveMode.barsHeightCallback(statusBarHeight, navBarHeight)
+                immersiveMode.barsHeightCallback?.invoke(statusBarHeight, navBarHeight)
             }
         }
     }

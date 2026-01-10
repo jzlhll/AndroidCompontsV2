@@ -209,19 +209,21 @@ open class FragmentShellActivity : ViewActivity() {
     }
 
     final override fun onWindowFocusChangedInner(hasFocus: Boolean) {
-        when (val immersiveMode = immersiveMode()) {
-            is ImmersiveMode.PaddingBars,
-               ImmersiveMode.PaddingStatusBar,
-               ImmersiveMode.PaddingNavigationBar -> {
-                //普通三种将直接处理activity的界面
-                super.onWindowFocusChangedInner(hasFocus)
-            }
-            is ImmersiveMode.FullImmersive -> {
-                //如果是全屏沉浸式，则将处理交给fragment的代码去执行
-                val pair = currentStatusBarAndNavBarHeight()
-                val statusBarHeight = pair?.first ?: 0
-                val navBarHeight = pair?.second ?: 0
-                immersiveMode.barsHeightCallback(statusBarHeight, navBarHeight)
+        if (hasFocus) {
+            when (val immersiveMode = immersiveMode()) {
+                is ImmersiveMode.PaddingBars,
+                ImmersiveMode.PaddingStatusBar,
+                ImmersiveMode.PaddingNavigationBar -> {
+                    //普通三种将直接处理activity的界面
+                    super.onWindowFocusChangedInner(true)
+                }
+                is ImmersiveMode.FullImmersive -> {
+                    //如果是全屏沉浸式，则将处理交给fragment的代码去执行
+                    val pair = currentStatusBarAndNavBarHeight()
+                    val statusBarHeight = pair?.first ?: 0
+                    val navBarHeight = pair?.second ?: 0
+                    immersiveMode.barsHeightCallback?.invoke(statusBarHeight, navBarHeight)
+                }
             }
         }
     }

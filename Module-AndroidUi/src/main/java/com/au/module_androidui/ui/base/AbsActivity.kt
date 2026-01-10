@@ -171,6 +171,8 @@ open class AbsActivity : AppCompatActivity(), IFullWindow, IAnim {
      */
     @CallSuper
     protected open fun onWindowFocusChangedInner(hasFocus: Boolean) {
-        immersive(this, findViewById(android.R.id.content))
+        if (hasFocus) {
+            immersive(this, findViewById(android.R.id.content))
+        }
     }
 }

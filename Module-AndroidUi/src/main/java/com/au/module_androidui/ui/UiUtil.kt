@@ -134,7 +134,7 @@ fun IFullWindow.immersive(activity: Activity, root: View) {
             root.updatePadding(bottom = bottomBarHeight)
         }
         is ImmersiveMode.FullImmersive -> {
-            immersiveMode.barsHeightCallback(statusBarsHeight, bottomBarHeight)
+            immersiveMode.barsHeightCallback?.invoke(statusBarsHeight, bottomBarHeight)
         }
     }
 }

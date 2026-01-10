@@ -7,10 +7,26 @@ android {
     namespace='com.au.module_androidui'
     compileSdk=gradle.ext.compileSdk
 
+    def FONT_NORMAL_PATH = findProperty("app.font.normal") ?: ""
+    def FONT_MEDIUM_PATH = findProperty("app.font.medium") ?: ""
+    def FONT_BOLD_PATH = findProperty("app.font.bold") ?: ""
+
+    def FONT_NUMBER_PATH = findProperty("app.font.number") ?: ""
+    def FONT_NUMBER_MEDIUM_PATH = findProperty("app.font.number.medium") ?: ""
+    def FONT_NUMBER_BOLD_PATH = findProperty("app.font.number.bold") ?: ""
+
     defaultConfig {
         minSdk=gradle.ext.minSdk
 
         consumerProguardFiles "consumer-rules.pro"
+
+        buildConfigField("String", "FONT_NORMAL_PATH", "\"${FONT_NORMAL_PATH}\"")
+        buildConfigField("String", "FONT_MEDIUM_PATH", "\"${FONT_MEDIUM_PATH}\"")
+        buildConfigField("String", "FONT_BOLD_PATH", "\"${FONT_BOLD_PATH}\"")
+
+        buildConfigField("String", "FONT_NUMBER_PATH", "\"${FONT_NUMBER_PATH}\"")
+        buildConfigField("String", "FONT_NUMBER_MEDIUM_PATH", "\"${FONT_NUMBER_MEDIUM_PATH}\"")
+        buildConfigField("String", "FONT_NUMBER_BOLD_PATH", "\"${FONT_NUMBER_BOLD_PATH}\"")
     }
 
     buildTypes {
@@ -25,6 +41,7 @@ android {
     }
     buildFeatures {
         viewBinding=true
+        buildConfig=true
     }
 }
 
