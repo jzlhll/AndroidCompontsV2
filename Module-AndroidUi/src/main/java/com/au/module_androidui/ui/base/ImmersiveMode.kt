@@ -22,7 +22,7 @@ sealed class ImmersiveMode {
     /**
      * 不padding，就是完全沉浸式。需要自行处理顶部和底部的距离问题
      */
-    class FullImmersive(val barsHeightCallback:(statusBarHeight:Int, navBarHeight:Int)->Unit) : ImmersiveMode()
+    class FullImmersive(val barsHeightCallback:((statusBarHeight:Int, navBarHeight:Int)->Unit)?=null) : ImmersiveMode()
 
     fun isPaddingNavigationBar() =
         this == PaddingBars || this == PaddingNavigationBar
