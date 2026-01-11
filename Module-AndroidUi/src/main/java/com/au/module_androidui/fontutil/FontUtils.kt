@@ -3,26 +3,27 @@ package com.au.module_androidui.fontutil
 import android.content.Context
 import android.graphics.Typeface
 import android.util.AttributeSet
+import android.util.Log
 import android.widget.TextView
 import com.au.module_androidui.R
 import com.au.module_androidui.widget.FontMode
 import com.au.module_androidui.widget.TextViewCheckMode
 import androidx.core.content.withStyledAttributes
+import com.au.module_android.utils.ignoreError
 import com.au.module_androidui.BuildConfig
 
 /**
  * 全局字体默认文件。可以自行更换任意一项，目前虽然一样。
  */
 
-private val fontFaceMap by lazy { hashMapOf<String, Typeface>() }
+private val fontFaceMap by lazy { hashMapOf<String, Typeface?>() }
 
 fun getOrCreateFontFace(context: Context, assetsPath: String?) : Typeface? {
     if(assetsPath.isNullOrEmpty()) return null
-    val cacheTypeFace = fontFaceMap[assetsPath]
-    if (cacheTypeFace != null) {
-        return cacheTypeFace
+    if (fontFaceMap.contains(assetsPath)) {
+        return fontFaceMap[assetsPath]
     }
-    val newTypeFace = Typeface.createFromAsset(context.assets, assetsPath)
+    val newTypeFace = ignoreError { Typeface.createFromAsset(context.assets, assetsPath) }
     fontFaceMap[assetsPath] = newTypeFace
     return newTypeFace
 }
