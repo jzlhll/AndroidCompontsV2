@@ -16,10 +16,9 @@ import com.au.module_simplepermission.activity.ActivityForResult
 const val KEY_EXIT_ANIM = "activity_key_exit_anim"
 const val KEY_ENTER_ANIM = "activity_key_enter_anim"
 
-//todo 尝试是否改成0
-val LAST_EXIT_ANIM = 0//R.anim.activity_stay
-
-fun Context.startActivityFix(intent: Intent, opts:Bundle? = null, @AnimRes enterAnim:Int? = null, @AnimRes exitAnim:Int? = null) {
+fun Context.startActivityFix(intent: Intent, opts:Bundle? = null,
+                             @AnimRes enterAnim:Int? = null,
+                             @AnimRes exitAnim:Int? = null) {
     if (this !is Activity) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
@@ -41,7 +40,7 @@ fun Context.startActivityFix(intent: Intent, opts:Bundle? = null, @AnimRes enter
     }
 
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && enterAnim != null && this is Activity) {
-        this.overridePendingTransition(enterAnim, exitAnim ?: LAST_EXIT_ANIM)
+        this.overridePendingTransition(enterAnim, R.anim.activity_stay)
     }
 }
 
@@ -55,7 +54,7 @@ fun ActivityForResult.animStart(
     if (enterAnim != null) intent.putExtra(KEY_ENTER_ANIM, enterAnim)
     if (exitAnim != null) intent.putExtra(KEY_EXIT_ANIM, exitAnim)
     start(intent, option, callback)
-    if (enterAnim != null && context is Activity) {
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && enterAnim != null && context is Activity) {
         context.overridePendingTransition(enterAnim, R.anim.activity_stay)
     }
 }
@@ -83,6 +82,6 @@ fun Context.startOutActivity(intent: Intent, opts:Bundle? = null, @AnimRes enter
     }
 
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && enterAnim != null && this is Activity) {
-        this.overridePendingTransition(enterAnim, exitAnim ?: LAST_EXIT_ANIM)
+        this.overridePendingTransition(enterAnim, R.anim.activity_stay)
     }
 }
