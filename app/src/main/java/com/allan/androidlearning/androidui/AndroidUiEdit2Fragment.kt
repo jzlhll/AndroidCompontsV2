@@ -3,9 +3,9 @@ package com.allan.androidlearning.androidui
 import android.os.Bundle
 import android.view.WindowManager
 import com.allan.androidlearning.databinding.FragmentAndroidUiEdit2Binding
+import com.au.module_android.utils.immersive
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
-import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.widget.CustomTextInputLayout
 
 /**
@@ -45,7 +45,7 @@ class AndroidUiEdit2Fragment : BindingFragment<FragmentAndroidUiEdit2Binding>() 
         binding.infoText.text = msg + " LinearLayout " + fullInfo()
 
         if (enableEdge == -1) {
-            requireActivity().transparentStatusBar { insets, statusBarsHeight, navigationBarHeight -> insets }
+            requireActivity().immersive()
         }
     }
 

@@ -85,6 +85,8 @@ dependencies {
     implementation(libs.nanohttpd.websocket)
     implementation(libs.gson)
 
+    implementation(libs.okhttp)
+
     implementation(libs.blurview)
     implementation(project(":Module-AndroidCommon"))
 

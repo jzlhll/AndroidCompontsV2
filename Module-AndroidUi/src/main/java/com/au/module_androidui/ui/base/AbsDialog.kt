@@ -5,19 +5,15 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.RectF
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import android.view.WindowManager
+import android.view.*
 import android.widget.FrameLayout
 import androidx.annotation.EmptySuper
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.DialogFragment
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.transparentStatusBar
+import com.au.module_android.utils.immersive
+import com.au.module_android.utils.isAppearanceLightForBars
 
 /**
  * @author Allan
@@ -149,7 +145,8 @@ abstract class AbsDialog(private val mode: DialogMode) : AppCompatDialogFragment
 
     open fun setWindowStyle() {
         dialog?.window?.apply {
-            transparentStatusBar()
+            val light = isAppearanceLightForBars(requireContext())
+            immersive(light, light)
             attributes = attributes?.also {
                 //保证对话框弹出的时候状态栏不是黑色
                 it.height = WindowManager.LayoutParams.MATCH_PARENT

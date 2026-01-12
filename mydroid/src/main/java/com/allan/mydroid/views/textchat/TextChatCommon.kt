@@ -15,10 +15,11 @@ import com.allan.mydroid.views.textchat.uibean.NormalItem
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.utils.ImeHelper
+import com.au.module_android.utils.applyWindowInsets
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.getScreenFullSize
+import com.au.module_android.utils.immersive
 import com.au.module_android.utils.setMaxLength
-import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.PickUriWrap
@@ -88,7 +89,8 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
             binding.bottomHost.translationY = -imeOffset.toFloat()
         }
 
-        ac.transparentStatusBar(statusBarTextDark = false) { insets, statusBarsHeight, _ ->
+        ac.immersive(statusBarTextDark = false)
+        f.requireActivity().window.decorView.applyWindowInsets{ insets, statusBarsHeight, _ ->
             binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
                 toolbarLP.topMargin = statusBarsHeight
                 binding.toolbar.layoutParams = toolbarLP

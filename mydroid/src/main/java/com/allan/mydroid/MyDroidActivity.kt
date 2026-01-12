@@ -11,12 +11,13 @@ import androidx.core.os.bundleOf
 import com.allan.mydroid.ui.theme.AndroidCompontsTheme
 import com.allan.mydroid.views.MyDroidAllFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
+import com.au.module_android.utils.enableEdgeToEdgeFix
 import com.au.module_androidui.ui.FragmentShellActivity
 
 class MyDroidActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdgeFix()
 //        setContent {
 //            AndroidCompontsTheme {
 //                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

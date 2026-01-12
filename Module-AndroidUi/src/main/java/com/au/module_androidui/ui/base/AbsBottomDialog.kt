@@ -12,8 +12,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updatePadding
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
+import com.au.module_android.utils.applyWindowInsets
 import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.transparentStatusBar
+import com.au.module_android.utils.immersive
+import com.au.module_android.utils.isAppearanceLightForBars
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -88,11 +90,12 @@ abstract class AbsBottomDialog(private val hasEditText:Boolean)
         // warn2: 设置了transparentStatusBar后，键盘无法弹起。
         // warn3: 那么，布局就从底部透到nav之下，从根部开始显示。
         if (!hasEditText) { //todo android15 check
-            dialog?.window?.apply {
-                transparentStatusBar { _, _, navigationBarHeight ->
-                    view?.updatePadding(bottom = navigationBarHeight)
-                    WindowInsetsCompat.CONSUMED
-                }
+            val light = isAppearanceLightForBars(requireContext())
+            dialog?.window?.immersive(light, light)
+            dialog?.window?.decorView?.applyWindowInsets {
+                    _, _, navigationBarHeight ->
+                view?.updatePadding(bottom = navigationBarHeight)
+                WindowInsetsCompat.CONSUMED
             }
         } else {
             dialog?.window?.let { w->

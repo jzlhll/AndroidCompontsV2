@@ -18,6 +18,7 @@ import com.au.audiorecordplayer.imgprocess.ReturnYourFaceFragment
 import com.au.audiorecordplayer.particle.TransparentParticleFragment
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
+import com.au.module_android.utils.enableEdgeToEdgeFix
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.FragmentShellTranslucentActivity
 import com.au.module_androidui.widget.FlowLayout
@@ -30,7 +31,7 @@ class MediaGalleryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdgeFix()
         setContentView(R.layout.activity_media_gallery)
 
         val flowLayout = findViewById<FlowLayout>(R.id.flowLayout)

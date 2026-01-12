@@ -37,7 +37,7 @@ import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.transparentStatusBar
+import com.au.module_android.utils.immersive
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_androidui.ui.base.ImmersiveMode
@@ -302,7 +302,7 @@ class Camera2Fragment : BindingFragment<FragmentCamera2Binding>() {
 
         toastOnText("previewMode is: " + DataRepository.previewMode)
 
-        requireActivity().transparentStatusBar(statusBarTextDark = false)
+        requireActivity().immersive(statusBarTextDark = false)
     }
 
     override fun onDestroyView() {

@@ -26,6 +26,7 @@ class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.PaddingNavigationBar
     }
+
     private fun uploadMyIp() {
         lifecycleScope.launch {
             if (!mIp.isNullOrEmpty()) {

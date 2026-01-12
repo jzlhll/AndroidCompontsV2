@@ -3,6 +3,7 @@ package com.allan.mydroid.views.send
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beansinner.ShareInBean
@@ -24,7 +25,7 @@ import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.log.logd
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utils.transparentStatusBar
+import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
@@ -33,10 +34,6 @@ import com.bumptech.glide.request.target.Target
 import org.koin.android.ext.android.get
 
 class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
-    override fun immersiveMode(): ImmersiveMode {
-        return ImmersiveMode.PaddingNavigationBar
-    }
-
     private val common by unsafeLazy {
         object : SendListSelectorCommon(true) {
             override fun rcv() = binding.rcv
@@ -82,19 +79,23 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
         }
     }
 
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.FullImmersive { statusBarsHeight, navBarHeight ->
+            binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
+                toolbarLP.topMargin = statusBarsHeight
+                binding.toolbar.layoutParams = toolbarLP
+            }
+            binding.root.updatePadding(bottom = navBarHeight)
+        }
+    }
+
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
 
         binding.adHost.setColor(Globals.getColor(R.color.color_normal_block0))
         binding.adHost.startAnimation()
 
-        requireActivity().transparentStatusBar(statusBarTextDark = false) { insets, statusBarsHeight, _ ->
-            binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
-                toolbarLP.topMargin = statusBarsHeight
-                binding.toolbar.layoutParams = toolbarLP
-            }
-            insets
-        }
+        requireActivity().changeBarsColor(statusBarTextDark = false)
 
         binding.toolbar.setNavigationOnClickListener {
             requireActivity().finishAfterTransition()

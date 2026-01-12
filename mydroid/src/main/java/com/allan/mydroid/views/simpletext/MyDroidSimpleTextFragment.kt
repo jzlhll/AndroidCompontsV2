@@ -1,7 +1,9 @@
 package com.allan.mydroid.views.simpletext
 
+import android.R.attr.orientation
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.databinding.FragmentMyDroidSimpleTextBinding
 import com.allan.mydroid.globals.GlobalNetworkMonitor
@@ -10,8 +12,8 @@ import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.launchRepeatOnStarted
-import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidcolor.R
 import org.koin.android.ext.android.get
 
@@ -19,7 +21,13 @@ class MyDroidSimpleTextFragment : AbsLiveFragment<FragmentMyDroidSimpleTextBindi
     private lateinit var adapter: SimpleTextAdapter
 
     override fun immersiveMode(): ImmersiveMode {
-        return ImmersiveMode.PaddingNavigationBar
+        return ImmersiveMode.FullImmersive { statusBarsHeight, navBarHeight ->
+            binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
+                toolbarLP.topMargin = statusBarsHeight
+                binding.toolbar.layoutParams = toolbarLP
+            }
+            binding.root.updatePadding(bottom = navBarHeight)
+        }
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
@@ -27,13 +35,7 @@ class MyDroidSimpleTextFragment : AbsLiveFragment<FragmentMyDroidSimpleTextBindi
         binding.adHost.setColor(Globals.getColor(R.color.color_normal_block0))
         binding.adHost.startAnimation()
 
-        requireActivity().transparentStatusBar(statusBarTextDark = false) { insets, statusBarsHeight, _ ->
-            binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
-                toolbarLP.topMargin = statusBarsHeight
-                binding.toolbar.layoutParams = toolbarLP
-            }
-            insets
-        }
+        requireActivity().changeBarsColor(statusBarTextDark = false)
 
         binding.toolbar.setNavigationOnClickListener {
             requireActivity().finishAfterTransition()

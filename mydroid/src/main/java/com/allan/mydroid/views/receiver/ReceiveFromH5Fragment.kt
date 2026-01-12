@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
+import androidx.core.view.updatePadding
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.databinding.FragmentReceiveFromH5Binding
@@ -18,7 +19,7 @@ import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utils.transparentStatusBar
+import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utilsmedia.getExternalFreeSpace
 import org.koin.android.ext.android.get
@@ -43,19 +44,18 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
     }
 
     override fun immersiveMode(): ImmersiveMode {
-        return ImmersiveMode.PaddingNavigationBar
-    }
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        requireActivity().transparentStatusBar(statusBarTextDark = false) { insets, statusBarsHeight, _ ->
+        return ImmersiveMode.FullImmersive { statusBarsHeight, navBarHeight ->
             binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
                 toolbarLP.topMargin = statusBarsHeight
                 binding.toolbar.layoutParams = toolbarLP
             }
-            insets
+            binding.root.updatePadding(bottom = navBarHeight)
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().changeBarsColor(statusBarTextDark = false)
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {

@@ -2,6 +2,7 @@ package com.allan.mydroid.views.transferserver
 
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updatePadding
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.databinding.FragmentMyDroidTransferServerBinding
@@ -14,24 +15,25 @@ import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utils.transparentStatusBar
+import com.au.module_android.utils.changeBarsColor
 import org.koin.android.ext.android.get
 
 class MyDroidTransferServerFragment : AbsLiveFragment<FragmentMyDroidTransferServerBinding>() {
 
     override fun immersiveMode(): ImmersiveMode {
-        return ImmersiveMode.PaddingNavigationBar
+        return ImmersiveMode.FullImmersive { statusBarHeight, navBarHeight ->
+            binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
+                toolbarLP.topMargin = statusBarHeight
+                binding.toolbar.layoutParams = toolbarLP
+            }
+
+            binding.root.updatePadding(bottom = navBarHeight)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireActivity().transparentStatusBar(statusBarTextDark = false) { insets, statusBarsHeight, _ ->
-            binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
-                toolbarLP.topMargin = statusBarsHeight
-                binding.toolbar.layoutParams = toolbarLP
-            }
-            insets
-        }
+        requireActivity().changeBarsColor(statusBarTextDark = false)
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {

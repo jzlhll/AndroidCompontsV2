@@ -8,20 +8,19 @@ import android.os.PersistableBundle
 import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
-import androidx.activity.enableEdgeToEdge
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import com.au.module_android.BuildConfig
 import com.au.module_android.DarkModeAndLocalesConst
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
+import com.au.module_android.utils.enableEdgeToEdgeFix
 import com.au.module_android.utils.hideImeNew
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.ui.KEY_ENTER_ANIM
 import com.au.module_androidui.ui.KEY_EXIT_ANIM
 import com.au.module_androidui.ui.immersive
-import kotlin.getValue
 
 @Deprecated("基础框架的一环，请使用BindingActivity或者ViewActivity")
 open class AbsActivity : AppCompatActivity(), IFullWindow {
@@ -49,8 +48,11 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
         ToutiaoScreenAdapter.attach(this)
+        enableEdgeToEdgeFix()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            this.window.isNavigationBarContrastEnforced = false
+        }
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
             //todo check

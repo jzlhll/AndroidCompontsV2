@@ -23,8 +23,8 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.hideImeNew
 import com.au.module_android.log.logd
+import com.au.module_android.utils.immersive
 import com.au.module_android.utils.showImeNew
-import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.dialogs.ConfirmBottomDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.dialogs.ConfirmCenterImgDialog
@@ -169,11 +169,11 @@ class AndroidUi2Fragment : BindingFragment<FragmentAndroidUi2Binding>() {
         binding.androidUiDarkmodeTitle.text = getDarkStrFunc()
 
         binding.androidUiDarkmodeTempingForceLight.onClick {
-            requireActivity().transparentStatusBar(false, false)
+            requireActivity().immersive(false, false)
         }
 
         binding.androidUiDarkmodeTempingForceDark.onClick {
-            requireActivity().transparentStatusBar(true, true)
+            requireActivity().immersive(true, true)
         }
 
         binding.androidUiDarkmode1.onClick {

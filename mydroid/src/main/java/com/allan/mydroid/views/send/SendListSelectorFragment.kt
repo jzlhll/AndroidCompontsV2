@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.PICKER_NEED_PERMISSION
@@ -23,9 +24,9 @@ import com.au.module_android.glide.glideSetAny
 import com.au.module_android.log.logd
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.transparentStatusBar
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
@@ -71,10 +72,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 }
             }
         }
-    }
-
-    override fun immersiveMode(): ImmersiveMode {
-        return ImmersiveMode.PaddingNavigationBar
     }
 
     private val common = object : SendListSelectorCommon(false) {
@@ -247,16 +244,20 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
         menuMgr.showMenu()
 
-        requireActivity().transparentStatusBar(statusBarTextDark = false) { insets, statusBarsHeight, navigationBarHeight ->
+        requireActivity().changeBarsColor(statusBarTextDark = false)
+
+        common.onCreated()
+        if (autoImport) autoImportAction()
+    }
+
+    override fun immersiveMode(): ImmersiveMode {
+        return ImmersiveMode.FullImmersive { statusBarsHeight, navBarHeight ->
             binding.toolbar.layoutParams.asOrNull<ConstraintLayout.LayoutParams>()?.let { toolbarLP->
                 toolbarLP.topMargin = statusBarsHeight
                 binding.toolbar.layoutParams = toolbarLP
             }
-            insets
+            binding.root.updatePadding(bottom = navBarHeight)
         }
-
-        common.onCreated()
-        if (autoImport) autoImportAction()
     }
 
     override fun onStart() {

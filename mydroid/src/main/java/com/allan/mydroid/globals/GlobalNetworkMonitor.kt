@@ -26,7 +26,9 @@ class GlobalNetworkMonitor(
     private val droidServer: GlobalDroidServer,
     private val backScope : BackAppScope,
 ) {
+    var isRegister = false
     val networkFlow: Flow<NetworkStatus> = callbackFlow {
+
         fun getIpAndTrySend() {
             val (ip, netType) = getIpAddress()
             val st = if (ip == null) {
@@ -55,14 +57,16 @@ class GlobalNetworkMonitor(
                 val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                 if (isBackground) {
                     logd { "Unregistering network callback" }
-                    manager.unregisterNetworkCallback(netObserver)
+                    if(isRegister) manager.unregisterNetworkCallback(netObserver)
+                    isRegister = false
                 } else {
                     // 注册网络回调
                     logd { "Starting network" }
                     val request = NetworkRequest.Builder()
                         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                         .build()
-                    manager.registerNetworkCallback(request, netObserver)
+                    if(!isRegister) manager.registerNetworkCallback(request, netObserver)
+                    isRegister = true
                 }
             }
         })

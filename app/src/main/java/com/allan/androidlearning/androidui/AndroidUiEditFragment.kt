@@ -3,9 +3,9 @@ package com.allan.androidlearning.androidui
 import android.os.Bundle
 import android.view.WindowManager
 import com.allan.androidlearning.databinding.FragmentAndroidUiEditBinding
+import com.au.module_android.utils.immersive
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
-import com.au.module_android.utils.transparentStatusBar
 import com.au.module_androidui.widget.CustomTextInputLayout
 
 /**
@@ -44,7 +44,7 @@ class AndroidUiEditFragment : BindingFragment<FragmentAndroidUiEditBinding>() {
         binding.infoText.text = msg + " NestedScrollView " + fullInfo()
 
         if (enableEdge == -1) {
-            requireActivity().transparentStatusBar { insets, statusBarsHeight, navigationBarHeight -> insets }
+            requireActivity().immersive()
         }
     }
 
