@@ -79,29 +79,30 @@ class UriParseHelper {
 //            }
 //        }
         return if (file != null) {
-            parse(file)
+            parse(file, uri)
         } else if (isFileScheme(uri)) {
-            parse(uri.toFile())
+            parse(uri.toFile(), uri)
         } else {
             parseAsContent(cr, uri)
         }
     }
 
     ///////////////必须先调用parse
-    fun parse(file: File) : UriParsedInfo{
+    fun parse(file: File, fileItsUri: Uri?=null) : UriParsedInfo{
         val extension = file.extension.lowercase()
         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
         val fileLength = file.length()
         val videoDuration = VideoDurationHelper().getDurationNormally(file.absolutePath, mimeType)
 
-        return UriParsedInfo(file.toUri(),
+        return UriParsedInfo(fileItsUri ?: file.toUri(),
             file.name,
             fileLength,
             extension,
             mimeType,
             file.absolutePath,
             null,
-            videoDuration) //todo 是否考虑fileDescriptor
+            videoDuration,
+            isFile = true) //todo 是否考虑fileDescriptor
     }
 
     private fun parseAsContent(cr: ContentResolver, uri: Uri) : UriParsedInfo {
@@ -166,7 +167,8 @@ class UriParseHelper {
             mimeType,
             fullPath,
             relativePath,
-            videoDuration)
+            videoDuration,
+            isFile = false)
 
         logdNoFile { "parseAsContent parsed Info: $r" }
         return r

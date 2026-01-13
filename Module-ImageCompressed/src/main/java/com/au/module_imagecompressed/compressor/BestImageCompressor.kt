@@ -7,21 +7,16 @@ import android.graphics.Canvas
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.graphics.Paint
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.createBitmap
 import androidx.exifinterface.media.ExifInterface
 import com.au.module_android.utils.ignoreError
-import com.au.module_android.utilsfile.SimpleFilesLruCache
-import com.au.module_android.utilsmedia.length
-import com.au.module_imagecompressed.copyToCacheFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import kotlin.math.roundToInt
@@ -43,7 +38,7 @@ import kotlin.math.roundToInt
  *  自动解码与采样、按需缩放与Exif旋转，写入压缩文件 compressOnce
  *  若设定 targetSize，按步长降质量并小幅二次缩放，限次尝试达标 compress
  */
-internal class BestImageCompressor(
+class BestImageCompressor(
     val config : Config,
     val provideInputStream: () -> InputStream?,
     val provideFileSize: () -> Long,
@@ -51,60 +46,7 @@ internal class BestImageCompressor(
 ) {
     companion object {
         private const val TAG = "au-Compressor"
-
-        suspend fun systemCompressFile(source: File, config: Config? = null) : File?{
-            val f = BestImageCompressor(
-                config = config ?: Config(),
-                provideInputStream = {
-                    FileInputStream(source)
-                },
-                provideFileSize = {
-                    source.length()
-                },
-                provideImageDecodeSource = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                        ImageDecoder.createSource(source)
-                    else null
-                }
-            ).compress()
-            return if (f != null) {
-                CompressCacheConstManager.mgr.afterFileOperator(f, SimpleFilesLruCache.FileOperateType.SAVE)
-                f
-            } else {
-                null
-            }
-        }
-
-        suspend fun systemCompressUri(context: Context, uri: Uri, config: Config? = null) : File? {
-            val f = BestImageCompressor(
-                config = config ?: Config(),
-                provideInputStream = {
-                    context.contentResolver.openInputStream(uri)
-                },
-                provideFileSize = {
-                    uri.length(context.contentResolver)
-                },
-                provideImageDecodeSource = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                        ImageDecoder.createSource(context.contentResolver, uri)
-                    else null
-                }
-            ).compress()
-            return if (f != null) {
-                CompressCacheConstManager.mgr.afterFileOperator(f, SimpleFilesLruCache.FileOperateType.SAVE)
-                f
-            } else {
-                null
-            }
-        }
-
-        /**
-         * 压缩不成就拷贝
-         */
-        suspend fun systemCompressUriOrCopy(context: Context, uri: Uri, config: Config? = null) : File {
-            val f = ignoreError { systemCompressUri(context, uri, config) }
-            return f ?: uri.copyToCacheFile(context)
-        }
+        const val DEFAULT_IGNORE_KB = 150
     }
 
     data class Config(
@@ -123,6 +65,24 @@ internal class BestImageCompressor(
         val supportScale: Boolean = true,
         /** 采样后的size和代码中期待的size，出现偏差的范围 1/supportScaleRatio ~ supportScaleRatio都不做scale。 比如大于1f，否则出错。*/
         val supportScaleRatio: Float = 1.2f,
+        /**
+         * 忽略列表，不做压缩
+         */
+        val ignoreFileTypes:List<String> = listOf("gif", "webp", "svg"),
+        /**
+         * 多少kb就忽略
+         */
+        val ignoreSizeInKB : Int = DEFAULT_IGNORE_KB,
+        /**
+         * 如果压缩失败，或者ignore后，选择的做法：
+         *
+         * always 不论是啥都进行拷贝
+         *
+         * onlyUri 只把远程uri进行拷贝到本地
+         *
+         * none/null 如果压缩失败，或者ignore都不进行拷贝
+         */
+        val alwaysCopyMode : String? = "onlyUri"
     )
 
     data class SecondReduce(
@@ -160,11 +120,12 @@ internal class BestImageCompressor(
         fun decodeBitmap() : Decoded
     }
 
+    var mFileSize:Long = -1L
+
     suspend fun compress() : File?{
         return withContext(Dispatchers.IO) {
-            val outputFile = CompressCacheConstManager.createCompressOutputFile()
-
-            try {
+            ignoreError {
+                val outputFile = CompressCacheConstManager.createCompressOutputFile()
                 val decoded = api.decodeBitmap()
                 Log.d(TAG, "compress: $decoded")
                 val bitmap = decoded.bitmap ?: return@withContext null
@@ -172,8 +133,8 @@ internal class BestImageCompressor(
                 val targetH = decoded.targetH
 
                 // 查询文件大小 放到外面避免多次查询
-                val fileSize = provideFileSize()
-                val quality = util.chooseQuality(fileSize, config.qualityType)
+                mFileSize = provideFileSize()
+                val quality = util.chooseQuality(mFileSize, config.qualityType)
                 Log.d(TAG, "compress: quality $quality type: ${config.qualityType}")
 
                 val targetSize = config.secondReduce?.targetSize
@@ -199,9 +160,8 @@ internal class BestImageCompressor(
                 } else {
                     onceBitmap.recycle()
                 }
-            } catch (_: Exception) {}
-
-            outputFile
+                outputFile
+            }
         }
     }
 

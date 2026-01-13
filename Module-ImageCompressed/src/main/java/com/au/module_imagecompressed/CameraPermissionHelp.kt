@@ -1,5 +1,6 @@
 package com.au.module_imagecompressed
 
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.au.module_android.Globals
@@ -7,6 +8,7 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_imagecompressed.compressor.BestImageCompressor
+import com.au.module_imagecompressed.compressor.useCompress
 import com.au.module_simplepermission.BaseCameraPermissionHelp
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +39,7 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
                 if (compress) {
                     Globals.backgroundScope.launch {
                         logdNoFile { "createdTempFile $createdTmpFile size: ${createdTmpFile.length()}" }
-                        val compressedFile = BestImageCompressor.systemCompressFile(createdTmpFile, BestImageCompressor.Config(qualityType = qualityType))
+                        val compressedFile = useCompress(realActivity, createdTmpFile.toUri(), BestImageCompressor.Config(qualityType = qualityType))
                         logdNoFile { "compressedFile $compressedFile size: ${compressedFile?.length()}" }
                         if (compressedFile != null) {
                             //需要再次从压缩文件覆盖createdTmpFile

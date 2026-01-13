@@ -17,21 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="Select Image" />
-
-    <Button
-        android:id="@+id/btnSelectCustomImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Select Custom Image" />
-
-    <Button
-        android:id="@+id/btnSelectSystemImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Select System Image" />
+        android:text="Select NO LIMIT Image" />
 
     <Button
         android:id="@+id/btnSelectImageAndVideo"
@@ -39,5 +25,19 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="Select Image and Video" />
+
+    <Button
+        android:id="@+id/selectUCropImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Select Image And Ucrop" />
+
+    <Button
+        android:id="@+id/selectCompressImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Select Image And Compress" />
 
 </LinearLayout>

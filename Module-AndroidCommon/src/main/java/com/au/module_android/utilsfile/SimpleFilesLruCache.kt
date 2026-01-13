@@ -2,9 +2,8 @@ package com.au.module_android.utilsfile
 
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.scopes.BackAppScope
-import com.au.module_android.utils.withIOThread
-import kotlinx.coroutines.launch
+import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
+import kotlinx.coroutines.delay
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
@@ -21,7 +20,13 @@ class SimpleFilesLruCache(
     private val maxSize: Long = 100 * 1024 * 1024, // 默认100MB
     private val clearToRatio: Double = 0.6
 ) {
-    private val scope = BackAppScope()
+    private var singleScope: SingleCoroutineTaskExecutor? = null
+    private fun getOrCreateScope() : SingleCoroutineTaskExecutor {
+        if (singleScope != null) return singleScope!!
+        val scope = SingleCoroutineTaskExecutor("file_lru_cache")
+        singleScope = scope
+        return scope
+    }
 
     val cacheDir = File(Globals.goodCacheDir, dirName)
 
@@ -46,29 +51,10 @@ class SimpleFilesLruCache(
         scanDirectory()
     }
 
-    /**
-     * 初始化时扫描目录，构建文件信息map
-     * 递归扫描所有子目录
-     */
-    fun scanDirectory() {
-        fileMetadata.clear()
-
-        if (!cacheDir.exists()) {
-            cacheDir.mkdirs()
-            return
-        }
-
-        scanDirectoryRecursive(cacheDir)
-        scope.launch {
-            // 检查是否需要清理旧文件
-            val size = getTotalSize()
-            logdNoFile { "cache total size: $size max:$maxSize" }
-            if (size > maxSize) {
-                cleanupOldFiles(size)
-            }
-
-            deleteEmptyDirectoriesInCacheDir()
-        }
+    fun shutdown() {
+        val scope = singleScope
+        singleScope = null
+        scope?.shutdown()
     }
 
     /**
@@ -76,7 +62,7 @@ class SimpleFilesLruCache(
      * @param currentDir 当前扫描的目录
      * @param relativePath 相对于cacheDir的路径
      */
-    private fun scanDirectoryRecursive(currentDir: File) {
+    fun scanDirectoryRecursive(currentDir: File) {
         val files = currentDir.listFiles() ?: return
         for (file in files) {
             if (file.isFile) {
@@ -93,12 +79,39 @@ class SimpleFilesLruCache(
     }
 
     /**
+     * 初始化时扫描目录，构建文件信息map
+     * 递归扫描所有子目录
+     * 也可以用来做清理作用
+     */
+    fun scanDirectory(shutdownWhenOver: Boolean = false) {
+        getOrCreateScope().submit {
+            fileMetadata.clear()
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs()
+                return@submit
+            }
+
+            scanDirectoryRecursive(cacheDir)
+            // 检查是否需要清理旧文件
+            val size = getTotalSize()
+            logdNoFile { "cache total size: $size max:$maxSize" }
+            if (size > maxSize) {
+                cleanupOldFiles(size)
+            }
+
+            if (shutdownWhenOver) {
+                shutdown()
+            }
+        }
+    }
+
+    /**
      * 文件操作后的回调，记录文件信息
      * @param file 文件对象
      * @param operateType 操作类型
      */
     fun afterFileOperator(file: File, operateType: FileOperateType) {
-        scope.launch {
+        getOrCreateScope().submit {
             // 计算相对于cacheDir的路径
             when (operateType) {
                 FileOperateType.SAVE -> {
@@ -148,7 +161,8 @@ class SimpleFilesLruCache(
     /**
      * 清理旧文件（简单的LRU实现）
      */
-    private fun cleanupOldFiles(totalSize: Long) {
+    private suspend fun cleanupOldFiles(totalSize: Long) {
+        delay(0)
         // 按访问时间排序
         val sortedEntries = fileMetadata.entries
             .sortedBy { it.value.accessTime }
@@ -179,7 +193,6 @@ class SimpleFilesLruCache(
             }
         }
     }
-
 
     /**
      * 计算总大小
@@ -222,65 +235,15 @@ class SimpleFilesLruCache(
     /**
      * 清理所有文件和记录。常用于app的设置中调用清理干净。
      */
-    suspend fun clearAll() {
-        withIOThread {
-            fileMetadata.keys.forEach {
-                val file = File(it)
-                if (file.exists()) {
-                    file.delete()
-                }
-            }
+    fun clearAll() {
+        getOrCreateScope().submit {
             fileMetadata.clear()
-
-            // 清理cacheDir下的所有空子目录
-            deleteEmptyDirectoriesInCacheDir()
-        }
-    }
-
-    /**
-     * 把子目录和更深的子目录判断为空删除
-     */
-    private fun deleteEmptyDirectoriesInCacheDir() {
-        val files = cacheDir.listFiles()
-        if (files != null) {
-            for (file in files) {
-                if (file.isDirectory) {
-                    deleteEmptyDirectoriesRecursive(file)
+            val files = cacheDir.listFiles()
+            if (files != null) {
+                for (file in files) {
+                    if(file.isFile) file.delete()
                 }
             }
         }
-    }
-
-    /**
-     * 递归删除目录（如果目录为空）
-     */
-    private fun deleteEmptyDirectoriesRecursive(directory: File) {
-        directory.listFiles()?.forEach { file ->
-            if (file.isDirectory) {
-                deleteEmptyDirectoriesRecursive(file)
-            }
-        }
-
-        // 检查目录是否为空
-        val files = directory.listFiles()
-        if (files == null || files.isEmpty()) {
-            directory.delete()
-        }
-    }
-
-    /**
-     * 手动触发清理
-     */
-    fun manualCleanupOlds() {
-        if (isNeedCleanupOlds()) {
-            cleanupOldFiles(getTotalSize())
-        }
-    }
-
-    /**
-     * 检查是否需要清理（超过最大大小）
-     */
-    fun isNeedCleanupOlds(): Boolean {
-        return getTotalSize() > maxSize
     }
 }

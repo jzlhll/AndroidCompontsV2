@@ -1,5 +1,7 @@
 package com.au.module_imagecompressed
 
+import com.au.module_imagecompressed.compressor.BestImageCompressor
+
 class PickerMediaParams private constructor(
     val alwaysCopyImage: Boolean,
     val alwaysCopyVideo: Boolean,
@@ -32,7 +34,7 @@ class PickerMediaParams private constructor(
             targetImageSize = 2 * 1024 * 1024
             limitVideoSize = 150 * 1024 * 1024L
             ignoreSizeKb = 500 * 1024
-            compressEngine = engine ?: defaultCompressEngine(ignoreSizeKb)
+            compressEngine = engine ?: defaultCompressEngine(config = BestImageCompressor.Config(ignoreSizeInKB = ignoreSizeKb))
             return this
         }
 

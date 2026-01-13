@@ -1,6 +1,7 @@
 package com.au.module_imagecompressed.compressor
 
 import com.au.module_android.utilsfile.SimpleFilesLruCache
+import com.au.module_android.utilsfile.SimpleFilesLruCache.FileOperateType
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -9,10 +10,22 @@ import kotlin.random.Random
 
 object CompressCacheConstManager {
     const val CACHE_DIR_NAME = "au_compressor"
-    val mgr = SimpleFilesLruCache(CACHE_DIR_NAME, maxSize = 250 * 1024 * 1024)
+    private val mgr = SimpleFilesLruCache(CACHE_DIR_NAME, maxSize = 250 * 1024 * 1024)
 
     val cacheDir: File
         get() = mgr.cacheDir
+
+    fun cleanSpace(shutdownWhenOver: Boolean = false) {
+        mgr.scanDirectory(shutdownWhenOver)
+    }
+
+    fun shutdown() {
+        mgr.shutdown()
+    }
+
+    fun afterFileOperator(file: File, operateType: FileOperateType) {
+        mgr.afterFileOperator(file, operateType)
+    }
 
     fun createCompressOutputFile(): File {
         val timestamp = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())

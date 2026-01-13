@@ -44,7 +44,7 @@ open class BaseCameraPermissionHelp {
     private val cameraPermissionResult: IOnePermissionResult
     private val takePictureForResult: SystemTakePictureForResult
 
-    private val realActivity: FragmentActivity
+    protected val realActivity: FragmentActivity
         get() = f?.requireActivity() ?: fa!!
 
     constructor(f: Fragment, supplier:ICameraFileProviderSupply) {

@@ -71,10 +71,14 @@ class MultiPhotoPickerContractResult(
 
                         if (isNeedCompress) {
                             val compressedFile = imageEngine.compress(fragment.requireContext(), uri)
-                            val uriParsedInfoCompress = compressedFile.myParse()
-                            val uriWrap = PickUriWrap(uriParsedInfoCompress, totalNum, isImage= true, beCopied = true)
-
-                            callback(isAllCallback, uriWrap, allResults, totalNum)
+                            if (compressedFile != null) {
+                                val uriParsedInfoCompress = compressedFile.myParse()
+                                val uriWrap = PickUriWrap(uriParsedInfoCompress, totalNum, isImage= true, beCopied = true)
+                                callback(isAllCallback, uriWrap, allResults, totalNum)
+                            } else {
+                                val uriWrap = PickUriWrap(parsedInfo, totalNum, isImage= true, beCopied = false)
+                                callback(isAllCallback, uriWrap, allResults, totalNum)
+                            }
                         } else if (isNeedCopy) {
                             val file = uri.copyToCacheFile(fragment.requireContext())
                             val copyInfo = file.myParse()

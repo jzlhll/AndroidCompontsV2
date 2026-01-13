@@ -9,7 +9,7 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
-import com.au.module_android.log.logd
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 import com.au.module_androidui.ui.bindings.BindingFragment
@@ -80,8 +80,8 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.selectShortAudioBtn.onClick {
-            audiosResult.start {
-                logd { "allan uri: $it" }
+            audiosResult.start { results->
+                logdNoFile { "allan uri: $results" }
             }
         }
         binding.selectShortPdfBtn.onClick {
@@ -103,68 +103,68 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         binding.directTakePicBtn.onClick {
             cameraHelper.safeRunTakePicMust(true)
                 {mode, uriWrap->
-                logd { "take pic mode $mode $uriWrap" }
+                logdNoFile { "take pic mode $mode $uriWrap" }
                 showPic(uriWrap)
             }
         }
         binding.directTakePicDeepBtn.onClick {
             cameraHelper.safeRunTakePicMust(true, "deep")
             {mode, uriWrap->
-                logd { "take pic mode $mode $uriWrap" }
+                logdNoFile { "take pic mode $mode $uriWrap" }
                 showPic(uriWrap)
             }
         }
         binding.directTakePicShallowBtn.onClick {
             cameraHelper.safeRunTakePicMust(true, "shallow")
             {mode, uriWrap->
-                logd { "take pic mode $mode $uriWrap" }
+                logdNoFile { "take pic mode $mode $uriWrap" }
                 showPic(uriWrap)
             }
         }
         binding.directTakePic2Btn.onClick {
             cameraHelper.safeRunTakePicMust(false)
             {mode, uriWrap->
-                logd { "#take pic mode $mode $uriWrap" }
+                logdNoFile { "#take pic mode $mode $uriWrap" }
                 showPic(uriWrap)
             }
         }
 
         binding.singlePic.onClick {
             singleResult.launchOneByOne(PickerType.IMAGE, null) { uri->
-                logd { "allan uri: $uri" }
+                logdNoFile { "allan uri: $uri" }
                 showPic(uri)
             }
         }
         binding.singleVideo.onClick {
             singleResult.launchOneByOne(PickerType.VIDEO, null) { uri->
-                logd { "allan uri: $uri" }
+                logdNoFile { "allan uri: $uri" }
                 showPic(uri)
             }
         }
         binding.singlePicAndVideo.onClick {
             singleResult.launchOneByOne(PickerType.IMAGE_AND_VIDEO, null) { uri->
-                logd { "allan uri: $uri" }
+                logdNoFile { "allan uri: $uri" }
                 showPic(uri)
             }
         }
         binding.multiPic4.onClick {
             multiResult.setCurrentMaxItems(6)
             multiResult.launchOneByOne(PickerType.IMAGE, null) {uri->
-                logd { "allan uri: $uri" }
+                logdNoFile { "allan uri: $uri" }
                 showPic(uri)
             }
         }
         binding.multiVideo3.onClick {
             multiResult.setCurrentMaxItems(3)
             multiResult.launchOneByOne(PickerType.VIDEO, null) {uri->
-                logd { "allan uri: $uri" }
+                logdNoFile { "allan uri: $uri" }
                 showPic(uri)
             }
         }
         binding.multiPicAndVideo5.onClick {
             multiResult.setCurrentMaxItems(9)
             multiResult.launchOneByOne(PickerType.IMAGE_AND_VIDEO, null) {uri->
-                logd { "allan uri: $uri" }
+                logdNoFile { "allan uri: $uri" }
                 showPic(uri)
             }
         }
@@ -173,7 +173,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
             multiResult.setCurrentMaxItems(Int.MAX_VALUE)
             multiResult.launchByAll(PickerType.IMAGE, null) {uris->
                 for (uri in uris) {
-                    logd { "allan uri: $uri" }
+                    logdNoFile { "allan uri: $uri" }
                     showPic(uri)
                 }
             }
@@ -182,7 +182,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
             multiResult.setCurrentMaxItems(3)
             multiResult.launchByAll(PickerType.VIDEO, null) {uris->
                 for (uri in uris) {
-                    logd { "allan uri: $uri" }
+                    logdNoFile { "allan uri: $uri" }
                     showPic(uri)
                 }
             }
@@ -191,7 +191,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
             multiResult.setCurrentMaxItems(9)
             multiResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
                 for (uri in uris) {
-                    logd { "allan uri: $uri" }
+                    logdNoFile { "allan uri: $uri" }
                     showPic(uri)
                 }
             }
@@ -200,27 +200,27 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
         binding.multiUri1.onClick {
             origUriPickerResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
-                logd{"single picker: file uris ${uris.size}"}
+                logdNoFile{"single picker: file uris ${uris.size}"}
                 for (uri in uris) {
-                    logd { "file allan uri: $uri" }
+                    logdNoFile { "file allan uri: $uri" }
                 }
             }
         }
 
         binding.multiUri2.onClick {
             origMultiUriPickerResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
-                logd{"multi picker: file uris ${uris.size}"}
+                logdNoFile{"multi picker: file uris ${uris.size}"}
                 for (uri in uris) {
-                    logd { "file allan uri: $uri" }
+                    logdNoFile { "file allan uri: $uri" }
                 }
             }
         }
 
         binding.multiUri3.onClick {
             origMultiUriPickerResult.launchByAll(PickerType.IMAGE, null) { uris->
-                logd{"multi picker: file uris ${uris.size}"}
+                logdNoFile{"multi picker: file uris ${uris.size}"}
                 for (uri in uris) {
-                    logd { "file allan uri: $uri" }
+                    logdNoFile { "file allan uri: $uri" }
                 }
             }
         }
@@ -269,7 +269,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
     override fun onClickSelectPhoto() {
         cameraAndSelectHelper.launchSelectPhotos {uris->
             for (uri in uris) {
-                logd { "allan uri: $uri" }
+                logdNoFile { "allan uri: $uri" }
                 showPic(uri)
             }
         }
