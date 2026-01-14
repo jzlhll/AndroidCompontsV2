@@ -30,8 +30,7 @@ swiperefreshlayout = "1.2.0"
 symbolProcessingApi = "2.2.21-2.0.4"
 ttsEdgeJava = "1.3.2"
 voskAndroid = "0.3.75"
-pictureselector2 = "3.16.3.1"
-pictureselector = "3.15.1"
+pictureselector2 = "3.16.4"
 window = "1.5.1"
 lifecycleProcess = "2.10.0"
 workRuntimeKtx = "2.11.0"
@@ -44,8 +43,11 @@ activity = "1.12.2"
 uiUnit = "1.10.0"
 kotlinxSerializationJson = "1.9.0"
 koinBom = "4.1.1"
+media3Exoplayer = "1.9.0"
 
 [libraries]
+androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3Exoplayer" }
+androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Exoplayer" }
 
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCamera2" }

@@ -83,6 +83,9 @@ dependencies {
     implementation(libs.okhttp)
 
     implementation libs.kotlinx.serialization.json
+    implementation(libs.androidx.media3.exoplayer)
+    // Media3 UI 组件 (包含 PlayerView)
+    implementation(libs.androidx.media3.ui)
 
 //    kapt project(':ClassNameAnnotations-compiler')
 }

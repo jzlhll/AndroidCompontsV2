@@ -15,4 +15,26 @@
         <item name="shapeAppearance">@null</item>
     </style>
 
+    <!--图片圆角-->
+    <style name="ShapedImage8dpStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <!--图片圆角-->
+    <style name="ShapedImage6dpStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">6dp</item>
+    </style>
+    <!--图片圆角-->
+    <style name="ShapedImage30dpStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">29dp</item>
+    </style>
+
+    <!-- 图片圆形 -->
+    <style name="ShapedImageMaxStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">100dp</item>
+    </style>
 </resources>

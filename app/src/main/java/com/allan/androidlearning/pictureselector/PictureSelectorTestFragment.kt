@@ -98,6 +98,7 @@ class PictureSelectorTestFragment : BindingFragment<FragmentPictureSelectorBindi
         binding.btnSelectImageAndVideo.onClick {
             PictureSelector.create(this)
                 .openGallery(SelectMimeType.ofAll())
+                .setVideoPlayerEngine(ExoPlayerEngine())
                 .setImageEngine(GlideEngine.createGlideEngine())
                 .forResult(object : OnResultCallbackListener<LocalMedia> {
                     override fun onResult(result: ArrayList<LocalMedia>?) {
