@@ -1,6 +1,6 @@
 解析图片实现 API 接口规则：
 # Response类
-响应格式为{code, msg, status}时，用requestApi调用，无需创建Response类
+响应格式为{code, message/msg, status}时，用requestApi调用，无需创建Response类
 类定义：public final
 字段：public
 驼峰命名，仅当下划线命名时使用SerializedName注解
