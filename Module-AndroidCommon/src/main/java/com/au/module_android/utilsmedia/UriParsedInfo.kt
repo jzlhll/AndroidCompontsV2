@@ -1,8 +1,10 @@
 package com.au.module_android.utilsmedia
 
 import android.net.Uri
+import androidx.annotation.Keep
 import java.io.File
 
+@Keep
 data class UriParsedInfo(
     val uri: Uri,
     val name:String,

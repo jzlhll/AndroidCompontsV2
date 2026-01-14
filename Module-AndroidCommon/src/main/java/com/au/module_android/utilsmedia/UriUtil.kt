@@ -10,9 +10,13 @@ import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Log
 import com.au.module_android.Globals
+import com.au.module_android.log.LogTag.TAG
 import com.au.module_android.utilsfile.FileIOUtils
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.InputStream
+
 
 fun File.myParse() = UriParseHelper().parse(this)
 fun Uri.myParse(context: Context = Globals.app) = UriParseHelper().parse(context.contentResolver, this)
@@ -162,5 +166,44 @@ fun Uri.copyToCache(name:String? = null) : File? {
     } catch (e: FileNotFoundException) {
         e.printStackTrace()
         null
+    }
+}
+
+
+/**
+ * 判断URI对应的资源是否存在
+ * @param context 上下文（建议使用Application Context，避免内存泄漏）
+ * @return 1 存在
+ *         0 不存在
+ *         -1 权限不足
+ *         -2 其他错误
+ */
+fun Uri.isUriExists(context: Context = Globals.app): Int {
+    var inputStream: InputStream? = null
+    try {
+        // 核心逻辑：尝试打开URI对应的输入流
+        inputStream = context.contentResolver.openInputStream(this)
+        // 输入流不为空则说明资源存在
+        return if (inputStream != null) 1 else 0
+    } catch (_: FileNotFoundException) {
+        // 明确的“资源不存在”异常
+        return 0
+    } catch (e: SecurityException) {
+        // 权限不足，无法访问该URI
+        Log.e(TAG, "访问URI权限不足: $this", e)
+        return -1
+    } catch (e: java.lang.Exception) {
+        // 其他异常（如URI格式错误、资源被占用等）
+        Log.e(TAG, "检查URI失败: $this", e)
+        return -2
+    } finally {
+        // 关闭输入流，避免资源泄漏
+        if (inputStream != null) {
+            try {
+                inputStream.close()
+            } catch (e: IOException) {
+                Log.e(TAG, "关闭输入流失败", e)
+            }
+        }
     }
 }

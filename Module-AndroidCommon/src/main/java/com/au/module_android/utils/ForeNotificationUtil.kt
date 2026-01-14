@@ -1,10 +1,6 @@
 package com.au.module_android.utils
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.os.Build
 import androidx.annotation.DrawableRes
@@ -26,6 +22,22 @@ object ForeNotificationUtil {
 
     /**
      * onStartCommand调用
+     * @param foregroundServiceType 查阅ServiceInfo
+     *
+    常量名	取值 (int)	含义	最低 API	配套权限 / 说明
+    FOREGROUND_SERVICE_TYPE_NONE	0	无特定类型（Android 12+ 不建议使用）	31	仅兼容旧逻辑
+    FOREGROUND_SERVICE_TYPE_LOCATION	1	定位 / 导航类前台服务	31	需 ACCESS_FINE_LOCATION 等
+    FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK	2	音频 / 视频播放类前台服务	31	无强制权限
+    FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION	4	屏幕录制 / 投屏类前台服务	31	需 MEDIA_PROJECTION 权限
+    FOREGROUND_SERVICE_TYPE_CAMERA	8	相机拍摄 / 录像类前台服务	31	需 CAMERA 权限
+    FOREGROUND_SERVICE_TYPE_MICROPHONE	16	录音类前台服务	31	需 RECORD_AUDIO 权限
+    FOREGROUND_SERVICE_TYPE_PHONE_CALL	32	通话类前台服务	31	需 READ_PHONE_STATE 等
+    FOREGROUND_SERVICE_TYPE_HEALTH	64	健康数据类前台服务	31	需健康相关权限（如 BODY_SENSORS）
+    FOREGROUND_SERVICE_TYPE_SHORTCUT	128	快捷方式 / 桌面小部件类前台服务（极少用）	31	无强制权限
+    FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED	256	系统豁免类（仅系统应用可用）	31	第三方 APP 禁止使用
+    FOREGROUND_SERVICE_TYPE_SPECIAL_USE	512	特殊用途（需谷歌审核）	33	第三方 APP 几乎用不到
+    FOREGROUND_SERVICE_TYPE_SHORT_SERVICE	1024	短时前台服务（≤10 分钟）	34	时长受限，无需强制权限
+    FOREGROUND_SERVICE_TYPE_DATA_SYNC	2048	数据同步类前台服务（云端 / 本地数据同步）	34	无强制权限，需匹配同步功能
      */
     @JvmStatic
     fun startForeground(service: Service,
