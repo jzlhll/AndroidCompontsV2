@@ -13,8 +13,8 @@ import com.au.module_android.log.logw
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_cached.AppDataStore
 import com.au.module_cached.delegate.AppDataStoreLongCache
-import com.au.module_gson.fromJsonList
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGsonList
+import com.au.module_gson.toGsonString
 import java.util.Calendar
 import java.util.UUID
 import kotlin.random.Random
@@ -36,7 +36,7 @@ object AutoFsObj {
         isInited = true
         val targetTsListJsonStr = AppDataStore.readBlocked("targetTsList", "")
         if (targetTsListJsonStr.isNotEmpty()) {
-            val targetTsList = targetTsListJsonStr.fromJsonList<TargetTs>()
+            val targetTsList = targetTsListJsonStr.fromGsonList<TargetTs>()
             targetTsListData.setValueSafe(targetTsList)
         } else {
             targetTsListData.setValueSafe(listOf())
@@ -105,7 +105,7 @@ object AutoFsObj {
         val foundTargetTs = targetTsList.find { it.autoFsId == autoFsId }
         if (foundTargetTs != null) {
             targetTsList.remove(foundTargetTs)
-            val json = targetTsList.toJsonString()
+            val json = targetTsList.toGsonString()
             AppDataStore.save("targetTsList", json)
             targetTsListData.setValueSafe(targetTsList)
 
@@ -136,7 +136,7 @@ object AutoFsObj {
 
         if (foundTargetTs.isClose != isClose) {
             foundTargetTs.isClose = isClose
-            val json = targetTsList.toJsonString()
+            val json = targetTsList.toGsonString()
             AppDataStore.save("targetTsList", json)
             targetTsListData.setValueSafe(targetTsList)
             checkAndStartNextAlarm(context)
@@ -233,7 +233,7 @@ object AutoFsObj {
         logd { "allanAlarm check start:" }
         val changeList = recoverTargetList() ?: return
 
-        val json = changeList.toJsonString()
+        val json = changeList.toGsonString()
         AppDataStore.save("targetTsList", json)
         targetTsListData.setValueSafe(changeList)
 

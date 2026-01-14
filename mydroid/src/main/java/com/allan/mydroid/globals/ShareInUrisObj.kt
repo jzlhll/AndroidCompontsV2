@@ -16,8 +16,8 @@ import com.au.module_android.utils.Md5Util
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchOnThread
 import com.au.module_cached.AppDataStore
-import com.au.module_gson.fromJson
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGson
+import com.au.module_gson.toGsonString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,7 +63,7 @@ object ShareInUrisObj {
             if (json.isEmpty()) {
                 return hashMapOf()
             }
-            val map: HashMap<String, ShareInBean>? = json.fromJson()
+            val map: HashMap<String, ShareInBean>? = json.fromGson()
             val hostUris = appHostPermissions()
             val needDeleteKeys = mutableListOf<String>()
             map?.forEach { k, v->
@@ -92,7 +92,7 @@ object ShareInUrisObj {
         val fixMap = map ?: hashMapOf()
         mSendUriMap = fixMap
         Globals.mainScope.launchOnThread {
-            AppDataStore.save("mydroid_sendUriMap", fixMap.toJsonString())
+            AppDataStore.save("mydroid_sendUriMap", fixMap.toGsonString())
         }
     }
 

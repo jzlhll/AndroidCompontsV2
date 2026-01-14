@@ -19,7 +19,7 @@ import com.au.module_androidui.dialogs.AbsCenterFakeDialog
 import com.au.module_androidui.selectlist.SimpleItem
 import com.au.module_androidui.selectlist.SimpleListFragment
 import com.au.module_androidui.toast.ToastUtil.toastOnTop
-import com.au.module_gson.fromJson
+import com.au.module_gson.fromGson
 import com.au.module_kson.fromKson
 import com.au.module_kson.kson
 import com.au.module_kson.toKsonString
@@ -647,7 +647,7 @@ class KsonTestFragment(
             {"cookies":[{"name":"xiao li","value":"api_token","expiresAt":253402300799999,"domain":"domain.com","path":"/","secure":false,"httpOnly":true,"persistent":false,"hostOnly":false}]}
         """.trimIndent()
         try {
-            val b = cookieStrings.fromJson<CookieStoreBean>()
+            val b = cookieStrings.fromGson<CookieStoreBean>()
             logdNoFile("🌟kson") { "cookie Bean $b" }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -669,7 +669,7 @@ class KsonTestFragment(
             {"color":{"argb":-65536},"uuid":{"uri":"https://www.google.com"},"date":{"epochMillis":$yesterday}}
         """.trimIndent()
         try {
-            val customBean = customBeanStr.fromJson<CustomBean>()
+            val customBean = customBeanStr.fromGson<CustomBean>()
             logdNoFile("🌟kson") { "customBean $customBean" }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -686,7 +686,7 @@ class KsonTestFragment(
             val origStr = """
                 ["eee","yyyy","xxx"]
             """.trimIndent()
-            val origList = origStr.fromJson<List<String>>()
+            val origList = origStr.fromGson<List<String>>()
             logdNoFile("🌟kson") { "origList $origList" }
         } catch (e: Exception) {
             e.printStackTrace()

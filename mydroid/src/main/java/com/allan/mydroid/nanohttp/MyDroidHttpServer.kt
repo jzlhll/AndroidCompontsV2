@@ -18,7 +18,7 @@ import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
 import com.au.module_okhttp.api.ResultBean
-import com.au.module_gson.toJsonString
+import com.au.module_gson.toGsonString
 import com.au.module_android.log.logdNoFile
 import com.modulenative.AppNative
 import fi.iki.elonen.NanoHTTPD
@@ -206,7 +206,7 @@ class MyDroidHttpServer(httpPort: Int,
     private fun getFileList() : Response {
         return runBlocking {
             val beans= ShareInUrisObj.loadShareInAndReceiveBeans()
-            val json = beans.toJsonString()
+            val json = beans.toGsonString()
             if (json.isNotEmpty()) {
                 ResultBean(CODE_SUC, "Success!", json).okJsonResponse()
             } else {

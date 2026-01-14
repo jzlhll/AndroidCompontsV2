@@ -2,7 +2,7 @@ package com.au.jobstudy.api
 
 import com.au.jobstudy.api.bean.JobBean
 import com.au.module_android.Globals
-import com.au.module_gson.fromJson
+import com.au.module_gson.fromGson
 import com.au.module_android.utils.awaitOnIoThread
 import com.au.module_android.log.logd
 import com.au.module_okhttp.OkhttpGlobal
@@ -51,7 +51,7 @@ class Api {
             val parsedText = str.substring(startIndex + parseStartText.length, str.indexOf(parseEndText, startIndex))
             val parsedXmlText = xmlStrConvert(parsedText)
             logd { "parsed Text $parsedXmlText" }
-            parsedXmlText.fromJson<JobBean>()
+            parsedXmlText.fromGson<JobBean>()
         }
     }
 }

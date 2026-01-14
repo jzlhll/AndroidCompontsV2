@@ -1,6 +1,6 @@
 package com.au.module_okhttp.creator
 
-import com.au.module_gson.fromJson
+import com.au.module_gson.fromGson
 import com.au.module_android.utils.awaitOnIoThread
 import com.au.module_okhttp.OkhttpGlobal.okHttpClient
 import com.au.module_okhttp.beans.ParamsStrRequestBody
@@ -95,7 +95,7 @@ inline fun <reified T> Response.parseJson() : T {
             if (bodyStr.isNullOrBlank()) {
                 throw AuResponseErrorException(this.code, this.message)
             } else {
-                bodyStr.fromJson<T>() as T
+                bodyStr.fromGson<T>() as T
             }
         }
     }

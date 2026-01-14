@@ -14,7 +14,7 @@ import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.MyDroidConst
 import com.au.module_android.Globals
 import com.au.module_android.Globals.resStr
-import com.au.module_gson.toJsonString
+import com.au.module_gson.toGsonString
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.log.logt
@@ -74,7 +74,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
                 try {
                     val leftSpace = getExternalFreeSpace(Globals.app)
                     val suc = R.string.success_message.resStr()
-                    val json = WSResultBox(CODE_SUC, suc, API_WS_LEFT_SPACE, LeftSpaceData(leftSpace)).toJsonString()
+                    val json = WSResultBox(CODE_SUC, suc, API_WS_LEFT_SPACE, LeftSpaceData(leftSpace)).toGsonString()
                     logt { "$clientName send: $json" }
                     send(json)
                 } catch (e: IOException) {
@@ -144,7 +144,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
                 mode,
                 clientName,
                 color)
-        ).toJsonString()
+        ).toGsonString()
         logt { "send: $json" }
         send(json)
     }

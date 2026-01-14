@@ -31,8 +31,8 @@ import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
-import com.au.module_gson.fromJsonList
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGsonList
+import com.au.module_gson.toGsonString
 import com.au.module_simplepermission.activity.ActivityForResult
 import org.koin.android.ext.android.inject
 import java.io.File
@@ -94,13 +94,13 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
 
         binding.submitButton.onClick {
             lifecycleScope.launchOnThread {
-                val newList = completedItem?.files?.fromJsonList<String>()?.toMutableList() ?: ArrayList()
+                val newList = completedItem?.files?.fromGsonList<String>()?.toMutableList() ?: ArrayList()
                 partialFragment?.getUploadFiles()?.let { it1 -> newList.addAll(it1) }
                 val entity = CompletedEntity(dataItem.id, dataItem.day, dataItem.weekStartDay,
-                    newList.toJsonString(), completedItem?.id ?: 0)
+                    newList.toGsonString(), completedItem?.id ?: 0)
                 checkConsts.markCompleted(entity, fromCompletedList)
                 requireActivity().setResult(0, Intent().also {
-                    it.putExtra("completedEntity", entity.toJsonString())
+                    it.putExtra("completedEntity", entity.toGsonString())
                 })
                 requireActivity().finishAfterTransition()
             }
@@ -165,13 +165,13 @@ class CheckWithFragment : BindingFragment<FragmentCheckInBinding>() {
 
         //later : 现在只有week任务才会加载
         if (fromCompletedList) {
-            completedItem?.files?.fromJsonList<String>()?.let {
+            completedItem?.files?.fromGsonList<String>()?.let {
                 alreadyFileListSet(it)
             }
         } else {
             lifecycleScope.launchOnThread {
                 val completed = db.getCompletedDao().queryCompletedByWorkId(dayWorkId = dataItem.id).firstOrNull()
-                val files = completed?.files?.fromJsonList<String>()
+                val files = completed?.files?.fromGsonList<String>()
                 files?.let { mFiles->
                     lifecycleScope.launchOnUi {
                         alreadyFileListSet(mFiles)

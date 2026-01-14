@@ -8,7 +8,7 @@ import com.au.jobstudy.databinding.FragmentCompletedBinding
 import com.au.jobstudy.utils.ISingleDayer
 import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.Globals
-import com.au.module_gson.fromJson
+import com.au.module_gson.fromGson
 import com.au.module_simplepermission.createActivityForResult
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
@@ -42,7 +42,7 @@ class CompletedFragment : BindingFragment<FragmentCompletedBinding>() {
                 bean.workEntity, bean.completedEntity) {
                 val completedEntity = it.data?.getStringExtra("completedEntity")
                 if (completedEntity != null) {
-                    completedEntity.fromJson<CompletedEntity>()?.dayWorkId?.let { workId->
+                    completedEntity.fromGson<CompletedEntity>()?.dayWorkId?.let { workId->
                         val completedBean = adpater.datas.find { d-> (d is CompletedBean) && d.workEntity.id == workId }
                         if (completedBean != null) {
                             val index = adpater.datas.indexOf(completedBean)

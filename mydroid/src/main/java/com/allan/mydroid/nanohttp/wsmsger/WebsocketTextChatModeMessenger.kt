@@ -4,7 +4,7 @@ import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_MSG
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.nanohttp.AbsWebSocketClientMessenger
 import com.allan.mydroid.nanohttp.WebsocketClientInServer
-import com.au.module_gson.fromJson
+import com.au.module_gson.fromGson
 import org.json.JSONObject
 
 /**
@@ -20,7 +20,7 @@ class WebsocketTextChatModeMessenger(client: WebsocketClientInServer) : AbsWebSo
     override fun onMessage(origJsonStr:String, api: String, json: JSONObject) {
         when (api) {
             API_WS_TEXT_CHAT_MSG -> {
-                val chatBean = origJsonStr.fromJson<WSChatMessageBean>() ?: return
+                val chatBean = origJsonStr.fromGson<WSChatMessageBean>() ?: return
                 client.server.onTextChatMessageArrived(client, chatBean)
             }
         }

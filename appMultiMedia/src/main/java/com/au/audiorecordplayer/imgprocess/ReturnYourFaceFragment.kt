@@ -18,8 +18,8 @@ import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.widget.SuitScreenHelper
 import com.au.module_cached.delegate.AppDataStoreStringCache
-import com.au.module_gson.fromJson
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGson
+import com.au.module_gson.toGsonString
 import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.pickUriWrapForResult
 import com.au.module_simplepermission.PickerType
@@ -243,7 +243,7 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.selectedImageButton.onClick {
             singleResult.launchOneByOne(PickerType.IMAGE, null) { uri->
-                mLastFile = uri.toJsonString()
+                mLastFile = uri.toGsonString()
                 logdNoFile { "selectedImage: $uri" }
                 binding.selectedImageButton.gone()
                 binding.adjustImageGroup.visible()
@@ -268,7 +268,7 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
                     ) {
                         binding.selectedImageButton.gone()
                         binding.adjustImageGroup.visible()
-                        val lastUrl = mLastFile.fromJson<PickUriWrap>()?.uriParsedInfo?.uri
+                        val lastUrl = mLastFile.fromGson<PickUriWrap>()?.uriParsedInfo?.uri
                         lastUrl?.let { uri->
                             binding.viewFinder.glideSetAny(uri)
                             parseImageSize(uri.toFile())

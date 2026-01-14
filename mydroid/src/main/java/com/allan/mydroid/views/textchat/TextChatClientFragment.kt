@@ -10,7 +10,7 @@ import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.textchat.uibean.NormalItem
-import com.au.module_gson.toJsonString
+import com.au.module_gson.toGsonString
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.launchRepeatOnStarted
@@ -41,7 +41,7 @@ class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
 
     private val common by unsafeLazy { object : TextChatCommon(this, binding) {
         override fun buttonSend(bean: WSChatMessageBean) {
-            val json = bean.toJsonString()
+            val json = bean.toGsonString()
             viewModel.wsClient?.sendText(json)
             logd { "client send: $json" }
             //刚刚点击的事件，肯定就是自己。

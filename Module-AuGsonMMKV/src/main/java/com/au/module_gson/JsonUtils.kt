@@ -16,7 +16,7 @@ val gson = Gson()
  * 扩展：将任意对象，转成jsonString。
  * Bundle 可能会直接出错。
  */
-fun Any.toJsonString() : String {
+fun Any.toGsonString() : String {
     if (isBaseType()) {
         return "" + this
     }
@@ -38,7 +38,7 @@ private fun Any.isBaseType() : Boolean{
  * org.jetbrains.kotlin.android <=1.8.10 有bug不支持二级嵌套xxxBean<CmdData>
  */
 @Throws(JsonSyntaxException::class)
-inline fun <reified T> String.fromJson() : T? {
+inline fun <reified T> String.fromGson() : T? {
     if (T::class.java == String::class.java) {
         return this as T
     }
@@ -48,19 +48,10 @@ inline fun <reified T> String.fromJson() : T? {
 /**
  * java版本：将string转成任意类型的对象
  */
-fun <T> fromJson(jsonStr: String?, t: Class<T>): T {
+fun <T> fromGson(jsonStr: String?, t: Class<T>): T {
     val typeToken = TypeToken.getParameterized(t).type
     return GsonBuilder().create().fromJson<T>(jsonStr, typeToken)
 }
-
-//二级泛型解析：使用TypeToken的版本。org.jetbrains.kotlin.android >1.8.10 则无需如此。
-//inline fun <reified T, reified TLv2> String.fromJsonLv2(): T {
-//    if (T::class.java == String::class.java) {
-//        return this as T
-//    }
-//    val typeToken = TypeToken.getParameterized(T::class.java, TLv2::class.java).type
-//    return gson.fromJson(this, typeToken)
-//}
 
 //JSONArray扩展函数
 fun JSONArray.foreachJSONObject(block:(JSONObject)->Unit) {
@@ -74,17 +65,17 @@ fun JSONArray.foreachJSONObject(block:(JSONObject)->Unit) {
 /**
  * 扩展：将string转成任意类型List的对象
  */
-inline fun <reified E> String.fromJsonList() : List<E> {
-    return fromJsonList(E::class.java)
+inline fun <reified E> String.fromGsonList() : List<E> {
+    return fromGsonList(E::class.java)
 }
 
 /**
  * 扩展：将string转成任意类型List的对象
  */
-fun <E> String.fromJsonList(elementClass:Class<E>) : List<E> {
-    //return gson.fromJson(strJson, TypeToken<List<T>>() {}.getType());
+fun <E> String.fromGsonList(elementClass:Class<E>) : List<E> {
+    //return gson.fromGson(strJson, TypeToken<List<T>>() {}.getType());
     //改为下面的方法，clazz传入实际想要解析出来的类
-    //return BaseGlobalConst.gson.fromJson(json, object : TypeToken<List<T>>() {}.type)
+    //return BaseGlobalConst.gson.fromGson(json, object : TypeToken<List<T>>() {}.type)
     try {
         val listType : Type = TypeToken.getParameterized(ArrayList::class.java, elementClass).type
         return gson.fromJson(this, listType)
@@ -94,7 +85,7 @@ fun <E> String.fromJsonList(elementClass:Class<E>) : List<E> {
     return emptyList()
 }
 
-private fun formatJsonBeautifulJsonStr(str:String) : String {
+private fun formatGsonBeautifulJsonStr(str:String) : String {
     return try {
         val jsonElement: JsonElement = JsonParser.parseString(str)
         val beautifulGson = GsonBuilder().setPrettyPrinting().create()
@@ -104,9 +95,9 @@ private fun formatJsonBeautifulJsonStr(str:String) : String {
     }
 }
 
-fun formatJsonBeautiful(obj:Any) : String {
+fun formatGsonBeautiful(obj:Any) : String {
     if (obj is String) {
-        return formatJsonBeautifulJsonStr(obj)
+        return formatGsonBeautifulJsonStr(obj)
     }
     return try {
         val beautifulGson = GsonBuilder().setPrettyPrinting().create()

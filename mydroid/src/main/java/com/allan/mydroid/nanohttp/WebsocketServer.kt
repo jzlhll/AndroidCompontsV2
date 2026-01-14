@@ -7,7 +7,7 @@ import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
-import com.au.module_gson.toJsonString
+import com.au.module_gson.toGsonString
 import com.au.module_android.utils.isMainThread
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
@@ -136,7 +136,7 @@ class WebsocketServer(
     }
 
     private fun serverSendMsgBoth(message: WSChatMessageBean) {
-        val json = message.toJsonString()
+        val json = message.toGsonString()
         logd { "serverSendMsg: $json" }
         clients.forEach { c ->
             c.send(json)

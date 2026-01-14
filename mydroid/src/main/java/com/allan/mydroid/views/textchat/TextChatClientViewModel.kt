@@ -7,7 +7,7 @@ import com.allan.mydroid.api.IpPortBean
 import com.allan.mydroid.api.TEXT_CHAT_READ_WEBSOCKET_IP_PORT
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.au.module_android.Globals
-import com.au.module_gson.toJsonString
+import com.au.module_gson.toGsonString
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.log.logd
 import com.au.module_android.log.loge
@@ -52,7 +52,7 @@ class TextChatClientViewModel : ViewModel() {
     }
 
     fun send(bean : WSChatMessageBean) {
-        wsClient?.sendText(bean.toJsonString())
+        wsClient?.sendText(bean.toGsonString())
     }
 
     fun shutdownWSClient() {

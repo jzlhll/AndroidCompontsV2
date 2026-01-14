@@ -1,8 +1,8 @@
 package com.au.module_okhttp.creator
 
 import com.au.module_okhttp.api.ResultBean
-import com.au.module_gson.fromJson
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGson
+import com.au.module_gson.toGsonString
 import com.au.module_okhttp.OkhttpGlobal
 import com.au.module_okhttp.exceptions.AuNoBaseUrlException
 import okhttp3.Request
@@ -63,7 +63,7 @@ abstract class AbsOkhttpApi {
         }
 
         //修改此处代码，实现了可以直接传入params为String。之前必须是对象
-        val paramsStr = params as? String ?: (params?.toJsonString() ?: "{}")
+        val paramsStr = params as? String ?: (params?.toGsonString() ?: "{}")
 
         val url = "${baseUrl.trimEnd('/')}/${apiUri.trimStart('/')}"
 
@@ -83,7 +83,7 @@ abstract class AbsOkhttpApi {
         timeOutMode:Int = 0,
     ): ResultBean<T>? {
         val resultStr = requestApi(apiUri, params, timeOutMode)
-        return resultStr.fromJson<ResultBean<T>>()
+        return resultStr.fromGson<ResultBean<T>>()
     }
 
     suspend inline fun <reified T> requestResultData(
@@ -92,6 +92,6 @@ abstract class AbsOkhttpApi {
         timeOutMode:Int = 0,
     ): T? {
         val resultStr = requestApi(apiUri, params, timeOutMode)
-        return resultStr.fromJson<ResultBean<T>>()?.data
+        return resultStr.fromGson<ResultBean<T>>()?.data
     }
 }

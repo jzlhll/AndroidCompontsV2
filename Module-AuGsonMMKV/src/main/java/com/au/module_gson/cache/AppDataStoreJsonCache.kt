@@ -3,8 +3,8 @@ package com.au.module_gson.cache
 import com.au.module_android.utils.IReadMoreWriteLessCacheProperty
 import com.au.module_android.utils.ignoreError
 import com.au.module_cached.delegate.AppDataStoreStringCache
-import com.au.module_gson.fromJson
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGson
+import com.au.module_gson.toGsonString
 
 /**
  * 通过json string存入到AppDataStoreStringCache。实现转换Json。
@@ -19,17 +19,17 @@ class AppDataStoreJsonCache<T : Any> (
     cacheFileName: String? = null
 ) : IReadMoreWriteLessCacheProperty<T>(key, defaultValue) {
 
-    private var cache by AppDataStoreStringCache(key, defaultValue.toJsonString(), cacheFileName)
+    private var cache by AppDataStoreStringCache(key, defaultValue.toGsonString(), cacheFileName)
     override fun read(key: String, defaultValue: T): T {
         val jsonStr = cache
         if (jsonStr.isNotEmpty()) {
-            return ignoreError { fromJson(jsonStr, clz) } ?: defaultValue
+            return ignoreError { fromGson(jsonStr, clz) } ?: defaultValue
         }
         return defaultValue
     }
 
     override fun save(key: String, value: T) {
-        val c = value.toJsonString()
+        val c = value.toGsonString()
         cache = c
     }
 }

@@ -12,7 +12,7 @@ import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
-import com.au.module_gson.toJsonString
+import com.au.module_gson.toGsonString
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
@@ -86,7 +86,7 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
 
         MyDroidConst.clientListLiveData.observe(this) { clientList->
             logdNoFile {
-                ">>client List:" + clientList.toJsonString()
+                ">>client List:" + clientList.toGsonString()
             }
         }
 

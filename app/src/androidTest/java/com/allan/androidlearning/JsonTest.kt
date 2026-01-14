@@ -2,9 +2,9 @@ package com.allan.androidlearning
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.au.module_gson.fromJson
-import com.au.module_gson.fromJsonList
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGson
+import com.au.module_gson.fromGsonList
+import com.au.module_gson.toGsonString
 import com.au.module_android.log.logd
 
 import org.junit.Test
@@ -33,16 +33,16 @@ class JsonTest {
         val bean1 = Bean("first", 1)
         val bean2 = Bean("second", 2)
 
-        val bean1Str = bean1.toJsonString()
-        val bean2Str = bean2.toJsonString()
+        val bean1Str = bean1.toGsonString()
+        val bean2Str = bean2.toGsonString()
 
-        val revert1 = bean1Str.fromJson<Bean>()
-        val revert2 = bean2Str.fromJson<Bean>()
+        val revert1 = bean1Str.fromGson<Bean>()
+        val revert2 = bean2Str.fromGson<Bean>()
 
         val list = listOf(bean1, bean2)
-        val listStr = list.toJsonString()
-        val revertList = listStr.fromJsonList<Bean>()
-        val revertList2 = listStr.fromJsonList(Bean::class.java)
+        val listStr = list.toGsonString()
+        val revertList = listStr.fromGsonList<Bean>()
+        val revertList2 = listStr.fromGsonList(Bean::class.java)
 
         logd{"beans1 $bean1Str bean2str $bean2Str $listStr $revertList"}
 

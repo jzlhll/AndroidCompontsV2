@@ -4,7 +4,7 @@ import androidx.annotation.DrawableRes
 import com.allan.mydroid.R
 import com.au.module_android.Globals
 import com.au.module_okhttp.api.ResultBean
-import com.au.module_gson.toJsonString
+import com.au.module_gson.toGsonString
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
@@ -67,7 +67,7 @@ fun ResultBean<*>.okJsonResponse() : Response{
     return newFixedLengthResponse(
         Status.OK,
         MIME_TYPE_JSON,
-        this.toJsonString()
+        this.toGsonString()
     )
 }
 
@@ -75,7 +75,7 @@ fun ResultBean<*>.badRequestJsonResponse() : Response{
     return newFixedLengthResponse(
         Status.BAD_REQUEST,
         MIME_TYPE_JSON,
-        this.toJsonString()
+        this.toGsonString()
     )
 }
 
@@ -83,7 +83,7 @@ fun ResultBean<*>.jsonResponse(status: Response.IStatus) : Response{
     return newFixedLengthResponse(
         status,
         MIME_TYPE_JSON,
-        this.toJsonString()
+        this.toGsonString()
     )
 }
 

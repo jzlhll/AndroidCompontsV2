@@ -35,9 +35,9 @@ fun <E> mmkvGetArrayList(key:String, elementClass:Class<E>) : ArrayList<E> {
 
     val json = mmkv.getString(key, "")
     if (!json.isNullOrEmpty()) {
-        //return gson.fromJson(strJson, TypeToken<List<T>>() {}.getType());
+        //return gson.fromGson(strJson, TypeToken<List<T>>() {}.getType());
         //改为下面的方法，clazz传入实际想要解析出来的类
-        //return BaseGlobalConst.gson.fromJson(json, object : TypeToken<List<T>>() {}.type)
+        //return BaseGlobalConst.gson.fromGson(json, object : TypeToken<List<T>>() {}.type)
         val listType : Type = TypeToken.getParameterized(ArrayList::class.java, elementClass).type
         return gson.fromJson(json, listType)
     }

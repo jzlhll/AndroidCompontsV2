@@ -11,7 +11,7 @@ import com.au.audiorecordplayer.util.MyLog
 import com.au.module_android.log.logt
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_android.utils.launchOnThread
-import com.au.module_gson.formatJsonBeautiful
+import com.au.module_gson.formatGsonBeautiful
 import kotlinx.coroutines.launch
 
 class BleSubFragment : AbsSubBleTestFragment(), BluetoothCallbackListener {
@@ -116,7 +116,7 @@ class BleSubFragment : AbsSubBleTestFragment(), BluetoothCallbackListener {
     override fun onDataCharChanged(address: String, data: ByteArray, str: String) {
         logt { "onDataCharChanged $address $str" }
         lifecycleScope.launch {
-            val json = formatJsonBeautiful(str)
+            val json = formatGsonBeautiful(str)
             updateInfo("onDataCharChanged $address\n$json")
         }
     }

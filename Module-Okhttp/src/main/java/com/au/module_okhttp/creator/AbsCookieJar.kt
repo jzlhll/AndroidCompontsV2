@@ -1,8 +1,8 @@
 package com.au.module_okhttp.creator
 
 import androidx.annotation.Keep
-import com.au.module_gson.fromJson
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGson
+import com.au.module_gson.toGsonString
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
@@ -26,10 +26,10 @@ abstract class AbsCookieJar : CookieJar {
             this.cookies = cookies
         }
         cookieStoreMap[host] = bean
-        saveToDisk(host, bean.toJsonString())
+        saveToDisk(host, bean.toGsonString())
     }
 
-    //mmkvSave("okhttp_cookie_" + host, bean.toJsonString())
+    //mmkvSave("okhttp_cookie_" + host, bean.toGsonString())
     abstract fun saveToDisk(host:String, data:String)
 
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
@@ -38,7 +38,7 @@ abstract class AbsCookieJar : CookieJar {
         if (cookieStoreBean == null) {
             loadFromDisk(host).let {
                 if (it.isNotBlank()) {
-                    val bean = it.fromJson<CookieStoreBean>()
+                    val bean = it.fromGson<CookieStoreBean>()
                     if(bean != null) cookieStoreMap[host] = bean
                     cookieStoreBean = bean
                 }

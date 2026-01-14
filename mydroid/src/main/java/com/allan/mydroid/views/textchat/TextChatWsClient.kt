@@ -8,8 +8,8 @@ import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.beans.wsdata.WSInitData
 import com.allan.mydroid.nanohttp.WebsocketServer.Companion.WS_CODE_CLOSE_BY_CLIENT
 import com.au.module_android.Globals
-import com.au.module_gson.fromJson
-import com.au.module_gson.toJsonString
+import com.au.module_gson.fromGson
+import com.au.module_gson.toGsonString
 import com.au.module_android.log.logd
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.unsafeLazy
@@ -80,7 +80,7 @@ class TextChatWsClient(val vmScope: CoroutineScope,
         isLive = true
 
         val bean = WSInitData(API_WS_INIT, wsName, "androidApp")
-        webSocket.send(bean.toJsonString())
+        webSocket.send(bean.toGsonString())
 
         successOpenBlock()
     }
@@ -95,13 +95,13 @@ class TextChatWsClient(val vmScope: CoroutineScope,
         val data = json?.optString("data")
         when (api) {
             API_WS_CLIENT_INIT_CALLBACK -> {
-                val dataBean = data?.fromJson<MyDroidModeData>()
+                val dataBean = data?.fromGson<MyDroidModeData>()
                 color = (dataBean?.color ?: "#212121")
                 logdNoFile { "client get init color $color" }
             }
 
             API_WS_TEXT_CHAT_MSG -> {
-                val bean = text.fromJson<WSChatMessageBean>()
+                val bean = text.fromGson<WSChatMessageBean>()
                 if (bean != null) {
                     logdNoFile{ "Message received1: $text" }
                     vmScope.launch {
