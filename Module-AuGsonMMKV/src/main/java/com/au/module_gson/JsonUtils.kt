@@ -1,10 +1,6 @@
 package com.au.module_gson
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import com.google.gson.JsonParser
-import com.google.gson.JsonSyntaxException
+import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import org.json.JSONArray
 import org.json.JSONObject
@@ -46,10 +42,22 @@ inline fun <reified T> String.fromGson() : T? {
 }
 
 /**
- * java版本：将string转成任意类型的对象
+ * 扩展：将string转成任意类型List的对象。
+ *
+ * @param typeToken 如下：
+ * 普通类：MyClass::class.java 或 (TypeToken.get(MyClass::class.java))
+ *
+ * List<MyClass> : TypeToken.getParameterized(List::class.java, MyClass::class.java).type
+ *
+ * 自定义嵌套泛型MyClass<TypeArg>: TypeToken.getParameterized(MyClass::class.java, TypeArg::class.java).type
+ *
+ * Map<String, MyClass> ：TypeToken.getParameterized(Map::class.java, String::class.java, MyClass::class.java).type
+ *
+ * 更复杂的List<Map<String, MyClass>>：
+ * val mapType = TypeToken.getParameterized(Map::class.java, String::class.java, MyClass::class.java).type
+ * val listType = TypeToken.getParameterized(List::class.java, mapType).type
  */
-fun <T> fromGson(jsonStr: String?, t: Class<T>): T {
-    val typeToken = TypeToken.getParameterized(t).type
+fun <T> fromGson(jsonStr: String?, typeToken: Type): T {
     return GsonBuilder().create().fromJson<T>(jsonStr, typeToken)
 }
 
