@@ -1,4 +1,8 @@
-解析图片实现 API 接口规则：
+---
+name: Api自动生成
+description: 当让你生成新的Api(文字或解析图片)实现函数/接口遵守该规则。
+---
+
 # Response类
 响应格式为{code, message/msg, status}时，用requestApi调用，无需创建Response类
 类定义：public final

@@ -1,4 +1,7 @@
-编写xml布局，遵守如下规则：
+---
+name: 布局生成
+description: 当涉及到Layout xml布局和dimen，style等属性使用时使用该规则。
+---
 
 # 控件
 全路径 com.au.module_androidui.widget.XXX
@@ -15,9 +18,10 @@
 有阴影：CardView包裹
 
 # 样式
-文本：StyleI8o14B(粗体), StyleI8o16M(中粗), StyleI8o12Desc(灰色描述)
-输入框：StyleI8oEdit
-按钮：StyleI8o16BlackBtn(常规), StyleI8o16WarnBtn(黄色警告)
+[styles.xml](Module-AndroidColor/src/main/res/values/styles.xml)
+文本：StyleAuTextNormal(常规), StyleAuTextNormalDesc(灰色描述)等等
+输入框：StyleBlankEditText
+按钮：StyleButtonPrimary(常规), StyleButtonWarn(警告)等
 图片文案：用tools:text
 
 # 边距
@@ -40,4 +44,4 @@ RecyclerView：xxxRcv
 
 # RecyclerView
 不主动写Adapter(除非允许)
-如果允许参考规则[RecyclerViewGen](RecyclerViewGen.md)
+如果允许参考规则SKILL: [RecyclerView开发框架]

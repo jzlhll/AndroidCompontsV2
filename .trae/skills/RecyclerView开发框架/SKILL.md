@@ -1,4 +1,9 @@
-RecyclerView开发框架:
+---
+name: RecyclerView开发框架
+description: 当生成和修改代码涉及到RecyclerView时，使用代码仓库中的开发框架，遵守如下规则。
+---
+
+[module_nested](Module-Nested/src/main/java/com/au/module_nested)：
 # 文件结构
 Adapter：独立文件XXXAdapter.kt（放Fragment旁）
 Holder：Adapter内部类XXXHolder
