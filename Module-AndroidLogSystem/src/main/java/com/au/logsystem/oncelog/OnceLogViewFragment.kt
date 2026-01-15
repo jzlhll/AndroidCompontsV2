@@ -20,7 +20,7 @@ import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
-import com.au.module_gson.cache.AppDataStoreGsonCache
+import com.au.module_gson.mmkv.MMKVGsonCache
 import java.io.File
 
 class OnceLogViewFragment : BindingFragment<FragmentLogViewBinding>() {
@@ -50,7 +50,7 @@ class OnceLogViewFragment : BindingFragment<FragmentLogViewBinding>() {
         }
     }
 
-    private var mShowInfo by AppDataStoreGsonCache(
+    private var mShowInfo by MMKVGsonCache(
         "logSysShownInfo",
         LogViewShownInfo(isWrap = false, fullScreen = true, time = true, threadProcess = true, level = true, tag = true),
         LogViewShownInfo::class.java

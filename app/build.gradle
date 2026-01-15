@@ -87,6 +87,15 @@ dependencies {
     // Media3 UI 组件 (包含 PlayerView)
     implementation(libs.androidx.media3.ui)
 
+    implementation  libs.refresh.layout.kernel      //核心必须依赖
+    implementation  libs.refresh.header.classics    //经典刷新头
+    implementation  libs.refresh.header.radar       //雷达刷新头
+    implementation  libs.refresh.header.falsify     //虚拟刷新头
+    implementation  libs.refresh.header.material    //谷歌刷新头
+    implementation  libs.refresh.header.two.level   //二级刷新头
+    implementation  libs.refresh.footer.ball        //球脉冲加载
+    implementation  libs.refresh.footer.classics    //经典加载
+
 //    kapt project(':ClassNameAnnotations-compiler')
 }
 

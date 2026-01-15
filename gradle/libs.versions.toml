@@ -24,6 +24,14 @@ navigationFragmentKtx = "2.9.6"
 okhttpBom = "5.3.2"
 poiOoxml = "5.5.1"
 recyclerview = "1.4.0"
+refreshHeaderTwoLevel = "3.0.0-alpha"
+refreshFooterBall = "3.0.0-alpha"
+refreshFooterClassics = "3.0.0-alpha"
+refreshLayoutKernel = "3.0.0-alpha"
+refreshHeaderClassics = "3.0.0-alpha"
+refreshHeaderRadar = "3.0.0-alpha"
+refreshHeaderFalsify = "3.0.0-alpha"
+refreshHeaderMaterial = "3.0.0-alpha"
 roomRuntime = "2.8.4"
 startupRuntime = "1.2.0"
 swiperefreshlayout = "1.2.0"
@@ -95,6 +103,14 @@ okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttp
 okhttp3-integration = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
 androidx-window = { group = "androidx.window", name = "window", version.ref = "window" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poiOoxml" }
+refresh-footer-classics = { module = "io.github.scwang90:refresh-footer-classics", version.ref = "refreshFooterClassics" }
+refresh-footer-ball = { module = "io.github.scwang90:refresh-footer-ball", version.ref = "refreshFooterBall" }
+refresh-header-material = { module = "io.github.scwang90:refresh-header-material", version.ref = "refreshHeaderMaterial" }
+refresh-header-falsify = { module = "io.github.scwang90:refresh-header-falsify", version.ref = "refreshHeaderFalsify" }
+refresh-header-radar = { module = "io.github.scwang90:refresh-header-radar", version.ref = "refreshHeaderRadar" }
+refresh-header-classics = { module = "io.github.scwang90:refresh-header-classics", version.ref = "refreshHeaderClassics" }
+refresh-header-two-level = { module = "io.github.scwang90:refresh-header-two-level", version.ref = "refreshHeaderTwoLevel" }
+refresh-layout-kernel = { module = "io.github.scwang90:refresh-layout-kernel", version.ref = "refreshLayoutKernel" }
 symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "symbolProcessingApi" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 tts-edge-java = { module = "io.github.whitemagic2014:tts-edge-java", version.ref = "ttsEdgeJava" }

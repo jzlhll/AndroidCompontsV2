@@ -36,7 +36,7 @@ class SingleCoroutineTaskExecutor(threadName: String) {
      * @param block 要执行的任务代码块
      * 会得到执行结果
      */
-    suspend fun <T> submitWithResult(block: suspend () -> T) : T{
+    suspend fun <T> awaitResult(block: suspend () -> T) : T{
         val deferred = scope.async {
             block()
         }

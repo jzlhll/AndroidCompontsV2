@@ -10,12 +10,15 @@ import com.au.module_androidui.selectlist.SelectListFragment
 import com.au.module_androidui.selectlist.SelectListItem
 import com.au.module_android.log.ALogJ
 import com.au.module_android.utils.dp
+import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
+import com.au.module_android.utilthread.SingleCoroutineTaskExecutor2
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.sin
 
 /**
  * @author allan
@@ -85,6 +88,20 @@ class CoroutineFragment(override val title: String = "Coroutine")
         }
     }
 
+    private val singleScope = SingleCoroutineTaskExecutor("names")
+
+    private fun testSingleScope() {
+        lifecycleScope.launch {
+            ALogJ.t("运行11")
+            singleScope.awaitResult {
+                delay(5000)
+                ALogJ.t("运行22")
+            }
+            ALogJ.t("运行33")
+        }
+        ALogJ.t("运行44")
+    }
+
     private val _items = listOf(
         initItem,
         KotlinCoroutineSelectListItem("主线程") {
@@ -97,7 +114,10 @@ class CoroutineFragment(override val title: String = "Coroutine")
 
         },
         testItem,
-        testItem2
+        testItem2,
+        KotlinCoroutineSelectListItem("测试单线程模型协程") {
+            testSingleScope()
+        },
     )
 
     override val initCur: KotlinCoroutineSelectListItem
