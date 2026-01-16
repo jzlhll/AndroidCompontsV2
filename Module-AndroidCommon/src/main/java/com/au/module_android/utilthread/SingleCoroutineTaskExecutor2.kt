@@ -1,6 +1,5 @@
 package com.au.module_android.utilthread
 
-import kotlin.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -25,11 +24,11 @@ class SingleCoroutineTaskExecutor2 {
         }
     }
 
-    suspend fun enqueueTask(task: suspend () -> Unit) {
+    suspend fun submit(task: suspend () -> Unit) {
         taskChannel.send(task)
     }
 
-    suspend fun <T> enqueueTaskWithResult(task: suspend () -> T): T {
+    suspend fun <T> awaitResult(task: suspend () -> T): T {
         val deferred = CompletableDeferred<T>()
         taskChannel.send {
             try {
@@ -42,7 +41,7 @@ class SingleCoroutineTaskExecutor2 {
         return deferred.await()
     }
 
-    suspend fun awaitTask(task: suspend () -> Unit) {
+    suspend fun await(task: suspend () -> Unit) {
         val deferred = CompletableDeferred<Unit>()
         taskChannel.send {
             try {

@@ -32,6 +32,16 @@ class SingleCoroutineTaskExecutor(threadName: String) {
     }
 
     /**
+     * 等待任务完成（按添加顺序执行）
+     */
+     suspend fun await(block: suspend () -> Unit) {
+        val deferred = scope.async {
+            block()
+        }
+        deferred.await()
+    }
+
+    /**
      * 添加任务到队列（按添加顺序执行）
      * @param block 要执行的任务代码块
      * 会得到执行结果
