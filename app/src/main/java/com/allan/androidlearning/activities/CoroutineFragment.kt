@@ -11,14 +11,12 @@ import com.au.module_androidui.selectlist.SelectListItem
 import com.au.module_android.log.ALogJ
 import com.au.module_android.utils.dp
 import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
-import com.au.module_android.utilthread.SingleCoroutineTaskExecutor2
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.sin
 
 /**
  * @author allan
@@ -87,22 +85,29 @@ class CoroutineFragment(override val title: String = "Coroutine")
             ALogJ.t("运行在主线程得到结果 $data")
         }
     }
-    private val singleScope = SingleCoroutineTaskExecutor2()
+    private val singleScope = SingleCoroutineTaskExecutor()
     private var map = hashMapOf<String, String>()
 
     private fun testSingleScope(from:String) {
         ALogJ.t("$from 运行11")
-        singleScope.submit {
-            ALogJ.t("$from 运行22")
-            Thread.sleep(3000)
-            ALogJ.t("$from 运行2233")
-            if (map.contains("name")) {
-                ALogJ.t("$from name 已存在")
-            } else {
-                ALogJ.t("$from name 不存在")
-                map["name"] = "allan"
+        lifecycleScope.launch {
+            ALogJ.t("$from 运行1122")
+            val ans = singleScope.awaitResult {
+                ALogJ.t("$from 运行22")
+                Thread.sleep(3000)
+                ALogJ.t("$from 运行2233")
+                if (map.contains("name")) {
+                    ALogJ.t("$from name 已存在")
+                    true
+                } else {
+                    ALogJ.t("$from name 不存在")
+                    map["name"] = "allan"
+                    false
+                }
             }
+            ALogJ.t("$from 运行1122 end $ans")
         }
+
         ALogJ.t("$from 运行33")
     }
 
@@ -137,6 +142,11 @@ class CoroutineFragment(override val title: String = "Coroutine")
         v as MaterialButton
         v.text = item.itemName
         v.onClick(item.onClick)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        singleScope.shutdownNow()
     }
 }
 
