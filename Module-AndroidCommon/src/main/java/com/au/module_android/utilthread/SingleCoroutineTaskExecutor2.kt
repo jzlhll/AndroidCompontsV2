@@ -16,7 +16,7 @@ import kotlinx.coroutines.newSingleThreadContext
 class SingleCoroutineTaskExecutor2 {
     @OptIn(DelicateCoroutinesApi::class)
     private val singleThreadContext = newSingleThreadContext("SequentialWorker")
-    private val taskChannel = Channel<suspend () -> Unit>(Channel.Factory.UNLIMITED)
+    private val taskChannel = Channel<suspend () -> Unit>(Channel.UNLIMITED)
 
     init {
         CoroutineScope(singleThreadContext).launch {
@@ -24,8 +24,8 @@ class SingleCoroutineTaskExecutor2 {
         }
     }
 
-    suspend fun submit(task: suspend () -> Unit) {
-        taskChannel.send(task)
+    fun submit(task: suspend () -> Unit) {
+        taskChannel.trySend(task)
     }
 
     suspend fun <T> awaitResult(task: suspend () -> T): T {

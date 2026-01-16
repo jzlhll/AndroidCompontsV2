@@ -87,27 +87,23 @@ class CoroutineFragment(override val title: String = "Coroutine")
             ALogJ.t("运行在主线程得到结果 $data")
         }
     }
-
-    private val singleScope = SingleCoroutineTaskExecutor("names")
+    private val singleScope = SingleCoroutineTaskExecutor2()
     private var map = hashMapOf<String, String>()
 
     private fun testSingleScope(from:String) {
-        lifecycleScope.launch {
-            ALogJ.t("$from 运行11")
-            singleScope.awaitResult {
-                ALogJ.t("$from 运行22")
-                Thread.sleep(3000)
-                ALogJ.t("$from 运行2233")
-                if (map.contains("name")) {
-                    ALogJ.t("$from name 已存在")
-                } else {
-                    ALogJ.t("$from name 不存在")
-                    map["name"] = "allan"
-                }
+        ALogJ.t("$from 运行11")
+        singleScope.submit {
+            ALogJ.t("$from 运行22")
+            Thread.sleep(3000)
+            ALogJ.t("$from 运行2233")
+            if (map.contains("name")) {
+                ALogJ.t("$from name 已存在")
+            } else {
+                ALogJ.t("$from name 不存在")
+                map["name"] = "allan"
             }
-            ALogJ.t("$from 运行33")
         }
-        ALogJ.t("$from 运行44")
+        ALogJ.t("$from 运行33")
     }
 
     private val _items = listOf(
