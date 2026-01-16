@@ -13,7 +13,6 @@ ClassNameAnnotations-ksp/build/
 /captures
 /jsbridge
 .externalNativeBuild
-Module-Native/.cxx/*
 .scannerwork/
 local.properties
 app/src/main/assets/vosk_en_lgraph_022/*
