@@ -12,7 +12,7 @@ import com.au.module_android.utils.dp
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.views.ViewFragment
 
-@EntryFrgName(priority = 10)
+@EntryFrgName
 class AnimActivityTestFragment : ViewFragment() {
     override fun onUiCreateView(
         inflater: LayoutInflater,

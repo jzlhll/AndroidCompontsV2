@@ -29,4 +29,6 @@ public @interface EntryFrgName {
     int priority() default 0;
     String customName() default "";
     boolean autoEnter() default false;
+    String textColor() default "";
+    String backgroundColor() default "";
 }

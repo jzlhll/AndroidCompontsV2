@@ -30,7 +30,7 @@ import com.au.module_simplepermission.pickerForResult
 import com.au.module_simplepermission.selectSysDirForResult
 import java.io.File
 
-@EntryFrgName(priority = 10)
+@EntryFrgName
 class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), TakePhotoActionDialog.ITakePhotoActionDialogCallback {
     val singleResult = pickUriWrapForResult()
     val multiResult = multiPickUriWrapForResult(3)

@@ -53,12 +53,13 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".EntryActivity"
         tools:showIn="@layout/activity_entry">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_marginTop="20dp"
+        <com.au.module_androidui.widget.FlowLayout
             android:id="@+id/buttonsHost"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
+            android:layout_width="match_parent"
+            app:flRowSpacing="12dp"
+            app:flChildSpacing="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginHorizontal="@dimen/ui_padding_edge"
             android:orientation="vertical"
             android:layout_height="wrap_content">
 <!--            <com.google.android.material.button.MaterialButton-->
@@ -67,7 +68,7 @@
 <!--                android:layout_width="match_parent"-->
 <!--                android:layout_height="wrap_content"/>-->
 
-        </LinearLayout>
+        </com.au.module_androidui.widget.FlowLayout>
     </androidx.core.widget.NestedScrollView>
 
     <TextView

@@ -24,7 +24,7 @@ import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.startActivityFix
 
-@EntryFrgName(priority = 10, customName = "GenerateSetting")
+@EntryFrgName(customName = "GenerateSetting")
 class DarkModeAndLocalesFragment : BindingFragment<FragmentDarkModeSettingBinding>() {
     private val localePart = LocalesPart()
     private var toolbarManager: ToolbarMenuManager? = null

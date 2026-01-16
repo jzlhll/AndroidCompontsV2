@@ -1,5 +1,6 @@
 package com.au.learning.classnamecompiler
 
+import com.allan.classnameanno.EntryData
 import com.allan.classnameanno.EntryFrgName
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
@@ -10,7 +11,6 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.validate
 import java.io.OutputStreamWriter
 
@@ -31,8 +31,6 @@ class AllEntryFrgNamesProvider : SymbolProcessorProvider{
  * warning:
  */
 class TestKspSymbolProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
-    // 使用一个集合来跟踪已经处理过的符号
-    private val processedSymbols = mutableSetOf<KSDeclaration>()
     val allEntryFragmentNamesTemplate = AllEntryFragmentNamesTemplate()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -51,16 +49,9 @@ class TestKspSymbolProcessor(private val environment: SymbolProcessorEnvironment
                 if (symbol is KSClassDeclaration && symbol.classKind == ClassKind.CLASS) {
                     val qualifiedClassName = symbol.qualifiedName?.asString()
                     //解析priority
-                    var priority = 0
-                    var customName:String? = null
-                    var autoEnter = false
                     symbol.annotations.forEach { an->
-                        val pair = parseAnnotation(an, qualifiedClassName)
-                        customName = pair.first
-                        priority = pair.second
-                        autoEnter = pair.third
+                        allEntryFragmentNamesTemplate.insert(qualifiedClassName!!, parseAnnotation(an, qualifiedClassName))
                     }
-                    allEntryFragmentNamesTemplate.insert(qualifiedClassName!!, priority, customName, autoEnter)
 //                    symbol.accept(TestKspVisitor(environment), Unit)//处理符号
                 } else {
                     ret.add(symbol)
@@ -75,32 +66,36 @@ class TestKspSymbolProcessor(private val environment: SymbolProcessorEnvironment
     private fun parseAnnotation(
         an: KSAnnotation,
         qualifiedClassName: String?,
-    ): Triple<String?, Int, Boolean> {
-        var priority = 0
-        var customName:String? = null
-        var autoEnter = false
+    ): EntryData {
+        val entryData = EntryData("", 0, "", "", false)
         if (an.shortName.getShortName() == "EntryFrgName") {
             an.arguments.forEach { arg ->
                 val argName = arg.name?.asString()
                 when (argName) {
                     "priority" -> {
-                        priority = arg.value.toString().toInt()
-                        environment.logger.warn("ksp process $qualifiedClassName priority $priority")
+                        entryData.priority = arg.value.toString().toInt()
+                        environment.logger.warn("ksp process $qualifiedClassName priority ${entryData.priority}")
                     }
-
                     "customName" -> {
-                        customName = arg.value.toString()
-                        environment.logger.warn("ksp process $qualifiedClassName customName $customName")
+                        entryData.customName = arg.value.toString()
+                        environment.logger.warn("ksp process $qualifiedClassName customName ${entryData.customName}")
                     }
-
                     "autoEnter" -> {
-                        autoEnter = arg.value.toString().toBoolean()
-                        environment.logger.warn("ksp process $qualifiedClassName autoEnter $autoEnter")
+                        entryData.autoEnter = arg.value.toString().toBoolean()
+                        environment.logger.warn("ksp process $qualifiedClassName autoEnter ${entryData.autoEnter}")
+                    }
+                    "textColor" -> {
+                        entryData.textColor = arg.value.toString()
+                        environment.logger.warn("ksp process $qualifiedClassName textColor ${entryData.textColor}")
+                    }
+                    "backgroundColor" -> {
+                        entryData.backgroundColor = arg.value.toString()
+                        environment.logger.warn("ksp process $qualifiedClassName backgroundColor ${entryData.backgroundColor}")
                     }
                 }
             }
         }
-        return Triple(customName, priority, autoEnter)
+        return entryData
     }
 
     override fun finish() {

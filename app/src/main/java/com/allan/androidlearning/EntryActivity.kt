@@ -2,8 +2,10 @@ package com.allan.androidlearning
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Space
 import androidx.lifecycle.lifecycleScope
@@ -16,10 +18,15 @@ import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.bindings.BindingActivity
 import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.log.logd
+import com.au.module_android.utils.ViewBackgroundBuilder
+import com.au.module_android.utils.dp
 import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.widget.BgBuildCustomFontText
+import com.au.module_androidui.widget.CustomButton
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.core.graphics.toColorInt
 
 class EntryActivity : BindingActivity<ActivityEntryBinding>() {
 
@@ -45,13 +52,29 @@ class EntryActivity : BindingActivity<ActivityEntryBinding>() {
         val entry = EntryList()
         val entryList = entry.getEntryList().toMutableList()
         entryList.also {
-            it.forEach { fragmentClassTriple ->
-                val btn = MaterialButton(this)
-                btn.text = if(fragmentClassTriple.third != null) fragmentClassTriple.third else fragmentClassTriple.first.simpleName.replace("Fragment", "")
-                btn.onClick {
-                    FragmentShellActivity.start(this, fragmentClassTriple.first)
+            it.forEach { item ->
+                val fragmentClass = item.first
+                val entryData = item.second
+
+                val btn = CustomButton(this)
+                btn.setPadding(8.dp, 4.dp, 8.dp, 4.dp)
+                val bgBuilder = ViewBackgroundBuilder()
+                if (entryData.backgroundColor.isNotEmpty()) {
+                    bgBuilder.setBackground(entryData.backgroundColor.toColorInt())
+                } else {
+                    bgBuilder.setBackground("#eeeeee".toColorInt())
                 }
-                binding.buttonsHost.addView(btn, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+                bgBuilder.setCornerRadius(6f.dp)
+
+                btn.background = bgBuilder.build()
+                btn.text = entryData.customName.ifEmpty { fragmentClass.simpleName.replace("Fragment", "") }
+                if (entryData.textColor.isNotEmpty()) {
+                    btn.setTextColor(entryData.textColor.toColorInt())
+                }
+                btn.onClick {
+                    FragmentShellActivity.start(this, fragmentClass)
+                }
+                binding.buttonsHost.addView(btn, ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
             }
 
             entry.getAutoEnterClass()?.let{ cls->
@@ -61,8 +84,6 @@ class EntryActivity : BindingActivity<ActivityEntryBinding>() {
                 }
             }
         }
-
-        binding.buttonsHost.addView(Space(this), LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, getScreenFullSize().second / 5))
 
         if (goto == "LiveData") {
             FragmentShellActivity.start(this, LiveDataFragment::class.java)

@@ -25,7 +25,7 @@ import kotlin.math.sin
  * @date :2024/7/29 10:50
  * @description:
  */
-@EntryFrgName
+@EntryFrgName(priority = 1, textColor = "#000000", backgroundColor = "#fafabb")
 class CoroutineFragment(override val title: String = "Coroutine")
         : SelectListFragment<KotlinCoroutineSelectListItem>() {
 
@@ -89,17 +89,25 @@ class CoroutineFragment(override val title: String = "Coroutine")
     }
 
     private val singleScope = SingleCoroutineTaskExecutor("names")
+    private var map = hashMapOf<String, String>()
 
-    private fun testSingleScope() {
+    private fun testSingleScope(from:String) {
         lifecycleScope.launch {
-            ALogJ.t("运行11")
+            ALogJ.t("$from 运行11")
             singleScope.awaitResult {
-                delay(5000)
-                ALogJ.t("运行22")
+                ALogJ.t("$from 运行22")
+                Thread.sleep(3000)
+                ALogJ.t("$from 运行2233")
+                if (map.contains("name")) {
+                    ALogJ.t("$from name 已存在")
+                } else {
+                    ALogJ.t("$from name 不存在")
+                    map["name"] = "allan"
+                }
             }
-            ALogJ.t("运行33")
+            ALogJ.t("$from 运行33")
         }
-        ALogJ.t("运行44")
+        ALogJ.t("$from 运行44")
     }
 
     private val _items = listOf(
@@ -116,7 +124,10 @@ class CoroutineFragment(override val title: String = "Coroutine")
         testItem,
         testItem2,
         KotlinCoroutineSelectListItem("测试单线程模型协程") {
-            testSingleScope()
+            testSingleScope("测1")
+        },
+        KotlinCoroutineSelectListItem("测试单线程模型协程2") {
+            testSingleScope("测2")
         },
     )
 
