@@ -1,6 +1,6 @@
 ---
 name: Api自动生成
-description: 当让你生成新的Api(文字或解析图片)实现函数/接口遵守该规则。
+description: 当让你生成新的Api(文字或解析图片)实现函数/接口遵守它。
 ---
 
 # Response类

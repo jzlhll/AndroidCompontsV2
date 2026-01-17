@@ -1,6 +1,6 @@
 ---
-name: 布局生成
-description: 当涉及到Layout xml布局和dimen，style等属性使用时使用该规则。
+name: 布局xml生成
+description: 当涉及到Layout xml布局和dimen，style等属性使用时使用它。
 ---
 
 # 控件
@@ -22,7 +22,7 @@ description: 当涉及到Layout xml布局和dimen，style等属性使用时使�
 文本：StyleAuTextNormal(常规), StyleAuTextNormalDesc(灰色描述)等等
 输入框：StyleBlankEditText
 按钮：StyleButtonPrimary(常规), StyleButtonWarn(警告)等
-图片文案：用tools:text
+文案：用tools:text编写(记得引入xmlns:tools)
 
 # 边距
 靠边间距：@dimen/ui_padding_edge
