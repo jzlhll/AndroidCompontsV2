@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -41,4 +43,6 @@ dependencies {
     implementation(project(":Module-AndroidCommon"))
     implementation(project(":Module-AndroidUi"))
     implementation(project(":Module-AndroidColor"))
+    implementation(libs.refresh.header.classics)
+    implementation(libs.refresh.layout.kernel)
 }
