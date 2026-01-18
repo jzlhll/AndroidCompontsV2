@@ -1,84 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.scwang.smart.refresh.layout.SmartRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/refreshLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".EntryActivity">
+    android:background="@color/windowBackground"
+    tools:context=".EntryActivity"
+    app:srlPrimaryColor="@color/colorPrimary"
+    app:srlAccentColor="@android:color/white">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/app_bar"
-        app:elevation="0dp"
-        android:elevation="0dp"
-        app:liftOnScroll="true"
-        app:liftOnScrollColor="@android:color/transparent"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="150dp">
+        android:layout_height="match_parent">
 
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:id="@+id/toolbar_layout"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar"
+            app:elevation="0dp"
+            android:elevation="0dp"
+            app:liftOnScroll="true"
+            app:liftOnScrollColor="@android:color/transparent"
             android:layout_width="match_parent"
-            android:background="@color/windowBackground"
-            app:contentScrim="@color/windowBackground"
-            android:layout_height="match_parent"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:toolbarId="@+id/toolbar">
+            android:layout_height="150dp">
 
-<!--            <androidx.appcompat.widget.AppCompatImageView-->
-<!--                android:id="@+id/testText"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:src="@drawable/ic_launcher_background"-->
-<!--                android:textColor="#333333"-->
-<!--                android:textSize="16sp"-->
-<!--                app:layout_collapseMode="parallax"-->
-<!--                android:gravity="center"-->
-<!--                android:layout_gravity="bottom|center_horizontal"/>-->
-
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                app:titleTextColor="@color/white"
+            <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/toolbar_layout"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:popupTheme="@style/CustomModuleTheme"
-                app:layout_collapseMode="pin"/>
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
+                android:background="@color/windowBackground"
+                app:contentScrim="@color/windowBackground"
+                android:layout_height="match_parent"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:toolbarId="@+id/toolbar">
 
-    </com.google.android.material.appbar.AppBarLayout>
+    <!--            <androidx.appcompat.widget.AppCompatImageView-->
+    <!--                android:id="@+id/testText"-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="match_parent"-->
+    <!--                android:src="@drawable/ic_launcher_background"-->
+    <!--                android:textColor="#333333"-->
+    <!--                android:textSize="16sp"-->
+    <!--                app:layout_collapseMode="parallax"-->
+    <!--                android:gravity="center"-->
+    <!--                android:layout_gravity="bottom|center_horizontal"/>-->
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:background="@color/windowBackground"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context=".EntryActivity"
-        tools:showIn="@layout/activity_entry">
-        <com.au.module_androidui.widget.FlowLayout
-            android:id="@+id/buttonsHost"
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    app:titleTextColor="@color/white"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:popupTheme="@style/CustomModuleTheme"
+                    app:layout_collapseMode="pin"/>
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.core.widget.NestedScrollView
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             android:layout_width="match_parent"
-            app:flRowSpacing="12dp"
-            app:flChildSpacing="16dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginHorizontal="@dimen/ui_padding_edge"
-            android:orientation="vertical"
-            android:layout_height="wrap_content">
-<!--            <com.google.android.material.button.MaterialButton-->
-<!--                android:text="first"-->
-<!--                android:textSize="16sp"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"/>-->
+            android:layout_height="match_parent"
+            tools:showIn="@layout/activity_entry">
+            <com.au.module_androidui.widget.FlowLayout
+                android:id="@+id/buttonsHost"
+                android:layout_width="match_parent"
+                app:flRowSpacing="12dp"
+                app:flChildSpacing="16dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginHorizontal="@dimen/ui_padding_edge"
+                android:orientation="vertical"
+                android:layout_height="wrap_content">
+                <!--            <com.google.android.material.button.MaterialButton-->
+                <!--                android:text="first"-->
+                <!--                android:textSize="16sp"-->
+                <!--                android:layout_width="match_parent"-->
+                <!--                android:layout_height="wrap_content"/>-->
 
-        </com.au.module_androidui.widget.FlowLayout>
-    </androidx.core.widget.NestedScrollView>
+            </com.au.module_androidui.widget.FlowLayout>
+        </androidx.core.widget.NestedScrollView>
 
-    <TextView
-        android:text="head"
-        android:layout_width="100dp"
-        android:layout_height="20dp"/>
+        <TextView
+            android:text="head"
+            android:layout_width="100dp"
+            android:layout_height="20dp"/>
 
-    <TextView
-        android:layout_gravity="bottom"
-        android:text="tile"
-        android:layout_width="100dp"
-        android:layout_height="20dp"/>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <TextView
+            android:layout_gravity="bottom"
+            android:text="tile"
+            android:layout_width="100dp"
+            android:layout_height="20dp"/>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</com.scwang.smart.refresh.layout.SmartRefreshLayout>

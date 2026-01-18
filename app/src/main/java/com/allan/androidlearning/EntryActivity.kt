@@ -27,6 +27,7 @@ import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.core.graphics.toColorInt
+import com.au.module_nested.smartrefresher.setSimpleLoadingHeader
 
 class EntryActivity : BindingActivity<ActivityEntryBinding>() {
 
@@ -43,6 +44,11 @@ class EntryActivity : BindingActivity<ActivityEntryBinding>() {
         super.onCreate(savedInstanceState)
 
         mHelper.test()
+
+        binding.refreshLayout.apply {
+            setSimpleLoadingHeader()
+            setEnableLoadMore(false)
+        }
 
         setSupportActionBar(findViewById(R.id.toolbar))
 
