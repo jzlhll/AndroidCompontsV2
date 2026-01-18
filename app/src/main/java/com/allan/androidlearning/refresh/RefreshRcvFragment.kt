@@ -21,7 +21,7 @@ import java.util.UUID
 /**
  * 常规recyclerView下的，头+脚
  */
-class Refresh1Fragment : BindingFragment<FragmentRefresh1Binding>() {
+class RefreshRcvFragment : BindingFragment<FragmentRefresh1Binding>() {
     private val adapter by lazy { Refresh1Adapter()}
 
     private var mCount = 0
@@ -30,7 +30,7 @@ class Refresh1Fragment : BindingFragment<FragmentRefresh1Binding>() {
         //配置RecyclerView
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@Refresh1Fragment.adapter
+            adapter = this@RefreshRcvFragment.adapter
         }
 
         //配置下拉刷新

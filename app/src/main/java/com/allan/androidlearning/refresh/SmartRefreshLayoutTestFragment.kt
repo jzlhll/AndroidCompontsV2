@@ -17,7 +17,7 @@ class SmartRefreshLayoutTestFragment(
 
     private val _items = listOf<Item>(
         Item("常规可以拉动主界面并显示刷新按钮") {
-            FragmentShellActivity.start(requireActivity(), Refresh1Fragment::class.java)
+            FragmentShellActivity.start(requireActivity(), RefreshRcvFragment::class.java)
         },
         Item("常规可以拉动主界面并显示刷新布局") {
         },
