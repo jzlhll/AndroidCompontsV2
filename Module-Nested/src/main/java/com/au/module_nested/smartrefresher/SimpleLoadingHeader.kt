@@ -16,27 +16,17 @@ import com.scwang.smart.refresh.layout.simple.SimpleComponent
  * 我定制的：
  * 简易的只有一个CircularProgressIndicator的下拉刷新Header
  */
-class SimpleLoadingHeader @JvmOverloads constructor(context: Context?, attrs: AttributeSet? = null) : SimpleComponent(context, attrs, 0), RefreshHeader {
+class SimpleLoadingHeader @JvmOverloads constructor(context: Context?, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+    : AbsSimpleLoading(context, attrs, defStyleAttr), RefreshHeader {
+    override fun getLayoutId(): Int {
+        return R.layout.srl_simple_loading_header
+    }
 
-    private var mIndicator: CircularProgressIndicator
+    override fun getIndicatorId(): Int {
+        return R.id.srl_simple_loading_indicator
+    }
 
-    private val colors = Colors.loadingColors()
-
-    /**
-     * 是否启用随机颜色
-     */
-    var enableRandomColor: Boolean = true
-
-    /**
-     * 下拉时的颜色
-     */
-    var pullColor : Int = colors[0]
-
-    init {
-        inflate(context, R.layout.srl_simple_loading_header, this)
-        val thisView: View = this
-        mIndicator = thisView.findViewById<CircularProgressIndicator>(R.id.srl_simple_loading_indicator)
-        mIndicator.animate().setInterpolator(null)
+    override fun initExtraUi(thisView: View) {
         mIndicator.setIndicatorColor(pullColor)
     }
 
@@ -53,13 +43,18 @@ class SimpleLoadingHeader @JvmOverloads constructor(context: Context?, attrs: At
     override fun onStateChanged(refreshLayout: RefreshLayout, oldState: RefreshState, newState: RefreshState) {
         if (enableRandomColor) {
             if (oldState == RefreshState.None) {
-                mIndicator.setIndicatorColor(pullColor)
+                changeIndicatorColor(true)
             }
             if (newState == RefreshState.Refreshing) {
-                mIndicator.setIndicatorColor(*colors)
+                changeIndicatorColor(false)
             } else {
-                mIndicator.setIndicatorColor(pullColor)
+                changeIndicatorColor(true)
             }
         }
+    }
+
+    override fun onFinish(refreshLayout: RefreshLayout, success: Boolean): Int {
+        changeIndicatorColor(true)
+        return super.onFinish(refreshLayout, success)
     }
 }

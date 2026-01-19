@@ -14,6 +14,7 @@ import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_nested.recyclerview.DiffCallback
 import com.au.module_nested.recyclerview.SmartRLBindRcvAdapter
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
+import com.au.module_nested.smartrefresher.setSimpleLoadingFooter
 import com.au.module_nested.smartrefresher.setSimpleLoadingHeader
 import com.scwang.smart.refresh.footer.ClassicsFooter
 import java.util.UUID
@@ -39,7 +40,8 @@ class RefreshRcvFragment : BindingFragment<FragmentRefresh1Binding>() {
             //setRefreshHeader(MaterialHeader(requireContext()))
             setSimpleLoadingHeader()
 
-            setRefreshFooter(ClassicsFooter(requireContext()))
+//            setRefreshFooter(ClassicsFooter(requireContext()))
+            setSimpleLoadingFooter()
 
             //第一个参数是背景色；第二个参数是文字颜色
             setPrimaryColorsId(com.au.module_androidcolor.R.color.windowBackground, com.au.module_androidcolor.R.color.color_text_desc)

@@ -8,3 +8,9 @@ fun SmartRefreshLayout.setSimpleLoadingHeader() : SmartRefreshLayout {
     setHeaderTriggerRate(1.25f)
     return this
 }
+
+fun SmartRefreshLayout.setSimpleLoadingFooter() : SmartRefreshLayout {
+    setRefreshFooter(SimpleLoadingFooter(context))
+    setFooterHeight(32f)
+    return this
+}
