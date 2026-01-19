@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_nested.R
+import com.au.module_nested.smartrefresher.Colors
 import com.google.android.material.progressindicator.CircularProgressIndicator
 
 /**
@@ -62,8 +63,8 @@ class NestedRecyclerViewLayout : NestedConstraintLayout {
      */
     private fun createCircularProgressIndicator(context: Context): CircularProgressIndicator {
         val progressIndicator = CircularProgressIndicator(context)
-        progressIndicator.indicatorSize = 20.dp
-        progressIndicator.trackThickness = 2.dp
+        progressIndicator.indicatorSize = context.resources.getDimensionPixelSize(R.dimen.nested_indicator_header_size)
+        progressIndicator.trackThickness = context.resources.getDimensionPixelSize(R.dimen.nested_indicator_header_track_thickness)
         progressIndicator.visibility = View.GONE
         return progressIndicator
     }
@@ -109,6 +110,10 @@ class NestedRecyclerViewLayout : NestedConstraintLayout {
         recyclerView.setPadding(0, 0, 0, 30.dp)
 
         addView(recyclerView, 0, lp) //添加到了最底层
+    }
+
+    fun setEnableRandomColor(enable:Boolean, pullColor:Int = Colors.sPullDownColor, refreshingColors:IntArray? = Colors.loadingColors()) {
+        refresher.setEnableRandomColor(enable, pullColor, refreshingColors)
     }
 
     /**

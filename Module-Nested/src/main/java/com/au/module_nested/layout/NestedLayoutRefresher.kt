@@ -8,12 +8,13 @@ import android.view.ViewGroup
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.RecyclerView
+import com.au.module_android.utils.dp
 import com.au.module_nested.mgr.INestedPullManager
 import com.au.module_nested.mgr.NestedPullFakeManager
 import com.au.module_nested.mgr.NestedPullSmoothManager
 import com.au.module_nested.mgr.SmoothParams
+import com.au.module_nested.smartrefresher.Colors
 import com.au.module_nested.widget.NoTopEffectRecyclerView
-import com.au.module_android.utils.dp
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import java.lang.Long.max
 
@@ -115,9 +116,16 @@ class NestedLayoutRefresher(private val layout:ViewGroup) : INestedPullManager {
         bePullView: View,
         progressIndicator: CircularProgressIndicator?,
         isIndicatorChildOfBePullView: Boolean,
+        enableRandomColor: Boolean = Colors.sEnableRandomColor,
+        pullColor: Int = Colors.sPullDownColor,
+        refreshingColors: IntArray? = Colors.loadingColors(),
         params: SmoothParams = SmoothParams(80.dp, 0.39f)
     ) {
-        pullManager = NestedPullSmoothManager(this, bePullView, progressIndicator, isIndicatorChildOfBePullView, params)
+        pullManager = NestedPullSmoothManager(this, bePullView, progressIndicator, isIndicatorChildOfBePullView, enableRandomColor, pullColor, refreshingColors, params)
+    }
+
+    override fun setEnableRandomColor(enable: Boolean, pullColor: Int, refreshingColors: IntArray?) {
+        pullManager.setEnableRandomColor(enable, pullColor, refreshingColors)
     }
 
     private fun resetRefreshCompleted() {

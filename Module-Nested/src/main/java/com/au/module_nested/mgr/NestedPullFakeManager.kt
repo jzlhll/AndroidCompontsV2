@@ -2,8 +2,8 @@ package com.au.module_nested.mgr
 
 import android.util.Log
 import android.view.View
-import com.au.module_nested.layout.NestedLayoutRefresher
 import com.au.module_android.utils.dp
+import com.au.module_nested.layout.NestedLayoutRefresher
 
 /**
  * author: allan
@@ -31,6 +31,9 @@ internal class NestedPullFakeManager
     override fun pullDownIsTargetTranslated() = bePullView.translationY != 0f
 
     override fun refreshCompleted() {}
+
+    override fun setEnableRandomColor(enable: Boolean, pullColor: Int, refreshingColors: IntArray?) {
+    }
 
     override fun setOnRefreshAction(onRefreshAction: (() -> Unit)?) {}
 

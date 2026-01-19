@@ -1,5 +1,7 @@
 package com.au.module_nested.mgr
 
+import com.au.module_nested.smartrefresher.Colors
+
 /**
  * @author allan
  * Date: 2023/2/27
@@ -22,4 +24,6 @@ interface INestedPullManager {
      * 添加额外的indicator的位移Hold偏差值
      */
     fun setIndicatorDeltaHoldY(delta:Float) {}
+
+    fun setEnableRandomColor(enable:Boolean, pullColor:Int = Colors.sPullDownColor, refreshingColors:IntArray? = Colors.loadingColors())
 }

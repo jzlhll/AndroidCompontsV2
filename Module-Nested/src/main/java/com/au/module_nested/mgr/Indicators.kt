@@ -25,6 +25,14 @@ internal abstract class IndicatorBase {
      */
     abstract var progress:Int
 
+    abstract val enableRandomColor : Boolean
+
+    abstract val pullColor : Int
+
+    abstract val refreshingColors : IntArray?
+
+    abstract fun setIndicatorColor(vararg indicatorColors:Int)
+
     open fun reset() {}
     open fun hide() {}
     open fun show() {}
@@ -46,9 +54,25 @@ internal class NoneIndicator : IndicatorBase() {
     override var progress: Int
         get() = mProgress
         set(value) {mProgress = value}
+
+    override val enableRandomColor: Boolean
+        get() = false
+
+    override val pullColor: Int
+        get() = 0
+
+    override val refreshingColors: IntArray?
+        get() = null
+
+    override fun setIndicatorColor(vararg indicatorColors: Int) {
+    }
 }
 
-internal class RealIndicator(private val indicator: CircularProgressIndicator) : IndicatorBase() {
+internal class RealIndicator(private val indicator: CircularProgressIndicator,
+                             override var enableRandomColor: Boolean,
+                             override var pullColor: Int,
+                             override var refreshingColors: IntArray?,
+                             ) : IndicatorBase() {
     private val _holdTranslateY:Float = indicator.indicatorSize + indicator.trackThickness * 2 + indicator.marginBottom + 0.5f.dp
 
     override val holdTranslateY: Float
@@ -73,6 +97,9 @@ internal class RealIndicator(private val indicator: CircularProgressIndicator) :
         indicator.visibility = View.GONE
         indicator.progress = 0
         indicator.isIndeterminate = false
+        if (enableRandomColor) {
+            indicator.setIndicatorColor(pullColor)
+        }
     }
 
     override fun hide() {
@@ -85,5 +112,9 @@ internal class RealIndicator(private val indicator: CircularProgressIndicator) :
         if (indicator.visibility != View.VISIBLE) {
             indicator.visibility = View.VISIBLE
         }
+    }
+
+     override fun setIndicatorColor(vararg indicatorColors: Int) {
+        indicator.setIndicatorColor(*indicatorColors)
     }
 }

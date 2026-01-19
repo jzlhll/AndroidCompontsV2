@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.au.module_nested.layout.ChildConstraintLayout
         android:id="@+id/contentHost"
         android:layout_width="match_parent"
         app:layout_constraintTop_toBottomOf="@id/myToolbar"
@@ -17,6 +17,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginStart="@dimen/nested_indicator_toolbar_margin_start"
         android:layout_marginEnd="@dimen/nested_indicator_toolbar_margin_end"
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="48dp"/>
 
@@ -25,8 +26,8 @@
         android:visibility="gone"
         android:id="@+id/indicator"
         android:layout_marginTop="@dimen/nested_indicator_toolbar_margin_top"
-        app:indicatorSize="20dp"
-        app:trackThickness="2dp"
+        app:indicatorSize="@dimen/nested_indicator_header_size"
+        app:trackThickness="@dimen/nested_indicator_header_track_thickness"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/myToolbar"

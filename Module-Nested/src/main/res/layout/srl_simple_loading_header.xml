@@ -13,8 +13,8 @@
         android:id="@+id/srl_simple_loading_indicator"
         android:layout_centerInParent="true"
         app:indicatorColor="@color/colorPrimary"
-        app:indicatorSize="24dp"
-        app:trackThickness="3dp"
+        app:indicatorSize="@dimen/nested_indicator_header_size"
+        app:trackThickness="@dimen/nested_indicator_header_track_thickness"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 

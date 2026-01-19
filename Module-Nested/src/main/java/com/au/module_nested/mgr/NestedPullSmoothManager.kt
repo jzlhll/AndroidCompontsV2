@@ -2,9 +2,11 @@ package com.au.module_nested.mgr
 
 import android.util.Log
 import android.view.View
-import com.google.android.material.progressindicator.CircularProgressIndicator
-import com.au.module_nested.layout.NestedLayoutRefresher
+import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
+import com.au.module_nested.layout.NestedLayoutRefresher
+import com.au.module_nested.smartrefresher.Colors
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import kotlin.math.max
 
 /**
@@ -27,6 +29,9 @@ internal class NestedPullSmoothManager
     private val bePullView: View,
     progressIndicator: CircularProgressIndicator?,
     private val isIndicatorChildOfBePullView: Boolean,
+    enableRandomColor: Boolean = Colors.sEnableRandomColor,
+    pullColor: Int = Colors.sPullDownColor,
+    refreshingColors: IntArray? = Colors.loadingColors(),
     private val params: SmoothParams = SmoothParams(80f.dp.toInt(), 0.35f)
 ): INestedPullManager {
     private val indicator:IndicatorBase
@@ -55,9 +60,17 @@ internal class NestedPullSmoothManager
     override fun pullDownIsTargetTranslated() = bePullView.translationY != 0f
 
     init {
-        indicator = if (progressIndicator == null) NoneIndicator() else RealIndicator(progressIndicator)
-
+        indicator = if (progressIndicator == null) NoneIndicator()
+                else RealIndicator(progressIndicator, enableRandomColor, pullColor, refreshingColors)
         initial()
+    }
+
+    override fun setEnableRandomColor(enable: Boolean, pullColor: Int, refreshingColors: IntArray?) {
+        indicator.asOrNull<RealIndicator>()?.let {
+            it.enableRandomColor = enable
+            it.pullColor = pullColor
+            it.refreshingColors = refreshingColors
+        }
     }
 
     private fun hideIndicator() {
@@ -83,6 +96,11 @@ internal class NestedPullSmoothManager
                         val refreshAction = onRefreshAction
                         if (shouldRefresh && refreshAction != null) {
                             indicator.isIndeterminate = true
+                            if (indicator.enableRandomColor) {
+                                indicator.refreshingColors?.let { colors->
+                                    indicator.setIndicatorColor(*colors)
+                                }
+                            }
                             isLoadingData = true
                             refreshAction.invoke()
                         }
@@ -135,6 +153,9 @@ internal class NestedPullSmoothManager
             } else { //代表下拉
                 indicator.progress = (indicator.max * translation1 / params.pullDownTriggerValue).toInt()
                 indicator.isIndeterminate = false
+                if (indicator.enableRandomColor) {
+                    indicator.setIndicatorColor(indicator.pullColor)
+                }
                 showIndicator()
             }
         }
@@ -149,6 +170,9 @@ internal class NestedPullSmoothManager
         isLoadingData = false
         indicator.isIndeterminate = false
         indicator.progress = 0
+        if (indicator.enableRandomColor) {
+            indicator.setIndicatorColor(indicator.pullColor)
+        }
         if (NestedLayoutRefresher.DEBUG) Log.d(NestedLayoutRefresher.TAG, "refreshCompleted in nestedPullSmooth")
         hideIndicator()
     }

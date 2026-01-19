@@ -20,12 +20,12 @@ abstract class AbsSimpleLoading @JvmOverloads constructor(context: Context?, att
     /**
      * 是否启用随机颜色
      */
-    var enableRandomColor: Boolean = true
+    var enableRandomColor: Boolean = Colors.sEnableRandomColor
 
     /**
      * 下拉时的颜色
      */
-    var pullColor : Int = colors[0]
+    var pullColor : Int = Colors.sPullDownColor
 
     // endregion
 

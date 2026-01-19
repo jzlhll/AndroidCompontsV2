@@ -8,7 +8,6 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 import com.au.module_android.Globals
-import com.au.module_android.Globals.activityList
 import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_androidui.ui.base.IFullWindow
 import com.au.module_androidui.ui.base.ImmersiveMode
@@ -56,7 +55,7 @@ fun <T : ViewBinding> createViewBinding(self: Class<*>, inflater: LayoutInflater
             ViewGroup::class.java,
             Boolean::class.java
         ).invoke(null, inflater, container, attach) as T
-    } catch (e : NoSuchMethodException) {
+    } catch (_ : NoSuchMethodException) {
         createViewBindingMerged(clz, inflater, container)
     }
 }
@@ -88,6 +87,7 @@ fun <T : ViewBinding> createViewBindingT2(self: Class<*>, inflater: LayoutInflat
             LayoutInflater::class.java,
             ViewGroup::class.java).invoke(null, inflater, container) as T
     } else {
+        //如果这里报错了，你需要检查你是否在xml中使用了merge标签。在框架中需要指定contentMergeXml为true
         clz.getMethod(
             "inflate",
             LayoutInflater::class.java,
@@ -111,7 +111,7 @@ fun findCustomFragmentGetActivity(customFragment: Class<*>): Activity? {
  * 退出某个fragment承载的activity
  */
 fun finishFragment(clz: Class<out Fragment>) {
-    activityList.forEach {
+    Globals.activityList.forEach {
         if (it is FragmentShellActivity && it.fragmentClass == clz) {
             it.finish()
         }

@@ -13,9 +13,9 @@
         android:id="@+id/srl_simple_loading_indicator"
         android:layout_centerInParent="true"
         app:indicatorColor="@color/colorPrimary"
-        app:indicatorSize="16dp"
+        app:indicatorSize="@dimen/nested_indicator_footer_size"
         android:indeterminate="true"
-        app:trackThickness="2dp"
+        app:trackThickness="@dimen/nested_indicator_footer_track_thickness"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 

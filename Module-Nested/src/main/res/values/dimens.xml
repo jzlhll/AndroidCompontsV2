@@ -4,4 +4,11 @@
     <dimen name="nested_indicator_toolbar_margin_end">0dp</dimen>
     <dimen name="nested_indicator_toolbar_margin_top">-12dp</dimen>
     <dimen name="nested_indicator_toolbar_holdy">-24dp</dimen>
+
+    <dimen name="nested_indicator_header_size">24dp</dimen>
+    <dimen name="nested_indicator_header_track_thickness">3dp</dimen>
+
+    <dimen name="nested_indicator_footer_size">16dp</dimen>
+    <dimen name="nested_indicator_footer_track_thickness">2dp</dimen>
+
 </resources>
