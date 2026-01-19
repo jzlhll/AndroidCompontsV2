@@ -1,1 +1,0 @@
-../.trae/skills/api自动生成/SKILL.md

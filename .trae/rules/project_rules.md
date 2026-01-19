@@ -15,6 +15,7 @@ trigger: always_on
     每个文件一行“类名(不要全路径)：一句话概括变更”；若涉及多文件，最后追加一行总概括。记得每个类描述后换行方便查看。
 
 # 行为准则
+思考过程和输出的Plan markdown，需使用中文
 严格按需求输出，不加额外内容
 只修改指定部分
 不重构未要求代码
@@ -27,5 +28,3 @@ trigger: always_on
 
 # 项目规则
 日志：优先logdNoFile（仅控制台），函数入口用logdNoFile{}，函数名拆分（如onDeviceListChanged→on deviceList changed）
-标题栏：默认用YourToolbarInfo.Defaults，自定义用YourToolbarInfo.Yours
-LiveData：用NoStickLiveData类，setValueSafe函数更新value

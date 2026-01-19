@@ -1,6 +1,6 @@
 ---
-name: 布局xml生成
-description: 当涉及到Layout xml布局和dimen，style等属性使用时使用它。
+name: 布局xml与Fragment生成
+description: 当涉及到Fragment生成，Layout xml布局创建修改，和dimen，style等属性使用时，遵守它。
 ---
 
 # 控件
@@ -37,10 +37,11 @@ description: 当涉及到Layout xml布局和dimen，style等属性使用时使�
 小容器：xxxLayout
 RecyclerView：xxxRcv
 
-# BindingFragment
+# Fragment
 继承BindingFragment<XXXBinding>
 重写onBindingCreated
 点击用onClick扩展
+标题栏：默认用YourToolbarInfo.Defaults，自定义用YourToolbarInfo.Yours
 
 # RecyclerView
 不主动写Adapter(除非允许)

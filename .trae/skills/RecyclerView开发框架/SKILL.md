@@ -3,7 +3,7 @@ name: RecyclerView开发框架
 description: 当生成和修改代码涉及到RecyclerView时，使用代码仓库中的开发框架，遵守它。
 ---
 
-代码目录为：[module_nested](Module-Nested/src/main/java/com/au/module_nested)
+代码目录：[module_nested](Module-Nested/src/main/java/com/au/module_nested)
 
 # 编写规范
 ## 文件结构

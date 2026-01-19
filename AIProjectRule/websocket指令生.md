@@ -1,1 +1,0 @@
-../.trae/skills/websocket指令生成/SKILL.md
