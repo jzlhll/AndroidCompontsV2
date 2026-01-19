@@ -75,12 +75,12 @@ class NestedLayoutRefresher(private val layout:ViewGroup) : INestedPullManager {
     /**
      * 松手后的回弹时间
      */
-    var looseFingerAnimDuration = 360L
+    var looseFingerAnimDuration = 300L
 
     /**
      * 至少显示加载进度的时间
      */
-    var atLeastShowLoadingTime = 1200L
+    var atLeastShowLoadingTime = 500L
 
     /**
      * 当手松开的时候，会调用它，判断我们的目标子View是否位移过。

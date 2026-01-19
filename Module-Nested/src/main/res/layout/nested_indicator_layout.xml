@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <com.au.module_nested.layout.ChildConstraintLayout
+    <!-- 跟SmartRefreshLayout一样，都需要嵌套一个NestedScrollView来包裹 -->
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/contentHost"
         android:layout_width="match_parent"
         app:layout_constraintTop_toBottomOf="@id/myToolbar"
