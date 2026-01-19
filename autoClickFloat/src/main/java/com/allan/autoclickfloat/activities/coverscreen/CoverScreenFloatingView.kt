@@ -19,6 +19,7 @@ import com.au.module_android.click.onClick
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
+import kotlinx.coroutines.launch
 
 class CoverScreenFloatingView private constructor() {
     companion object {
@@ -215,7 +216,9 @@ class CoverScreenFloatingView private constructor() {
         val smallenBtn = mRoot.findViewById<View>(R.id.smallenBtn)
         smallenBtn.onClick {
             getInstanceOrNull()?.remove()
-            SmallenIconFloatingView.getInstance().loadShow()
+            Globals.backgroundScope.launch {
+                SmallenIconFloatingView.getInstance().loadShow()
+            }
         }
 
         mRoot.findViewById<ViewGroup>(R.id.controlsHost)

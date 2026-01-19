@@ -44,11 +44,11 @@ class App : InitApplication() {
         OkhttpGlobal.initBeforeAnyRequest(OkhttpInitParams().also {
             it.okHttpCookieJar = object : AbsCookieJar() {
                 override fun saveToDisk(host: String, data: String) {
-                    AppDataStore.save("okhttp_cookie_$host", data)
+                    AppDataStore.saveString("okhttp_cookie_$host", data)
                 }
 
                 override fun loadFromDisk(host: String): String {
-                    return AppDataStore.readBlocked("okhttp_cookie_$host", "")
+                    return AppDataStore.readStringBlocked("okhttp_cookie_$host", "") ?: ""
                 }
             }
 

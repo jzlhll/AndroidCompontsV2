@@ -1,25 +1,25 @@
 package com.au.module_cached
 
 import com.au.module_android.Globals
-import com.au.module_android.utils.asOrNull
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
  * 不支持Set，List。请自行使用Gson进行转换存储。
  * 支持如下：
- *             Int::class.java
- *             Long::class.java
- *             Double::class.java
- *             Float::class.java
- *             Boolean::class.java
- *             String::class.java
- *             ByteArray::class.java
+ *             Int
+ *             Long
+ *             Double
+ *             Float
+ *             Boolean
+ *             String
+ *             ByteArray
  */
 object AppDataStore {
     class OnceDataStore(val context:Context, dataStoreName:String) {
@@ -37,172 +37,260 @@ object AppDataStore {
 
     fun onceDataStore(context: Context, dataStoreName:String) = OnceDataStore(context, dataStoreName).dataStore
 
-    inline fun <reified T> containsKeyBlocked(key:String,
-                                              dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean{
-        val ret = runBlocking {
-            val prefKey = when (T::class) {
-                Int::class -> intPreferencesKey(key)
-                Long::class -> longPreferencesKey(key)
-                Double::class -> doublePreferencesKey(key)
-                Float::class -> floatPreferencesKey(key)
-                Boolean::class -> booleanPreferencesKey(key)
-                String::class -> stringPreferencesKey(key)
-                ByteArray::class -> byteArrayPreferencesKey(key)
-                else -> {
-                    throw IllegalArgumentException("This type can be removed from DataStore1")
-                }
-            }
-            val t = dataStore.data.map {
-                it.contains(prefKey)
-            }.first()
-
-            return@runBlocking t
-        }
-
-        return ret
-    }
-
-    suspend inline fun <reified T> containsKey(key:String,
-                                               dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean{
-        val prefKey = when (T::class) {
-            Int::class -> intPreferencesKey(key)
-            Long::class -> longPreferencesKey(key)
-            Double::class -> doublePreferencesKey(key)
-            Float::class -> floatPreferencesKey(key)
-            Boolean::class -> booleanPreferencesKey(key)
-            String::class -> stringPreferencesKey(key)
-            ByteArray::class -> byteArrayPreferencesKey(key)
-            else -> {
-                throw IllegalArgumentException("This type can be removed from DataStore2")
-            }
-        }
-        val t = dataStore.data.map { it.contains(prefKey) }.first()
-        return t
-    }
-
     fun clear(dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
-        runBlocking {dataStore.edit { it.clear() } }
+        Globals.backgroundScope.launch {dataStore.edit { it.clear() } }
     }
 
-    fun save(key:String, value: Any, dataStore: DataStore<Preferences> = Globals.app.globalDataStore,) {
-        runBlocking {
-            saveSuspend(key, value, dataStore)
-        }
+    // Int
+    @Deprecated("use containsIntKey instead")
+    fun containsIntKeyBlocked(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { containsIntKey(key, dataStore) }
     }
 
-    fun save(vararg pair:Pair<String, Any>, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
-        runBlocking {
-            pair.forEach {
-                saveSuspend(it.first, it.second, dataStore)
-            }
-        }
+    suspend fun containsIntKey(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        val prefKey = intPreferencesKey(key)
+        return dataStore.data.map { it.contains(prefKey) }.first()
     }
 
-    inline fun <reified T> remove(key:String) {
-        runBlocking {
-            removeSuspend<T>(key)
-        }
+    fun saveInt(key:String, value: Int, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { dataStore.edit { it[intPreferencesKey(key)] = value } }
     }
 
-    suspend inline fun <reified T> removeSuspend(key:String,
-                                                 dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : T?{
-        if (!containsKey<T>(key)) {
-            return null
-        }
+    @Deprecated("use readInt instead")
+    fun readIntBlocked(key:String, defaultValue: Int, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Int {
+        return runBlocking { readInt(key, defaultValue, dataStore) }
+    }
 
-        var ret : T? = null
-        dataStore.edit { setting ->
-            ret = when (T::class) {
-                Int::class -> setting.remove(intPreferencesKey(key)).asOrNull()
-                Long::class -> setting.remove(longPreferencesKey(key)).asOrNull()
-                Double::class -> setting.remove(doublePreferencesKey(key)).asOrNull()
-                Float::class -> setting.remove(floatPreferencesKey(key)).asOrNull()
-                Boolean::class -> setting.remove(booleanPreferencesKey(key)).asOrNull()
-                String::class -> setting.remove(stringPreferencesKey(key)).asOrNull()
-                ByteArray::class -> setting.remove(byteArrayPreferencesKey(key)).asOrNull()
-                else -> {
-                    throw IllegalArgumentException("This type can be removed from DataStore3")
-                }
-            }
-        }
+    suspend fun readInt(key: String, defaultValue: Int, dataStore: DataStore<Preferences> = Globals.app.globalDataStore): Int {
+        return dataStore.data.map { it[intPreferencesKey(key)] ?: defaultValue }.first()
+    }
+
+    fun removeInt(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { removeIntSuspend(key, dataStore) }
+    }
+
+    suspend fun removeIntSuspend(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Int? {
+        if (!containsIntKey(key, dataStore)) return null
+        var ret : Int? = null
+        dataStore.edit { ret = it.remove(intPreferencesKey(key)) }
         return ret
     }
 
-    /**
-     * 因为我们用于保存，不应该使用lifeCycleScope来发起。有可能无法保存成功。应该使用全局scope。
-     */
-    @Deprecated("不建议直接使用，因为可能协程被取消，除非你明白你的scope一定保存成功")
-    private suspend fun saveSuspend(key:String, value:Any,
-                                    dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
-        dataStore.edit { setting ->
-            when (value) {
-                is Int -> setting[intPreferencesKey(key)] = value
-                is Long -> setting[longPreferencesKey(key)] = value
-                is Double -> setting[doublePreferencesKey(key)] = value
-                is Float -> setting[floatPreferencesKey(key)] = value
-                is Boolean -> setting[booleanPreferencesKey(key)] = value
-                is String -> setting[stringPreferencesKey(key)] = value
-                is ByteArray -> setting[byteArrayPreferencesKey(key)] = value
-                else -> {
-                    throw IllegalArgumentException("This type can be saved into DataStore")
-                }
-            }
+    // Long
+    @Deprecated("use containsLongKey instead")
+    fun containsLongKeyBlocked(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { containsLongKey(key, dataStore) }
+    }
+
+    suspend fun containsLongKey(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        val prefKey = longPreferencesKey(key)
+        return dataStore.data.map { it.contains(prefKey) }.first()
+    }
+
+    fun saveLong(key:String, value: Long, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { dataStore.edit { it[longPreferencesKey(key)] = value } }
+    }
+
+    @Deprecated("use readLong instead")
+    fun readLongBlocked(key:String, defaultValue: Long, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Long {
+        return runBlocking { readLong(key, defaultValue, dataStore) }
+    }
+
+    suspend fun readLong(key: String, defaultValue: Long, dataStore: DataStore<Preferences> = Globals.app.globalDataStore): Long {
+        return dataStore.data.map { it[longPreferencesKey(key)] ?: defaultValue }.first()
+    }
+
+    fun removeLong(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { removeLongSuspend(key, dataStore) }
+    }
+
+    suspend fun removeLongSuspend(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Long? {
+        if (!containsLongKey(key, dataStore)) return null
+        var ret : Long? = null
+        dataStore.edit { ret = it.remove(longPreferencesKey(key)) }
+        return ret
+    }
+
+    // Double
+    @Deprecated("use containsDoubleKey instead")
+    fun containsDoubleKeyBlocked(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { containsDoubleKey(key, dataStore) }
+    }
+
+    suspend fun containsDoubleKey(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        val prefKey = doublePreferencesKey(key)
+        return dataStore.data.map { it.contains(prefKey) }.first()
+    }
+
+    fun saveDouble(key:String, value: Double, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { dataStore.edit { it[doublePreferencesKey(key)] = value } }
+    }
+
+    @Deprecated("use readDouble instead")
+    fun readDoubleBlocked(key:String, defaultValue: Double, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Double {
+        return runBlocking { readDouble(key, defaultValue, dataStore) }
+    }
+
+    suspend fun readDouble(key: String, defaultValue: Double, dataStore: DataStore<Preferences> = Globals.app.globalDataStore): Double {
+        return dataStore.data.map { it[doublePreferencesKey(key)] ?: defaultValue }.first()
+    }
+
+    fun removeDouble(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { removeDoubleSuspend(key, dataStore) }
+    }
+
+    suspend fun removeDoubleSuspend(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Double? {
+        if (!containsDoubleKey(key, dataStore)) return null
+        var ret : Double? = null
+        dataStore.edit { ret = it.remove(doublePreferencesKey(key)) }
+        return ret
+    }
+
+    // Float
+    @Deprecated("use containsFloatKey instead")
+    fun containsFloatKeyBlocked(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { containsFloatKey(key, dataStore) }
+    }
+
+    suspend fun containsFloatKey(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        val prefKey = floatPreferencesKey(key)
+        return dataStore.data.map { it.contains(prefKey) }.first()
+    }
+
+    fun saveFloat(key:String, value: Float, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { dataStore.edit { it[floatPreferencesKey(key)] = value } }
+    }
+
+    @Deprecated("use readFloat instead")
+    fun readFloatBlocked(key:String, defaultValue: Float, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Float {
+        return runBlocking { readFloat(key, defaultValue, dataStore) }
+    }
+
+    suspend fun readFloat(key: String, defaultValue: Float, dataStore: DataStore<Preferences> = Globals.app.globalDataStore): Float {
+        return dataStore.data.map { it[floatPreferencesKey(key)] ?: defaultValue }.first()
+    }
+
+    fun removeFloat(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { removeFloatSuspend(key, dataStore) }
+    }
+
+    suspend fun removeFloatSuspend(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Float? {
+        if (!containsFloatKey(key, dataStore)) return null
+        var ret : Float? = null
+        dataStore.edit { ret = it.remove(floatPreferencesKey(key)) }
+        return ret
+    }
+
+    // Boolean
+    @Deprecated("use containsBooleanKey instead")
+    fun containsBooleanKeyBlocked(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { containsBooleanKey(key, dataStore) }
+    }
+
+    suspend fun containsBooleanKey(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        val prefKey = booleanPreferencesKey(key)
+        return dataStore.data.map { it.contains(prefKey) }.first()
+    }
+
+    fun saveBoolean(key:String, value: Boolean, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { dataStore.edit { it[booleanPreferencesKey(key)] = value } }
+    }
+
+    @Deprecated("use readBoolean instead")
+    fun readBooleanBlocked(key:String, defaultValue: Boolean, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { readBoolean(key, defaultValue, dataStore) }
+    }
+
+    suspend fun readBoolean(key: String, defaultValue: Boolean, dataStore: DataStore<Preferences> = Globals.app.globalDataStore): Boolean {
+        return dataStore.data.map { it[booleanPreferencesKey(key)] ?: defaultValue }.first()
+    }
+
+    fun removeBoolean(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { removeBooleanSuspend(key, dataStore) }
+    }
+
+    suspend fun removeBooleanSuspend(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean? {
+        if (!containsBooleanKey(key, dataStore)) return null
+        var ret : Boolean? = null
+        dataStore.edit { ret = it.remove(booleanPreferencesKey(key)) }
+        return ret
+    }
+
+    // String
+    @Deprecated("use containsStringKey instead")
+    fun containsStringKeyBlocked(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { containsStringKey(key, dataStore) }
+    }
+
+    suspend fun containsStringKey(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        val prefKey = stringPreferencesKey(key)
+        return dataStore.data.map { it.contains(prefKey) }.first()
+    }
+
+    fun saveString(key:String, value: String?, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        if (value == null) {
+            removeString(key, dataStore)
+        } else {
+            Globals.backgroundScope.launch { dataStore.edit { it[stringPreferencesKey(key)] = value } }
         }
     }
 
-    inline fun < reified T : Any> readBlocked(key:String, defaultValue:T,
-                                              dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : T {
-        val r = runBlocking {
-            read(key, defaultValue, dataStore)
-        }
-        return r
+    @Deprecated("use readString instead")
+    fun readStringBlocked(key:String, defaultValue: String?, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : String? {
+        return runBlocking { readString(key, defaultValue, dataStore) }
     }
 
-    /**
-     * 获取数据
-     * */
-    suspend inline fun < reified T : Any> read(key: String, defaultValue:T,
-                                               dataStore: DataStore<Preferences> = Globals.app.globalDataStore): T {
-        return when (T::class) {
-            Int::class -> {
-                dataStore.data.map { setting ->
-                    setting[intPreferencesKey(key)] ?: defaultValue
-                }.first() as T
-            }
-            Long::class -> {
-                dataStore.data.map { setting ->
-                    setting[longPreferencesKey(key)] ?: defaultValue
-                }.first() as T
-            }
-            Double::class -> {
-                dataStore.data.map { setting ->
-                    setting[doublePreferencesKey(key)] ?:defaultValue
-                }.first() as T
-            }
-            Float::class -> {
-                dataStore.data.map { setting ->
-                    setting[floatPreferencesKey(key)] ?:defaultValue
-                }.first() as T
-            }
-            Boolean::class -> {
-                dataStore.data.map { setting ->
-                    setting[booleanPreferencesKey(key)]?:defaultValue
-                }.first() as T
-            }
-            String::class -> {
-                dataStore.data.map { setting ->
-                    setting[stringPreferencesKey(key)] ?: defaultValue
-                }.first() as T
-            }
+    suspend fun readString(key: String, defaultValue: String?, dataStore: DataStore<Preferences> = Globals.app.globalDataStore): String? {
+        return dataStore.data.map { it[stringPreferencesKey(key)] ?: defaultValue }.first()
+    }
 
-            ByteArray::class -> {
-                dataStore.data.map { setting ->
-                    setting[byteArrayPreferencesKey(key)] ?: defaultValue
-                }.first() as T
-            }
-            else -> {
-                throw IllegalArgumentException("This type can be get into DataStore")
-            }
+    fun removeString(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { removeStringSuspend(key, dataStore) }
+    }
+
+    suspend fun removeStringSuspend(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : String? {
+        if (!containsStringKey(key, dataStore)) return null
+        var ret : String? = null
+        dataStore.edit { ret = it.remove(stringPreferencesKey(key)) }
+        return ret
+    }
+
+    // ByteArray
+    @Deprecated("use containsByteArrayKey instead")
+    fun containsByteArrayKeyBlocked(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        return runBlocking { containsByteArrayKey(key, dataStore) }
+    }
+
+    suspend fun containsByteArrayKey(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : Boolean {
+        val prefKey = byteArrayPreferencesKey(key)
+        return dataStore.data.map { it.contains(prefKey) }.first()
+    }
+
+    fun saveByteArray(key:String, value: ByteArray?, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        if (value == null) {
+            removeByteArray(key, dataStore)
+        } else {
+            Globals.backgroundScope.launch { dataStore.edit { it[byteArrayPreferencesKey(key)] = value } }
         }
+    }
+
+    @Deprecated("use readByteArray instead")
+    fun readByteArrayBlocked(key:String, defaultValue: ByteArray?, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : ByteArray? {
+        return runBlocking { readByteArray(key, defaultValue, dataStore) }
+    }
+
+    suspend fun readByteArray(key: String, defaultValue: ByteArray?, dataStore: DataStore<Preferences> = Globals.app.globalDataStore): ByteArray? {
+        return dataStore.data.map { it[byteArrayPreferencesKey(key)] ?: defaultValue }.first()
+    }
+
+    fun removeByteArray(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) {
+        Globals.backgroundScope.launch { removeByteArraySuspend(key, dataStore) }
+    }
+
+    suspend fun removeByteArraySuspend(key:String, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : ByteArray? {
+        if (!containsByteArrayKey(key, dataStore)) return null
+        var ret : ByteArray? = null
+        dataStore.edit { ret = it.remove(byteArrayPreferencesKey(key)) }
+        return ret
     }
 }

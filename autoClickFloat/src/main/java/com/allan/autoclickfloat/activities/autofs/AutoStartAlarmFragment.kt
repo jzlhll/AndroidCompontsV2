@@ -11,7 +11,9 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.hideImeNew
+import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.visible
+import com.au.module_android.utils.withMainThread
 import com.au.module_androidui.dialogs.ConfirmBottomDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastUtil
@@ -89,8 +91,6 @@ class AutoStartAlarmFragment : BindingFragment<FragmentAutoStartupNewBinding>(),
     }
 
     private fun initEdit() {
-        val savePsWd = AppDataStore.readBlocked("autoFsInputPassword", "")
-
         binding.inputHost.onClick {  } //必须添加用来阻止到被覆盖的界面
 
         binding.inputTitle.onClick {
@@ -101,24 +101,29 @@ class AutoStartAlarmFragment : BindingFragment<FragmentAutoStartupNewBinding>(),
             }
         }
 
-        if (savePsWd.isEmpty()) {
-            binding.inputTitle.text = "首次使用，请设置密码:"
-            binding.inputOkBtn.onClick {
-                val t = binding.inputEdit.text.toString()
-                if (t == binding.inputEdit2.text.toString() && t.isNotEmpty()) {
-                    AppDataStore.save("autoFsInputPassword" to t)
-                    binding.inputHost.gone()
-                    hideImeNew(requireActivity().window, binding.inputHost)
-                }
-            }
-        } else {
-            binding.inputTitle.text = "请输入密码:"
-            binding.inputEdit2.gone()
-            binding.inputOkBtn.onClick {
-                val t = binding.inputEdit.text.toString()
-                if (t == savePsWd && t.isNotEmpty()) {
-                    binding.inputHost.gone()
-                    hideImeNew(requireActivity().window, binding.inputHost)
+        lifecycleScope.launchOnThread {
+            val savePsWd = AppDataStore.readString("autoFsInputPassword", "") ?: ""
+            withMainThread {
+                if (savePsWd.isEmpty()) {
+                    binding.inputTitle.text = "首次使用，请设置密码:"
+                    binding.inputOkBtn.onClick {
+                        val t = binding.inputEdit.text.toString()
+                        if (t == binding.inputEdit2.text.toString() && t.isNotEmpty()) {
+                            AppDataStore.saveString("autoFsInputPassword", t)
+                            binding.inputHost.gone()
+                            hideImeNew(requireActivity().window, binding.inputHost)
+                        }
+                    }
+                } else {
+                    binding.inputTitle.text = "请输入密码:"
+                    binding.inputEdit2.gone()
+                    binding.inputOkBtn.onClick {
+                        val t = binding.inputEdit.text.toString()
+                        if (t == savePsWd && t.isNotEmpty()) {
+                            binding.inputHost.gone()
+                            hideImeNew(requireActivity().window, binding.inputHost)
+                        }
+                    }
                 }
             }
         }
@@ -127,28 +132,32 @@ class AutoStartAlarmFragment : BindingFragment<FragmentAutoStartupNewBinding>(),
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         initBtns()
         initAlarm()
-        initEdit()
         initCurrentTime()
         initRcv()
 
         initTimer()
+        initEdit()
     }
 
     private fun initDing() {
-        val lastTime = AppDataStore.readBlocked("autoFSDingInfoLastShowTime", 0L)
-        val cur = System.currentTimeMillis()
-        if (cur - lastTime > 7 * 24 * 3600 * 1000L) { //每七天显示一次
-            binding.dingInfoHost.visible()
-            binding.dingInfoHost.onClick {
-                binding.dingInfoHost.tag = "isClicked"
-                if (goToAutoStartSettings(requireContext())) {
-                    binding.dingInfoHost.gone()
+        lifecycleScope.launchOnThread {
+            val lastTime = AppDataStore.readLong("autoFSDingInfoLastShowTime", 0L)
+            val cur = System.currentTimeMillis()
+            withMainThread {
+                if (cur - lastTime > 7 * 24 * 3600 * 1000L) { //每七天显示一次
+                    binding.dingInfoHost.visible()
+                    binding.dingInfoHost.onClick {
+                        binding.dingInfoHost.tag = "isClicked"
+                        if (goToAutoStartSettings(requireContext())) {
+                            binding.dingInfoHost.gone()
+                        } else {
+                            ToastUtil.toastOnTop("暂时无法跳转到自启动设置界面，请手动去系统中设置。")
+                        }
+                    }
                 } else {
-                    ToastUtil.toastOnTop("暂时无法跳转到自启动设置界面，请手动去系统中设置。")
+                    binding.dingInfoHost.gone()
                 }
             }
-        } else {
-            binding.dingInfoHost.gone()
         }
     }
 
@@ -160,7 +169,7 @@ class AutoStartAlarmFragment : BindingFragment<FragmentAutoStartupNewBinding>(),
     override fun onStop() {
         super.onStop()
         if (binding.dingInfoHost.tag == "isClicked") {
-            AppDataStore.save("autoFSDingInfoLastShowTime" to System.currentTimeMillis())
+            AppDataStore.saveLong("autoFSDingInfoLastShowTime", System.currentTimeMillis())
         }
     }
 

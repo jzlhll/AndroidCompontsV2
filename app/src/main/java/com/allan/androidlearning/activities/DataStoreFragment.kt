@@ -36,26 +36,26 @@ class DataStoreFragment : BindingFragment<FragmentDatastoreBinding>() {
         }
 
         viewBinding.saveBtn.onClick {
-            AppDataStore.save("info", "randomStr " + System.currentTimeMillis())
+            AppDataStore.saveString("info", "randomStr " + System.currentTimeMillis())
         }
 
         viewBinding.readBtn.onClick {
             lifecycleScope.launch {
-                val data = AppDataStore.read<String>("info", "default_info")
+                val data = AppDataStore.readString("info", "default_info")
                 toastOnTop("data: $data")
             }
         }
 
         viewBinding.containsBtn.onClick {
             lifecycleScope.launch {
-                val isContains = AppDataStore.containsKey<String>("info")
+                val isContains = AppDataStore.containsStringKey("info")
                 toastOnTop("isContains: $isContains")
             }
         }
 
         viewBinding.removeKeyBtn.onClick {
             lifecycleScope.launch {
-                val r = AppDataStore.removeSuspend<String>("info")
+                val r = AppDataStore.removeStringSuspend("info")
                 toastOnTop("removed: $r")
             }
         }

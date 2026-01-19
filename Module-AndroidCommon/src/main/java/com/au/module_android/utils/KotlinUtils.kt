@@ -41,11 +41,24 @@ suspend fun <T> withMainThread(block: suspend () -> T): T {
 }
 
 /**
- * 始终在io线程运行代码
+ * 切换到io线程运行代码
  */
 suspend inline fun <T> withIOThread(crossinline block: suspend () -> T): T {
     return if (isMainThread) {
         withContext(Dispatchers.IO) {
+            block.invoke()
+        }
+    } else {
+        block.invoke()
+    }
+}
+
+/**
+ * 切换到子线程运行代码
+ */
+suspend inline fun <T> withSubThread(crossinline block: suspend () -> T): T {
+    return if (isMainThread) {
+        withContext(Dispatchers.Default) {
             block.invoke()
         }
     } else {

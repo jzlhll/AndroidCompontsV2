@@ -45,21 +45,18 @@ class SmallenIconFloatingView(@LayoutRes layoutId:Int) : BaseFloatingView(layout
 
     fun savePoint(x:Int, y:Int,  rotation:Int) {
         Log.d(Const.TAG, "saveAutoOnePoint rotation $rotation x-y $x $y")
-        Globals.mainScope.launch {
-            AppDataStore.save(
-                "smallenIconFloatX" to x,
-                "smallenIconFloatY" to y,
-                "smallenIconFloatRotation" to rotation)
-        }
+        AppDataStore.saveInt("smallenIconFloatX", x)
+        AppDataStore.saveInt("smallenIconFloatY", y)
+        AppDataStore.saveInt("smallenIconFloatRotation", rotation)
     }
 
-    fun loadShow() {
+    suspend fun loadShow() {
         if (isShown) {
             return
         }
-        val x = AppDataStore.readBlocked("smallenIconFloatX", 100)
-        val y = AppDataStore.readBlocked("smallenIconFloatY", 400)
-        val rotation = AppDataStore.readBlocked("smallenIconFloatRotation", -1)
+        val x = AppDataStore.readInt("smallenIconFloatX", 100)
+        val y = AppDataStore.readInt("smallenIconFloatY", 400)
+        val rotation = AppDataStore.readInt("smallenIconFloatRotation", -1)
         val fixRotation = if(rotation == -1) Const.rotationLiveData.value!! else rotation
         show(x, y, fixRotation)
     }

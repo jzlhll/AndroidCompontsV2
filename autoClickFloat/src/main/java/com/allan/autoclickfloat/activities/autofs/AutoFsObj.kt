@@ -11,10 +11,13 @@ import com.au.module_android.log.logd
 import com.au.module_android.log.loge
 import com.au.module_android.log.logw
 import com.au.module_android.simplelivedata.NoStickLiveData
+import com.au.module_android.utils.withMainThread
 import com.au.module_cached.AppDataStore
 import com.au.module_cached.delegate.AppDataStoreLongCache
 import com.au.module_gson.fromGsonList
 import com.au.module_gson.toGsonString
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.UUID
 import kotlin.random.Random
@@ -34,20 +37,24 @@ object AutoFsObj {
     fun init(context: Context, reason:String = "") {
         if(isInited) return
         isInited = true
-        val targetTsListJsonStr = AppDataStore.readBlocked("targetTsList", "")
-        if (targetTsListJsonStr.isNotEmpty()) {
-            val targetTsList = targetTsListJsonStr.fromGsonList<TargetTs>()
-            targetTsListData.setValueSafe(targetTsList)
-        } else {
-            targetTsListData.setValueSafe(listOf())
-        }
+        Globals.backgroundScope.launch {
+            val targetTsListJsonStr = AppDataStore.readStringBlocked("targetTsList", "") ?: ""
+            withMainThread {
+                if (targetTsListJsonStr.isNotEmpty()) {
+                    val targetTsList = targetTsListJsonStr.fromGsonList<TargetTs>()
+                    targetTsListData.setValueSafe(targetTsList)
+                } else {
+                    targetTsListData.setValueSafe(listOf())
+                }
 
-        if (reason == "boot") {
-            checkAndStartNextAlarm(context)
-        } else {
-            Globals.mainHandler.postDelayed({
-                checkAndStartNextAlarm(context)
-            }, 3000)
+                if (reason == "boot") {
+                    checkAndStartNextAlarm(context)
+                } else {
+                    Globals.mainHandler.postDelayed({
+                        checkAndStartNextAlarm(context)
+                    }, 3000)
+                }
+            }
         }
     }
 
@@ -106,7 +113,7 @@ object AutoFsObj {
         if (foundTargetTs != null) {
             targetTsList.remove(foundTargetTs)
             val json = targetTsList.toGsonString()
-            AppDataStore.save("targetTsList", json)
+            AppDataStore.saveString("targetTsList", json)
             targetTsListData.setValueSafe(targetTsList)
 
             checkAndStartNextAlarm(context)
@@ -137,7 +144,7 @@ object AutoFsObj {
         if (foundTargetTs.isClose != isClose) {
             foundTargetTs.isClose = isClose
             val json = targetTsList.toGsonString()
-            AppDataStore.save("targetTsList", json)
+            AppDataStore.saveString("targetTsList", json)
             targetTsListData.setValueSafe(targetTsList)
             checkAndStartNextAlarm(context)
         }
@@ -234,7 +241,7 @@ object AutoFsObj {
         val changeList = recoverTargetList() ?: return
 
         val json = changeList.toGsonString()
-        AppDataStore.save("targetTsList", json)
+        AppDataStore.saveString("targetTsList", json)
         targetTsListData.setValueSafe(changeList)
 
         //先关闭

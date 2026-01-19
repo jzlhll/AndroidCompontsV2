@@ -3,6 +3,7 @@ package com.au.module_kson.cache
 import com.au.module_android.utils.IReadMoreWriteLessCacheProperty
 import com.au.module_android.utils.ignoreError
 import com.au.module_cached.delegate.AppDataStoreStringCache
+import com.au.module_cached.delegate.IDSReadMoreWriteLessCacheProperty
 import com.au.module_kson.kson
 import kotlinx.serialization.KSerializer
 
@@ -17,9 +18,10 @@ class AppDataStoreKsonCache<T : Any> (
     defaultValue: T,
     private val serializer: KSerializer<T>,
     cacheFileName: String? = null
-) : IReadMoreWriteLessCacheProperty<T>(key, defaultValue) {
+) : IDSReadMoreWriteLessCacheProperty<T>(key, defaultValue) {
 
     private var cache by AppDataStoreStringCache(key, kson.encodeToString(serializer, defaultValue), cacheFileName)
+
     override fun read(key: String, defaultValue: T): T {
         val jsonStr = cache
         if (jsonStr.isNotEmpty()) {
@@ -31,6 +33,14 @@ class AppDataStoreKsonCache<T : Any> (
     override fun save(key: String, value: T) {
         val c = kson.encodeToString(serializer, value)
         cache = c
+    }
+
+    override suspend fun readSuspend(key: String, defaultValue: T): T {
+        val jsonStr = cache
+        if (jsonStr.isNotEmpty()) {
+            return ignoreError { kson.decodeFromString(serializer, jsonStr) } ?: defaultValue
+        }
+        return defaultValue
     }
 
 }

@@ -13,6 +13,7 @@ abstract class IReadMoreWriteLessCacheProperty<T:Any>(
     protected var value: T? = null
 
     protected abstract fun read(key: String, defaultValue: T) : T
+
     protected abstract fun save(key: String, value: T)
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {

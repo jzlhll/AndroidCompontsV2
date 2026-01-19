@@ -58,7 +58,7 @@ object ShareInUrisObj {
     private fun initCacheSendUriMap() : HashMap<String, ShareInBean> {
         var time = System.currentTimeMillis()
         try {
-            val json = AppDataStore.readBlocked("mydroid_sendUriMap", "")
+            val json = AppDataStore.readStringBlocked("mydroid_sendUriMap", "") ?: ""
             logdNoFile{"load cache sendUri Map json: $json"}
             if (json.isEmpty()) {
                 return hashMapOf()
@@ -92,7 +92,7 @@ object ShareInUrisObj {
         val fixMap = map ?: hashMapOf()
         mSendUriMap = fixMap
         Globals.mainScope.launchOnThread {
-            AppDataStore.save("mydroid_sendUriMap", fixMap.toGsonString())
+            AppDataStore.saveString("mydroid_sendUriMap", fixMap.toGsonString())
         }
     }
 
@@ -151,7 +151,7 @@ object ShareInUrisObj {
     private const val KEY_EXPORT_HISTORY = "my_droid_export_history_list"
 
     suspend fun loadExportHistory() : String {
-        return AppDataStore.read(KEY_EXPORT_HISTORY, "")
+        return AppDataStore.readStringBlocked(KEY_EXPORT_HISTORY, "") ?: ""
     }
 
     suspend fun writeNewExportHistory(info:String) {
@@ -173,7 +173,7 @@ object ShareInUrisObj {
         // 格式化为字符串
         val formattedTime = formatter.format(Instant.ofEpochMilli(currentTimeMillis))
 
-        AppDataStore.save(KEY_EXPORT_HISTORY, "($formattedTime) $info\n\n$fixOld")
+        AppDataStore.saveString(KEY_EXPORT_HISTORY, "($formattedTime) $info\n\n$fixOld")
     }
 
     fun formatSize(bytes: Long): String {

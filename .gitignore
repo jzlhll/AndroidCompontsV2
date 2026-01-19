@@ -16,3 +16,4 @@ ClassNameAnnotations-ksp/build/
 .scannerwork/
 local.properties
 app/src/main/assets/vosk_en_lgraph_022/*
+.trae/documents/
