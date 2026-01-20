@@ -3,6 +3,7 @@ package com.au.module_androidui.ui
 import android.content.res.TypedArray
 import android.view.View
 import com.au.module_android.utils.ViewBackgroundBuilder
+import com.au.module_android.utils.ViewShadowBuilder
 import com.au.module_androidui.R
 
 data class AnyViewIds(
@@ -17,7 +18,13 @@ data class AnyViewIds(
     val cornerSizeBottomRight: Int,
     val strokeColor: Int,
     val strokeWidth: Int,
-    val needRippleColor: Int
+    val needRippleColor: Int,
+    // 阴影属性
+    val shadowColor: Int = 0,
+    val shadowOffsetX: Int = 0,
+    val shadowOffsetY: Int = 0,
+    val shadowBlur: Int = 0,
+    val shadowSpread: Int = 0
 )
 
 val BgBuildLinearLayoutIds = AnyViewIds(
@@ -32,7 +39,12 @@ val BgBuildLinearLayoutIds = AnyViewIds(
     R.styleable.BgBuildLinearLayout_cornerSizeBottomRight,
     R.styleable.BgBuildLinearLayout_strokeColor,
     R.styleable.BgBuildLinearLayout_strokeWidth,
-    R.styleable.BgBuildLinearLayout_needRippleColor
+    R.styleable.BgBuildLinearLayout_needRippleColor,
+    R.styleable.BgBuildLinearLayout_shadowColor,
+    R.styleable.BgBuildLinearLayout_shadowOffsetX,
+    R.styleable.BgBuildLinearLayout_shadowOffsetY,
+    R.styleable.BgBuildLinearLayout_shadowBlur,
+    R.styleable.BgBuildLinearLayout_shadowSpread
 )
 
 val BgBuildRelativeLayoutIds = AnyViewIds(
@@ -47,7 +59,12 @@ val BgBuildRelativeLayoutIds = AnyViewIds(
     R.styleable.BgBuildRelativeLayout_cornerSizeBottomRight,
     R.styleable.BgBuildRelativeLayout_strokeColor,
     R.styleable.BgBuildRelativeLayout_strokeWidth,
-    R.styleable.BgBuildRelativeLayout_needRippleColor
+    R.styleable.BgBuildRelativeLayout_needRippleColor,
+    R.styleable.BgBuildRelativeLayout_shadowColor,
+    R.styleable.BgBuildRelativeLayout_shadowOffsetX,
+    R.styleable.BgBuildRelativeLayout_shadowOffsetY,
+    R.styleable.BgBuildRelativeLayout_shadowBlur,
+    R.styleable.BgBuildRelativeLayout_shadowSpread
 )
 
 val BgBuildConstraintLayoutIds = AnyViewIds(
@@ -62,7 +79,12 @@ val BgBuildConstraintLayoutIds = AnyViewIds(
     R.styleable.BgBuildConstraintLayout_cornerSizeBottomRight,
     R.styleable.BgBuildConstraintLayout_strokeColor,
     R.styleable.BgBuildConstraintLayout_strokeWidth,
-    R.styleable.BgBuildConstraintLayout_needRippleColor
+    R.styleable.BgBuildConstraintLayout_needRippleColor,
+    R.styleable.BgBuildConstraintLayout_shadowColor,
+    R.styleable.BgBuildConstraintLayout_shadowOffsetX,
+    R.styleable.BgBuildConstraintLayout_shadowOffsetY,
+    R.styleable.BgBuildConstraintLayout_shadowBlur,
+    R.styleable.BgBuildConstraintLayout_shadowSpread
 )
 
 val BgBuildFrameLayoutIds = AnyViewIds(
@@ -77,7 +99,12 @@ val BgBuildFrameLayoutIds = AnyViewIds(
     R.styleable.BgBuildFrameLayout_cornerSizeBottomRight,
     R.styleable.BgBuildFrameLayout_strokeColor,
     R.styleable.BgBuildFrameLayout_strokeWidth,
-    R.styleable.BgBuildFrameLayout_needRippleColor
+    R.styleable.BgBuildFrameLayout_needRippleColor,
+    R.styleable.BgBuildFrameLayout_shadowColor,
+    R.styleable.BgBuildFrameLayout_shadowOffsetX,
+    R.styleable.BgBuildFrameLayout_shadowOffsetY,
+    R.styleable.BgBuildFrameLayout_shadowBlur,
+    R.styleable.BgBuildFrameLayout_shadowSpread
 )
 
 val BgBuildCustomFontTextIds = AnyViewIds(
@@ -92,7 +119,12 @@ val BgBuildCustomFontTextIds = AnyViewIds(
     R.styleable.BgBuildCustomFontText_cornerSizeBottomRight,
     R.styleable.BgBuildCustomFontText_strokeColor,
     R.styleable.BgBuildCustomFontText_strokeWidth,
-    R.styleable.BgBuildCustomFontText_needRippleColor
+    R.styleable.BgBuildCustomFontText_needRippleColor,
+    R.styleable.BgBuildCustomFontText_shadowColor,
+    R.styleable.BgBuildCustomFontText_shadowOffsetX,
+    R.styleable.BgBuildCustomFontText_shadowOffsetY,
+    R.styleable.BgBuildCustomFontText_shadowBlur,
+    R.styleable.BgBuildCustomFontText_shadowSpread
 )
 
 val BgBuildViewIds = AnyViewIds(
@@ -107,7 +139,13 @@ val BgBuildViewIds = AnyViewIds(
     R.styleable.BgBuildView_cornerSizeBottomRight,
     R.styleable.BgBuildView_strokeColor,
     R.styleable.BgBuildView_strokeWidth,
-    R.styleable.BgBuildView_needRippleColor
+    R.styleable.BgBuildView_needRippleColor,
+    // 阴影属性
+    R.styleable.BgBuildView_shadowColor,
+    R.styleable.BgBuildView_shadowOffsetX,
+    R.styleable.BgBuildView_shadowOffsetY,
+    R.styleable.BgBuildView_shadowBlur,
+    R.styleable.BgBuildView_shadowSpread
 )
 
 val CustomButtonIds = AnyViewIds(
@@ -122,10 +160,36 @@ val CustomButtonIds = AnyViewIds(
     R.styleable.CustomButton_cornerSizeBottomRight,
     R.styleable.CustomButton_strokeColor,
     R.styleable.CustomButton_strokeWidth,
-    R.styleable.CustomButton_needRippleColor
+    R.styleable.CustomButton_needRippleColor,
+    R.styleable.CustomButton_shadowColor,
+    R.styleable.CustomButton_shadowOffsetX,
+    R.styleable.CustomButton_shadowOffsetY,
+    R.styleable.CustomButton_shadowBlur,
+    R.styleable.CustomButton_shadowSpread
 )
 
-fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds) {
+fun View.viewShadowBuild(array: TypedArray, viewIds: AnyViewIds, backgroundBuilder: ViewBackgroundBuilder? = null): ViewShadowBuilder? {
+    val noColor = 0
+    // 阴影配置
+    if (viewIds.shadowColor != 0) {
+        val shadowColor = array.getColor(viewIds.shadowColor, noColor)
+        if (shadowColor != noColor) {
+            val shadowOffsetX = array.getDimension(viewIds.shadowOffsetX, 0f)
+            val shadowOffsetY = array.getDimension(viewIds.shadowOffsetY, 0f)
+            val shadowBlur = array.getDimension(viewIds.shadowBlur, 0f)
+            val shadowSpread = array.getDimension(viewIds.shadowSpread, 0f)
+            val builder = ViewShadowBuilder()
+            builder.setShadow(shadowColor, shadowOffsetX, shadowOffsetY, shadowBlur, shadowSpread)
+            if (backgroundBuilder != null) {
+                builder.setCornerRadii(backgroundBuilder.getCornerRadiiArray())
+            }
+            return builder
+        }
+    }
+    return null
+}
+
+fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds): ViewBackgroundBuilder {
     val builder = ViewBackgroundBuilder()
 
     val noColor = 0
@@ -165,7 +229,9 @@ fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds) {
     builder.needRippleColor(array.getBoolean(viewIds.needRippleColor, false))
 
     builder.setStroke(strokeWidth, strokeColor)
+
     if (builder.isAtLeastOne) {
         background = builder.build()
     }
+    return builder
 }

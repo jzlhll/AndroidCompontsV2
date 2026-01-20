@@ -11,4 +11,10 @@
 
     <attr name="needRippleColor" format="boolean"/>
     <attr name="autoHideIme" format="boolean" />
+
+    <attr name="shadowColor" format="color"/>
+    <attr name="shadowOffsetX" format="dimension"/>
+    <attr name="shadowOffsetY" format="dimension"/>
+    <attr name="shadowBlur" format="dimension"/>
+    <attr name="shadowSpread" format="dimension"/>
 </resources>

@@ -25,8 +25,8 @@ gradle.ext.jvmTarget           = "17"
 gradle.ext.sourceCompatibility= JavaVersion.VERSION_17
 gradle.ext.targetCompatibility= JavaVersion.VERSION_17
 gradle.ext.compileSdk          = 36
-gradle.ext.targetSdk           = 35
-gradle.ext.minSdk              = 26
+gradle.ext.targetSdk           = 36
+gradle.ext.minSdk              = 28
 
 ///////end of extra params
 

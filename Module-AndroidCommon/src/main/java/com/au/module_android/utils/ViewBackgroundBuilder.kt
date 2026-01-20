@@ -177,6 +177,17 @@ class ViewBackgroundBuilder {
         }
         return it
     }
+
+    fun getCornerRadiiArray(): FloatArray {
+        return when (val c = mCorner) {
+            is CornerRadius.AllCornerRadius -> {
+                val r = c.size
+                floatArrayOf(r, r, r, r, r, r, r, r)
+            }
+            is CornerRadius.EachCornerRadius -> c.convert()
+            null -> floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+        }
+    }
 }
 
 /**

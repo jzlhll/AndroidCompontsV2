@@ -42,6 +42,7 @@ RecyclerView：xxxRcv
 重写onBindingCreated
 点击用onClick扩展
 标题栏：默认用YourToolbarInfo.Defaults，自定义用YourToolbarInfo.Yours
+不要给布局的根控件添加id，使用binding.root即可(无需强转)
 
 # RecyclerView
 不主动写Adapter(除非允许)
