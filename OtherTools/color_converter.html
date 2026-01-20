@@ -450,6 +450,24 @@
         };
         const isValid = (n) => !isNaN(n) && n >= 0 && n <= 255;
 
+        // 辅助函数：处理 Alpha 输入（支持百分比）
+        // 返回 [value, isPercent]
+        // 如果是百分比，解析为 0-255 并返回
+        // 如果是普通数值，解析为 0-255 并返回
+        // 如果无效，返回 null
+        const parseAlpha = (str) => {
+            str = str.trim();
+            if (str.endsWith('%')) {
+                const p = parseFloat(str.substring(0, str.length - 1));
+                if (isNaN(p) || p < 0 || p > 100) return null;
+                return Math.round((p / 100) * 255);
+            } else {
+                const n = parseInt(str, 10);
+                if (isNaN(n) || n < 0 || n > 255) return null;
+                return n;
+            }
+        };
+
         // AHEX 模式处理
         if (mode === 'AHEX') {
             const hexStr = document.getElementById('fHex').value.trim();
@@ -458,12 +476,15 @@
                 return; // 任意为空不工作
             }
             
-            // 校验 A
-            a = parseInt(aStr, 10);
-            if (!isValid(a)) {
-                alert('Alpha数值必须在 0-255 之间');
+            // 校验 A (支持百分比)
+            const parsedA = parseAlpha(aStr);
+            if (parsedA === null) {
+                alert('Alpha数值必须在 0-255 之间，或 0%-100%');
                 return;
             }
+            a = parsedA;
+            // 将转换后的 A 填回去（如果是百分比输入，转成 0-255）
+            document.getElementById('sA').value = a;
 
             // 校验 Hex (#RRGGBB 或 RRGGBB)
             let cleanHex = hexStr;
@@ -506,11 +527,14 @@
             }
 
             if (mode === 'ARGB') {
-                a = parseInt(aStr, 10);
-                if (!isValid(a)) {
-                    alert('Alpha数值必须在 0-255 之间');
+                const parsedA = parseAlpha(aStr);
+                if (parsedA === null) {
+                    alert('Alpha数值必须在 0-255 之间，或 0%-100%');
                     return;
                 }
+                a = parsedA;
+                // 将转换后的 A 填回去
+                document.getElementById('sA').value = a;
             }
         }
 
