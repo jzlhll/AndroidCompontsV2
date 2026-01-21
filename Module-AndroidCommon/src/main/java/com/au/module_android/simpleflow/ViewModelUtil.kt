@@ -78,8 +78,8 @@ fun <T> MutableStateFlow<StatusState<T>>.setSuccess(data: T) {
  * @param T 数据类型
  * @param throwable 错误信息
  */
-fun <T> MutableStateFlow<StatusState<T>>.setError(throwable: Throwable) {
-    value = StatusState.Error(throwable)
+fun <T> MutableStateFlow<StatusState<T>>.setError(throwable: Throwable, message: String? = null) {
+    value = StatusState.Error(throwable, message)
 }
 
 /**

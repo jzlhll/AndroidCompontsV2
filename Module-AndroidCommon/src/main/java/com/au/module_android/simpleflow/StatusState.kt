@@ -10,7 +10,7 @@ package com.au.module_android.simpleflow
 sealed class StatusState<out T> {
     object Uninitialized : StatusState<Nothing>()
     data class Success<T>(val data: T) : StatusState<T>()
-    data class Error(val throwable: Throwable) : StatusState<Nothing>()
+    data class Error(val throwable: Throwable, val message: String? = null) : StatusState<Nothing>()
     object Loading : StatusState<Nothing>()
 
     // 辅助函数
