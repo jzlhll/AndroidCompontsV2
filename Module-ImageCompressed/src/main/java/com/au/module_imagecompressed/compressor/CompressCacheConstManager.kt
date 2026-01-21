@@ -1,5 +1,6 @@
 package com.au.module_imagecompressed.compressor
 
+import com.au.module_android.Globals
 import com.au.module_android.utilsfile.SimpleFilesLruCache
 import com.au.module_android.utilsfile.SimpleFilesLruCache.FileOperateType
 import java.io.File
@@ -9,8 +10,8 @@ import java.util.Locale
 import kotlin.random.Random
 
 object CompressCacheConstManager {
-    const val CACHE_DIR_NAME = "au_compressor"
-    private val mgr = SimpleFilesLruCache(CACHE_DIR_NAME, maxSize = 250 * 1024 * 1024)
+    private val mgr : SimpleFilesLruCache
+        get() = Globals.lruFilesCache
 
     val cacheDir: File
         get() = mgr.cacheDir

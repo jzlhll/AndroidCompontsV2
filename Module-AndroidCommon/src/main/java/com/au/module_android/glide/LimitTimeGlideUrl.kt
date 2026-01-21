@@ -13,7 +13,7 @@ import com.bumptech.glide.load.model.GlideUrl
  *
  * 粗略的实现：目前保证cache时间为5-13天。
  */
-class LimitTimeGlideUrl(private val url: String?) : GlideUrl(url) {
+class LimitTimeGlideUrl(url: String?) : GlideUrl(url) {
     companion object {
         const val CACHE_MAX_TIME = 1000L * 3600 * 24 * 8
         const val UP_TO_NEXT_PERIOD = 1000L * 3600 * 24 * 5

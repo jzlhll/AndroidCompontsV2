@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import com.au.module_android.scopes.BackAppScope
 import com.au.module_android.scopes.MainAppScope
 import com.au.module_android.simplelivedata.NoStickLiveData
+import com.au.module_android.utilsfile.SimpleFilesLruCache
 import java.io.File
 
 object Globals {
@@ -58,6 +59,27 @@ object Globals {
      * 全局application
      */
     val app: Application get() = internalApp
+
+    private var _filesLruCache: SimpleFilesLruCache? = null
+    var filesLruCacheDirName = "au_cache_common"
+    var filesLruCacheSize = 250 * 1024 * 1024L
+    /**
+     * 全局文件缓存
+     */
+    val lruFilesCache: SimpleFilesLruCache
+        get() = _filesLruCache ?: run {
+            _filesLruCache = SimpleFilesLruCache(filesLruCacheDirName, maxSize = filesLruCacheSize)
+            _filesLruCache!!
+        }
+
+    /**
+     * 初始化全局文件缓存
+     */
+    fun initFilesLruCache(cacheDirName: String,
+                          maxCacheSize: Long) {
+        filesLruCacheDirName = cacheDirName
+        filesLruCacheSize = maxCacheSize
+    }
 
     /**
      * application初始化完成的通知。时机就是我们把基础的app全局给设置好。避免有的地方无法调用到。
@@ -118,8 +140,6 @@ object Globals {
     fun getString(@StringRes resId:Int) : String {
         return ContextCompat.getString(app, resId)
     }
-
-    fun Int.resStr() = getString(this)
 }
 
 //----------------------handler start

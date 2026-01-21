@@ -60,7 +60,6 @@ class SimpleFilesLruCache(
     /**
      * 递归扫描目录
      * @param currentDir 当前扫描的目录
-     * @param relativePath 相对于cacheDir的路径
      */
     fun scanDirectoryRecursive(currentDir: File) {
         val files = currentDir.listFiles() ?: return
@@ -203,7 +202,6 @@ class SimpleFilesLruCache(
 
     /**
      * 检查文件是否存在
-     * @param relativePath 文件的相对路径
      */
     fun fileExists(fileName:String, vararg dirs:String): Boolean {
         val relativePath = dirs.joinToString(File.separator) + File.separator + fileName
@@ -213,7 +211,6 @@ class SimpleFilesLruCache(
 
     /**
      * 根据相对路径获取文件
-     * @param relativePath 文件的相对路径
      */
     fun getFile(fileName:String, vararg dirs:String): File? {
         val relativePath = dirs.joinToString(File.separator) + File.separator + fileName

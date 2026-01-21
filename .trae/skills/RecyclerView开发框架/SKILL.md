@@ -14,7 +14,7 @@ Holder：可作为Adapter内部类XXXHolder，也可独立成文件
 ### 普通Adapter
 继承BindRcvAdapter<DATA:Any, VH: BindViewHolder<DATA, *>>
 泛型：Bean + ViewHolder
-重写onCreateViewHolder：根据viewType用xxxHolder(create(parent))创建,其中create(parent)函数封装了LayoutInflater创建binding的逻辑
+在onCreateViewHolder中，必须使用return XxxHolder(create(parent))实例化Holder；create(parent)函数利用泛型自动完成 ViewBinding 的 Inflate，无需手动LayoutInflater
 数据提交：
 - 普通数据更新：submitList(data, false)（第二个参数固定为false）
 
@@ -47,3 +47,6 @@ Holder：可作为Adapter内部类XXXHolder，也可独立成文件
 3. Holder通过currentData获取数据并回调onXxxClickBlock
 4. 创建Adapter时传入点击事件onXxxClickBlock参数
 5. Adapter在onCreateViewHolder中将onXxxClickBlock传递给Holder
+
+## 其他
+InViewPage2RecyclerView和InViewPageRecyclerView忽略他们的内部实现，就把他们当作普通的RecyclerView来使用。
