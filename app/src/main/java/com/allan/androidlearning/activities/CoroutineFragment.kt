@@ -9,7 +9,9 @@ import com.au.module_android.click.onClick
 import com.au.module_androidui.selectlist.SelectListFragment
 import com.au.module_androidui.selectlist.SelectListItem
 import com.au.module_android.log.ALogJ
+import com.au.module_android.log.logt
 import com.au.module_android.utils.dp
+import com.au.module_android.utilthread.CoroutineConcurrentLimiter
 import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -130,6 +132,9 @@ class CoroutineFragment(override val title: String = "Coroutine")
         KotlinCoroutineSelectListItem("测试单线程模型协程2") {
             testSingleScope("测2")
         },
+        KotlinCoroutineSelectListItem("测试并发工具类") {
+            testCoroutineLimiter()
+        },
     )
 
     override val initCur: KotlinCoroutineSelectListItem
@@ -147,6 +152,29 @@ class CoroutineFragment(override val title: String = "Coroutine")
     override fun onDestroyView() {
         super.onDestroyView()
         singleScope.shutdownNow()
+    }
+
+    fun testCoroutineLimiter() {
+        lifecycleScope.launch {
+            val limiter = CoroutineConcurrentLimiter(3)
+            val listUrls = listOf("url1", "url2", "url3", "url4", "url5", "url6", "url7", "url8")
+            logt { "start.." }
+            for (url in listUrls) {
+                limiter.submit {
+                    logt { "downData $url" }
+                    val data = downloadData(url)
+                    logt { "downData end $data" }
+                }
+            }
+            limiter.joinAll()
+            logt { "end of all" }
+        }
+    }
+
+    suspend fun downloadData(url:String) : String {
+        delay(0)
+        Thread.sleep(2000)
+        return "download $url"
     }
 }
 

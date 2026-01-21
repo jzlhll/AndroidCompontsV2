@@ -30,9 +30,17 @@ class CropEntryFragment : AbsNestedIndicatorFragment<Void, FragmentCropEntryBind
         return true
     }
 
+    override fun isFakeRefresh(): Boolean {
+        return false
+    }
+
+    override fun hasToolbar(): Boolean {
+        return false
+    }
+
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
-        contentViewBinding.button.onClick {
+        contentBinding.button.onClick {
             photoPickResult.launchOneByOne(PickerType.IMAGE, null) { uri ->
                 logd { "uri $uri" }
                 CropCircleImageFragment.startCropForResult(requireContext(), gotoUcropResult, uri.uriParsedInfo.uri) {
@@ -51,12 +59,16 @@ class CropEntryFragment : AbsNestedIndicatorFragment<Void, FragmentCropEntryBind
                         croppedUri?.let { cropped ->
                             val file = File(cropped.toString().replace("file://", ""))
                             logd { "croppedUri file: " + file + " size: " + file.length()}
-                            contentViewBinding.avatarImage.setBackgroundDrawable(null)
-                            contentViewBinding.avatarImage.glideSetAnyAsCircleCrop(file)
+                            contentBinding.avatarImage.setBackgroundDrawable(null)
+                            contentBinding.avatarImage.glideSetAnyAsCircleCrop(file)
                         }
                     }
                 }
             }
         }
+    }
+
+    override fun onRefreshAction(): () -> Unit {
+        TODO("Not yet implemented")
     }
 }

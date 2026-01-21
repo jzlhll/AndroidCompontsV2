@@ -55,22 +55,22 @@ fun getSizeFormat(size: Long): String {
     val megaByte = kiloByte / 1024
     if (megaByte < 1) {
         val result1 = BigDecimal(kiloByte)
-        return result1.setScale(1, BigDecimal.ROUND_HALF_UP)
+        return result1.setScale(1, RoundingMode.HALF_UP)
             .toPlainString() + "KB"
     }
     val gigaByte = megaByte / 1024
     if (gigaByte < 1) {
         val result2 = BigDecimal(megaByte)
-        return result2.setScale(1, BigDecimal.ROUND_HALF_UP)
+        return result2.setScale(1, RoundingMode.HALF_UP)
             .toPlainString() + "MB"
     }
     val teraBytes = gigaByte / 1024
     if (teraBytes < 1) {
         val result3 = BigDecimal(gigaByte)
-        return result3.setScale(1, BigDecimal.ROUND_HALF_UP)
+        return result3.setScale(2, RoundingMode.HALF_UP)
             .toPlainString() + "GB"
     }
     val result4 = BigDecimal(teraBytes)
-    return (result4.setScale(1, BigDecimal.ROUND_HALF_UP)
+    return (result4.setScale(2, RoundingMode.HALF_UP)
         .toPlainString() + "TB")
 }
