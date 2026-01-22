@@ -19,8 +19,8 @@ class MMKVGsonCache<T : Any> (
 ) : IReadMoreWriteLessCacheProperty<T>(key, defaultValue) {
 
     override fun read(key: String, defaultValue: T): T {
-        val jsonStr = mmkvGet<String>(key) ?: ""
-        if (jsonStr.isNotEmpty()) {
+        val jsonStr = mmkv.getString(key, "")
+        if (!jsonStr.isNullOrEmpty()) {
             return ignoreError { fromGson(jsonStr, typeToken) } ?: defaultValue
         }
         return defaultValue

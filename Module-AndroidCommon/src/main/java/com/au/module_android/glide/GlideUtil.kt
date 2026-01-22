@@ -15,7 +15,6 @@ import com.au.module_android.R
 import com.au.module_android.utils.deleteAll
 import com.au.module_android.utils.ignoreError
 import com.bumptech.glide.Glide
-import com.bumptech.glide.Priority
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -102,16 +101,14 @@ fun ImageView.glideSetAnyWithResDefault(
 /**
  * 加载本地文件
  */
-fun ImageView.glideLoadFile(localFile: File, errorDrawableId:Int,
-                            isScrollingFast: Boolean = false,
+fun ImageView.glideLoadFile(localFile: File,
+                            errorDrawableId:Int,
                             cacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC) {
     Glide.with(context)
         .load(localFile)
         .diskCacheStrategy(cacheStrategy) // 本地文件无需磁盘缓存
         .skipMemoryCache(false) // 保留内存缓存提升滑动流畅性
         .error(errorDrawableId)
-        // 滑动时降低加载优先级
-        .priority(if (isScrollingFast) Priority.LOW else Priority.HIGH)
         .into(this)
 }
 

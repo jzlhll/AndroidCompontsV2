@@ -1,5 +1,6 @@
 pluginManagement {
     repositories {
+        mavenCentral()
         maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url 'https://maven.aliyun.com/repository/google' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
@@ -11,7 +12,6 @@ pluginManagement {
         mavenLocal() // 本地仓库
         gradlePluginPortal()
         google()
-        mavenCentral()
     }
 }
 
@@ -33,6 +33,7 @@ gradle.ext.minSdk              = 28
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        mavenCentral()
         mavenLocal()
         maven { url 'https://maven.aliyun.com/repository/public' }
         maven { url 'https://maven.aliyun.com/repository/google' }
@@ -41,7 +42,6 @@ dependencyResolutionManagement {
         maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
         maven { url 'https://mirrors.163.com/maven/repository/maven-public/' }
         google()
-        mavenCentral()
         maven { url 'https://www.jitpack.io' }
     }
 }

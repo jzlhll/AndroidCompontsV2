@@ -1,12 +1,15 @@
 package com.au.module_gson
 
+import android.net.Uri
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.reflect.Type
 
-val gson = Gson()
+val gson : Gson = GsonBuilder()
+    .registerTypeAdapter(Uri::class.java, JsonUriAdapter())
+    .create()
 
 /**
  * 扩展：将任意对象，转成jsonString。
@@ -58,7 +61,7 @@ inline fun <reified T> String.fromGson() : T? {
  * val listType = TypeToken.getParameterized(List::class.java, mapType).type
  */
 fun <T> fromGson(jsonStr: String?, typeToken: Type): T {
-    return GsonBuilder().create().fromJson<T>(jsonStr, typeToken)
+    return gson.fromJson<T>(jsonStr, typeToken)
 }
 
 //JSONArray扩展函数
@@ -96,7 +99,7 @@ fun <E> String.fromGsonList(elementClass:Class<E>) : List<E> {
 private fun formatGsonBeautifulJsonStr(str:String) : String {
     return try {
         val jsonElement: JsonElement = JsonParser.parseString(str)
-        val beautifulGson = GsonBuilder().setPrettyPrinting().create()
+        val beautifulGson = gson.newBuilder().setPrettyPrinting().create()
         return beautifulGson.toJson(jsonElement)
     } catch (e:Exception) {
         str
@@ -108,7 +111,7 @@ fun formatGsonBeautiful(obj:Any) : String {
         return formatGsonBeautifulJsonStr(obj)
     }
     return try {
-        val beautifulGson = GsonBuilder().setPrettyPrinting().create()
+        val beautifulGson = gson.newBuilder().setPrettyPrinting().create()
         return beautifulGson.toJson(obj)
     } catch (e:Exception) {
         ""

@@ -61,8 +61,8 @@ object Globals {
     val app: Application get() = internalApp
 
     private var _filesLruCache: SimpleFilesLruCache? = null
-    var filesLruCacheDirName = "au_cache_common"
-    var filesLruCacheSize = 250 * 1024 * 1024L
+    private var filesLruCacheDirName = "au_cache_common"
+    private var filesLruCacheSize = 250 * 1024 * 1024L
     /**
      * 全局文件缓存
      */
@@ -71,6 +71,9 @@ object Globals {
             _filesLruCache = SimpleFilesLruCache(filesLruCacheDirName, maxSize = filesLruCacheSize)
             _filesLruCache!!
         }
+
+    val lruCachePath : String
+        get() = lruFilesCache.cacheDir.absolutePath
 
     /**
      * 初始化全局文件缓存
