@@ -10,7 +10,7 @@ import com.au.module_androidui.selectlist.SimpleItem
 import com.au.module_androidui.selectlist.SimpleListFragment
 import com.au.module_androidui.ui.FragmentShellActivity
 
-@EntryFrgName(backgroundColor = "#feceff")
+@EntryFrgName
 class SmartRefreshLayoutTestFragment(
 ) : SimpleListFragment<SmartRefreshLayoutTestFragment.Item>() {
     class Item(override val itemName: String, override val onItemClick: () -> Unit) : SimpleItem()
