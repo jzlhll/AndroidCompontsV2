@@ -48,29 +48,22 @@ fun convertMillisToMMSS(ts: Long): String {
  * @return
  */
 fun getSizeFormat(size: Long): String {
-    val kiloByte = size / 1024
-    if (kiloByte < 1) {
-        return "0KB"
-    }
-    val megaByte = kiloByte / 1024
-    if (megaByte < 1) {
-        val result1 = BigDecimal(kiloByte)
-        return result1.setScale(1, RoundingMode.HALF_UP)
-            .toPlainString() + "KB"
-    }
-    val gigaByte = megaByte / 1024
-    if (gigaByte < 1) {
-        val result2 = BigDecimal(megaByte)
-        return result2.setScale(1, RoundingMode.HALF_UP)
-            .toPlainString() + "MB"
-    }
-    val teraBytes = gigaByte / 1024
-    if (teraBytes < 1) {
-        val result3 = BigDecimal(gigaByte)
-        return result3.setScale(2, RoundingMode.HALF_UP)
-            .toPlainString() + "GB"
-    }
-    val result4 = BigDecimal(teraBytes)
-    return (result4.setScale(2, RoundingMode.HALF_UP)
-        .toPlainString() + "TB")
+    if (size < 1024) return "0KB"
+
+    // 转成Double，避免整数除法丢失小数
+    val sizeDouble = size.toDouble()
+    
+    // 依次计算各单位（1024进制）
+    val kb = sizeDouble / 1024.0
+
+    val mb = kb / 1024.0
+    if (mb < 1) return String.format("%.1fKB", kb) // KB保留1位小数
+
+    val gb = mb / 1024.0
+    if (gb < 1) return String.format("%.1fMB", mb) // MB保留1位小数
+
+    val tb = gb / 1024.0
+    if (tb < 1) return String.format("%.2fGB", gb) // GB保留2位小数
+
+    return String.format("%.2fTB", tb) // TB保留2位小数
 }
