@@ -14,9 +14,6 @@ import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.compressor.ImageLoader
 import com.au.module_imagecompressed.compressor.loadImage
 import kotlinx.coroutines.runBlocking
-import java.util.Collections
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 /**
  * 图片加载辅助类
@@ -56,8 +53,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     }
 
     companion object {
-        private const val BITMAP_CACHE_MAX_SIZE = 120 * 1024 * 1024 // 50MB
-        private const val THREAD_POOL_SIZE = 4
+        private const val BITMAP_CACHE_MAX_SIZE = 120 * 1024 * 1024
     }
 
     private val thumbnailUtils = ThumbnailCompatUtil(Globals.app)
@@ -72,10 +68,9 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
         }
     }
 
-    private var loadExecutor: ExecutorService? = Executors.newFixedThreadPool(THREAD_POOL_SIZE)
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private val loadingKeys = Collections.synchronizedSet(HashSet<String>())
+    private val executor = LIFOThreadPoolUtil.createFixedLIFOThreadPool(4)
 
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var mIsSliding = false
     private var mIsScaling = false
     private var lastScale = 1.0f
@@ -108,10 +103,6 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
      */
     fun onScaleStart(scaleCenter: PointF, scale: Float) {
         this.mIsScaling = true
-        // 缩放开始：不暂停加载任务，允许缩放过程中加载
-        if (loadExecutor == null || loadExecutor!!.isShutdown) {
-            loadExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE)
-        }
     }
 
     /**
@@ -119,10 +110,6 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
      */
     fun onScaleEnd(scaleCenter: PointF, scale: Float) {
         this.mIsScaling = false
-        // 重启加载任务
-        if (loadExecutor == null || loadExecutor!!.isShutdown) {
-            loadExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE)
-        }
         if(BuildConfig.DEBUG) logMemoryUsage("Scale End")
     }
 
@@ -158,58 +145,49 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
      * 如果缓存中有，直接返回；
      * 如果没有且当前允许加载，则触发加载并返回null（占位）；
      */
-    fun getBitmap(blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap?) : Bitmap? {
-        if (allImageBeans.isEmpty() || imageBean == null) {
+    fun getBitmap(blockInfo: BlockInfo, scale: Float) : Bitmap? {
+        if (allImageBeans.isEmpty()) {
             return null
         }
         val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
         val key = generateKey(blockInfo.centerPoint, currentQuality)
         var bitmap = bitmapCache.get(key)
 
-        var needReload = false
-        if (bitmap == null) {
-            needReload = true
-            // 降级查找：如果当前需要更高级（HIGH），尝试使用 LOW 占位
-            if (currentQuality.level > Quality.LOW.level) {
-                val fallbackKey = generateKey(blockInfo.centerPoint, Quality.LOW)
-                val fallbackBitmap = bitmapCache.get(fallbackKey)
-                if (fallbackBitmap != null) {
-                    bitmap = fallbackBitmap
-                }
+        // 降级查找：如果当前需要更高级（HIGH），尝试使用 LOW 占位
+        if (bitmap == null && currentQuality.level > Quality.LOW.level) {
+            val fallbackKey = generateKey(blockInfo.centerPoint, Quality.LOW)
+            val fallbackBitmap = bitmapCache.get(fallbackKey)
+            if (fallbackBitmap != null) {
+                bitmap = fallbackBitmap
             }
         }
 
-        if (needReload) {
-            loadBitmapAsync(key, blockInfo, scale, imageBean)
-        }
-        
-        // 即使需要重新加载，也返回旧 Bitmap 以避免闪烁
         return bitmap
     }
 
-    private fun loadBitmapAsync(key: String, blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap) {
-        val executor = loadExecutor
-        if (executor == null || executor.isShutdown) return
-
-        if (loadingKeys.contains(key)) {
-            logdNoFile { "load task (skip already loading): $key" }
-            return
-        }
-
-        loadingKeys.add(key)
-        logdNoFile { "submit load task: $key" }
-
-        executor.execute {
-            val bitmap = loadBitmapInThread(blockInfo, scale, imageBean)
-
-            mainHandler.post {
-                loadingKeys.remove(key)
-                if (bitmap != null) {
-                    bitmapCache.put(key, bitmap)
-                    logdNoFile { "bitmap loaded: $key" }
-                    listener?.onBitmapLoaded(blockInfo, scale)
+    fun loadAllBitmapsAsync(blockInfos: List<BlockInfo>, scale: Float) {
+        logdNoFile { "load all bitmap..." }
+        val runList = ArrayList<Runnable>()
+        blockInfos.forEach { blockInfo->
+            runList.add {
+                val imageBean = assignImageForBlock(blockInfo.key)
+                if (imageBean != null) {
+                    val newGenerateBitmap = loadBitmapInThread(blockInfo, scale, imageBean)
+                    val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
+                    val key = generateKey(blockInfo.centerPoint, currentQuality)
+                    mainHandler.post {
+                        if (newGenerateBitmap != null) {
+                            bitmapCache.put(key, newGenerateBitmap)
+                            logdNoFile { "bitmap loaded: $key" }
+                            listener?.onBitmapLoaded(blockInfo, scale)
+                        }
+                    }
                 }
             }
+        }
+
+        for (run in runList) {
+            executor.execute(run)
         }
     }
 
@@ -220,6 +198,11 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     )
 
     private fun loadBitmapInThread(blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap) : Bitmap? {
+        val cacheBitmap = getBitmap(blockInfo, scale)
+        if (cacheBitmap != null) {
+            return cacheBitmap
+        }
+
         // 加载 Bitmap 逻辑
         val quality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
         val size = quality.scaleToSize()
@@ -239,8 +222,8 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
         return "${center.x.toInt()}_${center.y.toInt()}_${quality.name}"
     }
 
-    fun onDestroy() {
-        loadExecutor?.shutdownNow()
+    fun onDetachedFromWindow() {
+        executor.shutdownNow()
         bitmapCache.evictAll()
         logdNoFile { "onDestroy: cache cleared" }
     }
@@ -249,9 +232,5 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
      * 恢复加载（如 View 重新 Attach）
      */
     fun onAttachedToWindow() {
-        if (loadExecutor == null || loadExecutor!!.isShutdown) {
-            loadExecutor = Executors.newFixedThreadPool(THREAD_POOL_SIZE)
-            loadingKeys.clear()
-        }
     }
 }

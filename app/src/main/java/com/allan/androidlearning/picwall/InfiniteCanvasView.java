@@ -19,6 +19,8 @@ import androidx.annotation.Nullable;
 
 import com.au.module_imagecompressed.PickUriWrap;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 /**
@@ -88,7 +90,7 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        blockManager.onDestroy();
+        blockManager.onDetachedFromWindow();
     }
 
     @Override
@@ -123,7 +125,7 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
     
     private void drawBlock(Canvas canvas, BlockInfo block, float currentScale, float cornerRadius) {
         // 获取Bitmap
-        android.graphics.Bitmap bitmap = blockManager.getBitmap(block);
+        android.graphics.Bitmap bitmap = blockManager.getBitmap(block, currentScale);
 
         // 绘制背景或Bitmap
         tempRectF.set(block.getPointLT().x, block.getPointLT().y, block.getPointRB().x, block.getPointRB().y);
@@ -217,5 +219,10 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
     public void invalidateView(@NonNull String from) {
         Log.d("au-", "invalidateView: from " + from);
         postInvalidate();
+    }
+
+    @Override
+    public void invalidateView(@NotNull RectF rect) {
+        postInvalidate((int) rect.left, (int) rect.top, (int) rect.right, (int) rect.bottom);
     }
 }

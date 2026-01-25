@@ -22,6 +22,7 @@ class InfiniteBlockManager(
 
     interface Callback {
         fun invalidateView(from:String)
+        fun invalidateView(rect: RectF)
     }
 
     companion object {
@@ -110,8 +111,8 @@ class InfiniteBlockManager(
         }
     }
 
-    fun onDestroy() {
-        bitmapLoadHelper.onDestroy()
+    fun onDetachedFromWindow() {
+        bitmapLoadHelper.onDetachedFromWindow()
     }
 
     fun onAttachedToWindow() {
@@ -137,15 +138,6 @@ class InfiniteBlockManager(
 
     fun getDrawBlockList(): List<BlockInfo> {
         return drawBlockList
-    }
-
-    fun getBitmap(block: BlockInfo): Bitmap? {
-        val bean = mapBlockToImageBean(block)
-        return bitmapLoadHelper.getBitmap(block, currentScale, bean)
-    }
-
-    private fun mapBlockToImageBean(block: BlockInfo): PickUriWrap? {
-        return bitmapLoadHelper.assignImageForBlock(block.key)
     }
 
     // --- 手势处理代理 ---
@@ -221,6 +213,10 @@ class InfiniteBlockManager(
         bitmapLoadHelper.onScaleEnd(scaleCenterCanvas, currentScale)
         calculateDrawBlocks("onScale End")
         callback.invalidateView("onScale End")
+    }
+
+    fun getBitmap(blockInfo: BlockInfo, scale: Float) : Bitmap? {
+        return bitmapLoadHelper.getBitmap(blockInfo, scale)
     }
 
     // --- 核心计算逻辑 ---
@@ -328,12 +324,14 @@ class InfiniteBlockManager(
 
         // 4. 更新列表和Map
         activeBlockMap = newActiveMap
-        drawBlockList = newDrawList
-
-        logdNoFile { "DrawBlocks: reuse=$reuseCount, create=$createCount, total=${drawBlockList.size}" }
-
         // 5. 排序
-        Collections.sort(drawBlockList, distanceComparator)
+        Collections.sort(newDrawList, distanceComparator)
+        logdNoFile { "DrawBlocks: reuse=$reuseCount, create=$createCount, total=${newDrawList.size}" }
+
+        //6. load bitmap async
+        bitmapLoadHelper.loadAllBitmapsAsync(newDrawList, currentScale)
+
+        drawBlockList = newDrawList
     }
 
     private fun createBlockInfo(ix: Int, iy: Int, stepX: Float, stepY: Float, key: String): BlockInfo {
@@ -368,7 +366,11 @@ class InfiniteBlockManager(
     // --- 接口实现 ---
 
     override fun onBitmapLoaded(blockInfo: BlockInfo, currentScale: Float) {
-        // Bitmap加载完毕，触发重绘
-        callback.invalidateView("onBitmap Loaded")
+        val left = blockInfo.pointLT.x * currentScale + realOffsetX
+        val top = blockInfo.pointLT.y * currentScale + realOffsetY
+        val right = blockInfo.pointRB.x * currentScale + realOffsetX
+        val bottom = blockInfo.pointRB.y * currentScale + realOffsetY
+        val rect = RectF(left, top, right, bottom)
+        callback.invalidateView(rect)
     }
 }
