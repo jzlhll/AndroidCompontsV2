@@ -199,7 +199,6 @@ class InfiniteBlockManager(
 
         currentScale = targetScale
 
-        bitmapLoadHelper.cleanScaleMismatchCache(currentScale) // 简单的通知
         throttleCalculate()
     }
 
@@ -216,7 +215,7 @@ class InfiniteBlockManager(
     }
 
     fun getBitmap(blockInfo: BlockInfo, scale: Float) : Bitmap? {
-        return bitmapLoadHelper.getBitmap(blockInfo, scale)
+        return bitmapLoadHelper.getCachedBitmap(blockInfo, scale)
     }
 
     // --- 核心计算逻辑 ---
@@ -366,11 +365,11 @@ class InfiniteBlockManager(
     // --- 接口实现 ---
 
     override fun onBitmapLoaded(blockInfo: BlockInfo, currentScale: Float) {
-        val left = blockInfo.pointLT.x * currentScale + realOffsetX
-        val top = blockInfo.pointLT.y * currentScale + realOffsetY
-        val right = blockInfo.pointRB.x * currentScale + realOffsetX
-        val bottom = blockInfo.pointRB.y * currentScale + realOffsetY
-        val rect = RectF(left, top, right, bottom)
-        callback.invalidateView(rect)
+//        val left = blockInfo.pointLT.x * currentScale + realOffsetX
+//        val top = blockInfo.pointLT.y * currentScale + realOffsetY
+//        val right = blockInfo.pointRB.x * currentScale + realOffsetX
+//        val bottom = blockInfo.pointRB.y * currentScale + realOffsetY
+//        val rect = RectF(left, top, right, bottom)
+        callback.invalidateView("onBitmap Loaded")
     }
 }

@@ -73,8 +73,6 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var mIsSliding = false
     private var mIsScaling = false
-    private var lastScale = 1.0f
-
     private var allImageBeans: List<PickUriWrap> = emptyList()
     private val blockIndexMap = HashMap<String, Int>()
 
@@ -120,14 +118,6 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     }
 
     /**
-     * 清理与当前缩放倍数不匹配的缓存
-     */
-    fun cleanScaleMismatchCache(scale: Float) {
-        // 移除激进的清空逻辑，交由 LRU 自动管理，避免闪烁
-        lastScale = scale
-    }
-
-    /**
      * 为Block分配固定的ImageBean
      */
     fun assignImageForBlock(key: String): PickUriWrap? {
@@ -141,14 +131,13 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     }
 
     /**
-     * 获取Bitmap
-     * 如果缓存中有，直接返回；
-     * 如果没有且当前允许加载，则触发加载并返回null（占位）；
+     * 获取缓存的 Bitmap
      */
-    fun getBitmap(blockInfo: BlockInfo, scale: Float) : Bitmap? {
-        if (allImageBeans.isEmpty()) {
-            return null
-        }
+    fun getCachedBitmap(blockInfo: BlockInfo, scale: Float) : Bitmap? {
+        //无需判断
+//        if (allImageBeans.isEmpty()) {
+//            return null
+//        }
         val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
         val key = generateKey(blockInfo.centerPoint, currentQuality)
         var bitmap = bitmapCache.get(key)
@@ -172,12 +161,12 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
             runList.add {
                 val imageBean = assignImageForBlock(blockInfo.key)
                 if (imageBean != null) {
-                    val newGenerateBitmap = loadBitmapInThread(blockInfo, scale, imageBean)
                     val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
                     val key = generateKey(blockInfo.centerPoint, currentQuality)
+                    val newGenerateBitmap = loadBitmapInThread(blockInfo, scale, imageBean)
+                    bitmapCache.put(key, newGenerateBitmap)
                     mainHandler.post {
                         if (newGenerateBitmap != null) {
-                            bitmapCache.put(key, newGenerateBitmap)
                             logdNoFile { "bitmap loaded: $key" }
                             listener?.onBitmapLoaded(blockInfo, scale)
                         }
@@ -194,11 +183,11 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     private val myCompressConfig = ImageLoader.Config(
         maxWidth = 1440,
         maxHeight = 1920,
-        ignoreSizeInKB = 1024 * 500,
+        ignoreSizeInKB = 1024 * 1024 * 2,
     )
 
     private fun loadBitmapInThread(blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap) : Bitmap? {
-        val cacheBitmap = getBitmap(blockInfo, scale)
+        val cacheBitmap = getCachedBitmap(blockInfo, scale)
         if (cacheBitmap != null) {
             return cacheBitmap
         }

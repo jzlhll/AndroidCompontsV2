@@ -129,8 +129,10 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
 
         // 绘制背景或Bitmap
         tempRectF.set(block.getPointLT().x, block.getPointLT().y, block.getPointRB().x, block.getPointRB().y);
+        var isBitmapNotNull = bitmap != null;
+        var isRecycled = bitmap != null && bitmap.isRecycled();
 
-        if (bitmap != null && !bitmap.isRecycled()) {
+        if (isBitmapNotNull && !isRecycled) {
             // 绘制Bitmap (使用 clipPath 实现圆角)
             int saveCount = canvas.save();
             clipPath.reset();
