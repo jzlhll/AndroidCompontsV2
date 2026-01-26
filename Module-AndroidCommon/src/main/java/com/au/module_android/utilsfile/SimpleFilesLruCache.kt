@@ -93,8 +93,8 @@ class SimpleFilesLruCache(
             scanDirectoryRecursive(cacheDir)
             // 检查是否需要清理旧文件
             val size = getTotalSize()
-            logdNoFile { "cache total size: $size max:$maxSize" }
             if (size > maxSize) {
+                logdNoFile { "cache total size: $size max:$maxSize" }
                 cleanupOldFiles(size)
             }
 
@@ -125,10 +125,10 @@ class SimpleFilesLruCache(
                         // 检查是否需要清理旧文件
                         val total = getTotalSize()
                         if (total > maxSize) {
-                            logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} need $total / $maxSize" }
+                          //  logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} need $total / $maxSize" }
                             cleanupOldFiles(total)
                         } else {
-                            logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} noNeed $total / $maxSize" }
+                          //  logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} noNeed $total / $maxSize" }
                         }
                     }
                 }

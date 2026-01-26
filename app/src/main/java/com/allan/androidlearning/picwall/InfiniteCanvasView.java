@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -133,15 +134,42 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
         var isRecycled = bitmap != null && bitmap.isRecycled();
 
         if (isBitmapNotNull && !isRecycled) {
-            // 绘制Bitmap (使用 clipPath 实现圆角)
-            int saveCount = canvas.save();
+            int saveCount = canvas.save(); // 保存画布状态
+
+            // 1. 重置Path并开启抗锯齿相关配置
             clipPath.reset();
+            // 添加圆角矩形，使用CW方向+EVEN_ODD填充规则，确保裁剪生效
             clipPath.addRoundRect(tempRectF, cornerRadius, cornerRadius, Path.Direction.CW);
+            clipPath.setFillType(Path.FillType.EVEN_ODD);
+
+            // 2. 裁剪画布为圆角区域（高版本兼容）
             canvas.clipPath(clipPath);
-            canvas.drawBitmap(bitmap, null, tempRectF, bitmapPaint);
+
+            // Bitmap原始尺寸
+            int bitmapWidth = bitmap.getWidth();
+            int bitmapHeight = bitmap.getHeight();
+            // 目标显示区域尺寸
+            float targetWidth = tempRectF.width();
+            float targetHeight = tempRectF.height();
+
+            // 计算缩放比例（centerCrop核心：取能覆盖目标区域的最小比例）
+            float scale = Math.max(targetWidth / bitmapWidth, targetHeight / bitmapHeight);
+
+            // 计算需要裁剪的Bitmap区域大小（缩放后刚好覆盖目标区域）
+            float scaledBitmapWidth = targetWidth / scale;
+            float scaledBitmapHeight = targetHeight / scale;
+
+            float dx = (bitmapWidth - scaledBitmapWidth) / 2;
+            float dy = (bitmapHeight - scaledBitmapHeight) / 2;
+
+            var srcRect = new Rect((int)dx, (int)dy, (int)(dx + scaledBitmapWidth), (int)(dy + scaledBitmapHeight));
+            // src=srcRect（裁剪Bitmap的部分区域），dst=dstRect（拉伸到目标区域）
+            canvas.drawBitmap(bitmap, srcRect, tempRectF, bitmapPaint);
+
+            // 恢复画布状态
             canvas.restoreToCount(saveCount);
         } else {
-            // 绘制占位色块
+            // 绘制占位色块（保留圆角）
             canvas.drawRoundRect(tempRectF, cornerRadius, cornerRadius, blockPaint);
         }
     }
