@@ -41,6 +41,8 @@ class InfiniteBlockManager(
         // 缩放常量
         private const val MAX_SCALE = 1.0f
         private const val MIN_SCALE = 0.21f
+        // 慢速滑动阈值，低于此速度认为可以加载高清图
+        private const val SPEED_THRESHOLD_DP = 16
     }
 
     enum class ScrollDirection {
@@ -69,8 +71,10 @@ class InfiniteBlockManager(
     // 节流控制
     private var lastCalcTime = 0L
     private var currentScrollDirection = ScrollDirection.NONE
-    private var mIsSliding = false
+    private var mIsScrolling = false
     private var mIsScaling = false
+    private var isFastScrolling = false
+    private var speedThresholdPx = 0f
 
     // 数据存储
     private var drawBlockList = ArrayList<BlockInfo>()
@@ -93,6 +97,7 @@ class InfiniteBlockManager(
         blockHeight = blockWidth * BLOCK_ASPECT_RATIO
         blockGap = BLOCK_GAP_DP.dpFloat
         cornerRadius = CORNER_RADIUS_DP.dpFloat
+        speedThresholdPx = SPEED_THRESHOLD_DP.dpFloat
 
         // 初始偏移：让 (0,0) 块居中
         // 目标：Center(0,0) = ViewCenter
@@ -147,12 +152,15 @@ class InfiniteBlockManager(
         realOffsetX -= distanceX * SLIDE_SCALE
         realOffsetY -= distanceY * SLIDE_SCALE
 
+        val distance = hypot(distanceX, distanceY)
+        isFastScrolling = distance > speedThresholdPx
+
         bitmapLoadHelper.onScrollStateChanged(true)
         throttleCalculate()
     }
 
     fun onScrollStateChanged(isScrolling: Boolean, direction: ScrollDirection) {
-        mIsSliding = isScrolling
+        mIsScrolling = isScrolling
         currentScrollDirection = direction
         bitmapLoadHelper.onScrollStateChanged(isScrolling)
         if (!isScrolling) {
@@ -215,19 +223,16 @@ class InfiniteBlockManager(
     }
 
     fun getBitmap(blockInfo: BlockInfo, scale: Float) : Bitmap? {
-        return bitmapLoadHelper.getCachedBitmap(blockInfo, scale)
+        return bitmapLoadHelper.getCachedBitmap(blockInfo, scale, true)
     }
 
     // --- 核心计算逻辑 ---
 
-    private fun isAnimating(): Boolean {
-        return mIsSliding || mIsScaling
-    }
-
     private fun calculateDrawBlocks(from:String) {
         //ignore //if (blockWidth <= 0f || blockHeight <= 0f) return
-        logdNoFile { "calculate Draw Blocks from( $from )" }
-        val isAnimating = isAnimating()
+        logdNoFile { "calculate Draw Blocks isFastScrolling $isFastScrolling from( $from )" }
+        // 只有在缩放中，或者快速滑动中，才认为是低质量模式
+        val useLowQuality = mIsScaling || (mIsScrolling && isFastScrolling)
 
         // 1. 计算可见区域 Rect (Canvas坐标)
         val viewCenterX = viewWidth / 2f
@@ -252,7 +257,8 @@ class InfiniteBlockManager(
         )
 
         // 1.5 计算真实可见区域（仅在非运动状态时计算）
-        val realVisibleRect = if (!isAnimating) {
+        // 修改：如果是慢速滑动，也允许计算真实可见区域（从而加载高清图）
+        val realVisibleRect = if (!useLowQuality) {
             RectF(
                 currentCenterX - visibleHalfW,
                 currentCenterY - visibleHalfH,
@@ -350,7 +356,7 @@ class InfiniteBlockManager(
         val lb = PointF(left, bottom)
         val center = PointF(left + blockWidth / 2f, top + blockHeight / 2f)
 
-        return BlockInfo(lt, rt, rb, lb, center, key, 0f, true)
+        return BlockInfo(lt, rt, rb, lb, center, key, 0f)
     }
 
     private fun throttleCalculate() {

@@ -18,7 +18,7 @@ class ImageLoader(
     val provideImageDecodeSource: () -> ImageDecoder.Source?
 ) {
     companion object {
-        const val DEFAULT_IGNORE_KB = 150
+        const val DEFAULT_IGNORE_KB = 800
     }
 
     data class Config(

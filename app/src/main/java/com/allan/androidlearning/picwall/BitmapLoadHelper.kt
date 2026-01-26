@@ -53,7 +53,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     }
 
     companion object {
-        private const val BITMAP_CACHE_MAX_SIZE = 120 * 1024 * 1024
+        private const val BITMAP_CACHE_MAX_SIZE = 50 * 1024 * 1024
     }
 
     private val thumbnailUtils = ThumbnailCompatUtil(Globals.app)
@@ -71,7 +71,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     private val executor = LIFOThreadPoolUtil.createFixedLIFOThreadPool(4)
 
     private val mainHandler = Handler(Looper.getMainLooper())
-    private var mIsSliding = false
+    private var mIsScrolling = false
     private var mIsScaling = false
     private var allImageBeans: List<PickUriWrap> = emptyList()
     private val blockIndexMap = HashMap<String, Int>()
@@ -89,9 +89,9 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     /**
      * 处理滑动状态变化
      */
-    fun onScrollStateChanged(isSliding: Boolean) {
-        this.mIsSliding = isSliding
-        if (!mIsSliding && !mIsScaling) {
+    fun onScrollStateChanged(isScrolling: Boolean) {
+        this.mIsScrolling = isScrolling
+        if (!mIsScrolling && !mIsScaling) {
             logMemoryUsage("Scroll End")
         }
     }
@@ -112,9 +112,11 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     }
 
     private fun logMemoryUsage(reason: String) {
-        val totalSize = bitmapCache.size()
-        val sizeMB = totalSize / 1024f / 1024f
-        logdNoFile { "Memory Usage ($reason): ${"%.2f".format(sizeMB)} MB ($totalSize bytes)" }
+        logdNoFile {
+            val totalSize = bitmapCache.size()
+            val sizeMB = totalSize / 1024f / 1024f
+            "Memory Usage ($reason): ${"%.2f".format(sizeMB)} MB ($totalSize bytes)"
+        }
     }
 
     /**
@@ -133,25 +135,35 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     /**
      * 获取缓存的 Bitmap
      */
-    fun getCachedBitmap(blockInfo: BlockInfo, scale: Float) : Bitmap? {
+    fun getCachedBitmap(blockInfo: BlockInfo, scale: Float, useLowQuality: Boolean) : Bitmap? {
         //无需判断
 //        if (allImageBeans.isEmpty()) {
 //            return null
 //        }
+        // 确定当前质量级别
         val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
-        val key = generateKey(blockInfo.centerPoint, currentQuality)
-        var bitmap = bitmapCache.get(key)
-
-        // 降级查找：如果当前需要更高级（HIGH），尝试使用 LOW 占位
-        if (bitmap == null && currentQuality.level > Quality.LOW.level) {
-            val fallbackKey = generateKey(blockInfo.centerPoint, Quality.LOW)
-            val fallbackBitmap = bitmapCache.get(fallbackKey)
-            if (fallbackBitmap != null) {
-                bitmap = fallbackBitmap
+        
+        // 构建质量查找序列：当前质量 -> 降级质量（如果允许）
+        val qualityLookupList = if (useLowQuality) {
+            // 根据当前质量级别，生成从高到低的降级质量序列
+            when (currentQuality) {
+                Quality.HIGH -> listOf(Quality.HIGH, Quality.MID, Quality.LOW)
+                Quality.MID -> listOf(Quality.MID, Quality.LOW)
+                else -> listOf(Quality.LOW)
             }
+        } else {
+            listOf(currentQuality)
         }
 
-        return bitmap
+        // 遍历质量序列，查找第一个可用的位图
+        for (quality in qualityLookupList) {
+            val key = generateKey(blockInfo.centerPoint, quality)
+            val bitmap = bitmapCache.get(key)
+            if (bitmap != null) {
+                return bitmap
+            }
+        }
+        return null
     }
 
     fun loadAllBitmapsAsync(blockInfos: List<BlockInfo>, scale: Float) {
@@ -187,7 +199,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     )
 
     private fun loadBitmapInThread(blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap) : Bitmap? {
-        val cacheBitmap = getCachedBitmap(blockInfo, scale)
+        val cacheBitmap = getCachedBitmap(blockInfo, scale, false)
         if (cacheBitmap != null) {
             return cacheBitmap
         }

@@ -130,19 +130,16 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
 
         // 绘制背景或Bitmap
         tempRectF.set(block.getPointLT().x, block.getPointLT().y, block.getPointRB().x, block.getPointRB().y);
-        var isBitmapNotNull = bitmap != null;
-        var isRecycled = bitmap != null && bitmap.isRecycled();
+        boolean isBitmapNotNull = bitmap != null;
+        boolean isRecycled = bitmap != null && bitmap.isRecycled();
 
         if (isBitmapNotNull && !isRecycled) {
             int saveCount = canvas.save(); // 保存画布状态
 
-            // 1. 重置Path并开启抗锯齿相关配置
             clipPath.reset();
-            // 添加圆角矩形，使用CW方向+EVEN_ODD填充规则，确保裁剪生效
             clipPath.addRoundRect(tempRectF, cornerRadius, cornerRadius, Path.Direction.CW);
             clipPath.setFillType(Path.FillType.EVEN_ODD);
 
-            // 2. 裁剪画布为圆角区域（高版本兼容）
             canvas.clipPath(clipPath);
 
             // Bitmap原始尺寸
@@ -155,7 +152,6 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
             // 计算缩放比例（centerCrop核心：取能覆盖目标区域的最小比例）
             float scale = Math.max(targetWidth / bitmapWidth, targetHeight / bitmapHeight);
 
-            // 计算需要裁剪的Bitmap区域大小（缩放后刚好覆盖目标区域）
             float scaledBitmapWidth = targetWidth / scale;
             float scaledBitmapHeight = targetHeight / scale;
 
@@ -163,10 +159,8 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
             float dy = (bitmapHeight - scaledBitmapHeight) / 2;
 
             var srcRect = new Rect((int)dx, (int)dy, (int)(dx + scaledBitmapWidth), (int)(dy + scaledBitmapHeight));
-            // src=srcRect（裁剪Bitmap的部分区域），dst=dstRect（拉伸到目标区域）
             canvas.drawBitmap(bitmap, srcRect, tempRectF, bitmapPaint);
 
-            // 恢复画布状态
             canvas.restoreToCount(saveCount);
         } else {
             // 绘制占位色块（保留圆角）
@@ -247,7 +241,6 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
 
     @Override
     public void invalidateView(@NonNull String from) {
-        Log.d("au-", "invalidateView: from " + from);
         postInvalidate();
     }
 

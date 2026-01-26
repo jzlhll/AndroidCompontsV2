@@ -187,7 +187,7 @@ public class LIFOThreadPoolUtil {
      * 强制关闭线程池（立即中断所有任务，返回未执行的任务列表）
      * @return 未执行的任务列表
      */
-    public java.util.List<Runnable> shutdownNow() {
+    public List<Runnable> shutdownNow() {
         if (isShutdown.compareAndSet(false, true)) {
             List<Runnable> unexecutedTasks = lifoExecutor.shutdownNow();
             System.out.println("线程池已强制关闭，未执行任务数：" + unexecutedTasks.size());
