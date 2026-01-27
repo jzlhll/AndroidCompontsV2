@@ -18,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap
 class SimpleFilesLruCache(
     dirName: String,
     private val maxSize: Long = 100 * 1024 * 1024, // 默认100MB
-    private val clearToRatio: Double = 0.6
+    private val clearToRatio: Double = 0.6,
+    isFileOrCacheParent : Boolean = false
 ) {
     private var singleScope: SingleCoroutineTaskExecutor? = null
     private fun getOrCreateScope() : SingleCoroutineTaskExecutor {
@@ -28,7 +29,7 @@ class SimpleFilesLruCache(
         return scope
     }
 
-    val cacheDir = File(Globals.goodCacheDir, dirName)
+    val cacheDir = File(if(isFileOrCacheParent) Globals.goodFilesDir else Globals.goodCacheDir, dirName)
 
     // 记录文件的访问时间和大小，key就是全路径
     private val fileMetadata = ConcurrentHashMap<String, FileMetadata>()
