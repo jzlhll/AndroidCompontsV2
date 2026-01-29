@@ -91,16 +91,15 @@ runCallCatch(hasLoading = true, call = {
 - `filterUninitialized()`：只接收未初始化状态
 
 ### 5.3 状态收集
-- 使用 `collectStatusState()` 一次性处理所有状态
-- 结合 `launchRepeatOnStarted()` 确保生命周期安全
 
+- 普通的Flow类型的流，直接使用`collect()`函数来收集状态
+- 如果是StatusState<*>类型的流，需要使用`collectStatusState()`函数来收集状态
+- 在生命周期类Fragment/Activity中使用如下代码包裹collect/collectStatusState函数：
 ```kotlin
-launchRepeatOnStarted {
-    viewModel.dataState.collectStatusState(
-        onLoading = { /* 显示加载 */ },
-        onSuccess = { data -> /* 更新UI */ },
-        onError = { throwable -> /* 显示错误 */ }
-    )
+    lifecycleScope.launch {
+    repeatOnLifecycle(Lifecycle.State.STARTED) {
+        block()
+    }
 }
 ```
 
