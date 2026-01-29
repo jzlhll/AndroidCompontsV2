@@ -15,7 +15,13 @@ description: 当涉及到Fragment生成，Layout xml布局创建修改，和dime
 # 容器
 有圆角：BgBuildXXXLayout, 相关属性：backgroundNormal, cornerRadius
 无圆角：常规布局(如ConstraintLayout)
-有阴影：CardView包裹
+默认没有阴影；如果我要求添加阴影效果，则添加如下内容，数值不做修改，并修改该控件的父控件clipChildren和clipToPadding为false：
+```xml
+app:shadowBlur="8dp"
+app:shadowColor="#10000000"
+app:shadowOffsetY="4dp"
+app:backgroundNormal="#ffffff"
+```
 
 # 样式
 [styles.xml](../../../Module-AndroidColor/src/main/res/values/styles.xml)
