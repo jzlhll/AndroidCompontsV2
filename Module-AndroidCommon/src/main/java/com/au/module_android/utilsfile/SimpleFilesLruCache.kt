@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
  * 支持嵌套目录结构
  */
 class SimpleFilesLruCache(
-    dirName: String,
+    val dirName: String,
     private val maxSize: Long = 100 * 1024 * 1024, // 默认100MB
     private val clearToRatio: Double = 0.6,
     isFileOrCacheParent : Boolean = false
@@ -204,10 +204,25 @@ class SimpleFilesLruCache(
     /**
      * 检查文件是否存在
      */
+    fun fileExists(fileName:String): Boolean {
+        return File(cacheDir, fileName).exists()
+    }
+
+    /**
+     * 检查文件是否存在
+     */
     fun fileExists(fileName:String, vararg dirs:String): Boolean {
         val relativePath = dirs.joinToString(File.separator) + File.separator + fileName
         val file = File(cacheDir, relativePath)
         return file.exists()
+    }
+
+    /**
+     * 根据相对路径获取文件
+     */
+    fun getFile(fileName:String): File? {
+        val file = File(cacheDir, fileName)
+        return if (file.exists()) file else null
     }
 
     /**

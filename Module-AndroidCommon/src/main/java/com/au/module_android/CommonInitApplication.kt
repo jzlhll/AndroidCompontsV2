@@ -59,6 +59,9 @@ open class CommonInitApplication : Application() {
 
     override fun onCreate() {
         Globals.internalApp = this
+        if (BuildConfig.DEBUG) {
+            System.setProperty("kotlinx.coroutines.debug", "on")
+        }
         super.onCreate()
         init(this)
         DarkModeAndLocalesConst.appOnCreated(this)
