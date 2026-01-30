@@ -60,6 +60,22 @@
             android:layout_height="40dp" />
     </com.au.module_androidui.widget.BgBuildLinearLayout>
 
+    <com.au.module_androidui.widget.BgBuildRelativeLayout
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="40dp"
+        app:strokeColor="@color/color_text_desc"
+        app:strokeWidth="1dp"
+        android:layout_width="300dp"
+        android:layout_height="46dp">
+    </com.au.module_androidui.widget.BgBuildRelativeLayout>
+
+    <!-- Liquid Glass View -->
+    <com.qmdeve.liquidglass.widget.LiquidGlassView
+        android:id="@+id/liquidGlassView"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true" />
+
     <LinearLayout
         android:layout_gravity="bottom|center_horizontal"
         android:layout_width="wrap_content"
@@ -72,4 +88,5 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>
+
 </FrameLayout>

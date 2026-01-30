@@ -95,7 +95,7 @@ dependencies {
     implementation  libs.refresh.header.two.level   //二级刷新头
     implementation  libs.refresh.footer.ball        //球脉冲加载
     implementation  libs.refresh.footer.classics    //经典加载
-
+    implementation  libs.liquidglass
 //    kapt project(':ClassNameAnnotations-compiler')
 }
 

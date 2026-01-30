@@ -3,6 +3,7 @@
 appcompat = "1.7.1"
 blurview = "version-2.0.6"
 cameraCamera2 = "1.5.2"
+liquidglass = "1.0.1"
 flexbox = "3.0.0"
 hiltAndroid = "2.57.2"
 hiltAndroidCompiler = "2.57.2"
@@ -83,6 +84,7 @@ androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefre
 androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntimeKtx" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 blurview = { module = "com.github.Dimezis:BlurView", version.ref = "blurview" }
+liquidglass = { module = "com.qmdeve.liquidglass:core", version.ref = "liquidglass" }
 flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
