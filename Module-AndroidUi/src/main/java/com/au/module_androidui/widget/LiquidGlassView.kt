@@ -50,6 +50,7 @@ class LiquidGlassView : View {
         abstract fun onElementsChanged()
         abstract fun applyRenderEffectTo(target: View)
         abstract fun onDraw(canvas: Canvas)
+        abstract fun getActiveTarget(): View?
     }
 
     private inner class LowerLiquidGlass : ILiquidGlass() {
@@ -74,6 +75,8 @@ class LiquidGlassView : View {
             val color = if (isNight) nightColor else dayColor
             canvas.drawColor(color)
         }
+
+        override fun getActiveTarget(): View? = null
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -142,11 +145,14 @@ class LiquidGlassView : View {
             canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         }
 
+        override fun getActiveTarget(): View? = renderEffectTarget
+
         /**
          * 更新 Shader 的 uniform 参数
          * @param w 绘制区域的宽度
          * @param h 绘制区域的高度
          */
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
         private fun updateShaderUniforms(shader: RuntimeShader, w: Float, h: Float) {
             // 设置分辨率
             shader.setFloatUniform("resolution", w, h)
@@ -218,9 +224,10 @@ class LiquidGlassView : View {
      * 创建一个填满 View 的圆角矩形（自动计算最大圆角，呈胶囊形或圆形）。
      */
     fun setupFullCapsule() {
-        post {
-            if (width > 0 && height > 0) {
-                val radius = minOf(width, height) / 2f
+        val target = impl.getActiveTarget() ?: this
+        target.post {
+            if (target.width > 0 && target.height > 0) {
+                val radius = minOf(target.width, target.height) / 2f
                 setupFullRoundedRect(radius)
             }
         }
@@ -230,11 +237,12 @@ class LiquidGlassView : View {
      * 创建一个填满 View 的圆角矩形，指定圆角半径。
      */
     fun setupFullRoundedRect(cornerRadius: Float) {
-        post {
-            if (width > 0 && height > 0) {
+        val target = impl.getActiveTarget() ?: this
+        target.post {
+            if (target.width > 0 && target.height > 0) {
                 val element = GlassElement(
                     position = PointF(0f, 0f),
-                    size = SizeF(width.toFloat(), height.toFloat()),
+                    size = SizeF(target.width.toFloat(), target.height.toFloat()),
                     scale = 1.0f,
                     cornerRadius = cornerRadius,
                     elevation = 0f, // 默认平面
@@ -242,7 +250,7 @@ class LiquidGlassView : View {
                     tint = Color.valueOf(1f, 1f, 1f, 0.2f), // 默认微白透明
                     darkness = 0f,
                     warpEdges = 0f,
-                    blur = 0.5f // 默认模糊
+                    blur = 16f // 默认模糊
                 )
                 this.elements = listOf(element)
             }

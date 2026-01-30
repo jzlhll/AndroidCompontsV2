@@ -33,11 +33,6 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
         requireActivity().changeBarsColor(false, false)
         binding.liquidGlassView.applyRenderEffectTo(binding.infiniteCanvasView)
         binding.liquidGlassView.setupFullCapsule()
-//        binding.liquidGlassView.bind(binding.host)
-//        binding.liquidGlassView.apply {
-//            setCornerRadius(25.dpFloat)
-//            setBlurRadius(25.dpFloat)
-//        }
 
         // 收集状态
         lifecycleScope.launch {
