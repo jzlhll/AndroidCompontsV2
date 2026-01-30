@@ -31,6 +31,8 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         requireActivity().changeBarsColor(false, false)
+        binding.liquidGlassView.applyRenderEffectTo(binding.infiniteCanvasView)
+        binding.liquidGlassView.setupFullCapsule()
 //        binding.liquidGlassView.bind(binding.host)
 //        binding.liquidGlassView.apply {
 //            setCornerRadius(25.dpFloat)
