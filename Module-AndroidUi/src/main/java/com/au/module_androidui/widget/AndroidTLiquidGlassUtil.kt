@@ -1,7 +1,10 @@
 package com.au.module_androidui.widget
 
+import org.intellij.lang.annotations.Language
+
 class AndroidTLiquidGlassUtil {
-    val shaderCode = """
+    @Language("AGSL")
+    val liquidGlassView1 = """
 uniform float3 iResolution; 
 uniform float  iTime; 
 uniform float4 iMouse; 
