@@ -12,8 +12,10 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_android.utilsmedia.ThumbnailCompatUtil
 import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.compressor.ImageLoader
-import com.au.module_imagecompressed.compressor.loadImage
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Future
+import kotlin.collections.iterator
 
 /**
  * 图片加载辅助类
@@ -69,12 +71,14 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     }
 
     private val executor = LIFOThreadPoolUtil.createFixedLIFOThreadPool(4)
+    // 任务管理 Map: Key=Block.key, Value=Future
+    private val runningTasks = ConcurrentHashMap<Long, Future<*>>()
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var mIsScrolling = false
     private var mIsScaling = false
     private var allImageBeans: List<PickUriWrap> = emptyList()
-    private val blockIndexMap = HashMap<String, Int>()
+    private val blockIndexMap = HashMap<Long, Int>()
 
     /**
      * 初始化数据源
@@ -83,7 +87,13 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
         this.allImageBeans = frameImageList
         blockIndexMap.clear()
         bitmapCache.evictAll()
+        cancelAllTasks()
         logdNoFile { "onInitial: cache cleared" }
+    }
+
+    private fun cancelAllTasks() {
+        runningTasks.values.forEach { it.cancel(false) }
+        runningTasks.clear()
     }
 
     /**
@@ -122,7 +132,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     /**
      * 为Block分配固定的ImageBean
      */
-    fun assignImageForBlock(key: String): PickUriWrap? {
+    fun assignImageForBlock(key: Long): PickUriWrap? {
         if (allImageBeans.isEmpty()) {
             return null
         }
@@ -157,7 +167,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
 
         // 遍历质量序列，查找第一个可用的位图
         for (quality in qualityLookupList) {
-            val key = generateKey(blockInfo.centerPoint, quality)
+            val key = generateCacheKey(blockInfo.key, quality)
             val bitmap = bitmapCache.get(key)
             if (bitmap != null) {
                 return bitmap
@@ -168,34 +178,76 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
 
     fun loadAllBitmapsAsync(blockInfos: List<BlockInfo>, scale: Float) {
         logdNoFile { "load all bitmap..." }
-        val runList = ArrayList<Runnable>()
-        blockInfos.forEach { blockInfo->
-            runList.add {
-                val imageBean = assignImageForBlock(blockInfo.key)
-                if (imageBean != null) {
-                    val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
-                    val key = generateKey(blockInfo.centerPoint, currentQuality)
-                    val newGenerateBitmap = loadBitmapInThread(blockInfo, scale, imageBean)
-                    bitmapCache.put(key, newGenerateBitmap)
-                    mainHandler.post {
-                        if (newGenerateBitmap != null) {
-                            logdNoFile { "bitmap loaded: $key" }
-                            listener?.onBitmapLoaded(blockInfo, scale)
-                        }
-                    }
-                }
+        
+        // 1. 找出当前可见区域的所有 Block Key
+        val visibleKeys = blockInfos.map { it.key }.toSet()
+
+        // 2. 取消那些已经滑出屏幕（不再 visibleKeys 中）的任务
+        val iterator = runningTasks.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (!visibleKeys.contains(entry.key)) {
+                entry.value.cancel(false) // 尝试取消
+                iterator.remove()
+                logdNoFile { "Task cancelled for block: ${entry.key}" }
             }
         }
 
-        for (run in runList) {
-            executor.execute(run)
+        // 3. 提交新任务
+        blockInfos.forEach { blockInfo ->
+            // 如果已经在运行或者已有缓存，则跳过
+            // 这里简单判断：只要有任务在跑就不重复提交。LIFO 线程池会优先处理后提交的。
+            // 注意：如果 Scale 变了导致 Quality 变了，可能需要重新加载。
+            // 但目前的逻辑主要针对滑动。为了简化，假设同一个 Block 在队列中只需存在一份。
+            if (runningTasks.containsKey(blockInfo.key)) {
+                return@forEach
+            }
+
+            // 检查缓存，如果有就不提交任务
+            if (getCachedBitmap(blockInfo, scale, false) != null) {
+                return@forEach
+            }
+
+            val task = executor.submit {
+                try {
+                    // 任务开始前再次检查是否被取消（虽然 Future.cancel 会置位，但双重保险）
+                    if (Thread.currentThread().isInterrupted) return@submit
+
+                    val imageBean = assignImageForBlock(blockInfo.key)
+                    if (imageBean != null) {
+                        val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
+                        val cacheKey = generateCacheKey(blockInfo.key, currentQuality)
+                        
+                        val newGenerateBitmap = loadBitmapInThread(blockInfo, scale, imageBean)
+                        
+                        if (Thread.currentThread().isInterrupted) return@submit
+
+                        if (newGenerateBitmap != null) {
+                            bitmapCache.put(cacheKey, newGenerateBitmap)
+                            mainHandler.post {
+                                logdNoFile { "bitmap loaded: $cacheKey" }
+                                listener?.onBitmapLoaded(blockInfo, scale)
+                                // 任务完成后移除
+                                runningTasks.remove(blockInfo.key)
+                            }
+                        } else {
+                            runningTasks.remove(blockInfo.key)
+                        }
+                    } else {
+                        runningTasks.remove(blockInfo.key)
+                    }
+                } catch (e: Exception) {
+                    runningTasks.remove(blockInfo.key)
+                }
+            }
+            runningTasks[blockInfo.key] = task
         }
     }
 
     private val myCompressConfig = ImageLoader.Config(
         maxWidth = 1440,
         maxHeight = 1920,
-        ignoreSizeInKB = 1024 * 1024 * 2,
+        ignoreSizeInKB = 2000,
     )
 
     private fun loadBitmapInThread(blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap) : Bitmap? {
@@ -211,19 +263,21 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
             //加载原图
             //使用我的策略进行略微压缩加载避免过大
             val bitmap = runBlocking {
-                loadImage(Globals.app, imageBean.uriParsedInfo.uri, myCompressConfig)
+                ImageLoader.loadImage(Globals.app, imageBean.uriParsedInfo.uri, myCompressConfig)
             }
             return bitmap
         }
         return thumbnailUtils.loadThumbnailCompat(imageBean.uriParsedInfo.uri, size)
     }
 
-    private fun generateKey(center: PointF, quality: Quality): String {
-        // Key不再包含 Scale，以便在缩放时复用旧 Bitmap
-        return "${center.x.toInt()}_${center.y.toInt()}_${quality.name}"
+    private fun generateCacheKey(blockKey: Long, quality: Quality): String {
+        // Cache Key 依然保留字符串形式，因为 LruCache 是 String Key
+        // 但基础部分改用 Long Key
+        return "${blockKey}_${quality.name}"
     }
 
     fun onDetachedFromWindow() {
+        cancelAllTasks()
         executor.shutdownNow()
         bitmapCache.evictAll()
         logdNoFile { "onDestroy: cache cleared" }

@@ -11,7 +11,7 @@ data class BlockInfo(
     val pointRB: PointF,
     val pointLB: PointF,
     val centerPoint: PointF,
-    val key: String,
+    val key: Long,
     var distance: Float = 0f,
     var isRealVisible: Boolean = false
 )

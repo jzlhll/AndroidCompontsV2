@@ -1,6 +1,5 @@
 package com.au.module_imagecompressed.compressor
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -100,7 +99,6 @@ class BestImageCompressor(
     )
 
     private val tempBufferSize = 16 * 1024
-    private val util = CompressUtil()
 
     private val api: IApi = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         NewApi()
@@ -134,7 +132,7 @@ class BestImageCompressor(
 
                 // 查询文件大小 放到外面避免多次查询
                 mFileSize = provideFileSize()
-                val quality = util.chooseQuality(mFileSize, config.qualityType)
+                val quality = CompressUtil.chooseQuality(mFileSize, config.qualityType)
                 Log.d(TAG, "compress: quality $quality type: ${config.qualityType}")
 
                 val targetSize = config.secondReduce?.targetSize
@@ -300,7 +298,7 @@ class BestImageCompressor(
             }
 
             // 2. 计算目标缩放尺寸
-            val (targetWidth, targetHeight) = util.calculateTargetDimensions(
+            val (targetWidth, targetHeight) = CompressUtil.calculateTargetDimensions(
                 options.outWidth,
                 options.outHeight,
                 config.maxWidth.toFloat(),
@@ -308,7 +306,7 @@ class BestImageCompressor(
             )
 
             // 3. 计算采样率
-            val sampleSize = util.calculateSampleSize(
+            val sampleSize = CompressUtil.calculateSampleSize(
                 options.outWidth,
                 options.outHeight,
                 targetWidth,
@@ -342,7 +340,7 @@ class BestImageCompressor(
                 decoded.originalH = originalHeight
 
                 // 2. 计算目标缩放尺寸
-                val (targetWidth, targetHeight) = util.calculateTargetDimensions(
+                val (targetWidth, targetHeight) = CompressUtil.calculateTargetDimensions(
                     originalWidth,
                     originalHeight,
                     config.maxWidth.toFloat(),
@@ -352,7 +350,7 @@ class BestImageCompressor(
                 decoded.targetH = targetHeight
 
                 // 3. 计算采样率
-                val sampleSize = util.calculateSampleSize(
+                val sampleSize = CompressUtil.calculateSampleSize(
                     originalWidth,
                     originalHeight,
                     targetWidth,
@@ -370,91 +368,93 @@ class BestImageCompressor(
 }
 
 class CompressUtil {
-    /**
-     * 根据文件大小选择压缩质量。适配现在的需求
-     */
-    fun chooseQuality(size: Long, qualityType: String): Int {
-        when (qualityType) {
-            "deep" -> {
-                return when {
-                    size > 16_000_000 -> 55
-                    size > 8_000_000 -> 65
-                    size > 4_000_000 -> 78
-                    size > 2_000_000 -> 82
-                    size > 1_000_000 -> 88
-                    else -> 100
+    companion object {
+        /**
+         * 根据文件大小选择压缩质量。适配现在的需求
+         */
+        fun chooseQuality(size: Long, qualityType: String): Int {
+            when (qualityType) {
+                "deep" -> {
+                    return when {
+                        size > 16_000_000 -> 55
+                        size > 8_000_000 -> 65
+                        size > 4_000_000 -> 78
+                        size > 2_000_000 -> 82
+                        size > 1_000_000 -> 88
+                        else -> 100
+                    }
+                }
+                "shallow"-> {
+                    return when {
+                        size > 16_000_000 -> 80
+                        size > 8_000_000 -> 85
+                        size > 4_000_000 -> 90
+                        size > 2_000_000 -> 95
+                        size > 1_000_000 -> 98
+                        else -> 100
+                    }
+                }
+                else -> {
+                    return when {
+                        size > 16_000_000 -> 70
+                        size > 8_000_000 -> 80
+                        size > 4_000_000 -> 85
+                        size > 2_000_000 -> 90
+                        size > 1_000_000 -> 95
+                        else -> 100
+                    }
                 }
             }
-            "shallow"-> {
-                return when {
-                    size > 16_000_000 -> 80
-                    size > 8_000_000 -> 85
-                    size > 4_000_000 -> 90
-                    size > 2_000_000 -> 95
-                    size > 1_000_000 -> 98
-                    else -> 100
+        }
+
+        fun calculateSampleSize(
+            origW: Int,
+            origH: Int,
+            reqWidth: Int,
+            reqHeight: Int
+        ): Int {
+            var inSample = 1
+            if (origH > reqHeight || origW > reqWidth) {
+                val heightRatio = (origH.toFloat() / reqHeight).roundToInt()
+                val widthRatio = (origW.toFloat() / reqWidth).roundToInt()
+                inSample = minOf(heightRatio, widthRatio)
+            }
+
+            val totalPixels = origW * origH.toFloat()
+            val cap = reqWidth * reqHeight * 2f
+            while (totalPixels / (inSample * inSample) > cap) {
+                inSample++
+            }
+            return inSample
+        }
+
+        fun calculateTargetDimensions(
+            width: Int,
+            height: Int,
+            maxWidth: Float,
+            maxHeight: Float
+        ): Pair<Int, Int> {
+            var w = width.toFloat()
+            var h = height.toFloat()
+
+            val imgRatio = w / h
+            val maxRatio = maxWidth / maxHeight
+
+            if (h > maxHeight || w > maxWidth) {
+                if (imgRatio < maxRatio) {
+                    val scale = maxHeight / h
+                    w *= scale
+                    h = maxHeight
+                } else if (imgRatio > maxRatio) {
+                    val scale = maxWidth / w
+                    h *= scale
+                    w = maxWidth
+                } else {
+                    w = maxWidth
+                    h = maxHeight
                 }
             }
-            else -> {
-                return when {
-                    size > 16_000_000 -> 70
-                    size > 8_000_000 -> 80
-                    size > 4_000_000 -> 85
-                    size > 2_000_000 -> 90
-                    size > 1_000_000 -> 95
-                    else -> 100
-                }
-            }
+            return w.roundToInt() to h.roundToInt()
         }
-    }
-
-    fun calculateSampleSize(
-        origW: Int,
-        origH: Int,
-        reqWidth: Int,
-        reqHeight: Int
-    ): Int {
-        var inSample = 1
-        if (origH > reqHeight || origW > reqWidth) {
-            val heightRatio = (origH.toFloat() / reqHeight).roundToInt()
-            val widthRatio = (origW.toFloat() / reqWidth).roundToInt()
-            inSample = minOf(heightRatio, widthRatio)
-        }
-
-        val totalPixels = origW * origH.toFloat()
-        val cap = reqWidth * reqHeight * 2f
-        while (totalPixels / (inSample * inSample) > cap) {
-            inSample++
-        }
-        return inSample
-    }
-
-    fun calculateTargetDimensions(
-        width: Int,
-        height: Int,
-        maxWidth: Float,
-        maxHeight: Float
-    ): Pair<Int, Int> {
-        var w = width.toFloat()
-        var h = height.toFloat()
-
-        val imgRatio = w / h
-        val maxRatio = maxWidth / maxHeight
-
-        if (h > maxHeight || w > maxWidth) {
-            if (imgRatio < maxRatio) {
-                val scale = maxHeight / h
-                w *= scale
-                h = maxHeight
-            } else if (imgRatio > maxRatio) {
-                val scale = maxWidth / w
-                h *= scale
-                w = maxWidth
-            } else {
-                w = maxWidth
-                h = maxHeight
-            }
-        }
-        return w.roundToInt() to h.roundToInt()
     }
 }

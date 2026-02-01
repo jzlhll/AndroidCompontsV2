@@ -78,7 +78,7 @@ class InfiniteBlockManager(
 
     // 数据存储
     private var drawBlockList = ArrayList<BlockInfo>()
-    private var activeBlockMap = HashMap<String, BlockInfo>() // Key: "x_y" (index)
+    private var activeBlockMap = HashMap<Long, BlockInfo>() // Key: Long (index)
 
     // 辅助类
     private val bitmapLoadHelper = BitmapLoadHelper(this)
@@ -282,7 +282,7 @@ class InfiniteBlockManager(
 
         // 3. 生成/复用 BlockInfo
         val newDrawList = ArrayList<BlockInfo>()
-        val newActiveMap = HashMap<String, BlockInfo>()
+        val newActiveMap = HashMap<Long, BlockInfo>()
 
         var reuseCount = 0
         var createCount = 0
@@ -299,7 +299,10 @@ class InfiniteBlockManager(
             val maxIdxY = floor((visibleRect.bottom - yOffset) / stepY).toInt() + 1
 
             for (iy in minIdxY..maxIdxY) {
-                val key = "${ix}_${iy}"
+                // Key 优化：使用位运算合成 Long Key
+                // (ix << 32) | (iy & 0xFFFFFFFFL)
+                val key = (ix.toLong() shl 32) or (iy.toLong() and 0xFFFFFFFFL)
+
                 var block = activeBlockMap[key]
                 if (block == null) {
                     // 新增块
@@ -339,7 +342,7 @@ class InfiniteBlockManager(
         drawBlockList = newDrawList
     }
 
-    private fun createBlockInfo(ix: Int, iy: Int, stepX: Float, stepY: Float, key: String): BlockInfo {
+    private fun createBlockInfo(ix: Int, iy: Int, stepX: Float, stepY: Float, key: Long): BlockInfo {
         // 核心交错逻辑：每一列相比前一列，下沉 1/3 高度
         // offset = ix * (blockHeight / 3)
         // 这样 ix=1 比 ix=0 低，ix=-1 比 ix=0 高

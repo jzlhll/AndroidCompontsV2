@@ -14,11 +14,48 @@ import java.io.InputStream
 
 class ImageLoader(
     val config: Config,
-    val provideInputStream: () -> InputStream?,
-    val provideImageDecodeSource: () -> ImageDecoder.Source?
 ) {
+    private lateinit var api: IApi
     companion object {
-        const val DEFAULT_IGNORE_KB = 800
+        const val DEFAULT_IGNORE_KB = 1200
+
+        suspend fun loadImage(context: Context, uri: Uri, config: Config = Config()): Bitmap? {
+            val parsedInfo = uri.myParse(context)
+            val ignore = parsedInfo.fileLength < config.ignoreSizeInKB * 1024 ||
+                    config.ignoreFileTypes.contains(parsedInfo.extension.lowercase())
+
+            if (ignore) {
+                // Load original
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    try {
+                        val source = ImageDecoder.createSource(context.contentResolver, uri)
+                        return ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                        }
+                    } catch (_: Exception) {
+                        return null
+                    }
+                } else {
+                    return context.contentResolver.openInputStream(uri)?.use {
+                        BitmapFactory.decodeStream(it)
+                    }
+                }
+            }
+
+            val loader = ImageLoader(config = config)
+            loader.api = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                NewApi(config) {
+                    ImageDecoder.createSource(context.contentResolver, uri)
+                }
+            } else {
+                OldApi(config) {
+                    context.contentResolver.openInputStream(uri)
+                }
+            }
+
+            return loader.load()
+        }
+
     }
 
     data class Config(
@@ -38,14 +75,6 @@ class ImageLoader(
         val ignoreSizeInKB : Int = DEFAULT_IGNORE_KB
     )
 
-    private val util = CompressUtil()
-
-    private val api: IApi = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        NewApi()
-    } else {
-        OldApi()
-    }
-
     suspend fun load(): Bitmap? {
         return withContext(Dispatchers.IO) {
             api.decodeBitmap()
@@ -56,7 +85,7 @@ class ImageLoader(
         fun decodeBitmap(): Bitmap?
     }
 
-    private inner class OldApi : IApi {
+    private class OldApi(val config: Config, private val provideInputStream: () -> InputStream?) : IApi {
         override fun decodeBitmap(): Bitmap? {
             // 1. Decode bounds
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -65,7 +94,7 @@ class ImageLoader(
             }
 
             // 2. Calculate sample size
-            val sampleSize = util.calculateSampleSize(
+            val sampleSize = CompressUtil.calculateSampleSize(
                 options.outWidth,
                 options.outHeight,
                 config.maxWidth,
@@ -88,7 +117,7 @@ class ImageLoader(
     }
 
     @RequiresApi(Build.VERSION_CODES.P)
-    private inner class NewApi : IApi {
+    private class NewApi(val config: Config, val provideImageDecodeSource: () -> ImageDecoder.Source?) : IApi {
         override fun decodeBitmap(): Bitmap? {
             return try {
                 val source = provideImageDecodeSource() ?: return null
@@ -96,7 +125,7 @@ class ImageLoader(
                     val originalWidth = info.size.width
                     val originalHeight = info.size.height
 
-                    val sampleSize = util.calculateSampleSize(
+                    val sampleSize = CompressUtil.calculateSampleSize(
                         originalWidth,
                         originalHeight,
                         config.maxWidth,
@@ -104,7 +133,7 @@ class ImageLoader(
                     )
                     decoder.setTargetSampleSize(sampleSize)
 
-                    if (config.qualityType == "shallow") {
+                    if (config.qualityType == "shallow" || config.qualityType == "default") {
                         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                         decoder.memorySizePolicy = ImageDecoder.MEMORY_POLICY_DEFAULT
                     } else {
@@ -118,41 +147,4 @@ class ImageLoader(
             }
         }
     }
-}
-
-suspend fun loadImage(context: Context, uri: Uri, config: ImageLoader.Config = ImageLoader.Config()): Bitmap? {
-    val parsedInfo = uri.myParse(context)
-    val ignore = parsedInfo.fileLength < config.ignoreSizeInKB * 1024 ||
-            config.ignoreFileTypes.contains(parsedInfo.extension.lowercase())
-
-    if (ignore) {
-        // Load original
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                try {
-                    val source = ImageDecoder.createSource(context.contentResolver, uri)
-                    return ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
-                        decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                    }
-                } catch (_: Exception) {
-                    return null
-                }
-            } else {
-                return context.contentResolver.openInputStream(uri)?.use {
-                    BitmapFactory.decodeStream(it)
-                }
-            }
-    }
-
-    val loader = ImageLoader(
-        config = config,
-        provideInputStream = { context.contentResolver.openInputStream(uri) },
-        provideImageDecodeSource = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ImageDecoder.createSource(context.contentResolver, uri)
-            } else {
-                null
-            }
-        }
-    )
-    return loader.load()
 }
