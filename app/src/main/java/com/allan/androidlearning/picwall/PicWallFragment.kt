@@ -42,9 +42,6 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
                         // TODO: 处理成功数据
                         logdNoFile { "view model loaded data.size: ${data.size}" }
                         binding.infiniteCanvasView.setFrameImageList(data)
-                        postToMainHandler {
-                            AndroidSBlurUtil.applyBlurEffect(binding.liquidGlassView, 50.dpFloat, 50.dpFloat)
-                        }
                     }
                 )
             }

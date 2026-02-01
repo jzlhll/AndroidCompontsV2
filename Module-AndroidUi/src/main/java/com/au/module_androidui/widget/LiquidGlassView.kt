@@ -57,6 +57,14 @@ class LiquidGlassView : View {
         private val nightColor = "#80333333".toColorInt()
         private val dayColor = "#80ffffff".toColorInt()
 
+        init {
+            val isNight = isNightMode()
+            val color = if (isNight) nightColor else dayColor
+            paint.color = color
+            paint.isAntiAlias = true
+            paint.style = Paint.Style.FILL
+        }
+
         private fun isNightMode(): Boolean {
             val mode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
             return mode == Configuration.UI_MODE_NIGHT_YES
@@ -71,9 +79,8 @@ class LiquidGlassView : View {
         }
 
         override fun onDraw(canvas: Canvas) {
-            val isNight = isNightMode()
-            val color = if (isNight) nightColor else dayColor
-            canvas.drawColor(color)
+            val cornerRadius = elements.getOrNull(0)?.cornerRadius ?: 0f
+            canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), cornerRadius, cornerRadius, paint)
         }
 
         override fun getActiveTarget(): View? = null

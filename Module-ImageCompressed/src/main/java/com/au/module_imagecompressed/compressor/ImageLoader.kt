@@ -102,8 +102,7 @@ class ImageLoader(
             )
 
             // 3. Config
-            val configType = if (config.qualityType == "shallow")
-                Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
+            val configType = if (config.qualityType == "shallow") Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
 
             // 4. Decode
             val opts = BitmapFactory.Options().apply {
