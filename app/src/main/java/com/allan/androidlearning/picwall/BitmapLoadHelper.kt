@@ -55,18 +55,18 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     }
 
     companion object {
-        private const val BITMAP_CACHE_MAX_SIZE = 50 * 1024 * 1024
+        private const val BITMAP_CACHE_MAX_SIZE = 128 * 1024 * 1024
     }
 
     private val thumbnailUtils = ThumbnailCompatUtil(Globals.app)
 
     private val bitmapCache: LruCache<String, Bitmap> = object : LruCache<String, Bitmap>(BITMAP_CACHE_MAX_SIZE) {
         override fun sizeOf(key: String, value: Bitmap): Int {
-            return value.byteCount // 返回真实字节大小
+            return value.allocationByteCount // 返回真实字节大小
         }
 
         override fun entryRemoved(evicted: Boolean, key: String?, oldValue: Bitmap?, newValue: Bitmap?) {
-            logdNoFile { "cache entry removed: $key, evicted=$evicted, size=${oldValue?.byteCount}" }
+            logdNoFile { "cache entry removed: $key, evicted=$evicted, size=${oldValue?.allocationByteCount}" }
         }
     }
 
@@ -225,7 +225,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
                         if (newGenerateBitmap != null) {
                             bitmapCache.put(cacheKey, newGenerateBitmap)
                             mainHandler.post {
-                                logdNoFile { "bitmap loaded: $cacheKey" }
+                                logdNoFile { "bitmap loaded: $cacheKey ${newGenerateBitmap.allocationByteCount}" }
                                 listener?.onBitmapLoaded(blockInfo, scale)
                                 // 任务完成后移除
                                 runningTasks.remove(blockInfo.key)
@@ -247,6 +247,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     private val myCompressConfig = ImageLoader.Config(
         maxWidth = 1440,
         maxHeight = 1920,
+        qualityType = "deep",
         ignoreSizeInKB = 2000,
     )
 

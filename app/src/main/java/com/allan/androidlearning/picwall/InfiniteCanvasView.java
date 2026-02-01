@@ -104,7 +104,6 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
-        Log.d("au-", " onDraw: ");
         // 保存画布状态
         canvas.save();
 
@@ -130,10 +129,8 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
 
         // 绘制背景或Bitmap
         tempRectF.set(block.getPointLT().x, block.getPointLT().y, block.getPointRB().x, block.getPointRB().y);
-        boolean isBitmapNotNull = bitmap != null;
-        boolean isRecycled = bitmap != null && bitmap.isRecycled();
-
-        if (isBitmapNotNull && !isRecycled) {
+        boolean isRecycled = bitmap == null || bitmap.isRecycled();
+        if (!isRecycled) {
             int saveCount = canvas.save(); // 保存画布状态
 
             clipPath.reset();
