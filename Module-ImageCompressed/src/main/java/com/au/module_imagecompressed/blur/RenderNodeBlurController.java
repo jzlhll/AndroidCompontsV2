@@ -4,7 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BlendMode;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ComposeShader;
 import android.graphics.LinearGradient;
+import android.graphics.PorterDuff;
 import android.graphics.RecordingCanvas;
 import android.graphics.RenderEffect;
 import android.graphics.RenderNode;
@@ -249,7 +251,7 @@ public class RenderNodeBlurController implements BlurController {
         if (gradientDirection != BlurView.GRADIENT_NONE && blurView.getWidth() > 0 && blurView.getHeight() > 0) {
             int w = blurView.getWidth();
             int h = blurView.getHeight();
-            Shader gradient = gradientCache.getShader(w, h);
+            Shader gradient = gradientCache.getShader(w, h, getLeft(), getTop(), gradientDirection);
             if (gradient != null) {
                 RenderEffect mask = RenderEffect.createShaderEffect(gradient);
                 blur = RenderEffect.createBlendModeEffect(blur, mask, BlendMode.DST_IN);
@@ -259,7 +261,7 @@ public class RenderNodeBlurController implements BlurController {
         blurNode.setRenderEffect(blur);
     }
 
-    private class GradientCache {
+    private static class GradientCache {
         @Nullable
         private Shader shader;
         int w;
@@ -269,14 +271,11 @@ public class RenderNodeBlurController implements BlurController {
         int direction = -1;
 
         @Nullable
-        Shader getShader(int w, int h) {
+        Shader getShader(int w, int h, int currentLeft, int currentTop, int gradientDirection) {
             if (gradientDirection == BlurView.GRADIENT_NONE) {
                 shader = null;
                 return null;
             }
-
-            int currentLeft = getLeft();
-            int currentTop = getTop();
 
             // Check if cache is valid
             if (isCacheValid(w, h, currentLeft, currentTop, gradientDirection)) {
@@ -294,7 +293,7 @@ public class RenderNodeBlurController implements BlurController {
             float right = left + w;
             float bottom = top + h;
 
-            Shader shader = switch (gradientDirection) {
+            Shader linearGradient = switch (gradientDirection) {
                 case BlurView.GRADIENT_TOP_TO_BOTTOM ->
                     // Top: Blur (Opaque), Bottom: Sharp (Transparent)
                         new LinearGradient(0, top, 0, bottom, c1, c2, Shader.TileMode.CLAMP);
@@ -303,6 +302,8 @@ public class RenderNodeBlurController implements BlurController {
                 case BlurView.GRADIENT_RIGHT_TO_LEFT -> new LinearGradient(right, 0, left, 0, c1, c2, Shader.TileMode.CLAMP);
                 default -> null;
             };
+
+            shader = linearGradient;
 
             // Update cache
             update(shader, w, h, currentLeft, currentTop, gradientDirection);
