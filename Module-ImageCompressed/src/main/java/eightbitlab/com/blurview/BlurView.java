@@ -1,6 +1,6 @@
-package com.au.module_imagecompressed.blur;
+package eightbitlab.com.blurview;
 
-import static com.au.module_imagecompressed.blur.BlurController.DEFAULT_SCALE_FACTOR;
+import static eightbitlab.com.blurview.BlurController.DEFAULT_SCALE_FACTOR;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -170,6 +170,13 @@ public class BlurView extends FrameLayout {
      */
     public BlurViewFacade setBlurGradient(int direction) {
         return blurController.setBlurGradient(direction);
+    }
+
+    /**
+     * @see BlurViewFacade#setOverlayGradientColor(int, int, int)
+     */
+    public BlurViewFacade setOverlayGradientColor(@ColorInt int startColor, @ColorInt int endColor, int direction) {
+        return blurController.setOverlayGradientColor(startColor, endColor, direction);
     }
 
     @Override

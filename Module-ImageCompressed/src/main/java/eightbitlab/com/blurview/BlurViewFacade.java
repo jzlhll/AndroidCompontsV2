@@ -1,4 +1,4 @@
-package com.au.module_imagecompressed.blur;
+package eightbitlab.com.blurview;
 
 import android.graphics.drawable.Drawable;
 
@@ -56,4 +56,15 @@ public interface BlurViewFacade {
      * @return {@link BlurViewFacade}
      */
     BlurViewFacade setBlurGradient(int direction);
+
+    /**
+     * Sets the overlay color gradient.
+     * If set, this gradient will be drawn on top of the blurred content.
+     *
+     * @param startColor start color of the gradient
+     * @param endColor   end color of the gradient
+     * @param direction  gradient direction, see {@link BlurView#GRADIENT_TOP_TO_BOTTOM} etc.
+     * @return {@link BlurViewFacade}
+     */
+    BlurViewFacade setOverlayGradientColor(@ColorInt int startColor, @ColorInt int endColor, int direction);
 }

@@ -1,4 +1,4 @@
-package com.au.module_imagecompressed.blur;
+package eightbitlab.com.blurview;
 
 import java.util.Objects;
 

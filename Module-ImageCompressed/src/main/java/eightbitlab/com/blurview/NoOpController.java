@@ -1,4 +1,4 @@
-package com.au.module_imagecompressed.blur;
+package eightbitlab.com.blurview;
 
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -32,6 +32,11 @@ public class NoOpController implements BlurController {
 
     @Override
     public BlurViewFacade setOverlayColor(int overlayColor) {
+        return this;
+    }
+
+    @Override
+    public BlurViewFacade setOverlayGradientColor(int startColor, int endColor, int direction) {
         return this;
     }
 

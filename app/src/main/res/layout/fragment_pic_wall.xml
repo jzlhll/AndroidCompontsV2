@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <com.au.module_imagecompressed.blur.BlurTarget
+    <eightbitlab.com.blurview.BlurTarget
         android:id="@+id/blurTarget"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -11,15 +11,15 @@
             android:id="@+id/infiniteCanvasView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-    </com.au.module_imagecompressed.blur.BlurTarget>
+    </eightbitlab.com.blurview.BlurTarget>
 
-    <com.au.module_imagecompressed.blur.BlurView
+    <eightbitlab.com.blurview.BlurView
         android:id="@+id/blurView"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_width="match_parent"
         android:layout_height="120dp" />
 
-    <com.au.module_imagecompressed.blur.BlurView
+    <eightbitlab.com.blurview.BlurView
         android:id="@+id/blurView2"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="match_parent"
