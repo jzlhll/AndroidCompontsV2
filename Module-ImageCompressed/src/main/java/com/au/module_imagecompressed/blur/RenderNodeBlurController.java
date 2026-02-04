@@ -249,8 +249,7 @@ public class RenderNodeBlurController implements BlurController {
         if (gradientDirection != BlurView.GRADIENT_NONE && blurView.getWidth() > 0 && blurView.getHeight() > 0) {
             int w = blurView.getWidth();
             int h = blurView.getHeight();
-            Shader gradient = getShader(w, h);
-
+            Shader gradient = gradientCache.getShader(w, h);
             if (gradient != null) {
                 RenderEffect mask = RenderEffect.createShaderEffect(gradient);
                 blur = RenderEffect.createBlendModeEffect(blur, mask, BlendMode.DST_IN);
@@ -260,58 +259,58 @@ public class RenderNodeBlurController implements BlurController {
         blurNode.setRenderEffect(blur);
     }
 
-    @Nullable
-    private Shader getShader(int w, int h) {
-        if (gradientDirection == BlurView.GRADIENT_NONE) {
-            gradientCache.shader = null;
-            return null;
-        }
-
-        int currentLeft = getLeft();
-        int currentTop = getTop();
-
-        // Check if cache is valid
-        if (gradientCache.isCacheValid(w, h, currentLeft, currentTop, gradientDirection)) {
-            return gradientCache.shader;
-        }
-
-        // Cache miss, create new shader
-        // Colors: Opaque to Transparent
-        // Opaque keeps the blur, Transparent removes it (shows underlying sharp content)
-        int c1 = Color.BLACK;
-        int c2 = Color.TRANSPARENT;
-
-        float left = currentLeft;
-        float top = currentTop;
-        float right = left + w;
-        float bottom = top + h;
-
-        Shader shader = switch (gradientDirection) {
-            case BlurView.GRADIENT_TOP_TO_BOTTOM ->
-                // Top: Blur (Opaque), Bottom: Sharp (Transparent)
-                    new LinearGradient(0, top, 0, bottom, c1, c2, Shader.TileMode.CLAMP);
-            case BlurView.GRADIENT_BOTTOM_TO_TOP -> new LinearGradient(0, bottom, 0, top, c1, c2, Shader.TileMode.CLAMP);
-            case BlurView.GRADIENT_LEFT_TO_RIGHT -> new LinearGradient(left, 0, right, 0, c1, c2, Shader.TileMode.CLAMP);
-            case BlurView.GRADIENT_RIGHT_TO_LEFT -> new LinearGradient(right, 0, left, 0, c1, c2, Shader.TileMode.CLAMP);
-            default -> null;
-        };
-
-        // Update cache
-        gradientCache.update(shader, w, h, currentLeft, currentTop, gradientDirection);
-
-        return shader;
-    }
-
-    private static class GradientCache {
+    private class GradientCache {
         @Nullable
-        Shader shader;
+        private Shader shader;
         int w;
         int h;
         int left;
         int top;
         int direction = -1;
 
-        boolean isCacheValid(int w, int h, int left, int top, int direction) {
+        @Nullable
+        Shader getShader(int w, int h) {
+            if (gradientDirection == BlurView.GRADIENT_NONE) {
+                shader = null;
+                return null;
+            }
+
+            int currentLeft = getLeft();
+            int currentTop = getTop();
+
+            // Check if cache is valid
+            if (isCacheValid(w, h, currentLeft, currentTop, gradientDirection)) {
+                return shader;
+            }
+
+            // Cache miss, create new shader
+            // Colors: Opaque to Transparent
+            // Opaque keeps the blur, Transparent removes it (shows underlying sharp content)
+            int c1 = Color.BLACK;
+            int c2 = Color.TRANSPARENT;
+
+            float left = currentLeft;
+            float top = currentTop;
+            float right = left + w;
+            float bottom = top + h;
+
+            Shader shader = switch (gradientDirection) {
+                case BlurView.GRADIENT_TOP_TO_BOTTOM ->
+                    // Top: Blur (Opaque), Bottom: Sharp (Transparent)
+                        new LinearGradient(0, top, 0, bottom, c1, c2, Shader.TileMode.CLAMP);
+                case BlurView.GRADIENT_BOTTOM_TO_TOP -> new LinearGradient(0, bottom, 0, top, c1, c2, Shader.TileMode.CLAMP);
+                case BlurView.GRADIENT_LEFT_TO_RIGHT -> new LinearGradient(left, 0, right, 0, c1, c2, Shader.TileMode.CLAMP);
+                case BlurView.GRADIENT_RIGHT_TO_LEFT -> new LinearGradient(right, 0, left, 0, c1, c2, Shader.TileMode.CLAMP);
+                default -> null;
+            };
+
+            // Update cache
+            update(shader, w, h, currentLeft, currentTop, gradientDirection);
+
+            return shader;
+        }
+
+        private boolean isCacheValid(int w, int h, int left, int top, int direction) {
             return shader != null &&
                     this.w == w &&
                     this.h == h &&
@@ -320,7 +319,7 @@ public class RenderNodeBlurController implements BlurController {
                     this.direction == direction;
         }
 
-        void update(Shader shader, int w, int h, int left, int top, int direction) {
+        private void update(Shader shader, int w, int h, int left, int top, int direction) {
             this.shader = shader;
             this.w = w;
             this.h = h;

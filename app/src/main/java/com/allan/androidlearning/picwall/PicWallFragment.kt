@@ -29,9 +29,9 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         requireActivity().changeBarsColor(false, false)
 
-        BlurViewEx3(binding.blurView, 0).setBlur(binding.blurTarget, 20f, Color.TRANSPARENT)
+        BlurViewEx3(binding.blurView, 0).setBlur(binding.blurTarget, 30f, Color.TRANSPARENT)
         binding.blurView.setBlurGradient(BlurView.GRADIENT_TOP_TO_BOTTOM)
-        BlurViewEx3(binding.blurView2, 0).setBlur(binding.blurTarget, 20f, Color.TRANSPARENT)
+        BlurViewEx3(binding.blurView2, 0).setBlur(binding.blurTarget, 30f, Color.TRANSPARENT)
         binding.blurView2.setBlurGradient(BlurView.GRADIENT_BOTTOM_TO_TOP)
 
         // 收集状态
