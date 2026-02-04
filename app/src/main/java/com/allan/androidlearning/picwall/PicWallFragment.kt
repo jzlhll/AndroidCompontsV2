@@ -1,9 +1,7 @@
 package com.allan.androidlearning.picwall
 
+import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,10 +13,9 @@ import com.au.module_android.postToMainHandler
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_android.utils.AndroidSBlurUtil
 import com.au.module_android.utils.changeBarsColor
-import com.au.module_android.utils.dp
-import com.au.module_android.utils.dpFloat
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_imagecompressed.blur.BlurView
 import kotlinx.coroutines.launch
 
 @EntryFrgName(backgroundColor = "#ff00ff")
@@ -31,8 +28,11 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         requireActivity().changeBarsColor(false, false)
-        binding.liquidGlassView.applyRenderEffectTo(binding.infiniteCanvasView)
-        binding.liquidGlassView.setupFullCapsule()
+
+        BlurViewEx3(binding.blurView, 0).setBlur(binding.blurTarget, 20f, Color.TRANSPARENT)
+        binding.blurView.setBlurGradient(BlurView.GRADIENT_TOP_TO_BOTTOM)
+        BlurViewEx3(binding.blurView2, 0).setBlur(binding.blurTarget, 20f, Color.TRANSPARENT)
+        binding.blurView2.setBlurGradient(BlurView.GRADIENT_BOTTOM_TO_TOP)
 
         // 收集状态
         lifecycleScope.launch {
