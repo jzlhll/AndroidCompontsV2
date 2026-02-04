@@ -148,6 +148,27 @@ val BgBuildViewIds = AnyViewIds(
     R.styleable.BgBuildView_shadowSpread
 )
 
+val BgBuildImageViewIds = AnyViewIds(
+    R.styleable.BgBuildImageView_backgroundAlpha,
+    R.styleable.BgBuildImageView_backgroundNormal,
+    R.styleable.BgBuildImageView_backgroundDisabled,
+    R.styleable.BgBuildImageView_backgroundPressed,
+    R.styleable.BgBuildImageView_cornerRadius,
+    R.styleable.BgBuildImageView_cornerSizeTopLeft,
+    R.styleable.BgBuildImageView_cornerSizeTopRight,
+    R.styleable.BgBuildImageView_cornerSizeBottomLeft,
+    R.styleable.BgBuildImageView_cornerSizeBottomRight,
+    R.styleable.BgBuildImageView_strokeColor,
+    R.styleable.BgBuildImageView_strokeWidth,
+    R.styleable.BgBuildImageView_needRippleColor,
+    // 阴影属性
+    R.styleable.BgBuildImageView_shadowColor,
+    R.styleable.BgBuildImageView_shadowOffsetX,
+    R.styleable.BgBuildImageView_shadowOffsetY,
+    R.styleable.BgBuildImageView_shadowBlur,
+    R.styleable.BgBuildImageView_shadowSpread
+)
+
 val CustomButtonIds = AnyViewIds(
     R.styleable.CustomButton_backgroundAlpha,
     R.styleable.CustomButton_backgroundNormal,

@@ -73,6 +73,19 @@ fun <T> MutableStateFlow<StatusState<T>>.setSuccess(data: T) {
 }
 
 /**
+ * 设置成功状态
+ *
+ * @param T 数据类型
+ * @param data 成功数据
+ */
+fun <T> MutableStateFlow<StatusState<T>>.asSuccess() : StatusState.Success<T>?{
+    if (value is StatusState.Success) {
+        return value as StatusState.Success<T>
+    }
+    return null
+}
+
+/**
  * 设置错误状态
  *
  * @param T 数据类型

@@ -8,7 +8,6 @@ import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.au.module_android.Globals
-import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.ignoreError
 import kotlinx.coroutines.delay
 import java.io.File
@@ -34,7 +33,7 @@ class UriParseHelper {
     }
 
     fun parse(cr: ContentResolver, uri: Uri) : UriParsedInfo{
-        logdNoFile { "parse uri: $uri" }
+//        logdNoFile { "parse uri: $uri" }
         val path = uri.path
 
         var file:File? = null
@@ -170,7 +169,7 @@ class UriParseHelper {
             videoDuration,
             isFile = false)
 
-        logdNoFile { "parseAsContent parsed Info: $r" }
+//        logdNoFile { "parseAsContent parsed Info: $r" }
         return r
     }
 

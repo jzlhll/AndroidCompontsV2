@@ -23,7 +23,8 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.bumptech.glide.signature.MediaStoreSignature
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
@@ -184,26 +185,38 @@ fun ImageView.glideLoadContentUri(contentUri: Uri, signature: MediaStoreSignatur
     // 3. 加载Content URI并绑定签名
     Glide.with(context)
         .load(contentUri) // 传入Content URI
+        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
         .signature(signature) // 绑定媒体库签名
         .into(this)
 }
 
 // 封装：根据Content URI获取媒体库元数据，并加载图片，并带签名确保缓存更新
-suspend fun ImageView.glideLoadContentUri(contentUri: Uri) {
-    delay(0)
-    val context = Globals.app
-    // 1. 查询该Content URI对应的元数据（MIME类型、修改时间、旋转角度）
-    val (mimeType, dateModified, orientation) = getMediaStoreMeta(context, contentUri)
-
-    // 2. 创建MediaStoreSignature（核心：元数据变，签名就变）
-    val signature = MediaStoreSignature(mimeType, dateModified, orientation)
-
-    // 3. 加载Content URI并绑定签名
+fun ImageView.glideLoadContentUri(contentUri: Uri) {
     Glide.with(context)
         .load(contentUri) // 传入Content URI
-        .signature(signature) // 绑定媒体库签名
-        .into(this)
+        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+        .into(this@glideLoadContentUri)
 }
+
+suspend fun ImageView.glideLoadContentUri(contentUri: Uri, overrideWidth: Int, overrideHeight: Int) =
+    // 1. 查询该Content URI对应的元数据（MIME类型、修改时间、旋转角度）
+    withContext(Dispatchers.Default) {
+        val context = Globals.app
+        val (mimeType, dateModified, orientation) = getMediaStoreMeta(context, contentUri)
+
+        // 2. 创建MediaStoreSignature（核心：元数据变，签名就变）
+        val signature = MediaStoreSignature(mimeType, dateModified, orientation)
+
+        // 3. 加载Content URI并绑定签名
+        withContext(Dispatchers.Main) {
+            Glide.with(context)
+                .load(contentUri) // 传入Content URI
+                .signature(signature) // 绑定媒体库签名
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                .override(overrideWidth, overrideHeight)
+                .into(this@glideLoadContentUri)
+        }
+    }
 
 // 工具方法：从ContentResolver查询元数据
 fun getMediaStoreMeta(context: Context, contentUri: Uri): Triple<String, Long, Int> {

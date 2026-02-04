@@ -97,6 +97,27 @@ fun mmkvSetAny(key:String, value:Any) {
 }
 
 /**
+ * 通过mmkv获取，常规的数据类型。
+ */
+fun mmkvGetString(key:String, defaultValue:String = "") : String {
+    return mmkv.getString(key, defaultValue) ?: defaultValue
+}
+
+/**
+ * 通过mmkv获取，常规的数据类型。
+ */
+fun mmkvGetInt(key:String, defaultValue:Int = 0) : Int {
+    return mmkv.getInt(key, defaultValue)
+}
+
+/**
+ * 通过mmkv获取，常规的数据类型。
+ */
+fun mmkvGetLong(key:String, defaultValue:Long = 0L) : Long {
+    return mmkv.getLong(key, defaultValue)
+}
+
+/**
  * 通过mmkv获取，非常规的数据类型。
  */
 inline fun <reified T> mmkvGet(key:String) : T? {

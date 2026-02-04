@@ -58,15 +58,15 @@ class PermissionMediaHelper {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 14+
             // Android 14+需额外声明READ_MEDIA_VISUAL_USER_SELECTED
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
-            }
             mediaTypes.forEach {mediaType->
                 when (mediaType) {
                     PermissionMediaType.IMAGE -> permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
                     PermissionMediaType.VIDEO -> permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
                     PermissionMediaType.AUDIO -> permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
                 }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
             }
         } else { // Android 12及以下
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
