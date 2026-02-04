@@ -183,6 +183,10 @@
         <button id="copyHexBtn" class="ml-20 copy-btn">复制</button>
     </div>
 
+    <div class="normal-label" style="margin-left: 10px; margin-top: 5px; color: #888; font-size: 12px;">
+        支持格式：#RRGGBB 或 #AARRGGBB (例如 #FFFFFF 或 #FF800000)
+    </div>
+
     <!-- HBox 3: 设置2 -->
     <div class="hbox mt-30" style="margin-left: 10px;">
         <span class="normal-label" style="margin-top: 10px;">设置2：ARGB制</span>
@@ -239,6 +243,10 @@
         <div id="labelB" style="width: 36px; text-align: center; margin-left: 18px;">
             <span class="normal-label" style="font-size: 13px; font-weight: bold;">B</span>
         </div>
+    </div>
+
+    <div id="alphaHint" class="normal-label" style="margin-left: 10px; margin-top: 5px; color: #888; font-size: 12px; display: none;">
+        Alpha数值必须在 0-255 之间，或 0%-100%
     </div>
 
     <span id="errorInfo" class="normal-label" style="color: red;"></span>
@@ -393,6 +401,7 @@
     const labelG = document.getElementById('labelG');
     const labelB = document.getElementById('labelB');
     const labelA = document.getElementById('fALabel').parentElement; // Parent div
+    const alphaHint = document.getElementById('alphaHint');
 
     combo.addEventListener('change', (e) => {
         const val = e.target.value;
@@ -401,6 +410,7 @@
         labelA.style.display = 'none';
         fHex.style.display = 'none';
         fHexLabel.style.display = 'none';
+        alphaHint.style.display = 'none';
         
         boxR.style.display = 'flex';
         boxG.style.display = 'flex';
@@ -413,11 +423,13 @@
             sA.style.display = 'block';
             labelA.style.display = 'block';
             document.getElementById('fALabel').style.display = 'inline'; // Ensure text is visible
+            alphaHint.style.display = 'block';
         } else if (val === 'AHEX') {
             // AHEX模式：显示 A 和 Hex，隐藏 RGB
             sA.style.display = 'block';
             labelA.style.display = 'block';
             document.getElementById('fALabel').style.display = 'inline';
+            alphaHint.style.display = 'block';
             
             fHex.style.display = 'block';
             fHexLabel.style.display = 'block';
