@@ -1,4 +1,4 @@
-package com.au.module_android.utilsmedia
+package com.au.module_imagecompressed.compressor
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -10,11 +10,11 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.scale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
-import androidx.core.graphics.scale
 
 /**
 // 1. 实例化工具类（建议复用，避免重复创建）
@@ -71,12 +71,7 @@ val compatVideoBitmap = thumbnailUtil.loadThumbnailCompat(compatVideoUri, target
  * 整合图片/视频缩略图生成、系统缓存查询、低版本兼容逻辑
  * 普通 Class 实现，需通过构造函数传入 Context 实例使用
  */
-class ThumbnailCompatUtil(private val context: Context) {
-    companion object {
-        val LOW_SIZE = Size(240, 320)
-        val MID_SIZE = Size(480, 640)
-    }
-
+internal class ThumbnailCompatUtil(private val context: Context) {
     /**
      * 【方法1】通过文件路径生成图片缩略图（兼容 API 28-）
      * @param filePath 图片文件绝对路径（公共目录/私有目录均可）

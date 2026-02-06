@@ -10,9 +10,13 @@ import androidx.annotation.RequiresApi
 import com.au.module_android.utilsmedia.myParse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.InputStream
 
-class ImageLoader(
+/**
+ * 主要功能是，直接通过ImageLoader类或者BitmapFactory类 根据 Config 来进行图片加载
+ */
+internal class ImageLoaderUtil(
     val config: Config,
 ) {
     private lateinit var api: IApi
@@ -42,7 +46,7 @@ class ImageLoader(
                 }
             }
 
-            val loader = ImageLoader(config = config)
+            val loader = ImageLoaderUtil(config = config)
             loader.api = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 NewApi(config) {
                     ImageDecoder.createSource(context.contentResolver, uri)
@@ -50,6 +54,42 @@ class ImageLoader(
             } else {
                 OldApi(config) {
                     context.contentResolver.openInputStream(uri)
+                }
+            }
+
+            return loader.load()
+        }
+
+        suspend fun loadImage(file: File, config: Config = Config()): Bitmap? {
+            val ignore = file.length() < config.ignoreSizeInKB * 1024 ||
+                    config.ignoreFileTypes.contains(file.extension.lowercase())
+
+            if (ignore) {
+                // Load original
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    try {
+                        val source = ImageDecoder.createSource(file)
+                        return ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                        }
+                    } catch (_: Exception) {
+                        return null
+                    }
+                } else {
+                    return file.inputStream().use {
+                        BitmapFactory.decodeStream(it)
+                    }
+                }
+            }
+
+            val loader = ImageLoaderUtil(config = config)
+            loader.api = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                NewApi(config) {
+                    ImageDecoder.createSource(file)
+                }
+            } else {
+                OldApi(config) {
+                    file.inputStream()
                 }
             }
 
