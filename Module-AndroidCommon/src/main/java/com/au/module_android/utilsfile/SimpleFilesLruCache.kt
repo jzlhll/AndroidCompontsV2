@@ -209,6 +209,25 @@ class SimpleFilesLruCache(
     }
 
     /**
+     * 批量检查文件是否存在
+     * 返回 Pair(存在的列表, 不存在的列表)
+     */
+    fun checkFilesExistBatch(fileNames: List<String>): Pair<List<String>, List<String>> {
+        val allFiles = cacheDir.list()?.toHashSet() ?: hashSetOf()
+        val existList = mutableListOf<String>()
+        val notExistList = mutableListOf<String>()
+
+        for (name in fileNames) {
+            if (allFiles.contains(name)) {
+                existList.add(name)
+            } else {
+                notExistList.add(name)
+            }
+        }
+        return Pair(existList, notExistList)
+    }
+
+    /**
      * 检查文件是否存在
      */
     fun fileExists(fileName:String, vararg dirs:String): Boolean {

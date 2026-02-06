@@ -5,6 +5,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import kotlin.math.min
 
 /**
  * 用于并发限制且针对同一Key任务合并的执行器
@@ -12,7 +13,7 @@ import kotlinx.coroutines.sync.withPermit
  * 2. 限制同时执行的任务数量（并发控制）
  */
 class KeyedConcurrentTaskExecutor<T>(
-    maxConcurrency: Int = (Runtime.getRuntime().availableProcessors() * 1.2).toInt().coerceAtLeast(4)
+    maxConcurrency: Int = min(4, Runtime.getRuntime().availableProcessors())
 ) {
     private val mutex = Mutex()
     private val taskMap = mutableMapOf<String, CompletableDeferred<T>>()
