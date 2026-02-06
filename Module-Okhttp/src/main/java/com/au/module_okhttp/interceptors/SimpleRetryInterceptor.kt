@@ -1,5 +1,6 @@
 package com.au.module_okhttp.interceptors
 
+import android.util.Log
 import com.au.module_android.log.logdNoFile
 import com.au.module_okhttp.exceptions.AuTimestampErrorException
 import com.au.module_okhttp.exceptions.AuTokenExpiredException
@@ -8,6 +9,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.internal.connection.RealCall
 import okhttp3.internal.http2.ConnectionShutdownException
+import java.io.EOFException
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InterruptedIOException
@@ -103,6 +105,11 @@ class SimpleRetryInterceptor(
 
         // We can't send the request body again.
         if (requestSendStarted && requestIsOneShot(e, userRequest)) return false
+
+        // 处理EOFException和包含unexpected end of stream的流终止错误，标记为可恢复
+        if (e is EOFException || e.message?.contains("unexpected end of stream") == true) {
+            return true
+        }
 
         // No more routes to attempt.
         if (call != null && !call.retryAfterFailure()) return false

@@ -29,7 +29,7 @@ import java.lang.Long.max
  */
 class NestedLayoutRefresher(private val layout:ViewGroup) : INestedPullManager {
     companion object {
-        internal const val DEBUG = true
+        internal const val DEBUG = false
         internal const val TAG = "allan_nested"
     }
 

@@ -17,6 +17,13 @@ import com.au.module_androidui.ui.views.ViewToolbarFragment
 abstract class BindingFragment<VB: ViewBinding> : ViewToolbarFragment() {
     lateinit var binding:VB private set
 
+    /**
+     * 判断是否初始化了binding
+     */
+    fun isBindingInit() : Boolean {
+        return this::binding.isInitialized
+    }
+
     final override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val vb = createViewBinding(javaClass, inflater, container, false) as VB
         binding = vb

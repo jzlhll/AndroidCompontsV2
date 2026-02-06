@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:backgroundNormal="@color/windowDialogBackground"
-    app:cornerSizeTopRight="16dp"
-    app:cornerSizeTopLeft="16dp"
+    app:cornerSizeTopRight="@dimen/bottom_dialog_corner_size"
+    app:cornerSizeTopLeft="@dimen/bottom_dialog_corner_size"
     android:orientation="vertical">
 
     <com.au.module_androidui.widget.BgBuildView
@@ -13,9 +13,9 @@
         android:layout_width="36dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="12dp"
-        app:backgroundNormal="@color/color_line"
+        android:layout_marginTop="@dimen/bottom_dialog_head_line_margin_top"
+        android:layout_marginBottom="@dimen/bottom_dialog_head_line_margin_bottom"
+        app:backgroundNormal="@color/color_bottom_dialog_line"
         app:cornerRadius="4dp" />
 
     <androidx.fragment.app.FragmentContainerView

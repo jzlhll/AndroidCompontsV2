@@ -105,13 +105,14 @@ class CoroutineConcurrentLimiter(
      * 取消所有未完成的任务
      * @param cause 取消原因（可选）
      */
-    suspend fun cancelAll(cause: CancellationException? = null) {
+    suspend fun cancelAll(cause: CancellationException? = null) : Boolean {
         val tasks = listMutex.withLock {
             val copy = ArrayList(jobList)
             jobList.clear()
             copy
         }
         tasks.forEach { it.cancel(cause) }
+        return tasks.isNotEmpty()
     }
 
     /**

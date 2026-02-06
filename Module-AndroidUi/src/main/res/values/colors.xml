@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="color_bottom_dialog_line">@color/color_line</color>
+</resources>
