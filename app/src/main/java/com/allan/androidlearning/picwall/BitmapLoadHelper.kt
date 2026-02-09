@@ -9,9 +9,8 @@ import android.util.Size
 import com.allan.androidlearning.BuildConfig
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utilsmedia.ThumbnailCompatUtil
 import com.au.module_imagecompressed.PickUriWrap
-import com.au.module_imagecompressed.compressor.ImageLoader
+import com.au.module_imagecompressed.compressor.ImageHybridLoaderUtil
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
@@ -47,8 +46,8 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
 
         fun scaleToSize() : Size? {
             return when (this) {
-                LOW -> ThumbnailCompatUtil.LOW_SIZE
-                MID -> ThumbnailCompatUtil.MID_SIZE
+                LOW -> ImageHybridLoaderUtil.LOW_SIZE
+                MID -> ImageHybridLoaderUtil.MID_SIZE
                 HIGH -> null
             }
         }
@@ -58,7 +57,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
         private const val BITMAP_CACHE_MAX_SIZE = 128 * 1024 * 1024
     }
 
-    private val thumbnailUtils = ThumbnailCompatUtil(Globals.app)
+    private val thumbnailUtils = ImageHybridLoaderUtil(Globals.app)
 
     private val bitmapCache: LruCache<String, Bitmap> = object : LruCache<String, Bitmap>(BITMAP_CACHE_MAX_SIZE) {
         override fun sizeOf(key: String, value: Bitmap): Int {
@@ -244,13 +243,6 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
         }
     }
 
-    private val myCompressConfig = ImageLoader.Config(
-        maxWidth = 1440,
-        maxHeight = 1920,
-        qualityType = "deep",
-        ignoreSizeInKB = 2000,
-    )
-
     private fun loadBitmapInThread(blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap) : Bitmap? {
         val cacheBitmap = getCachedBitmap(blockInfo, scale, false)
         if (cacheBitmap != null) {
@@ -264,11 +256,13 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
             //加载原图
             //使用我的策略进行略微压缩加载避免过大
             val bitmap = runBlocking {
-                ImageLoader.loadImage(Globals.app, imageBean.uriParsedInfo.uri, myCompressConfig)
+                thumbnailUtils.loadUri(imageBean.uriParsedInfo.uri, null)
             }
             return bitmap
         }
-        return thumbnailUtils.loadThumbnailCompat(imageBean.uriParsedInfo.uri, size)
+        return runBlocking {
+            thumbnailUtils.loadUri(imageBean.uriParsedInfo.uri, size)
+        }
     }
 
     private fun generateCacheKey(blockKey: Long, quality: Quality): String {

@@ -17,6 +17,9 @@ class ViewBackgroundBuilder {
     private var mStrokeWidth:Float = 0f
     private var mStrokeColor:Int = 0
     private var mBg:ColorStateList? = null
+    private var mGradientStartColor: Int = 0
+    private var mGradientEndColor: Int = 0
+    private var mGradientAngle: Int = 0
 
     private var mBgAlpha = -1
 
@@ -98,6 +101,30 @@ class ViewBackgroundBuilder {
         return this
     }
 
+    /**
+     * 设置线性渐变背景
+     * @param startColor 渐变开始颜色
+     * @param endColor 渐变结束颜色
+     * @param angle 渐变角度。虽然支持任意 int 值，但内部会映射到最接近的 45 度倍数方向：
+     *              0: LEFT_RIGHT (左 -> 右)
+     *              45: BL_TR (左下 -> 右上)
+     *              90: BOTTOM_TOP (下 -> 上)
+     *              135: BR_TL (右下 -> 左上)
+     *              180: RIGHT_LEFT (右 -> 左)
+     *              225: TR_BL (右上 -> 左下)
+     *              270: TOP_BOTTOM (上 -> 下)
+     *              315: TL_BR (左上 -> 右下)
+     */
+    fun setGradient(startColor: Int, endColor: Int, angle: Int): ViewBackgroundBuilder {
+        if (startColor != 0 && endColor != 0) {
+            mGradientStartColor = startColor
+            mGradientEndColor = endColor
+            mGradientAngle = angle
+            isAtLeastOne = true
+        }
+        return this
+    }
+
     fun setBackground(color:Int, pressedColor:Int = 0, disabledColor:Int = 0)
             : ViewBackgroundBuilder {
         val colorMap = mutableListOf<Pair<IntArray, Int>>()
@@ -140,7 +167,13 @@ class ViewBackgroundBuilder {
 
         val it = GradientDrawable()
         //背景
-        if(mBg != null) it.color = mBg
+        if (mGradientStartColor != 0 && mGradientEndColor != 0) {
+            it.colors = intArrayOf(mGradientStartColor, mGradientEndColor)
+            it.orientation = getGradientOrientation(mGradientAngle)
+            it.gradientType = GradientDrawable.LINEAR_GRADIENT
+        } else if (mBg != null) {
+             it.color = mBg
+        }
 
         //圆角
         when (mCorner) {
@@ -176,6 +209,22 @@ class ViewBackgroundBuilder {
             return it.setRippleColor(color)
         }
         return it
+    }
+
+    private fun getGradientOrientation(angle: Int): GradientDrawable.Orientation {
+        val normalizedAngle = ((angle % 360) + 360) % 360
+        val index = ((normalizedAngle + 22.5) / 45).toInt() % 8
+        return when (index) {
+            0 -> GradientDrawable.Orientation.LEFT_RIGHT // 0
+            1 -> GradientDrawable.Orientation.BL_TR      // 45
+            2 -> GradientDrawable.Orientation.BOTTOM_TOP // 90
+            3 -> GradientDrawable.Orientation.BR_TL      // 135
+            4 -> GradientDrawable.Orientation.RIGHT_LEFT // 180
+            5 -> GradientDrawable.Orientation.TR_BL      // 225
+            6 -> GradientDrawable.Orientation.TOP_BOTTOM // 270
+            7 -> GradientDrawable.Orientation.TL_BR      // 315
+            else -> GradientDrawable.Orientation.LEFT_RIGHT
+        }
     }
 
     fun getCornerRadiiArray(): FloatArray {

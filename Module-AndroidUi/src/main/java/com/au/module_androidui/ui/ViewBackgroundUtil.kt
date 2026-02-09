@@ -19,6 +19,9 @@ data class AnyViewIds(
     val strokeColor: Int,
     val strokeWidth: Int,
     val needRippleColor: Int,
+    val backgroundGradientStart: Int = 0,
+    val backgroundGradientEnd: Int = 0,
+    val backgroundGradientAngle: Int = 0,
     // 阴影属性
     val shadowColor: Int = 0,
     val shadowOffsetX: Int = 0,
@@ -40,6 +43,9 @@ val BgBuildLinearLayoutIds = AnyViewIds(
     R.styleable.BgBuildLinearLayout_strokeColor,
     R.styleable.BgBuildLinearLayout_strokeWidth,
     R.styleable.BgBuildLinearLayout_needRippleColor,
+    R.styleable.BgBuildLinearLayout_backgroundGradientStart,
+    R.styleable.BgBuildLinearLayout_backgroundGradientEnd,
+    R.styleable.BgBuildLinearLayout_backgroundGradientAngle,
     R.styleable.BgBuildLinearLayout_shadowColor,
     R.styleable.BgBuildLinearLayout_shadowOffsetX,
     R.styleable.BgBuildLinearLayout_shadowOffsetY,
@@ -60,6 +66,9 @@ val BgBuildRelativeLayoutIds = AnyViewIds(
     R.styleable.BgBuildRelativeLayout_strokeColor,
     R.styleable.BgBuildRelativeLayout_strokeWidth,
     R.styleable.BgBuildRelativeLayout_needRippleColor,
+    R.styleable.BgBuildRelativeLayout_backgroundGradientStart,
+    R.styleable.BgBuildRelativeLayout_backgroundGradientEnd,
+    R.styleable.BgBuildRelativeLayout_backgroundGradientAngle,
     R.styleable.BgBuildRelativeLayout_shadowColor,
     R.styleable.BgBuildRelativeLayout_shadowOffsetX,
     R.styleable.BgBuildRelativeLayout_shadowOffsetY,
@@ -80,6 +89,9 @@ val BgBuildConstraintLayoutIds = AnyViewIds(
     R.styleable.BgBuildConstraintLayout_strokeColor,
     R.styleable.BgBuildConstraintLayout_strokeWidth,
     R.styleable.BgBuildConstraintLayout_needRippleColor,
+    R.styleable.BgBuildConstraintLayout_backgroundGradientStart,
+    R.styleable.BgBuildConstraintLayout_backgroundGradientEnd,
+    R.styleable.BgBuildConstraintLayout_backgroundGradientAngle,
     R.styleable.BgBuildConstraintLayout_shadowColor,
     R.styleable.BgBuildConstraintLayout_shadowOffsetX,
     R.styleable.BgBuildConstraintLayout_shadowOffsetY,
@@ -100,6 +112,9 @@ val BgBuildFrameLayoutIds = AnyViewIds(
     R.styleable.BgBuildFrameLayout_strokeColor,
     R.styleable.BgBuildFrameLayout_strokeWidth,
     R.styleable.BgBuildFrameLayout_needRippleColor,
+    R.styleable.BgBuildFrameLayout_backgroundGradientStart,
+    R.styleable.BgBuildFrameLayout_backgroundGradientEnd,
+    R.styleable.BgBuildFrameLayout_backgroundGradientAngle,
     R.styleable.BgBuildFrameLayout_shadowColor,
     R.styleable.BgBuildFrameLayout_shadowOffsetX,
     R.styleable.BgBuildFrameLayout_shadowOffsetY,
@@ -120,6 +135,9 @@ val BgBuildCustomFontTextIds = AnyViewIds(
     R.styleable.BgBuildCustomFontText_strokeColor,
     R.styleable.BgBuildCustomFontText_strokeWidth,
     R.styleable.BgBuildCustomFontText_needRippleColor,
+    R.styleable.BgBuildCustomFontText_backgroundGradientStart,
+    R.styleable.BgBuildCustomFontText_backgroundGradientEnd,
+    R.styleable.BgBuildCustomFontText_backgroundGradientAngle,
     R.styleable.BgBuildCustomFontText_shadowColor,
     R.styleable.BgBuildCustomFontText_shadowOffsetX,
     R.styleable.BgBuildCustomFontText_shadowOffsetY,
@@ -140,6 +158,9 @@ val BgBuildViewIds = AnyViewIds(
     R.styleable.BgBuildView_strokeColor,
     R.styleable.BgBuildView_strokeWidth,
     R.styleable.BgBuildView_needRippleColor,
+    R.styleable.BgBuildView_backgroundGradientStart,
+    R.styleable.BgBuildView_backgroundGradientEnd,
+    R.styleable.BgBuildView_backgroundGradientAngle,
     // 阴影属性
     R.styleable.BgBuildView_shadowColor,
     R.styleable.BgBuildView_shadowOffsetX,
@@ -161,6 +182,9 @@ val BgBuildImageViewIds = AnyViewIds(
     R.styleable.BgBuildImageView_strokeColor,
     R.styleable.BgBuildImageView_strokeWidth,
     R.styleable.BgBuildImageView_needRippleColor,
+    R.styleable.BgBuildImageView_backgroundGradientStart,
+    R.styleable.BgBuildImageView_backgroundGradientEnd,
+    R.styleable.BgBuildImageView_backgroundGradientAngle,
     // 阴影属性
     R.styleable.BgBuildImageView_shadowColor,
     R.styleable.BgBuildImageView_shadowOffsetX,
@@ -182,6 +206,9 @@ val CustomButtonIds = AnyViewIds(
     R.styleable.CustomButton_strokeColor,
     R.styleable.CustomButton_strokeWidth,
     R.styleable.CustomButton_needRippleColor,
+    R.styleable.CustomButton_backgroundGradientStart,
+    R.styleable.CustomButton_backgroundGradientEnd,
+    R.styleable.CustomButton_backgroundGradientAngle,
     R.styleable.CustomButton_shadowColor,
     R.styleable.CustomButton_shadowOffsetX,
     R.styleable.CustomButton_shadowOffsetY,
@@ -248,6 +275,11 @@ fun View.viewBackgroundBuild(array: TypedArray, viewIds: AnyViewIds): ViewBackgr
     val strokeWidth = array.getDimension(viewIds.strokeWidth, 0f)
 
     builder.needRippleColor(array.getBoolean(viewIds.needRippleColor, false))
+
+    val startColor = array.getColor(viewIds.backgroundGradientStart, noColor)
+    val endColor = array.getColor(viewIds.backgroundGradientEnd, noColor)
+    val angle = array.getInt(viewIds.backgroundGradientAngle, 0)
+    builder.setGradient(startColor, endColor, angle)
 
     builder.setStroke(strokeWidth, strokeColor)
 

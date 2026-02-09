@@ -110,6 +110,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" format="color" />
+        <attr name="backgroundGradientEnd" format="color" />
+        <attr name="backgroundGradientAngle" format="integer" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
@@ -133,6 +136,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" />
+        <attr name="backgroundGradientEnd" />
+        <attr name="backgroundGradientAngle" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
@@ -156,6 +162,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" />
+        <attr name="backgroundGradientEnd" />
+        <attr name="backgroundGradientAngle" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
@@ -179,6 +188,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" />
+        <attr name="backgroundGradientEnd" />
+        <attr name="backgroundGradientAngle" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
@@ -202,6 +214,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" />
+        <attr name="backgroundGradientEnd" />
+        <attr name="backgroundGradientAngle" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
@@ -225,6 +240,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" />
+        <attr name="backgroundGradientEnd" />
+        <attr name="backgroundGradientAngle" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
@@ -248,6 +266,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" />
+        <attr name="backgroundGradientEnd" />
+        <attr name="backgroundGradientAngle" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
@@ -271,6 +292,9 @@
         <attr name="backgroundAlpha" />
         <attr name="backgroundPressed" />
         <attr name="backgroundDisabled" />
+        <attr name="backgroundGradientStart" />
+        <attr name="backgroundGradientEnd" />
+        <attr name="backgroundGradientAngle" />
 
         <attr name="cornerRadius" />
         <attr name="cornerSizeTopLeft" />
