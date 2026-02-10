@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class SimpleFilesLruCache(
     val dirName: String,
-    private val maxSize: Long = 100 * 1024 * 1024, // 默认100MB
-    private val clearToRatio: Double = 0.6,
+    private val maxSize: Long = 125_000_000L,
+    private val clearToRatio: Int = 70,
     isFileOrCacheParent : Boolean = false
 ) {
     private var singleScope: SingleCoroutineTaskExecutor? = null
@@ -169,7 +169,7 @@ class SimpleFilesLruCache(
             .toList()
 
         var currentSize = totalSize
-        val clearToSize = maxSize * clearToRatio
+        val clearToSize : Long = maxSize / 100 * clearToRatio
 
         logdNoFile { "deleted totalSize $currentSize , clearToSize: $clearToSize" }
         // 删除最旧的，直到满足大小限制

@@ -1,5 +1,6 @@
 package com.au.module_android.viewmodel
 
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
@@ -11,14 +12,9 @@ import kotlin.reflect.KClass
 object AllShareViewModelManager {
     // 蓝牙业务的ViewModel管理器（泛型指定BTViewModel）
     val btViewModelManager = ShareViewModelManager(BTViewModel::class)
-    // 可扩展：WiFi业务的管理器（示例）
-    // val wifiViewModelManager = ShareViewModelManager(
-          vmKClass = WiFiViewModel::class,
-           factory = WiFiViewModel.Factory(WiFiRepository()) // 传自定义 factory
-           )
 }
 
-第二步1：创建ViewModel1 BTViewModel（支持无参构造，也可扩展为带参构造）
+第二步：创建ViewModel 支持无参构造
 class BTViewModel : ViewModel() {
     val btConnectState = MutableLiveData<Boolean>(false)
     override fun onCleared() {
@@ -28,8 +24,8 @@ class BTViewModel : ViewModel() {
     }
 }
 
-第二步2：创建ViewModel2 带参构造的ViewModel（需自定义Factory）
-class WiFiViewModel(private val repo: WiFiRepository) : ViewModel() {
+或者 ：创建ViewModel 带参构造的ViewModel（需自定义Factory）
+class BTViewModel(private val repo: WiFiRepository) : ViewModel() {
     // 自定义工厂
     class Factory(private val repo: WiFiRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
@@ -39,7 +35,7 @@ class WiFiViewModel(private val repo: WiFiRepository) : ViewModel() {
     }
 }
 
-第三步：在Activity/fragment中使用
+第三步：在任意多个Activity或fragment中使用
 class BTConnectActivity : AppCompatActivity() {
     // 无需关注底层逻辑，直接通过全局入口获取
     private val btViewModel by lazy {
@@ -96,7 +92,7 @@ class ShareViewModelManager<VM : ViewModel>(
         lifecycleOwner.lifecycle.addObserver(object : LifecycleEventObserver {
             override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
                 // 区分：Fragment视图销毁（ON_DESTROY） vs 组件本身销毁
-                val isDestroy = if (isViewLifecycle) {
+                val isDestroy = if (lifecycleOwner is Fragment && isViewLifecycle) {
                     // viewLifecycleOwner的ON_DESTROY是视图销毁，需等Fragment本身销毁才减计数
                     event == Lifecycle.Event.ON_DESTROY && source.lifecycle.currentState == Lifecycle.State.DESTROYED
                 } else {
