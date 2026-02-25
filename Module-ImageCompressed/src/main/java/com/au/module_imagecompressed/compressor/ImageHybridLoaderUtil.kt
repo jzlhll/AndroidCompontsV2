@@ -6,37 +6,56 @@ import android.net.Uri
 import android.util.Size
 import java.io.File
 
+val LOW_SIZE = Size(240, 320)
+val MID_SIZE = Size(480, 640)
+
 /**
- * ThumbnailCompatUtil 与 ImageLoaderUtil 混合加载器
- *
- * ThumbnailCompatUtil用于加载缩略图，目前只是设计了2种低尺寸的图，故而是用来加载小小图的
- * ImageLoaderUtil 用于加载接近原始图片(限制在常用的清晰范围1920*1440, 避免过大导致OOM)
+ * 加载原始图片，忽略压缩配置
  */
-class ImageHybridLoaderUtil(private val context: Context,
-    private val myCompressConfig: ImageLoadConfig = ImageLoadConfig(
-        maxWidth = 1440,
-        maxHeight = 1920,
-        quality = ImageLoadQuality.Low,
-        ignoreSizeInKB = 2000,
-    )) {
-    companion object {
-        val LOW_SIZE = Size(240, 320)
-        val MID_SIZE = Size(480, 640)
+suspend fun loadOriginalUriOrFile(context:Context, uriOrFile: Any, originalLoadConfig: ImageLoadConfig = ImageLoadConfig(
+    quality = ImageLoadQuality.High,
+    alwaysLoadOriginal = true
+)) : Bitmap?{
+    return when (uriOrFile) {
+        is Uri -> ImageLoaderUtil.loadImage(context, uriOrFile, originalLoadConfig)
+        is File -> ImageLoaderUtil.loadImage(uriOrFile, originalLoadConfig)
+        else -> null
+    }
+}
+
+/**
+ * 加载压缩图片
+ */
+suspend fun loadCompressUriOrFile(context:Context,
+                                  uriOrFile: Any,
+                                  compressConfig: ImageLoadConfig = ImageLoadConfig(
+    maxWidth = 1440,
+    maxHeight = 1920,
+    quality = ImageLoadQuality.Low,
+    ignoreSizeInKB = 2000,
+)) : Bitmap? {
+    return when(uriOrFile) {
+        is Uri -> ImageLoaderUtil.loadImage(context, uriOrFile, compressConfig)
+        is File -> ImageLoaderUtil.loadImage(uriOrFile, compressConfig)
+        else -> null
+    }
+}
+
+/**
+ * 加载缩略图
+ * @param thumbSize 缩略图尺寸 推荐使用 LOW_SIZE 或 MID_SIZE
+ */
+suspend fun loadThumbnailUriOrFile(context:Context,
+                                 uriOrFile: Any,
+                                 thumbSize: Size?) : Bitmap? {
+    if (thumbSize == null) {
+        return loadCompressUriOrFile(context, uriOrFile)
     }
 
-    private val thumbnailUtils = ThumbnailCompatUtil(context)
-
-    suspend fun loadUri(uri: Uri, size: Size?) : Bitmap?{
-        if (size == null) {
-            return ImageLoaderUtil.loadImage(context, uri, myCompressConfig)
-        }
-        return thumbnailUtils.loadThumbnailCompat(uri, size)
-    }
-
-    suspend fun loadFile(file: File, size: Size?) : Bitmap?{
-        if (size == null) {
-            return ImageLoaderUtil.loadImage(file, myCompressConfig)
-        }
-        return thumbnailUtils.createImageThumbnailByPath(file.absolutePath, size)
+    val thumbnailUtils = ThumbnailCompatUtil(context)
+    return when (uriOrFile) {
+        is Uri -> thumbnailUtils.loadThumbnailCompat(uriOrFile, thumbSize)
+        is File -> thumbnailUtils.createImageThumbnailByPath(uriOrFile.absolutePath, thumbSize)
+        else -> null
     }
 }

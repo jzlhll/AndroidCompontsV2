@@ -122,13 +122,30 @@ internal class ImageLoaderUtil(
                     val originalWidth = info.size.width
                     val originalHeight = info.size.height
 
+                    val (targetWidth, targetHeight) = if (config.fixedWidth > 0 && config.fixedHeight > 0) {
+                        // 使用固定尺寸
+                        Pair(config.fixedWidth, config.fixedHeight)
+                    } else {
+                        // 使用最大尺寸限制
+                        CompressUtil.calculateTargetDimensions(
+                            originalWidth,
+                            originalHeight,
+                            config.maxWidth.toFloat(),
+                            config.maxHeight.toFloat()
+                        )
+                    }
+
                     val sampleSize = CompressUtil.calculateSampleSize(
                         originalWidth,
                         originalHeight,
-                        config.maxWidth,
-                        config.maxHeight
+                        targetWidth,
+                        targetHeight
                     )
                     decoder.setTargetSampleSize(sampleSize)
+                    // 设置目标尺寸，确保最终图片大小为固定值
+                    if (config.fixedWidth > 0 && config.fixedHeight > 0) {
+                        decoder.setTargetSize(config.fixedWidth, config.fixedHeight)
+                    }
                     //todo decoder.crop = Rect()
 
                     if (config.quality == ImageLoadQuality.High) {

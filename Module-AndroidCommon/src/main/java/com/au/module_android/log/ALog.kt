@@ -112,3 +112,14 @@ fun logLargeLine(tag:String, str:String) {
         i = lineIndex + 1
     }
 }
+
+fun logLargeSize(tag:String, str:String, length : Int = 300) {
+    val len = str.length
+    var i = 0
+    while (i < len) {
+        val endIndex = min(i + length, len)
+        val log = str.substring(i, endIndex)
+        Log.d(tag, log)
+        i = endIndex
+    }
+}
