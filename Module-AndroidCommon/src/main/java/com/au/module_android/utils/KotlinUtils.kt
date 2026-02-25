@@ -8,8 +8,12 @@ import android.os.Build.VERSION
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import java.io.Serializable
 
 /**
@@ -158,4 +162,37 @@ fun LifecycleOwner.tryGetContext() : Context? {
         }
     }
     return null
+}
+
+
+/**
+ * 封装 launch + repeatOnLifecycle 模式，用于安全地收集 Flow
+ * @param block 要执行的收集逻辑
+ */
+inline fun LifecycleOwner.launchRepeatOnStarted(
+    crossinline block: suspend () -> Unit
+) {
+    lifecycleScope.launch {
+        repeatOnLifecycle(Lifecycle.State.STARTED) {
+            block()
+        }
+    }
+}
+
+/**
+ * 便捷方法：直接收集 Flow 并处理结果
+ * @param flow 要收集的 Flow
+ * @param collector 处理 Flow 发送值的函数
+ */
+inline fun <T> LifecycleOwner.launchRepeatOnStarted(
+    flow: Flow<T>,
+    crossinline collector: (T) -> Unit
+) {
+    lifecycleScope.launch {
+        repeatOnLifecycle(Lifecycle.State.STARTED) {
+            flow.collect { value ->
+                collector(value)
+            }
+        }
+    }
 }

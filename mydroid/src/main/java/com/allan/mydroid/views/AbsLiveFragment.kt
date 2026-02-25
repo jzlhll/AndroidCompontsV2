@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewbinding.ViewBinding
 import com.allan.mydroid.R
 import com.allan.mydroid.globals.GlobalNetworkMonitor
@@ -12,8 +15,8 @@ import com.allan.mydroid.globals.MyDroidConst
 import com.au.module_android.Globals
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
@@ -58,25 +61,29 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
         }
 
         if (whenIpNullShowExitDialog) {
-            launchRepeatOnStarted(networkMonitor.networkInfoFlow) { networkInfo->
-                val ip = networkInfo?.ip
-                if (ip.isNullOrEmpty()) {
-                    if (waitDialog == null) {
-                        ConfirmBottomSingleDialog.show(childFragmentManager, getString(R.string.tips),
-                            getString(R.string.exit_with_wifi_reminder),
-                            "OK",
-                            true) { d->
+            lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    networkMonitor.networkInfoFlow.collect { networkInfo->
+                        val ip = networkInfo?.ip
+                        if (ip.isNullOrEmpty()) {
+                            if (waitDialog == null) {
+                                ConfirmBottomSingleDialog.show(childFragmentManager, getString(R.string.tips),
+                                    getString(R.string.exit_with_wifi_reminder),
+                                    "OK",
+                                    true) { d->
+                                    waitDialog?.dismissAllowingStateLoss()
+                                    waitDialog = null
+                                    requireActivity().finishAfterTransition()
+                                }.also { d->
+                                    d.isCancelable = false
+                                    waitDialog = d
+                                }
+                            }
+                        } else {
                             waitDialog?.dismissAllowingStateLoss()
                             waitDialog = null
-                            requireActivity().finishAfterTransition()
-                        }.also { d->
-                            d.isCancelable = false
-                            waitDialog = d
                         }
                     }
-                } else {
-                    waitDialog?.dismissAllowingStateLoss()
-                    waitDialog = null
                 }
             }
         }

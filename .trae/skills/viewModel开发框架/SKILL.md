@@ -113,9 +113,6 @@ runCallCatch(hasLoading = true, call = {
 - 避免单个协程执行过多耗时操作
 - 并发任务使用 `async/await` 模式
 
-### 6.3 状态流生命周期管理
-- 使用 `launchRepeatOnStarted()` 确保在 `STARTED` 状态下收集流
-
 ## 7. 核心原则
 
 1. **单向数据流**：UI → Action → ViewModel → State → UI

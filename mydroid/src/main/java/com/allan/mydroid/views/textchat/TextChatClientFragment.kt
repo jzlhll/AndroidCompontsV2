@@ -8,7 +8,7 @@ import com.allan.mydroid.R
 import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.databinding.FragmentTextChatBinding
 import com.allan.mydroid.globals.GlobalNetworkMonitor
-import com.allan.mydroid.utils.BlurViewEx
+import com.allan.mydroid.utils.BlurViewEx3
 import com.allan.mydroid.views.textchat.uibean.NormalItem
 import com.au.module_gson.toGsonString
 import com.au.module_androidui.ui.base.ImmersiveMode
@@ -88,7 +88,6 @@ class TextChatClientFragment : BindingFragment<FragmentTextChatBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.toolbar.setTitle(R.string.text_chat_client_next)
-        BlurViewEx(binding.loadingHost, 0).setBlur(binding.root, 20f)
         common.onCreate()
 
         viewModel.closedData.observe(this) {

@@ -16,7 +16,6 @@ import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendListSelectorBinding
 import com.allan.mydroid.globals.ShareInUrisObj
-import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
@@ -111,7 +110,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 binding.iconPlay.gone()
             }
             binding.bigImage.setImageDrawable(null)
-            BlurViewEx(binding.blurView, 0).setBlur(binding.root, 96f)
         }
 
         binding.blurView.visible()

@@ -5,7 +5,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
+import com.au.module_android.Globals.getString
 import com.au.module_android.service.AutoStopService
 import com.au.module_android.log.logd
 
@@ -38,7 +38,7 @@ class MyDroidKeepLiveService : AutoStopService() {
     }
 
     override fun getNotifyName(): String {
-        return com.allan.mydroid.R.string.mydroid_running_only_for_alive.resStr()
+        return getString(com.allan.mydroid.R.string.mydroid_running_only_for_alive)
     }
 
     override fun getPendingIntent(): PendingIntent {

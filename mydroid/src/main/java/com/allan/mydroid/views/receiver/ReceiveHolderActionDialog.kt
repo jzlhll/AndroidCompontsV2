@@ -6,7 +6,6 @@ import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.BuildConfig
 import com.allan.mydroid.R
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.serializableCompat
@@ -19,7 +18,6 @@ import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import kotlinx.coroutines.delay
 import java.io.File
 import java.lang.ref.WeakReference
-
 
 class ReceiveHolderActionDialog : AbsActionDialogFragment() {
     companion object Companion {
@@ -56,11 +54,11 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
     }
 
     val mItems = listOf(
-        ItemBean(TAG_OPEN, R.string.open.resStr(), R.drawable.ic_open, normalColor),
-        ItemBean(TAG_SHARE, R.string.share.resStr(), R.drawable.ic_share, normalColor),
-        ItemBean(TAG_EXPORT_ONLY, R.string.export.resStr(), R.drawable.ic_export, normalColor),
-        ItemBean(TAG_DELETE, R.string.delete.resStr(), R.drawable.ic_delete, normalColor),
-        ItemBean(TAG_EXPORT_AND_DEL, R.string.export_and_delete.resStr(), R.drawable.ic_export_and_delete, normalColor))
+        ItemBean(TAG_OPEN, getString(R.string.open), R.drawable.ic_open, normalColor),
+        ItemBean(TAG_SHARE, getString(R.string.share), R.drawable.ic_share, normalColor),
+        ItemBean(TAG_EXPORT_ONLY, getString(R.string.export), R.drawable.ic_export, normalColor),
+        ItemBean(TAG_DELETE, getString(R.string.delete), R.drawable.ic_delete, normalColor),
+        ItemBean(TAG_EXPORT_AND_DEL, getString(R.string.export_and_delete), R.drawable.ic_export_and_delete, normalColor))
 
     override val items: List<ItemBean>
         get() = mItems
@@ -100,14 +98,14 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
             val fullPath = parsedInfo.fullPath
             val relativePath = parsedInfo.relativePath
             if (!fullPath.isNullOrEmpty()) {
-                val firstStr = String.format(R.string.save_to_success.resStr(), fullPath)
+                val firstStr = String.format(getString(R.string.save_to_success), fullPath)
                 fileExportSuccessCallback?.get()?.invoke(firstStr, fullPath.replace("/storage/emulated/0/", "/sdcard/"))
             } else if (!relativePath.isNullOrEmpty()) {
                 val p = relativePath.replace("/storage/emulated/0/", "/sdcard/")
                 fileExportSuccessCallback?.get()?.invoke(relativePath, "/sdcard/$p")
             }
         } else {
-            fileExportFailCallback?.get()?.invoke(R.string.save_failed.resStr())
+            fileExportFailCallback?.get()?.invoke(getString(R.string.save_failed))
         }
     }
 

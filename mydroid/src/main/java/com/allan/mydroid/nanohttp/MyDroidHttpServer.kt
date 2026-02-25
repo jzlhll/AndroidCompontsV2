@@ -16,7 +16,6 @@ import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
 import com.au.module_okhttp.api.ResultBean
 import com.au.module_gson.toGsonString
 import com.au.module_android.log.logdNoFile
@@ -199,7 +198,7 @@ class MyDroidHttpServer(httpPort: Int,
             READ_WEBSOCKET_IP_PORT -> getWebsocketIpPort()
             TEXT_CHAT_READ_WEBSOCKET_IP_PORT -> getWebsocketIpPortWrap()
             REQUEST_FILE_LIST -> getFileList()
-            else -> newFixedLengthResponse(R.string.invalid_request_from_appserver.resStr()) // 或者其他默认响应
+            else -> newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
         }
     }
 
@@ -210,7 +209,7 @@ class MyDroidHttpServer(httpPort: Int,
             if (json.isNotEmpty()) {
                 ResultBean(CODE_SUC, "Success!", json).okJsonResponse()
             } else {
-                newFixedLengthResponse(R.string.invalid_request_from_appserver.resStr()) // 或者其他默认响应
+                newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
             }
         }
     }
@@ -241,7 +240,7 @@ class MyDroidHttpServer(httpPort: Int,
             logdNoFile { "get websocket ipPort $info" }
             ResultBean(CODE_SUC, "Success!", info).okJsonResponse()
         } else {
-            newFixedLengthResponse(R.string.invalid_request_from_appserver.resStr()) // 或者其他默认响应
+            newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
         }
     }
 

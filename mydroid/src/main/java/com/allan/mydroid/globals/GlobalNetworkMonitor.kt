@@ -4,10 +4,10 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkInfo
 import android.net.NetworkRequest
 import com.allan.mydroid.R
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
 import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.scopes.BackAppScope
 import com.au.module_android.simpleflow.StatusState
@@ -57,16 +57,20 @@ class GlobalNetworkMonitor(
                 val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                 if (isBackground) {
                     logd { "Unregistering network callback" }
-                    if(isRegister) manager.unregisterNetworkCallback(netObserver)
-                    isRegister = false
+                    if(isRegister) {
+                        manager.unregisterNetworkCallback(netObserver)
+                        isRegister = false
+                    }
                 } else {
                     // 注册网络回调
                     logd { "Starting network" }
-                    val request = NetworkRequest.Builder()
-                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                        .build()
-                    if(!isRegister) manager.registerNetworkCallback(request, netObserver)
-                    isRegister = true
+                    if(!isRegister) {
+                        val request = NetworkRequest.Builder()
+                            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                            .build()
+                        manager.registerNetworkCallback(request, netObserver)
+                        isRegister = true
+                    }
                 }
             }
         })
@@ -83,14 +87,16 @@ class GlobalNetworkMonitor(
         logt { "networkInfo combine $networkStatus $statusState" }
         when (networkStatus) {
             is NetworkStatus.Connected -> {
-                val strFmt = R.string.server_m.resStr()
+                val strFmt = Globals.getString(R.string.server_m)
                 val ports = if(statusState is StatusState.Success<Pair<Int, Int>>) statusState.data else null
                 val httpPort = ports?.first
                 val wsPort = ports?.second
                 val ip = networkStatus.ip
 
-                NetworkInfo(ip, httpPort, wsPort, networkStatus.networkType,
-                    String.format(strFmt, "${ip}:${httpPort}"))
+                NetworkInfo(
+                    ip, httpPort, wsPort, networkStatus.networkType,
+                    String.format(strFmt, "${ip}:${httpPort}")
+                )
             }
 
             is NetworkStatus.Uninitialized,

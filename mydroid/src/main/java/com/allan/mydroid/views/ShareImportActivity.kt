@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.databinding.ActivityImportBinding
 import com.allan.mydroid.globals.ShareInUrisObj
@@ -12,7 +13,6 @@ import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.MY_DROID_SHARE_IMPORT_URIS
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.findMyLaunchActivity
 import com.au.module_android.utils.launchOnThread
@@ -75,7 +75,7 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
         logdNoFile { "handle increase uris $uris" }
 
         if (ifUrisFromMyApp(uris)) {
-            Toast.makeText(this, com.allan.mydroid.R.string.import_to_send_list_hint.resStr(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, Globals.getString(R.string.import_to_send_list_hint), Toast.LENGTH_SHORT).show()
             finish()
             return
         }

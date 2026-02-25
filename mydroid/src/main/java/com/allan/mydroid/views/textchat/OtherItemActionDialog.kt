@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.R
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.log.logd
@@ -45,7 +44,7 @@ class OtherItemActionDialog(private var file: File? = null) : AbsActionDialogFra
     }
 
     val mItems = listOf(
-        ItemBean(TAG_DOWNLAOD, R.string.download.resStr(), R.drawable.ic_download, normalColor)
+        ItemBean(TAG_DOWNLAOD, Globals.getString(R.string.download), R.drawable.ic_download, normalColor)
     )
 
     override val items: List<ItemBean>
@@ -85,14 +84,14 @@ class OtherItemActionDialog(private var file: File? = null) : AbsActionDialogFra
             val fullPath = parsedInfo.fullPath
             val relativePath = parsedInfo.relativePath
             if (!fullPath.isNullOrEmpty()) {
-                val firstStr = String.format(R.string.save_to_success.resStr(), fullPath)
+                val firstStr = String.format(Globals.getString(R.string.save_to_success), fullPath)
                 fileExportSuccessCallback?.get()?.invoke(firstStr, fullPath.replace("/storage/emulated/0/", "/sdcard/"))
             } else if (!relativePath.isNullOrEmpty()) {
                 val p = relativePath.replace("/storage/emulated/0/", "/sdcard/")
                 fileExportSuccessCallback?.get()?.invoke(relativePath, "/sdcard/$p")
             }
         } else {
-            fileExportFailCallback?.get()?.invoke(R.string.save_failed.resStr())
+            fileExportFailCallback?.get()?.invoke(Globals.getString(R.string.save_failed))
         }
     }
 

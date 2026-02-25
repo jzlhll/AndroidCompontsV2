@@ -4,7 +4,9 @@ import android.graphics.Outline
 import android.os.Build
 import android.view.View
 import android.view.ViewOutlineProvider
+import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.dp
+import eightbitlab.com.blurview.BlurTarget
 import eightbitlab.com.blurview.BlurView
 
 /**
@@ -22,36 +24,36 @@ class BlurViewEx3(private val blurView: BlurView,
         }
     }
 
-//    fun setBlur(target: BlurTarget, blurRadius:Float, overlayColor:Int) {
-//        if (isNotLegacy) { //高版本使用模糊，低版本纯半透
-////float radius = 20f;
-////
-////    View decorView = getWindow().getDecorView();
-////    // A view hierarchy you want blur. The BlurTarget can't include the BlurView that targets it.
-////    BlurTarget target = findViewById(R.id.target);
-////
-////    // Optional:
-////    // Set the drawable to draw in the beginning of each blurred frame.
-////    // Can be used in case your layout has a lot of transparent space and your content
-////    // gets a low alpha value after blur is applied.
-////    Drawable windowBackground = decorView.getBackground();
-////
-////    // Optionally pass a custom BlurAlgorithm and scale factor as additional parameters.
-////    // You might want to set a smaller scale factor on API 31+ to have a more precise blur with less flickering.
-//            blurView.setupWith(target)
-//                .setOverlayColor(overlayColor)
-//                //.setFrameClearDrawable(windowBackground) // Optional. Useful when your root has a lot of transparent background, which results in semi-transparent blurred content. This will make the background opaque
-//                .setBlurRadius(blurRadius)
+    fun setBlur(target: BlurTarget, blurRadius:Float, overlayColor:Int) {
+        if (isNotLegacy) { //高版本使用模糊，低版本纯半透
+//float radius = 20f;
 //
-//            blurView.outlineProvider = viewOutlineProvider
-//            blurView.clipToOutline = true
-//        } else {
-//            ViewBackgroundBuilder()
-//            .setBackground(overlayColor)
-//            .setCornerRadius(cornerRadius.toFloat().dp)
-//            .build()?.let {
-//                blurView.background = it
-//            }
-//        }
-//    }
+//    View decorView = getWindow().getDecorView();
+//    // A view hierarchy you want blur. The BlurTarget can't include the BlurView that targets it.
+//    BlurTarget target = findViewById(R.id.target);
+//
+//    // Optional:
+//    // Set the drawable to draw in the beginning of each blurred frame.
+//    // Can be used in case your layout has a lot of transparent space and your content
+//    // gets a low alpha value after blur is applied.
+//    Drawable windowBackground = decorView.getBackground();
+//
+//    // Optionally pass a custom BlurAlgorithm and scale factor as additional parameters.
+//    // You might want to set a smaller scale factor on API 31+ to have a more precise blur with less flickering.
+            blurView.setupWith(target)
+                .setOverlayColor(overlayColor)
+                //.setFrameClearDrawable(windowBackground) // Optional. Useful when your root has a lot of transparent background, which results in semi-transparent blurred content. This will make the background opaque
+                .setBlurRadius(blurRadius)
+
+            blurView.outlineProvider = viewOutlineProvider
+            blurView.clipToOutline = true
+        } else {
+            ViewBackgroundBuilder()
+            .setBackground(overlayColor)
+            .setCornerRadius(cornerRadius.toFloat().dp)
+            .build()?.let {
+                blurView.background = it
+            }
+        }
+    }
 }

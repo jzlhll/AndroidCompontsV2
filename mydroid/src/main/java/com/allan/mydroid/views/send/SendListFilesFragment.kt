@@ -11,7 +11,6 @@ import com.allan.mydroid.databinding.FragmentSendFilesBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
 import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.utils.BlurViewEx
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
@@ -63,7 +62,6 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
                 binding.iconPlay.gone()
             }
             binding.bigImage.setImageDrawable(null)
-            BlurViewEx(binding.blurView, 0).setBlur(binding.root, 96f)
         }
 
         binding.blurView.visible()

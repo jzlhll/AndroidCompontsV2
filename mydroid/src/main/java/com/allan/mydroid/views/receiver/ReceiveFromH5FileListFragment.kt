@@ -14,7 +14,6 @@ import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
 import com.au.module_android.click.onClick
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_androidui.ui.bindings.BindingFragment
@@ -119,7 +118,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                         val colorGray = getString(com.au.module_androidcolor.R.string.color_text_desc_str)
 
                         binding.exportHistoryTv.useSimpleHtmlText(
-                            HtmlPart(R.string.keep_recent_records.resStr() + "\n\n", colorGray),
+                            HtmlPart(Globals.getString(R.string.keep_recent_records) + "\n\n", colorGray),
                                     HtmlPart(it, colorNormal)
                         )
                         updateTabsTitle(false)

@@ -13,7 +13,6 @@ import com.allan.mydroid.beans.wsdata.MyDroidModeData
 import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.MyDroidConst
 import com.au.module_android.Globals
-import com.au.module_android.Globals.resStr
 import com.au.module_gson.toGsonString
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.log.logdNoFile
@@ -73,7 +72,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
                 logdNoFile { "${Thread.currentThread()} $clientName send free space job!" }
                 try {
                     val leftSpace = getExternalFreeSpace(Globals.app)
-                    val suc = R.string.success_message.resStr()
+                    val suc = Globals.getString(R.string.success_message)
                     val json = WSResultBox(CODE_SUC, suc, API_WS_LEFT_SPACE, LeftSpaceData(leftSpace)).toGsonString()
                     logt { "$clientName send: $json" }
                     send(json)
@@ -131,7 +130,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
 
     private fun clientInit() {
         //通过later则不需要注意线程
-        val message = String.format(R.string.new_webpage_access.resStr(), clientName)
+        val message = String.format(Globals.getString(R.string.new_webpage_access), clientName)
         ToastBuilder().setMessage(message)
             .setIcon("success")
             .setOnTopLater(200).toast()

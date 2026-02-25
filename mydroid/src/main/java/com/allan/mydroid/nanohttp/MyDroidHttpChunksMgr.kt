@@ -19,7 +19,7 @@ import com.allan.mydroid.globals.jsonResponse
 import com.allan.mydroid.globals.nanoTempCacheChunksDir
 import com.allan.mydroid.globals.nanoTempCacheMergedDir
 import com.allan.mydroid.globals.okJsonResponse
-import com.au.module_android.Globals.resStr
+import com.au.module_android.Globals
 import com.au.module_okhttp.api.ResultBean
 import com.au.module_android.log.ALogJ
 import com.au.module_android.log.logd
@@ -81,7 +81,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
             // 2. 获取文件块内容（核心）
             val tmpFileStr = parseBodyFileMap["chunk"]
             if (tmpFileStr.isNullOrEmpty()) {
-                val s = R.string.file_not_received.resStr()
+                val s = Globals.getString(R.string.file_not_received)
                 return ResultBean<ChunkInfoResult>(CODE_FAIL, s, null).badRequestJsonResponse()
             }
 
@@ -124,7 +124,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
                         chunkIndex,
                         totalChunks,
                         PROCESS_CHUNK_ERROR,
-                        R.string.chunk_receiver_error.resStr()
+                        Globals.getString(R.string.chunk_receiver_error)
                     )
                 )
             )
@@ -146,7 +146,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         if (md5.isNullOrEmpty() || fileName.isNullOrEmpty()) {
             return ResultBean<ChunkInfoResult>(
                 CODE_FAIL,
-                R.string.error_merge_chunk_params.resStr(), null).badRequestJsonResponse()
+                Globals.getString(R.string.error_merge_chunk_params), null).badRequestJsonResponse()
         }
         logt { "handle Merge Chunk $fileName , $md5 , totalChunks:$totalChunks" }
 
@@ -164,7 +164,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
 
         val chunkInfoList = removeChunkInfoList(fileName, md5)
         if (chunkInfoList == null) {
-            val noChunkStr = R.string.no_chunks.resStr()
+            val noChunkStr = Globals.getString(R.string.no_chunks)
 
             MyDroidConst.receiverProgressData.setValueSafe(
                 mapOf(
@@ -183,7 +183,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         }
         chunkInfoList.sortBy { it.chunkIndex }
         if (chunkInfoList.size != totalChunks) {
-            val chunkNumNotMatchStr = R.string.chunks_number_not_match.resStr()
+            val chunkNumNotMatchStr = Globals.getString(R.string.chunks_number_not_match)
             MyDroidConst.receiverProgressData.setValueSafe(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
@@ -236,11 +236,11 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
             )
             return ResultBean<ChunkInfoResult>(
                 CODE_SUC,
-                R.string.file_merge_success.resStr()
+                Globals.getString(R.string.file_merge_success)
                 , null).okJsonResponse()
         } else {
             outputFile.delete()
-            val md5FailStr = R.string.md5_check_failed.resStr()
+            val md5FailStr = Globals.getString(R.string.md5_check_failed)
             MyDroidConst.receiverProgressData.setValueSafe(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
@@ -274,7 +274,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         }
         return ResultBean<String>(
             CODE_SUC,
-            R.string.clear_up.resStr(), null).jsonResponse(Status.OK)
+            Globals.getString(R.string.clear_up), null).jsonResponse(Status.OK)
     }
 
     // 辅助方法：将请求体转为字符串
