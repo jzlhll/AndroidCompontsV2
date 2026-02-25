@@ -1,5 +1,6 @@
 package com.allan.mydroid
 
+import android.util.Log
 import com.allan.mydroid.api.Api
 import com.allan.mydroid.globals.GlobalDroidServer
 import com.allan.mydroid.globals.GlobalNetworkMonitor
@@ -21,12 +22,15 @@ import com.au.module_okhttp.interceptors.PretreatmentInterceptor
 import com.au.module_okhttp.interceptors.SimpleRetryInterceptor
 import com.modulenative.AppNative
 import dagger.hilt.android.HiltAndroidApp
+import okhttp3.ConnectionPool
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.binds
 import org.koin.dsl.module
+import java.util.concurrent.TimeUnit
 
 /**
  * @author allan
@@ -53,6 +57,18 @@ class App : InitApplication() {
             }
 
             it.okhttpExtraBuilder = { builder->
+                val customConnPool = ConnectionPool(
+                    maxIdleConnections = 4, // 最大空闲连接数，默认5，可根据项目并发调整（如8/10）
+                    keepAliveDuration = 180, // 核心修改：空闲超时时间（秒），根据服务端值调整
+                    timeUnit = TimeUnit.SECONDS
+                )
+                builder.connectionPool(customConnPool)
+
+                val loggingInterceptor = HttpLoggingInterceptor { message -> Log.d("OKHTTP_LOG", "okhttp: $message"); }
+                loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+
+                builder.addInterceptor(loggingInterceptor)
+
                 builder.addInterceptor(SimpleRetryInterceptor(
                     headersResetBlock = { request->
                         request //填充。更改request的部分参数，比如时间戳等信息
@@ -63,11 +79,14 @@ class App : InitApplication() {
                     },
                     tokenExpiredBlock = { msg->
                         ToastBuilder().setMessage(msg).setOnTopLater().toast()
+                        true
                         //填充。仅仅是一个提醒。tokenExpire过期的时候，给出一个全局的通知。具体的那个请求还是抛异常。
                     }
                 ))
                 builder.addInterceptor(PretreatmentInterceptor())
             }
+
+
         })
 
         val globalModule = module {

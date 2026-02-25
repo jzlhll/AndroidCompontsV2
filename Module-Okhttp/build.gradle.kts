@@ -48,5 +48,6 @@ dependencies {
     implementation(platform(libs.okhttp.bom))
     // define any required OkHttp artifacts without version
     implementation(libs.okhttp)
+    api(libs.okhttp.logging)
     implementation(libs.okhttp.tls)
 }

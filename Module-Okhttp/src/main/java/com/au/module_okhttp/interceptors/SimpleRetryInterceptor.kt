@@ -1,9 +1,9 @@
 package com.au.module_okhttp.interceptors
 
-import android.util.Log
 import com.au.module_android.log.logdNoFile
-import com.au.module_okhttp.exceptions.AuTimestampErrorException
-import com.au.module_okhttp.exceptions.AuTokenExpiredException
+import com.au.module_okhttp.exceptions.RefreshTokenExpiredException
+import com.au.module_okhttp.exceptions.TimestampErrorException
+import com.au.module_okhttp.exceptions.TokenExpiredException
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -28,7 +28,8 @@ import javax.net.ssl.SSLPeerUnverifiedException
 class SimpleRetryInterceptor(
     val headersResetBlock:(Request)-> Request,
     val timestampOffsetBlock:(Long)->Unit,
-    val tokenExpiredBlock:((String)->Unit)?=null) : Interceptor {
+    val tokenExpiredBlock:((String)->Boolean)?=null,
+    val refreshTokenExpiredBlock:((String)->Unit)?=null) : Interceptor {
     private val retryMaxCount = 3
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -46,20 +47,14 @@ class SimpleRetryInterceptor(
                 }
                 response = chain.proceed(request)
                 return response
-            }  catch (e: IOException) {
+            } catch (e: IOException) {
                 errorException = e
                 // An attempt to communicate with a server failed. The request may have been sent.
                 val isRecoverable = recover(e,  call, request)
                 if (!isRecoverable) {
                     break
                 }
-            } catch (e: IOException) {
-                errorException = e
-                // An attempt to communicate with a server failed. The request may have been sent.
-                if (!isRecoverable(e, requestSendStarted = e !is ConnectionShutdownException)) {
-                    break
-                }
-            } catch (e: AuTimestampErrorException) {
+            } catch (e: TimestampErrorException) {
                 errorException = e
                 if (e.hasTimestampInfo) {
                     timestampOffsetBlock(e.timestampOffset)
@@ -69,14 +64,22 @@ class SimpleRetryInterceptor(
                 } else {
                     isTimestampAlreadyRetry = true
                 }
-            } catch (e: AuTokenExpiredException) {
+            } catch (e: TokenExpiredException) {
                 errorException = e
                 //处理一下，立刻继续上抛
-                tokenExpiredBlock?.invoke(e.message ?: "")
+                if (tokenExpiredBlock?.invoke(e.message ?: "") == true) {
+                    //token 刷新成功，则可以继续到 retryCount
+                } else {
+                    break
+                }
+            } catch (e: RefreshTokenExpiredException) {
+                errorException = e
+                //处理一下，立刻继续上抛
+                refreshTokenExpiredBlock?.invoke(e.message ?: "")
                 break
             }
 
-            logdNoFile { "okhttp: retry url ${request.url} exception: ${errorException?.message}" }
+            logdNoFile { "retry url ${request.url} exception: ${errorException.message}" }
             if (retryCount++ < retryMaxCount) {
                 request = headersResetBlock(request)
                 Thread.sleep(200) //重试的时候，略微延迟，等等网络。
@@ -121,8 +124,10 @@ class SimpleRetryInterceptor(
         return true
     }
 
-
-    private fun isRecoverable(e: IOException, requestSendStarted: Boolean): Boolean {
+    private fun isRecoverable(
+        e: IOException,
+        requestSendStarted: Boolean,
+    ): Boolean {
         // If there was a protocol problem, don't recover.
         if (e is ProtocolException) {
             return false

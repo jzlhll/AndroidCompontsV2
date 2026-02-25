@@ -1,11 +1,11 @@
 package com.au.module_okhttp.creator
 
-import com.au.module_gson.fromGson
 import com.au.module_android.utils.awaitOnIoThread
+import com.au.module_kson.fromKson
 import com.au.module_okhttp.OkhttpGlobal.okHttpClient
 import com.au.module_okhttp.beans.ParamsStrRequestBody
-import com.au.module_okhttp.exceptions.AuNoNetworkException
-import com.au.module_okhttp.exceptions.AuResponseErrorException
+import com.au.module_okhttp.exceptions.NoNetworkException
+import com.au.module_okhttp.exceptions.ResponseErrorException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import okhttp3.Call
@@ -39,8 +39,9 @@ suspend inline fun Request.awaitHttpResponse(
             it.resume(call.execute())
         } catch (e: Throwable) {
             val ne = if (e is UnknownHostException) {
-                AuNoNetworkException()
+                NoNetworkException()
             } else e
+
             it.resumeWithException(ne)
         }
     }
@@ -75,7 +76,7 @@ fun httpResponseCallbackFlow(request:Request, client: OkHttpClient = okHttpClien
         send(response.body?.string())
     } catch (e: Throwable) {
         val ne = if (e is UnknownHostException) {
-            AuNoNetworkException()
+            NoNetworkException()
         } else e
         close(ne)
     }
@@ -93,9 +94,9 @@ inline fun <reified T> Response.parseJson() : T {
         else -> {
             val bodyStr = this.body?.string()
             if (bodyStr.isNullOrBlank()) {
-                throw AuResponseErrorException(this.code, this.message)
+                throw ResponseErrorException(this.code, this.message)
             } else {
-                bodyStr.fromGson<T>() as T
+                bodyStr.fromKson<T>() as T
             }
         }
     }
@@ -109,9 +110,10 @@ fun Response.bodyString() : String? {
 }
 
 /**
- * 创建RequestBody。重构requestBody。
- *  fun String.toRequestBody(contentType: MediaType? = null)
- *  参考而来。
+ *
+ * 创建RequestBody 主要用于json参数做post请求
+ *
+ *  参考String.toRequestBody(contentType: MediaType? = null)而实现。
  */
 fun String.toParamsStrRequestBody(): ParamsStrRequestBody {
     var charset: Charset = UTF_8

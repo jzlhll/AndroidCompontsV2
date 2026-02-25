@@ -2,14 +2,11 @@ package com.au.module_okhttp
 
 import com.au.module_android.Globals
 import com.au.module_okhttp.beans.OkhttpInitParams
-import com.au.module_okhttp.creator.TrustAllCertsManager
+import com.au.module_okhttp.creator.myTrustAll
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.io.File
-import java.security.SecureRandom
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
 
 object OkhttpGlobal {
     /**
@@ -71,41 +68,21 @@ object OkhttpGlobal {
             .build()
     }
 
-    /** 传入 Array(1) 为1的空数组即可。
-     * 返回okhttp的设置参数。
-     */
-    internal fun createSSLSocketFactory(tls:String) : SSLSocketFactory {
-        val cert = TrustAllCertsManager()
-
-        val ssfFactory: SSLSocketFactory
-        val sc = SSLContext.getInstance(tls)
-        sc.init(null, arrayOf(cert), SecureRandom())
-        ssfFactory = sc.socketFactory
-        return ssfFactory
-    }
-
     /**
      * 添加证书相关设置
      */
-    fun createCertOkHttpBuilder(params: OkhttpInitParams? = null) : OkHttpClient.Builder {
+    internal fun createCertOkHttpBuilder(params: OkhttpInitParams? = null) : OkHttpClient.Builder {
         val builder: OkHttpClient.Builder = OkHttpClient.Builder()
         val okHttpEnableTrustAllCertificates = params?.okHttpEnableTrustAllCertificates ?: mParams.okHttpEnableTrustAllCertificates
         val okHttpCacheSize = params?.okHttpCacheSize ?: mParams.okHttpCacheSize
-        val okHttpCookieJar = params?.okHttpCookieJar ?: mParams.okHttpCookieJar
 
         if (okHttpEnableTrustAllCertificates) {
-            //下面两行信任所有证书
-            builder.sslSocketFactory(
-                createSSLSocketFactory("TLS"),
-                TrustAllCertsManager()
-            )
-            builder.hostnameVerifier(TrustAllCertsManager.TrustAllHostnameVerifier())
+            builder.myTrustAll("TLS")
         }
         if (okHttpCacheSize > 0) {
             //如果缓存的长度大于0，设置缓存
-            builder.cache(Cache(File(Globals.goodCacheDir, "okhttpcache"), okHttpCacheSize))
+            builder.cache(Cache(File(Globals.goodCacheDir, "okhttp_cache"), okHttpCacheSize))
         }
-        okHttpCookieJar?.let { builder.cookieJar(it) }
         return builder
     }
 }

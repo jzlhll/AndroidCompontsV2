@@ -3,11 +3,15 @@ package com.au.module_okhttp.creator
 import android.content.Context
 import android.net.Uri
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okio.BufferedSink
 import okio.source
 
-fun Uri.asInputStreamRequestBody(context:Context, length:Long = -1, contentType: MediaType? = null) : RequestBody {
+/**
+ * 兼容本地File和远程Uri的转变成okhttp的RequestBody
+ */
+fun Uri.asInputStreamRequestBody(context:Context, length:Long, contentType: MediaType? = null) : RequestBody {
     return object : RequestBody() {
         override fun contentType(): MediaType? {
             return contentType
@@ -26,3 +30,6 @@ fun Uri.asInputStreamRequestBody(context:Context, length:Long = -1, contentType:
         }
     }
 }
+
+fun Uri.asInputStreamRequestBody(context:Context, length:Long, mediaType: String)
+        = asInputStreamRequestBody(context, length, mediaType.toMediaTypeOrNull())

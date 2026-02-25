@@ -33,7 +33,7 @@ class TextChatClientViewModel : ViewModel() {
         logd { "currentBaseUrl ${Api.currentBaseUrl}" }
         viewModelScope.launch {
             try {
-                val data = Api.requestResultData<IpPortBean>(TEXT_CHAT_READ_WEBSOCKET_IP_PORT)
+                val data = Api.requestIpPort()
                 if (data != null) {
                     wsClient?.manualShutdown()
                     val newClient = TextChatWsClient(viewModelScope, ip, port, successOpenBlock)

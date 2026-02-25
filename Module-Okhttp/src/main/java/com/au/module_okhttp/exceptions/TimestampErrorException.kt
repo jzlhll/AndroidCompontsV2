@@ -7,4 +7,4 @@ import androidx.annotation.Keep
  * @param hasTimestampInfo 是否有内容，如果false就不能重试了。
  */
 @Keep
-class AuTimestampErrorException(val timestampOffset:Long, val hasTimestampInfo:Boolean, msg:String) : RuntimeException(msg)
+class TimestampErrorException(val timestampOffset:Long, val hasTimestampInfo:Boolean, msg:String) : RuntimeException(msg)

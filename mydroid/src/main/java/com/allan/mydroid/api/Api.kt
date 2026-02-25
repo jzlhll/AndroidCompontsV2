@@ -20,6 +20,22 @@ object Api : AbsOkhttpApi() {
         return currentBaseUrl
     }
 
+    override fun getAppId(): String {
+        return ""
+    }
+
+    override fun getAppKey(): String {
+        return ""
+    }
+
+    override fun getApiToken(): String {
+        return ""
+    }
+
+    override fun setupHeader(builder: Request.Builder, needToken: Boolean) {
+        //无
+    }
+
     // 创建并启动WebSocket连接
     fun connectWSServer(ip:String, port:Int, listener:WebSocketListener) {
         val client = OkHttpClient.Builder()
@@ -27,5 +43,9 @@ object Api : AbsOkhttpApi() {
             .build()
         val request: Request = Request.Builder().url("ws://$ip:$port").build()
         client.newWebSocket(request, listener)
+    }
+
+    suspend fun requestIpPort() : IpPortBean? {
+        return TEXT_CHAT_READ_WEBSOCKET_IP_PORT.requestResultGet<IpPortBean>()
     }
 }

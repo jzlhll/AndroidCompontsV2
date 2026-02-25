@@ -1,15 +1,23 @@
 package com.au.module_okhttp.interceptors
 import com.au.module_android.Globals
-import com.au.module_okhttp.exceptions.AuApiException
-import com.au.module_okhttp.exceptions.AuResponseErrorException
-import com.au.module_okhttp.exceptions.AuTokenExpiredException
-import com.au.module_okhttp.exceptions.AuTimestampErrorException
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.utils.ignoreError
+import com.au.module_kson.fromKson
+import com.au.module_okhttp.BuildConfig
+import com.au.module_okhttp.api.BaseDataStrBean
+import com.au.module_okhttp.exceptions.ApiErrorException
+import com.au.module_okhttp.exceptions.ResponseErrorException
+import com.au.module_okhttp.exceptions.TokenExpiredException
+import com.au.module_okhttp.exceptions.TimestampErrorException
 import com.au.module_okhttp.beans.CODE_OK
 import com.au.module_okhttp.beans.CODE_TIMESTAMP_ERROR
 import com.au.module_okhttp.beans.CODE_TOKEN_EXPIRED
+import com.au.module_okhttp.beans.CODE_TOKEN_REFRESH_EXPIRED
+import com.au.module_okhttp.exceptions.RefreshTokenExpiredException
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.MediaType
+import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
 import okio.Buffer
@@ -17,6 +25,7 @@ import org.json.JSONObject
 import java.io.EOFException
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
+import kotlin.text.toInt
 
 /**
  * 拦截器，对响应进行预处理。必须放在OkhttpSimpleRetryInterceptor之后。
@@ -24,104 +33,141 @@ import java.nio.charset.UnsupportedCharsetException
  * 2. 检查token是否过期
  * 3. 时间戳偏移纠正
  */
-class PretreatmentInterceptor : Interceptor {
+class PretreatmentInterceptor(
+    val checkIsRefreshTokenError: ((url:String?, httpRespCode:Int?, apiRespCode:String?)-> Boolean)?=null) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val response = chain.proceed(request)
         val responseCode = response.code
-        //1. 检查错误码
-        val error = checkHttpResponseCode(responseCode)
-        if (error != null) {
-            throw AuResponseErrorException(responseCode, "$error, ($responseCode)")
+        //过滤掉sse
+        if (request.isEventStream()) {
+            return response
         }
-
         val responseBody = response.body ?: return response
-
-        if (!bodyEncoded(response.headers)) {
-            checkWithBody(responseBody)
+        //过滤掉sse
+        if (responseBody.isEventStream()) {
+            return response
         }
 
-        return response
+        val url = request.url.toString()
+
+        //现在不论如何都解析httpCode 和 content
+        val error = checkHttpResponseCode(responseCode)
+        val result = getCloneResult(response)
+
+        // 1. 如果响应异常，但是 result 解析不出来。就直接报响应错误
+        if (error != null && result == null) {
+            throw ResponseErrorException(responseCode, error)
+        }
+
+        logdNoFile{"($error): $responseCode $result"}
+        // 2. 我们直接在result 进行业务错误码解析，
+        // 因为暂时我不能肯定是否影响错误的逻辑，一定不是httpSuccess200。所以不在上面直接 return。
+        // later：优化。
+        //所以这里不论是否是错误都会走，正常逻辑也会走。效率上大约拷贝+json 解析了一次。
+        checkContentThrow(responseCode, url, result)
+        return response //大概率不走了。
     }
 
-    private fun checkWithBody(responseBody: ResponseBody) {
+    private fun ResponseBody.isEventStream(): Boolean {
+        val contentType = contentType() ?: return false
+        return contentType.type == "text" && contentType.subtype == "event-stream"
+    }
+
+    fun Request.isEventStream(): Boolean {
+        return header("Accept")?.contains("text/event-stream") == true
+    }
+
+    /**
+     * clone 后解析响应体
+     */
+    private fun getCloneResult(response: Response) : String? {
+        if (bodyEncoded(response.headers)) {
+            logdNoFile{"parseContentAndPrint response body is encoded"}
+            return null
+        }
+        val responseBody = response.body
+        if (responseBody == null) {
+            logdNoFile{"parseContentAndPrint response body is null"}
+            return null
+        }
         val source = responseBody.source()
-        source.request(Long.Companion.MAX_VALUE) // Buffer the entire body.
+        source.request(Long.MAX_VALUE) // Buffer the entire body.
         val buffer: Buffer = source.buffer
         if (!isPlaintext(buffer)) {
-            return
-        }
-
-        var charset: Charset? = utf8Charset
-        val contentType: MediaType? = responseBody.contentType()
-        if (contentType != null) {
-            try {
-                charset = contentType.charset(utf8Charset)
-            } catch (_: UnsupportedCharsetException) {
-                return
-            }
+            logdNoFile{"parseContentAndPrint response body is not plaintext"}
+            return null
         }
 
         val contentLength = responseBody.contentLength()
         if (contentLength != 0L) {
-            checkContentLength(buffer, charset)
-            return
+            var charset: Charset? = utf8Charset
+            val contentType: MediaType? = responseBody.contentType()
+            if (contentType != null) {
+                try {
+                    charset = contentType.charset(utf8Charset)
+                } catch (_: UnsupportedCharsetException) {
+                    logdNoFile{"parseContentAndPrint response body charset is not supported"}
+                    return null
+                }
+            }
+            //clone 保证不消费 body
+            val result: String = buffer.clone().readString(charset ?: utf8Charset)
+            if (BuildConfig.DEBUG) {
+                logdNoFile{ "parseContentAndPrint response body: $result" }
+            }
+            return result
+        } else {
+            logdNoFile{"parseContentAndPrint response contentLength is 0"}
+            return null
         }
     }
 
-    private fun checkContentLength(buffer: Buffer, charset: Charset?) {
-        val result: String? = buffer.clone().readString(charset ?: utf8Charset)
+    private fun checkContentThrow(responseCode: Int, url: String, result: String?) { //业务错误码
         if (result.isNullOrEmpty()) {
             return
         }
-        var jsonObject = JSONObject(result)
-        val code = jsonObject.optString("code")
-        when (code) {
-            CODE_OK -> {
-                return
-            }
-
-            CODE_TIMESTAMP_ERROR -> {
-                val msg = if (jsonObject.has("msg")) jsonObject.getString("msg") else result
-                if (jsonObject.has("data")) {//处理时间戳的偏移
-                    val data = jsonObject.optJSONObject("data")
-                    if (data != null && data.has("timestamp")) {
-                        val timestamp = data.getLong("timestamp")
-                        val timestampOffset = timestamp - System.currentTimeMillis()
-                        throw AuTimestampErrorException(timestampOffset, true, msg)
-                    } else {
-                        throw AuTimestampErrorException(0, false, msg)
-                    }
-                } else {
-                    throw AuTimestampErrorException(0, false, msg)
+        val dataBean = ignoreError { result.fromKson<BaseDataStrBean>() }  ?: return
+        logdNoFile("🌟kson") { "dataBean $dataBean" }
+        val code = dataBean.code
+        //由于刷新token判断比较复杂，所以交给业务实现。框架不做判断。做解耦。
+        val isRefreshTokenError = checkIsRefreshTokenError?.invoke(url, responseCode, code) ?: false
+        if (isRefreshTokenError) {
+            throw RefreshTokenExpiredException(dataBean.msg ?: result)
+        } else {
+            when (code) {
+                CODE_OK -> {
+                    return
                 }
-            }
-
-            CODE_TOKEN_EXPIRED -> {
-                if (jsonObject.has("msg")) {
-                    val msg = jsonObject.getString("msg")
-                    throw AuTokenExpiredException(msg)
-                } else {
-                    throw AuTokenExpiredException(result)
+                CODE_TIMESTAMP_ERROR -> {
+                    val msg = dataBean.msg ?: result
+//                    if (dataBean.has("data")) {//处理时间戳的偏移
+//                        val data = dataBean.optJSONObject("data")
+//                        if (data != null && data.has("timestamp")) {
+//                            val timestamp = data.getLong("timestamp")
+//                            val timestampOffset = timestamp - System.currentTimeMillis()
+//                            throw TimestampErrorException(timestampOffset, true, msg)
+//                        } else {
+//                            throw TimestampErrorException(0, false, msg)
+//                        }
+//                    } else {
+//                        throw TimestampErrorException(0, false, msg)
+//                    }
+                    val timestamp = System.currentTimeMillis() //todo
+                    val timestampOffset = timestamp - System.currentTimeMillis()
+                    throw TimestampErrorException(timestampOffset, false, msg)
                 }
-            }
-
-            else -> {
-                var da = if (jsonObject.has("data")) jsonObject.getString("data") else null
-                if (da == "null" || da.isNullOrEmpty()) {
-                    da = null
+                CODE_TOKEN_REFRESH_EXPIRED -> {
+                    throw RefreshTokenExpiredException(dataBean.msg ?: result)
                 }
-                if (jsonObject.has("msg")) {
-                    val msg = jsonObject.getString("msg")
-                    throw AuApiException(code, msg, da)
-                } else {
-                    throw AuApiException(code, result, da)
+                CODE_TOKEN_EXPIRED -> {
+                    throw TokenExpiredException(dataBean.msg ?: result)
+                }
+                else -> {
+                    throw ApiErrorException(code, dataBean.msg ?: result, "")
                 }
             }
         }
-        //Log.d("okhttp", " response.url $response.request.url response.body():$result")
-        //得到所需的string，还可以进一步处理
-        //***********************do something*****************************
     }
 
     private val utf8Charset: Charset = Charset.forName("UTF-8")

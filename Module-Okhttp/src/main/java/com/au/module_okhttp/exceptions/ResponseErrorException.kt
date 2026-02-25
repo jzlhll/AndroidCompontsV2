@@ -6,4 +6,4 @@ import androidx.annotation.Keep
  *响应错误
  */
 @Keep
-class AuResponseErrorException(var errorCode: Int, msg: String) : RuntimeException(msg)
+class ResponseErrorException(var errorCode: Int, msg: String) : RuntimeException(msg)

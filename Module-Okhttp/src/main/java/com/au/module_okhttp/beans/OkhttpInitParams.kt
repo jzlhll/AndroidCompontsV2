@@ -1,8 +1,12 @@
 package com.au.module_okhttp.beans
 
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.utils.ignoreError
 import com.au.module_okhttp.creator.AbsCookieJar
 import com.au.module_okhttp.interceptors.PretreatmentInterceptor
+import com.au.module_okhttp.interceptors.RefreshTokenCoordinator
 import com.au.module_okhttp.interceptors.SimpleRetryInterceptor
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 
 data class OkhttpInitParams(
@@ -19,6 +23,24 @@ data class OkhttpInitParams(
             },
             tokenExpiredBlock = { msg->
                 //填充。仅仅是一个提醒。tokenExpire过期的时候，给出一个全局的通知。具体的那个请求还是抛异常。
+                true
+            },
+            refreshTokenExpiredBlock = {
+                "".logdNoFile { "refresh token started" }
+                val ans = runBlocking {
+                    RefreshTokenCoordinator.awaitOrRun {
+                        ignoreError {
+//                            val resp = api.refreshRefreshToken()
+//                            if (resp != null && resp.token.isNotEmpty()) {
+//                                userActions.updateLoginResponse(resp, false)
+//                                true
+//                            } else {
+//                                false
+//                            }
+                            true //todo
+                        } == true
+                    }
+                }
             }
         ))
         builder.addInterceptor(PretreatmentInterceptor())
