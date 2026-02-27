@@ -18,6 +18,7 @@ import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.dpInt
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_nested.recyclerview.IViewTypeBean
 
 /**
  * @author au
@@ -35,7 +36,7 @@ abstract class NestedRecyclerFragment : ViewFragment() {
         }
     }
 
-    abstract val adapter: BaseAdapter<Any, *>
+    abstract val adapter: BaseAdapter<IViewTypeBean, *>
 
     /**
      * 给recyclerView添加LayoutManager和ItemDecoration。

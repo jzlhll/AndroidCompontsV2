@@ -48,8 +48,7 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
     var isPlacesHolder = false //如果是搞的占位图显示；则需要调用initWithPlacesHolder。然后替换的时候，不能做差异化更新。
         internal set
 
-    //todo 放开
-    final override fun getItemCount(): Int {
+    override fun getItemCount(): Int {
         return datas.count()
     }
 
@@ -62,8 +61,8 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
         return 0
     }
 
-    //todo 放开
-    final override fun onBindViewHolder(holder: VH, position: Int) {
+    @CallSuper
+    override fun onBindViewHolder(holder: VH, position: Int) {
         holder.bindData(datas[position])
     }
 
@@ -158,7 +157,6 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
         onDataChanged(DataChangeExtraInfoAppend(oldDataSize, newDataSize))
     }
 
-    @CallSuper
     final override fun onBindViewHolder(holder: VH, position: Int, payloads: MutableList<Any>) {
         //查看父类也只是透给onBindViewHolder ，这里屏蔽掉，去处理给payloads
         //super.onBindViewHolder(holder, position, payloads)

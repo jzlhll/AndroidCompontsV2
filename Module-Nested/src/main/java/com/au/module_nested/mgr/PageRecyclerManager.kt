@@ -8,6 +8,7 @@ import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
 import com.au.module_nested.recyclerview.DataChangeExtraInfoInit
 import com.au.module_nested.recyclerview.DataExtraInfo
 import com.au.module_nested.recyclerview.IOnChangeListener
+import com.au.module_nested.recyclerview.IViewTypeBean
 import com.au.module_nested.recyclerview.page.AbstractPageViewModel
 /**
  * 用于联动下拉刷新框架。
@@ -19,7 +20,7 @@ import com.au.module_nested.recyclerview.page.AbstractPageViewModel
  * 这样Fragment可以自由追加额外控件。而不受限于具体某个xml。
  *
  */
-open class PageRecyclerManager<Bean:Any>(
+open class PageRecyclerManager<Bean: IViewTypeBean>(
     layout: NestedRecyclerViewLayout,
     viewModel: AbstractPageViewModel<Bean>,
     adapter: AutoLoadMoreBindRcvAdapter<Bean, *>,
@@ -27,7 +28,7 @@ open class PageRecyclerManager<Bean:Any>(
     supportLoadMore: Boolean = true,
 ) : PageRecyclerManager2<Bean>(layout.recyclerView, layout.refresher, viewModel, adapter, supportPullRefresh, supportLoadMore)
 
-open class PageRecyclerManager2<Bean:Any>(
+open class PageRecyclerManager2<Bean: IViewTypeBean>(
     rcv: RecyclerView,
     refresher: NestedLayoutRefresher,
     viewModel: AbstractPageViewModel<Bean>,

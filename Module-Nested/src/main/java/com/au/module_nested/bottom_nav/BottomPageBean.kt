@@ -2,6 +2,7 @@ package com.au.module_nested.bottom_nav
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import com.au.module_nested.recyclerview.IViewTypeBean
 
 /**
  * @author au
@@ -14,4 +15,4 @@ data class BottomPageBean(
                           @DrawableRes val iconRes: Int,
                           @DrawableRes val selectIconRes: Int,
                           val titleColor:Int,
-                          val selectTitleColor:Int)
+                          val selectTitleColor:Int) : IViewTypeBean

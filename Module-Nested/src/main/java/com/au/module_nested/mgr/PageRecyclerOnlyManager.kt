@@ -11,6 +11,7 @@ import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
 import com.au.module_nested.recyclerview.page.AbstractPageViewModel
 import com.au.module_android.simplelivedata.Status
 import com.au.module_android.utils.dp
+import com.au.module_nested.recyclerview.IViewTypeBean
 
 /**
  * 用于联动下拉刷新框架。
@@ -22,7 +23,7 @@ import com.au.module_android.utils.dp
  * 这样Fragment可以自由追加额外控件。而不受限于具体某个xml。
  *
  */
-open class PageRecyclerOnlyManager<Bean:Any>(
+open class PageRecyclerOnlyManager<Bean: IViewTypeBean>(
     private val rcv: RecyclerView,
     val viewModel: AbstractPageViewModel<Bean>,
     val adapter: AutoLoadMoreBindRcvAdapter<Bean, *>,

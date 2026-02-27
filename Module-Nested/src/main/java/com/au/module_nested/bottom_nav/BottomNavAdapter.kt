@@ -84,8 +84,9 @@ class BottomNavAdapter<VB:ViewBinding>(data:List<BottomPageBean>, private val vi
     }
 
     override fun onBindViewHolder(holder: BottomNavHolder<VB>, position: Int) {
+        super.onBindViewHolder(holder, position)
         val b = this.datas[position]
-        holder.bindData(b)
+
         //每次新建一个click进去
         holder.binding.root.setOnClickListener(null)
         holder.binding.root.onTagClick(tag=position, wrapClick = bottomItemRootViewClick)
@@ -95,14 +96,6 @@ class BottomNavAdapter<VB:ViewBinding>(data:List<BottomPageBean>, private val vi
         if (apply != null) {
             AnimationUtil().bottomSwitchBtnAnim(apply(holder.binding)).start() //todo 可能考虑第一次默认选中问题会有动画
         }
-    }
-
-    override fun getItemCount(): Int {
-        return datas.count()
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return 0
     }
 }
 

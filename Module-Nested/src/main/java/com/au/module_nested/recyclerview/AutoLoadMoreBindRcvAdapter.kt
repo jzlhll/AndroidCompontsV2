@@ -85,7 +85,7 @@ abstract class AutoLoadMoreBindRcvAdapter<DATA: IViewTypeBean, VH: BindViewHolde
 
     @CallSuper
     final override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bindData(datas[position])
+        super.onBindViewHolder(holder, position)
         if (supportLoadMore() && hasMore && position == itemCount - 1) {
             onLoadMoreInner()
         }

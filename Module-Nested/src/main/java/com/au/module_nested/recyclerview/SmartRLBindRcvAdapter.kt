@@ -73,11 +73,6 @@ abstract class SmartRLBindRcvAdapter<DATA:IViewTypeBean, VH: BindViewHolder<DATA
         }
     }
 
-    @CallSuper
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bindData(datas[position])
-    }
-
     /**
      * 当需要进行局部化差异更新的时候，会创建differ。
      */
