@@ -41,6 +41,6 @@ dependencies {
     implementation(project(":Module-AndroidCommon"))
     implementation(project(":Module-AndroidUi"))
     implementation(project(":Module-AndroidColor"))
-    api(libs.refresh.header.classics)
     api(libs.refresh.layout.kernel)
+    api(libs.refresh.header.classics)
 }

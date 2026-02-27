@@ -6,10 +6,6 @@ import com.au.module_nested.recyclerview.DiffCallback
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 
 class CompletedAdapter(private val itemClick:(CompletedBean)->Unit) : AutoLoadMoreBindRcvAdapter<ICompletedBean, BindViewHolder<ICompletedBean, *>>() {
-    override fun isSupportDiffer(): Boolean {
-        return true
-    }
-
     override fun createDiffer(a: List<ICompletedBean>?, b: List<ICompletedBean>?): DiffCallback<ICompletedBean> {
         return Differ(a, b)
     }

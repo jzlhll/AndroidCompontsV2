@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  * @date :2024/7/29 10:50
  * @description:
  */
-@EntryFrgName(priority = 1, textColor = "#000000", backgroundColor = "#fafabb")
+@EntryFrgName(priority = 1)
 class CoroutineFragment(override val title: String = "Coroutine")
         : SelectListFragment<KotlinCoroutineSelectListItem>() {
 

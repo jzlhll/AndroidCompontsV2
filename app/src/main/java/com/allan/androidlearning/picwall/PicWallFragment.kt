@@ -16,7 +16,7 @@ import com.au.module_androidui.ui.bindings.BindingFragment
 import eightbitlab.com.blurview.BlurView
 import kotlinx.coroutines.launch
 
-@EntryFrgName(backgroundColor = "#ff00ff")
+@EntryFrgName
 class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
     private val mViewModel by viewModels<PicWallViewModel>()
     

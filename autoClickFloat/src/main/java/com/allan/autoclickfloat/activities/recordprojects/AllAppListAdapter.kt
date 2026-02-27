@@ -12,10 +12,6 @@ import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
  * @description:
  */
 class AllAppListAdapter : AutoLoadMoreBindRcvAdapter<AllAppListItemBean, AllAppListItemHolder>() {
-    override fun isSupportDiffer(): Boolean {
-        return false
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AllAppListItemHolder {
         return AllAppListItemHolder(create(parent))
     }

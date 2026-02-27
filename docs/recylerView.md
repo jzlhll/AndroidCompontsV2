@@ -136,7 +136,7 @@ todo 今天必须完成。
 
   1. 使用`submitList`或者`submitListAsync`更新数据。
 
-  2. 如果想支持精细化更新items，实现`createDiffer()`和`isSupportDiffer() = true`
+  2. 如果想支持精细化更新items，实现`createDiffer()`
   3. 还有一些简易的addItems|removeItems等操作。
 
 * BindingLoadMoreRcvAdapter

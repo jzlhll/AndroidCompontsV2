@@ -25,7 +25,6 @@ Holder：可作为Adapter内部类XXXHolder，也可独立成文件
 - 初始化数据：initDatas(data, hasMore)函数提交初始数据
 - 追加数据：appendDatas(data, hasMore)函数追加数据
 支持differ提交：
-- isSupportDiffer()函数返回true
 - 实现createDiffer()方法，创建DiffCallback实例
 - DiffCallback实现
   - 继承DiffCallback<DATA>，实现compareContent方法

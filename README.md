@@ -201,10 +201,6 @@ override fun bindData(bean: XXXBean) {
   * 实现差异化更新
 
     ```
-    override fun isSupportDiffer(): Boolean {
-        return true
-    }
-    
     private class Differ(aList:List<Bean>?, bList:List<Bean>?) : DiffCallback<Bean>(aList, bList) {
         override fun compareContent(a: Bean, b: Bean): Boolean {
             return //todo a.index == b.index 
@@ -216,7 +212,7 @@ override fun bindData(bean: XXXBean) {
       }
     ```
 
-    在adapter中，将isSupportDiffer()返回true，并实现createDiffer函数。就能在框架的指引下，进行解析。
+    在adapter中，实现createDiffer函数。就能在框架的指引下，进行解析。
 
   * 实现分页加载
 

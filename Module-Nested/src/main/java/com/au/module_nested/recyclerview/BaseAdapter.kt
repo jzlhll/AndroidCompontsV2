@@ -55,20 +55,20 @@ abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView
     /**
      * 移除item
      */
-    fun removeItem(position: Int) {
+    fun removeItem(position: Int, onChange: Boolean = true) {
         val oldDataSize = datas.size
         val newDataSize = if(oldDataSize > 0) oldDataSize - 1 else 0
         datas.removeAt(position)
         notifyItemRemoved(position)
-        onDataChanged(DataChangeExtraInfo(oldDataSize, newDataSize))
+        if (onChange) onDataChanged(DataChangeExtraInfo(oldDataSize, newDataSize))
     }
 
     /**
      * 移除item
      */
-    fun removeItem(data: DATA) {
+    fun removeItem(data: DATA, onChange: Boolean = true) {
         val index = datas.indexOf(data)
-        removeItem(index)
+        removeItem(index, onChange)
     }
 
     /**
@@ -92,7 +92,7 @@ abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView
         val newDataSize = oldDataSize - (data?.size ?: 0)
 
         data?.forEach {
-            removeItem(it)
+            removeItem(it, false)
         }
 
         onDataChanged(DataChangeExtraInfo(oldDataSize, newDataSize))
@@ -161,10 +161,10 @@ abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView
     internal fun submitTraditional(newList: List<DATA>?) {
         val oldDataSize = datas.size
         val newDataSize = newList?.size ?: 0
-        if (newList.isNullOrEmpty()) {
-            datas = mutableListOf()
+        datas = if (newList.isNullOrEmpty()) {
+            mutableListOf()
         } else {
-            datas = mutableListOf<DATA>().also { it.addAll(newList) }
+            mutableListOf<DATA>().also { it.addAll(newList) }
         }
 
         notifyDataSetChanged()

@@ -2,8 +2,13 @@ package com.au.module_nested.recyclerview
 
 import android.util.Log
 import androidx.annotation.CallSuper
+import androidx.recyclerview.widget.DiffUtil
+import com.au.module_android.Globals
+import com.au.module_android.utils.launchOnThread
 import com.au.module_nested.recyclerview.page.PullRefreshStatus
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.lang.IllegalStateException
 
 /**
@@ -18,7 +23,13 @@ import java.lang.IllegalStateException
  *
  */
 abstract class AutoLoadMoreBindRcvAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> :
-    SmartRLBindRcvAdapter<DATA, VH>(), ILoadMoreAdapter<DATA> {
+    BaseAdapter<DATA, VH>(), ILoadMoreAdapter<DATA> {
+
+    internal var hasMore = false
+
+    fun setNoMore() {
+        hasMore = false
+    }
 
     /**
      * 如果支持自动触底loadMore下一页，则需要设置这个参数。
@@ -40,11 +51,6 @@ abstract class AutoLoadMoreBindRcvAdapter<DATA:Any, VH: BindViewHolder<DATA, *>>
     private var status: PullRefreshStatus = PullRefreshStatus.Normal //默认加载
     fun getCurrentStatus(): PullRefreshStatus = status
 
-    override fun endInitDatasBlock(oldDataSize: Int, newDataSize: Int) {
-        status = PullRefreshStatus.Normal
-        onDataChanged(DataChangeExtraInfoInit(oldDataSize, newDataSize))
-    }
-
     /**
      * 加载更多数据
      */
@@ -53,16 +59,48 @@ abstract class AutoLoadMoreBindRcvAdapter<DATA:Any, VH: BindViewHolder<DATA, *>>
             Log.e("allan", "You do not supportLoadMore!")
             throw IllegalStateException("You do not supportLoadMore!")
         }
-        super.appendDatas(appendList, hasMore)
+
         status = PullRefreshStatus.Normal
+        this.hasMore = hasMore
+
+        if (!appendList.isNullOrEmpty()) {
+            val realDatas = mutableListOf<DATA>()
+            realDatas.addAll(appendList)
+            addItems(realDatas)
+        }
+    }
+
+    protected open fun endInitDatasBlock(oldDataSize: Int, newDataSize: Int) {
+        status = PullRefreshStatus.Normal
+        onDataChanged(DataChangeExtraInfoInit(oldDataSize, newDataSize))
+    }
+
+    /**
+     * 如果是占位图显示；则需要调用initWithPlacesHolder。替换的时候，不能做差异化更新。
+     */
+    override fun initDatas(datas: List<DATA>?, hasMore: Boolean, isTraditionalUpdate: Boolean) {
+        this.hasMore = hasMore
+
+        initDatasCommon(datas, { a, b->
+            createDiffer(a, b)
+        }, isTraditionalUpdate) { oldDataSize: Int, newDataSize: Int->
+            endInitDatasBlock(oldDataSize, newDataSize)
+        }
     }
 
     @CallSuper
     final override fun onBindViewHolder(holder: VH, position: Int) {
-        super.onBindViewHolder(holder, position)
+        holder.bindData(datas[position])
         if (supportLoadMore() && hasMore && position == itemCount - 1) {
             onLoadMoreInner()
         }
+    }
+
+    /**
+     * 当需要进行局部化差异更新的时候，会创建differ。
+     */
+    protected open fun createDiffer(a:List<DATA>?, b:List<DATA>?): DiffCallback<DATA>? {
+        return null
     }
 
 }

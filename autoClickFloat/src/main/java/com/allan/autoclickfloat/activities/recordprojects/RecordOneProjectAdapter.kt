@@ -10,8 +10,6 @@ import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 data class StepWrap(val isSelected:Boolean, val step:Step)
 
 class RecordOneProjectAdapter : AutoLoadMoreBindRcvAdapter<StepWrap, RecordOneProjectViewHolder>() {
-    override fun isSupportDiffer() = true
-
     override fun createDiffer(a: List<StepWrap>?, b: List<StepWrap>?): DiffCallback<StepWrap>? {
         return Differ(a, b)
     }
