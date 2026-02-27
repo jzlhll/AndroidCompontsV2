@@ -2,14 +2,14 @@ package com.allan.androidlearning.picwall
 
 import android.provider.MediaStore
 import androidx.fragment.app.FragmentActivity
-import com.allan.androidlearning.pictureselector.toPickUriWrap
+import com.allan.androidlearning.pictureselector.toUriParsedInfo
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.simpleflow.AbsActionDispatcherViewModel
 import com.au.module_android.simpleflow.IStateAction
 import com.au.module_android.simpleflow.createStatusStateFlow
 import com.au.module_android.simpleflow.setLoading
 import com.au.module_android.simpleflow.setSuccess
-import com.au.module_imagecompressed.PickUriWrap
+import com.au.module_android.utilsmedia.UriParsedInfo
 import com.luck.picture.lib.basic.PictureSelector
 import com.luck.picture.lib.config.SelectMimeType
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ class PicWallViewModel : AbsActionDispatcherViewModel() {
     data class RequestLocalAction(val activity: FragmentActivity) : IStateAction
     
     // 定义状态流
-    private val _localMediaState = createStatusStateFlow<List<PickUriWrap>>()
+    private val _localMediaState = createStatusStateFlow<List<UriParsedInfo>>()
     val localMediaState = _localMediaState.asStateFlow()
     
     init {
@@ -40,7 +40,7 @@ class PicWallViewModel : AbsActionDispatcherViewModel() {
             .setQuerySortOrder(MediaStore.MediaColumns.DATE_MODIFIED + " DESC")
             .obtainMediaData { result ->
                 logdNoFile { "onComplete: ${result.size}" }
-                val convertedList = result.map { it.toPickUriWrap(result.size) }
+                val convertedList = result.map { it.toUriParsedInfo() }
                 _localMediaState.setSuccess(convertedList)
             }
     }

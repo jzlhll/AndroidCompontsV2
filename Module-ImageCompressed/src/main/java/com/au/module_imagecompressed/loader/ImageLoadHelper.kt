@@ -1,21 +1,24 @@
-package com.au.module_imagecompressed.compressor
+package com.au.module_imagecompressed.loader
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import com.au.module_android.utilsmedia.myParse
+import com.au.module_imagecompressed.compressor.calculateSampleSize
+import com.au.module_imagecompressed.compressor.calculateTargetDimensions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * 主要功能是，直接通过ImageLoader类或者BitmapFactory类 根据 Config 来进行图片加载
+ * 主要功能是，直接通过ImageLoader类 来进行图片加载
+ * BitmapFactory类 根据 Config 已经完全移除，采用android10以上。
  */
-internal class ImageLoaderUtil(
+internal class ImageLoadHelper(
     val config: ImageLoadConfig,
 ) {
-    private lateinit var api: IApi
+    private lateinit var api : NewApi
     companion object {
         const val DEFAULT_IGNORE_KB = 1200
 
@@ -36,7 +39,7 @@ internal class ImageLoaderUtil(
                 }
             }
 
-            val loader = ImageLoaderUtil(config = config)
+            val loader = ImageLoadHelper(config = config)
             loader.api = NewApi(config) {
                 ImageDecoder.createSource(context.contentResolver, uri)
             }
@@ -61,7 +64,7 @@ internal class ImageLoaderUtil(
                 }
             }
 
-            val loader = ImageLoaderUtil(config = config)
+            val loader = ImageLoadHelper(config = config)
             loader.api = NewApi(config) {
                 ImageDecoder.createSource(file)
             }
@@ -71,63 +74,26 @@ internal class ImageLoaderUtil(
 
     }
 
-
-
     suspend fun load(): Bitmap? {
         return withContext(Dispatchers.IO) {
             api.decodeBitmap()
         }
     }
 
-    private interface IApi {
-        fun decodeBitmap(): Bitmap?
-    }
-
-//    private class OldApi(val config: Config, private val provideInputStream: () -> InputStream?) : IApi {
-//        override fun decodeBitmap(): Bitmap? {
-//            // 1. Decode bounds
-//            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-//            provideInputStream()?.use { stream ->
-//                BitmapFactory.decodeStream(stream, null, options)
-//            }
-//
-//            // 2. Calculate sample size
-//            val sampleSize = CompressUtil.calculateSampleSize(
-//                options.outWidth,
-//                options.outHeight,
-//                config.maxWidth,
-//                config.maxHeight
-//            )
-//
-//            // 3. Config
-//            val configType = if (config.quality == Quality.High) Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
-//
-//            // 4. Decode
-//            val opts = BitmapFactory.Options().apply {
-//                inSampleSize = sampleSize
-//                inJustDecodeBounds = false
-//                inPreferredConfig = configType
-//            }
-//            return provideInputStream()?.use { stream ->
-//                BitmapFactory.decodeStream(stream, null, opts)
-//            }
-//        }
-//    }
-
-    private class NewApi(val config: ImageLoadConfig, val provideImageDecodeSource: () -> ImageDecoder.Source?) : IApi {
-        override fun decodeBitmap(): Bitmap? {
+    private class NewApi(val config: ImageLoadConfig, val provideImageDecodeSource: () -> ImageDecoder.Source?) {
+        fun decodeBitmap(): Bitmap? {
             return try {
                 val source = provideImageDecodeSource() ?: return null
                 ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
                     val originalWidth = info.size.width
                     val originalHeight = info.size.height
 
-                    val (targetWidth, targetHeight) = if (config.fixedWidth > 0 && config.fixedHeight > 0) {
+                    val (targetWidth, targetHeight) = if (config.targetWidth > 0 && config.targetHeight > 0) {
                         // 使用固定尺寸
-                        Pair(config.fixedWidth, config.fixedHeight)
+                        Pair(config.targetWidth, config.targetHeight)
                     } else {
                         // 使用最大尺寸限制
-                        CompressUtil.calculateTargetDimensions(
+                        calculateTargetDimensions(
                             originalWidth,
                             originalHeight,
                             config.maxWidth.toFloat(),
@@ -135,7 +101,7 @@ internal class ImageLoaderUtil(
                         )
                     }
 
-                    val sampleSize = CompressUtil.calculateSampleSize(
+                    val sampleSize = calculateSampleSize(
                         originalWidth,
                         originalHeight,
                         targetWidth,
@@ -143,12 +109,12 @@ internal class ImageLoaderUtil(
                     )
                     decoder.setTargetSampleSize(sampleSize)
                     // 设置目标尺寸，确保最终图片大小为固定值
-                    if (config.fixedWidth > 0 && config.fixedHeight > 0) {
-                        decoder.setTargetSize(config.fixedWidth, config.fixedHeight)
+                    if (config.targetWidth > 0 && config.targetHeight > 0) {
+                        decoder.setTargetSize(config.targetWidth, config.targetHeight)
                     }
                     //todo decoder.crop = Rect()
 
-                    if (config.quality == ImageLoadQuality.High) {
+                    if (config.quality == ImageLoadConfig.Quality.MEMORY_POLICY_DEFAULT) {
                         decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                         decoder.memorySizePolicy = ImageDecoder.MEMORY_POLICY_DEFAULT
                     } else {

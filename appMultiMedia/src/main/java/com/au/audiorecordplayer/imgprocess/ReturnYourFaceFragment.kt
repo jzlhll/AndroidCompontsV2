@@ -8,20 +8,22 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.net.toFile
 import com.au.audiorecordplayer.databinding.FragmentReturnYourFaceBinding
+import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
+import com.au.module_android.utilsmedia.UriParsedInfo
+import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.widget.SuitScreenHelper
 import com.au.module_cached.delegate.AppDataStoreStringCache
 import com.au.module_gson.fromGson
 import com.au.module_gson.toGsonString
-import com.au.module_imagecompressed.PickUriWrap
-import com.au.module_imagecompressed.pickUriWrapForResult
+import com.au.module_imagecompressed.pickForResult
 import com.au.module_simplepermission.PickerType
 import java.io.File
 import java.io.FileInputStream
@@ -29,7 +31,7 @@ import java.io.FileInputStream
 class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() {
     private var mLastFile by AppDataStoreStringCache("returnYourFaceLastFile", "")
 
-    val singleResult = pickUriWrapForResult().also { it.paramsBuilder.setIgnoreSizeKb(2048) }
+    val singleResult = pickForResult()
 
     private val thresholdPadding = 10.dp
 
@@ -40,44 +42,40 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
     private var mCurrentLineInfo: LineInfo? = null
 
     private fun initLineMap() {
-        lineMap.put("horizontalLine1",
-            HorizontalLineInfo("horizontalLine1",
-                binding.horzLine1,
-                1,
-                binding.horzLine1.y,
-                minY = -1f,
-                maxY = binding.horzLine2.y - thresholdPadding,
-                false))
-        lineMap.put("horizontalLine2",
-            HorizontalLineInfo("horizontalLine2",
-                binding.horzLine2,
-                2,
-                binding.horzLine2.y,
-                minY = binding.horzLine1.y + thresholdPadding,
-                maxY = -1f,
-                false))
+        lineMap["horizontalLine1"] = HorizontalLineInfo("horizontalLine1",
+            binding.horzLine1,
+            1,
+            binding.horzLine1.y,
+            minY = -1f,
+            maxY = binding.horzLine2.y - thresholdPadding,
+            false)
+        lineMap["horizontalLine2"] = HorizontalLineInfo("horizontalLine2",
+            binding.horzLine2,
+            2,
+            binding.horzLine2.y,
+            minY = binding.horzLine1.y + thresholdPadding,
+            maxY = -1f,
+            false)
 //        lineMap.put("horizontalLine3",
 //            HorizontalLineInfo("horizontalLine3",
 //                binding.horzLine3,
 //                binding.horzLine3.y,
 //                false))
 
-        lineMap.put("verticalLine1",
-            VerticalLineInfo("verticalLine1",
-                binding.verticalLine1,
-                1,
-                binding.verticalLine1.x,
-                minX = -1f,
-                maxX = binding.verticalLine2.x - thresholdPadding,
-                false))
-        lineMap.put("verticalLine2",
-            VerticalLineInfo("verticalLine2",
-                binding.verticalLine2,
-                2,
-                binding.verticalLine2.x,
-                minX = binding.verticalLine1.x + thresholdPadding,
-                maxX = -1f,
-                false))
+        lineMap["verticalLine1"] = VerticalLineInfo("verticalLine1",
+            binding.verticalLine1,
+            1,
+            binding.verticalLine1.x,
+            minX = -1f,
+            maxX = binding.verticalLine2.x - thresholdPadding,
+            false)
+        lineMap["verticalLine2"] = VerticalLineInfo("verticalLine2",
+            binding.verticalLine2,
+            2,
+            binding.verticalLine2.x,
+            minX = binding.verticalLine1.x + thresholdPadding,
+            maxX = -1f,
+            false)
 
         lineMap.forEach { (k, v)->
             v.line.setBackgroundColor(Color.BLACK)
@@ -242,13 +240,16 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.selectedImageButton.onClick {
-            singleResult.launchOneByOne(PickerType.IMAGE, null) { uri->
-                mLastFile = uri.toGsonString()
+            singleResult.launchByAll(PickerType.IMAGE, null) { uris->
+                val uri = uris.firstOrNull() ?: return@launchByAll
+                val info = uri.myParse(Globals.app)
+
+                mLastFile = info.toGsonString()
                 logdNoFile { "selectedImage: $uri" }
                 binding.selectedImageButton.gone()
                 binding.adjustImageGroup.visible()
-                binding.viewFinder.glideSetAny(uri.uriParsedInfo.uri)
-                parseImageSize(uri.uriParsedInfo.uri.toFile())
+                binding.viewFinder.glideSetAny(info.uri)
+                parseImageSize(info.uri.toFile())
             }
         }
 
@@ -268,7 +269,7 @@ class ReturnYourFaceFragment : BindingFragment<FragmentReturnYourFaceBinding>() 
                     ) {
                         binding.selectedImageButton.gone()
                         binding.adjustImageGroup.visible()
-                        val lastUrl = mLastFile.fromGson<PickUriWrap>()?.uriParsedInfo?.uri
+                        val lastUrl = mLastFile.fromGson<UriParsedInfo>()?.uri
                         lastUrl?.let { uri->
                             binding.viewFinder.glideSetAny(uri)
                             parseImageSize(uri.toFile())

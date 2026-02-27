@@ -22,7 +22,6 @@ import com.au.module_android.utils.immersive
 import com.au.module_android.utils.setMaxLength
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
-import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.TakePhotoActionDialog
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
@@ -36,22 +35,16 @@ abstract class TextChatCommon(val f: Fragment, val binding: FragmentTextChatBind
     }
 
     override fun onClickSelectPhoto() {
-        cameraAndSelectHelper.launchSelectPhotos { uriWraps ->
-            uriWraps.forEach {
-                onPicGot(it)
+        cameraAndSelectHelper.launchSelectPhotos { uriList ->
+            uriList.forEach {
             }
         }
     }
 
     override fun onClickTakePic(): Boolean {
-        cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(false) { info, uriWrap->
-            uriWrap?.let { onPicGot(it) }
+        cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(false) { info, uri->
         }
         return true
-    }
-
-    private fun onPicGot(uriWrap: PickUriWrap) {
-        //todo file
     }
 
     val cameraAndSelectHelper = CameraAndSelectPhotosPermissionHelper(f, 9,

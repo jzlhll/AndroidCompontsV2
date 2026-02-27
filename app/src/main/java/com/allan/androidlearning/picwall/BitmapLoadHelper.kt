@@ -9,11 +9,14 @@ import android.util.Size
 import com.allan.androidlearning.BuildConfig
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
-import com.au.module_imagecompressed.PickUriWrap
-import com.au.module_imagecompressed.compressor.ImageHybridLoaderUtil
+import com.au.module_android.utilsmedia.UriParsedInfo
+import com.au.module_imagecompressed.loader.SYS_FULL_SIZE
+import com.au.module_imagecompressed.loader.SYS_MIN_SIZE
+import com.au.module_imagecompressed.loader.loadThumbnailUriOrFile
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Future
+import kotlin.collections.getOrNull
 import kotlin.collections.iterator
 
 /**
@@ -46,8 +49,8 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
 
         fun scaleToSize() : Size? {
             return when (this) {
-                LOW -> ImageHybridLoaderUtil.LOW_SIZE
-                MID -> ImageHybridLoaderUtil.MID_SIZE
+                LOW -> SYS_MIN_SIZE
+                MID -> SYS_FULL_SIZE
                 HIGH -> null
             }
         }
@@ -56,8 +59,6 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     companion object {
         private const val BITMAP_CACHE_MAX_SIZE = 128 * 1024 * 1024
     }
-
-    private val thumbnailUtils = ImageHybridLoaderUtil(Globals.app)
 
     private val bitmapCache: LruCache<String, Bitmap> = object : LruCache<String, Bitmap>(BITMAP_CACHE_MAX_SIZE) {
         override fun sizeOf(key: String, value: Bitmap): Int {
@@ -76,13 +77,13 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var mIsScrolling = false
     private var mIsScaling = false
-    private var allImageBeans: List<PickUriWrap> = emptyList()
+    private var allImageBeans: List<UriParsedInfo> = emptyList()
     private val blockIndexMap = HashMap<Long, Int>()
 
     /**
      * 初始化数据源
      */
-    fun onInitial(frameImageList: List<PickUriWrap>) {
+    fun onInitial(frameImageList: List<UriParsedInfo>) {
         this.allImageBeans = frameImageList
         blockIndexMap.clear()
         bitmapCache.evictAll()
@@ -131,7 +132,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     /**
      * 为Block分配固定的ImageBean
      */
-    fun assignImageForBlock(key: Long): PickUriWrap? {
+    fun assignImageForBlock(key: Long): UriParsedInfo? {
         if (allImageBeans.isEmpty()) {
             return null
         }
@@ -217,7 +218,10 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
                         val currentQuality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
                         val cacheKey = generateCacheKey(blockInfo.key, currentQuality)
                         
-                        val newGenerateBitmap = loadBitmapInThread(blockInfo, scale, imageBean)
+                        val newGenerateBitmap =
+                            runBlocking {
+                                loadBitmapInThread(blockInfo, scale, imageBean)
+                            }
                         
                         if (Thread.currentThread().isInterrupted) return@submit
 
@@ -243,7 +247,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
         }
     }
 
-    private fun loadBitmapInThread(blockInfo: BlockInfo, scale: Float, imageBean: PickUriWrap) : Bitmap? {
+    private suspend fun loadBitmapInThread(blockInfo: BlockInfo, scale: Float, imageBean: UriParsedInfo) : Bitmap? {
         val cacheBitmap = getCachedBitmap(blockInfo, scale, false)
         if (cacheBitmap != null) {
             return cacheBitmap
@@ -252,17 +256,7 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
         // 加载 Bitmap 逻辑
         val quality = if(blockInfo.isRealVisible) Quality.fromScale(scale) else Quality.LOW
         val size = quality.scaleToSize()
-        if (size == null) {
-            //加载原图
-            //使用我的策略进行略微压缩加载避免过大
-            val bitmap = runBlocking {
-                thumbnailUtils.loadUri(imageBean.uriParsedInfo.uri, null)
-            }
-            return bitmap
-        }
-        return runBlocking {
-            thumbnailUtils.loadUri(imageBean.uriParsedInfo.uri, size)
-        }
+        return loadThumbnailUriOrFile(Globals.app, imageBean.uri, size)
     }
 
     private fun generateCacheKey(blockKey: Long, quality: Quality): String {

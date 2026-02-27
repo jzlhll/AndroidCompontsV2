@@ -5,8 +5,9 @@ import android.graphics.PointF
 import android.graphics.RectF
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.dpFloat
-import com.au.module_imagecompressed.PickUriWrap
+import com.au.module_android.utilsmedia.UriParsedInfo
 import java.util.Collections
+import kotlin.collections.isNotEmpty
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
@@ -134,7 +135,7 @@ class InfiniteBlockManager(
 
     private var mHasData = false
 
-    fun setFrameImageList(list: List<PickUriWrap>) {
+    fun setFrameImageList(list: List<UriParsedInfo>) {
         bitmapLoadHelper.onInitial(list)
         mHasData = list.isNotEmpty()
         calculateDrawBlocks("set Frame ImageList")

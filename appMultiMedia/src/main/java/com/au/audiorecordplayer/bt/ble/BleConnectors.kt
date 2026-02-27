@@ -137,7 +137,7 @@ object BleConnectors {
     }
 
     private suspend fun sendMessageSerial(bleConnector: BleConnector, data:String, writeType: Int?) : Boolean {
-        return taskExecutor.submitWithResult {
+        return taskExecutor.awaitResult {
             bleConnector.gattWrite(data, writeType)
         }
     }

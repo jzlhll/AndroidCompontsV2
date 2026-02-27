@@ -53,16 +53,16 @@ class WebUploadFragment : BindingFragment<ActivityJsHtmlBinding>(), TakePhotoAct
             for (uri in uris) {
                 logd { "launchSelectPhotos callback uri: $uri" }
             }
-            updateSelectValueCallback(uris.map { it.uriParsedInfo.uri }.toTypedArray())
+            updateSelectValueCallback(uris.toTypedArray())
         }
     }
 
     override fun onClickTakePic() : Boolean{
         logd { "onClick TakePic" }
-        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(true){mode, uriWrap->
+        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(true){mode, uri->
             logd { "on click take pic mode=>$mode" }
-            if (uriWrap != null) {
-                updateSelectValueCallback(arrayOf(uriWrap.uriParsedInfo.uri))
+            if (uri != null) {
+                updateSelectValueCallback(arrayOf(uri))
             } else {
                 updateSelectValueCallback(null)
             }

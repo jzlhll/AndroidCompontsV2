@@ -1,5 +1,6 @@
 package com.au.module_imagecompressed
 
+import android.net.Uri
 import androidx.fragment.app.Fragment
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
@@ -16,7 +17,7 @@ class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
     var takePhotoCallback: TakePhotoActionDialog.ITakePhotoActionDialogCallback? = null
 
     //可以在早期修改
-    val multiResult = f.multiPickUriWrapForResult(maxNum)
+    val multiResult = f.multiPickForResult(maxNum)
 
     val cameraHelper = CameraPermissionHelp(f, supplier)
 
@@ -30,7 +31,7 @@ class CameraAndSelectPhotosPermissionHelper(val f: Fragment,
         TakePhotoActionDialog.pop(f, takePhotoCallback)
     }
 
-    fun launchSelectPhotos(callback: (Array<PickUriWrap>) -> Unit) {
+    fun launchSelectPhotos(callback: (List<Uri>) -> Unit) {
         multiResult.launchByAll(pickerType, null, callback)
     }
 }

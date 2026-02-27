@@ -3,7 +3,6 @@ package com.au.module_android.utilsmedia
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.provider.MediaStore
@@ -208,7 +207,7 @@ fun insertFileToContentResolverUri(
     subPath: String,
     contentValuesAction: Function1<ContentValues, Unit>? = null
 ) : Uri? {
-    val mimeType = UriParseHelper().parse(context.contentResolver, origUri).mimeType
+    val mimeType = origUri.myParse(context).mimeType
     val mediaType = ExtensionMimeUtil.mediaTypeTo(mimeType)
     return insertFileToContentResolver(context, mediaType, mimeType, displayName, subPath, contentValuesAction)
 }
@@ -236,7 +235,7 @@ fun insertFileToContentResolverFile(
  * false:当前是分区存储
  */
 val isExternalStorageLegacy: Boolean
-    get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Environment.isExternalStorageLegacy()
+    get() = Environment.isExternalStorageLegacy()
 
 private fun getOldSdkPath(
     displayName: String,

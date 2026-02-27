@@ -3,20 +3,19 @@ package com.au.module_imagecompressed.compressor
 import android.content.Context
 import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utilsfile.SimpleFilesLruCache
 import com.au.module_android.utilsmedia.UriParsedInfo
 import com.au.module_android.utilsmedia.myParse
 import com.au.module_imagecompressed.compressor.BestImageCompressor.Config
-import com.au.module_imagecompressed.copyToCacheFile
 import java.io.File
 import java.io.FileInputStream
 import java.util.UUID
 
 /**
  * 公开使用的函数
+ * @param uri 传入File型 或 Content型的Uri都可以，会parse后进行处理
  */
 suspend fun useCompress(context: Context, uri: Uri, config: Config = Config()) : File? {
     val parsedInfo = uri.myParse(context)
@@ -37,7 +36,11 @@ suspend fun useCompress(context: Context, uri: Uri, config: Config = Config()) :
     if (!beIgnore) {
         //2. 开始压缩
         val isFile = parsedInfo.isFile
-        val compressor = createBestImageCompressor(isFile, parsedInfo, config, context, uri)
+        val compressor = if (isFile) {
+            createFileCompressor(parsedInfo, config)
+        } else {
+            createUriCompressor(parsedInfo, config, context, uri)
+        }
         val compressed = ignoreError { compressor.compress() }
         if (compressed != null) {
             val compressedSize = compressed.length()
@@ -63,46 +66,43 @@ suspend fun useCompress(context: Context, uri: Uri, config: Config = Config()) :
     return targetFile
 }
 
-private fun createBestImageCompressor(
-    isFile: Boolean,
+private fun createFileCompressor(
+    parsedInfo: UriParsedInfo,
+    config: Config?
+): BestImageCompressor {
+    val source = parsedInfo.file()!!
+    return BestImageCompressor(
+        config = config ?: Config(),
+        provideInputStream = {
+            FileInputStream(source)
+        },
+        provideFileSize = {
+            parsedInfo.fileLength
+        },
+        provideImageDecodeSource = {
+            ImageDecoder.createSource(source)
+        }
+    )
+}
+
+private fun createUriCompressor(
     parsedInfo: UriParsedInfo,
     config: Config?,
     context: Context,
     uri: Uri
 ): BestImageCompressor {
-    val compressor = if (isFile) {
-        val source = parsedInfo.file()!!
-        BestImageCompressor(
-            config = config ?: Config(),
-            provideInputStream = {
-                FileInputStream(source)
-            },
-            provideFileSize = {
-                parsedInfo.fileLength
-            },
-            provideImageDecodeSource = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                    ImageDecoder.createSource(source)
-                else null
-            }
-        )
-    } else {
-        BestImageCompressor(
-            config = config ?: Config(),
-            provideInputStream = {
-                context.contentResolver.openInputStream(uri)
-            },
-            provideFileSize = {
-                parsedInfo.fileLength
-            },
-            provideImageDecodeSource = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                    ImageDecoder.createSource(context.contentResolver, uri)
-                else null
-            }
-        )
-    }
-    return compressor
+    return BestImageCompressor(
+        config = config ?: Config(),
+        provideInputStream = {
+            context.contentResolver.openInputStream(uri)
+        },
+        provideFileSize = {
+            parsedInfo.fileLength
+        },
+        provideImageDecodeSource = {
+            ImageDecoder.createSource(context.contentResolver, uri)
+        }
+    )
 }
 
 private suspend fun copy(config : Config, context: Context, uri: Uri, parsedInfo: UriParsedInfo) : File? {

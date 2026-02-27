@@ -4,7 +4,6 @@ import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import com.au.module_android.utilsmedia.UriParsedInfo
-import com.au.module_imagecompressed.PickUriWrap
 import com.luck.picture.lib.entity.LocalMedia
 import kotlin.text.ifEmpty
 import kotlin.text.substringAfterLast
@@ -82,15 +81,5 @@ fun LocalMedia.toUriParsedInfo() : UriParsedInfo{
         fullPath = this.realPath,
 //        relativePath = this.originalPath,
         videoDuration = this.duration
-    )
-}
-
-fun LocalMedia.toPickUriWrap(totalNum:Int) : PickUriWrap {
-    val info = toUriParsedInfo()
-    return PickUriWrap(
-        info,
-        totalNum,
-        info.isUriImage(),
-        false
     )
 }

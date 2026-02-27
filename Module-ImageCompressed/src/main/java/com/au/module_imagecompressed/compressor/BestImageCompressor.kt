@@ -1,9 +1,7 @@
 package com.au.module_imagecompressed.compressor
 
 import android.graphics.*
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.graphics.createBitmap
 import androidx.exifinterface.media.ExifInterface
 import com.au.module_android.utils.ignoreError
@@ -64,7 +62,7 @@ class BestImageCompressor(
          */
         val ignoreFileTypes:List<String> = listOf("gif", "webp", "svg"),
         /**
-         * 多少kb就忽略
+         * 多少kb就忽略不需要压缩
          */
         val ignoreSizeInKB : Int = DEFAULT_IGNORE_KB,
         /**
@@ -93,13 +91,7 @@ class BestImageCompressor(
         val tryReduceCount: Int = 3,
     )
 
-    private val tempBufferSize = 16 * 1024
-
-    private val api: IApi = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        NewApi()
-    } else {
-        OldApi()
-    }
+    private val api = NewApi()
 
     private data class Decoded(
         var originalW:Int, var originalH:Int,
@@ -107,10 +99,6 @@ class BestImageCompressor(
         override fun toString(): String {
             return "orig:${originalW}x$originalH, sample:$sampleSize, wish size:${targetW}x$targetH, decoded bitmap:${bitmap?.width}x${bitmap?.height}"
         }
-    }
-
-    private interface IApi {
-        fun decodeBitmap() : Decoded
     }
 
     var mFileSize:Long = -1L
@@ -127,7 +115,7 @@ class BestImageCompressor(
 
                 // 查询文件大小 放到外面避免多次查询
                 mFileSize = provideFileSize()
-                val quality = CompressUtil.chooseQuality(mFileSize, config.qualityType)
+                val quality = chooseQuality(mFileSize, config.qualityType)
                 Log.d(TAG, "compress: quality $quality type: ${config.qualityType}")
 
                 val targetSize = config.secondReduce?.targetSize
@@ -221,7 +209,7 @@ class BestImageCompressor(
      */
     private fun Bitmap.scaleTo(wishWidth: Int, wishHeight: Int) : Bitmap {
         // 修复点1：将硬件位图转换为软件位图
-        val softwareBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this.getConfig() == Bitmap.Config.HARDWARE) {
+        val softwareBitmap = if (this.getConfig() == Bitmap.Config.HARDWARE) {
             // 硬件位图转换为软件位图（选择ARGB_8888保证兼容性，也可根据需求用RGB_565）
             this.copy(Bitmap.Config.ARGB_8888, true)
         } else {
@@ -283,48 +271,8 @@ class BestImageCompressor(
         return this
     }
 
-    //region decoded 接口实现
-    private inner class OldApi : IApi {
-        override fun decodeBitmap() : Decoded {
-            // 1. 解码图片边界（仅获取宽高，不加载完整Bitmap）
-            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            provideInputStream()?.use { stream ->
-                BitmapFactory.decodeStream(stream, null, options)
-            }
-
-            // 2. 计算目标缩放尺寸
-            val (targetWidth, targetHeight) = CompressUtil.calculateTargetDimensions(
-                options.outWidth,
-                options.outHeight,
-                config.maxWidth.toFloat(),
-                config.maxHeight.toFloat()
-            )
-
-            // 3. 计算采样率
-            val sampleSize = CompressUtil.calculateSampleSize(
-                options.outWidth,
-                options.outHeight,
-                targetWidth,
-                targetHeight
-            )
-
-            // 4. 解码并处理Bitmap（缩放+旋转）
-            val opts = BitmapFactory.Options().apply {
-                inSampleSize = sampleSize
-                inJustDecodeBounds = false
-                inTempStorage = ByteArray(tempBufferSize)
-            }
-            val bitmap = provideInputStream()?.use { stream ->
-                BitmapFactory.decodeStream(stream, null, opts)
-            }
-
-            return Decoded(options.outWidth, options.outHeight, targetWidth, targetHeight, sampleSize, bitmap)
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.P)
-    private inner class NewApi : IApi {
-        override fun decodeBitmap(): Decoded {
+    private inner class NewApi {
+        fun decodeBitmap(): Decoded {
             val decoded = Decoded(0, 0, 0, 0, 0, null)
             //1. 解码图片
             decoded.bitmap = ImageDecoder.decodeBitmap(provideImageDecodeSource()!!) { decoder, info, _ ->
@@ -335,7 +283,7 @@ class BestImageCompressor(
                 decoded.originalH = originalHeight
 
                 // 2. 计算目标缩放尺寸
-                val (targetWidth, targetHeight) = CompressUtil.calculateTargetDimensions(
+                val (targetWidth, targetHeight) = calculateTargetDimensions(
                     originalWidth,
                     originalHeight,
                     config.maxWidth.toFloat(),
@@ -345,7 +293,7 @@ class BestImageCompressor(
                 decoded.targetH = targetHeight
 
                 // 3. 计算采样率
-                val sampleSize = CompressUtil.calculateSampleSize(
+                val sampleSize = calculateSampleSize(
                     originalWidth,
                     originalHeight,
                     targetWidth,

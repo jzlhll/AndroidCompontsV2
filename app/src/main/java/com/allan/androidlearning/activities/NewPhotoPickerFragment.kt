@@ -12,37 +12,35 @@ import com.au.module_android.glide.glideSetAny
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
+import com.au.module_android.utilsmedia.myParse
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_imagecompressed.CameraAndSelectPhotosPermissionHelper
 import com.au.module_imagecompressed.CameraPermissionHelp
-import com.au.module_imagecompressed.PickUriWrap
 import com.au.module_imagecompressed.TakePhotoActionDialog
-import com.au.module_imagecompressed.multiPickUriWrapForResult
-import com.au.module_imagecompressed.pickUriWrapForResult
+import com.au.module_imagecompressed.multiPickForResult
+import com.au.module_imagecompressed.pickForResult
 import com.au.module_simplepermission.ICameraFileProviderSupply
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.getAudioForResult
 import com.au.module_simplepermission.getAudiosForResult
 import com.au.module_simplepermission.getContentForResult
 import com.au.module_simplepermission.getMultipleContentsForResult
-import com.au.module_simplepermission.multiPickerForResult
-import com.au.module_simplepermission.pickerForResult
 import com.au.module_simplepermission.selectSysDirForResult
 import java.io.File
 
 @EntryFrgName
 class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), TakePhotoActionDialog.ITakePhotoActionDialogCallback {
-    val singleResult = pickUriWrapForResult()
-    val multiResult = multiPickUriWrapForResult(3)
+    val singleResult = pickForResult()
+    val multiResult = multiPickForResult(3)
 
     //用于授权存储访问框架（Storage Access Framework, SAF），得到某个目录的长久权限，详情见函数内
     val selectDirResult = selectSysDirForResult()
 
      //单选图片和视频，通过launchByAll的第一个参数来决定选择的类型
-    val origUriPickerResult = pickerForResult()
+    val origUriPickerResult = pickForResult()
 
     //多选图片和视频，通过launchByAll的第一个参数来决定选择的类型
-    val origMultiUriPickerResult = multiPickerForResult(9)
+    val origMultiUriPickerResult = multiPickForResult(9)
 
     //选择单文件，自行传入start(参数)，参数传入，文件类型的mimeType
     val shortDocResult = getContentForResult()
@@ -66,9 +64,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
         override fun createFileProvider(): Pair<File, Uri> {
             return createFileProviderMine()
         }
-    }).also {
-        it.multiResult.paramsBuilder.asCopyAndStingy()
-    }
+    })
 
     private fun createFileProviderMine(): Pair<File, Uri> {
         val picture = File(Globals.goodCacheDir.path + "/shared")
@@ -102,98 +98,96 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
         binding.directTakePicBtn.onClick {
             cameraHelper.safeRunTakePicMust(true)
-                {mode, uriWrap->
-                logdNoFile { "take pic mode $mode $uriWrap" }
-                showPic(uriWrap)
+                {mode, uri->
+                logdNoFile { "take pic mode $mode $uri" }
+                if (uri != null) {
+                    showPic(listOf(uri))
+                }
             }
         }
         binding.directTakePicDeepBtn.onClick {
             cameraHelper.safeRunTakePicMust(true, "deep")
-            {mode, uriWrap->
-                logdNoFile { "take pic mode $mode $uriWrap" }
-                showPic(uriWrap)
+            {mode, uri->
+                logdNoFile { "take pic mode $mode $uri" }
+                if (uri != null) {
+                    showPic(listOf(uri))
+                }
             }
         }
         binding.directTakePicShallowBtn.onClick {
             cameraHelper.safeRunTakePicMust(true, "shallow")
-            {mode, uriWrap->
-                logdNoFile { "take pic mode $mode $uriWrap" }
-                showPic(uriWrap)
+            {mode, uri->
+                logdNoFile { "take pic mode $mode $uri" }
+                if (uri != null) {
+                    showPic(listOf(uri))
+                }
             }
         }
         binding.directTakePic2Btn.onClick {
             cameraHelper.safeRunTakePicMust(false)
-            {mode, uriWrap->
-                logdNoFile { "#take pic mode $mode $uriWrap" }
-                showPic(uriWrap)
+            {mode, uri->
+                logdNoFile { "#take pic mode $mode $uri" }
+                if (uri != null) {
+                    showPic(listOf(uri))
+                }
             }
         }
 
         binding.singlePic.onClick {
-            singleResult.launchOneByOne(PickerType.IMAGE, null) { uri->
-                logdNoFile { "allan uri: $uri" }
-                showPic(uri)
+            singleResult.launchByAll(PickerType.IMAGE, null) { uriList->
+                showPic(uriList)
             }
         }
         binding.singleVideo.onClick {
-            singleResult.launchOneByOne(PickerType.VIDEO, null) { uri->
-                logdNoFile { "allan uri: $uri" }
-                showPic(uri)
+            singleResult.launchByAll(PickerType.VIDEO, null) { uriList->
+                logdNoFile { "allan uri: $uriList" }
+                showPic(uriList)
             }
         }
         binding.singlePicAndVideo.onClick {
-            singleResult.launchOneByOne(PickerType.IMAGE_AND_VIDEO, null) { uri->
-                logdNoFile { "allan uri: $uri" }
-                showPic(uri)
+            singleResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uriList->
+                logdNoFile { "allan uri: $uriList" }
+                showPic(uriList)
             }
         }
         binding.multiPic4.onClick {
             multiResult.setCurrentMaxItems(6)
-            multiResult.launchOneByOne(PickerType.IMAGE, null) {uri->
-                logdNoFile { "allan uri: $uri" }
-                showPic(uri)
+            multiResult.launchByAll(PickerType.IMAGE, null) {uriList->
+                logdNoFile { "allan uri: $uriList" }
+                showPic(uriList)
             }
         }
         binding.multiVideo3.onClick {
             multiResult.setCurrentMaxItems(3)
-            multiResult.launchOneByOne(PickerType.VIDEO, null) {uri->
-                logdNoFile { "allan uri: $uri" }
-                showPic(uri)
+            multiResult.launchByAll(PickerType.VIDEO, null) {uriList->
+                logdNoFile { "allan uri: $uriList" }
+                showPic(uriList)
             }
         }
         binding.multiPicAndVideo5.onClick {
             multiResult.setCurrentMaxItems(9)
-            multiResult.launchOneByOne(PickerType.IMAGE_AND_VIDEO, null) {uri->
-                logdNoFile { "allan uri: $uri" }
-                showPic(uri)
+            multiResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) {uris->
+                logdNoFile { "allan uri: $uris" }
+                showPic(uris)
             }
         }
 
         binding.multiPicV2.onClick {
             multiResult.setCurrentMaxItems(Int.MAX_VALUE)
             multiResult.launchByAll(PickerType.IMAGE, null) {uris->
-                for (uri in uris) {
-                    logdNoFile { "allan uri: $uri" }
-                    showPic(uri)
-                }
+                showPic(uris)
             }
         }
         binding.multiVideoV2.onClick {
             multiResult.setCurrentMaxItems(3)
             multiResult.launchByAll(PickerType.VIDEO, null) {uris->
-                for (uri in uris) {
-                    logdNoFile { "allan uri: $uri" }
-                    showPic(uri)
-                }
+                showPic(uris)
             }
         }
         binding.multiPicAndVideoV2.onClick {
             multiResult.setCurrentMaxItems(9)
             multiResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
-                for (uri in uris) {
-                    logdNoFile { "allan uri: $uri" }
-                    showPic(uri)
-                }
+                showPic(uris)
             }
         }
 
@@ -234,44 +228,44 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
 
     var currentIndex = 1
     @Synchronized
-    private fun showPic(uriWrap: PickUriWrap?) {
-        uriWrap ?: return
-        val pic = when(currentIndex) {
-            1 -> binding.pic1
-            2 -> binding.pic2
-            3 -> binding.pic3
-            4 -> binding.pic4
-            5 -> binding.pic5
-            6 -> binding.pic6
-            7 -> binding.pic7
-            8 -> binding.pic8
-            9 -> binding.pic9
-            else -> null
-        }
-        currentIndex++
-        if (currentIndex == 10) {
-            currentIndex = 1
-        }
-        pic?.picture?.glideSetAny(uriWrap.uriParsedInfo.uri)
-        if (uriWrap.isImage) {
-            pic?.centerIcon?.gone()
-        } else {
-            pic?.centerIcon?.visible()
+    private fun showPic(uriList: List<Uri>) {
+        uriList.forEach { uri->
+            val parsedInfo = uri.myParse(requireContext())
+
+            val pic = when(currentIndex) {
+                1 -> binding.pic1
+                2 -> binding.pic2
+                3 -> binding.pic3
+                4 -> binding.pic4
+                5 -> binding.pic5
+                6 -> binding.pic6
+                7 -> binding.pic7
+                8 -> binding.pic8
+                9 -> binding.pic9
+                else -> null
+            }
+            currentIndex++
+            if (currentIndex == 10) {
+                currentIndex = 1
+            }
+            pic?.picture?.glideSetAny(uri)
+            if (parsedInfo.isUriImage()) {
+                pic?.centerIcon?.gone()
+            } else {
+                pic?.centerIcon?.visible()
+            }
         }
     }
 
     override fun onClickTakePic() : Boolean{
-        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(true) { mode, uriWrap ->
-            showPic(uriWrap)
+        return cameraAndSelectHelper.cameraHelper.safeRunTakePicMust(true) { mode, uri ->
+            if(uri != null) showPic(listOf(uri))
         }
     }
 
     override fun onClickSelectPhoto() {
         cameraAndSelectHelper.launchSelectPhotos {uris->
-            for (uri in uris) {
-                logdNoFile { "allan uri: $uri" }
-                showPic(uri)
-            }
+            showPic(uris)
         }
     }
 

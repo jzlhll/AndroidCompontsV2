@@ -1,12 +1,11 @@
 package com.au.module_imagecompressed
 
+import android.net.Uri
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utilsmedia.myParse
-import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_imagecompressed.compressor.BestImageCompressor
 import com.au.module_imagecompressed.compressor.useCompress
 import com.au.module_simplepermission.BaseCameraPermissionHelp
@@ -14,8 +13,6 @@ import com.au.module_simplepermission.ICameraFileProviderSupply
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.nio.file.Files
 
 /**
  * 封装了请求camera的一系列动作。
@@ -32,8 +29,7 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
      */
     fun safeRunTakePicMust(compress:Boolean = true,
                            qualityType:String = "default",
-                           errorToastBlock:()->Unit = {ToastBuilder().setOnTop().setIcon("info").setMessage("需要camera权限.").toast() },
-                           callback: (mode:String, uriWrap: PickUriWrap?)->Unit) : Boolean{
+                           callback: (mode:String, uri: Uri?)->Unit) : Boolean{
         val ret = safeRunTakePic({createdTmpFile->
             if (createdTmpFile != null) {
                 if (compress) {
@@ -42,26 +38,19 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
                         val compressedFile = useCompress(realActivity, createdTmpFile.toUri(), BestImageCompressor.Config(qualityType = qualityType))
                         logdNoFile { "compressedFile $compressedFile size: ${compressedFile?.length()}" }
                         if (compressedFile != null) {
-                            //需要再次从压缩文件覆盖createdTmpFile
-                            if (false) {
-                                 createdTmpFile.delete()
-                                 logdNoFile { "compressedFile delete $compressedFile and move to compressed" }
-                                 Files.move(compressedFile.toPath(), createdTmpFile.toPath())
-                            }
-
                             withContext(Dispatchers.Main) {
-                                val cvtUri = imageFileConvertToWrap(createdTmpFile)
+                                val cvtUri = createdTmpFile.toUri()
                                 callback("takePicAndCompressed", cvtUri)
                             }
                         } else {
                             withContext(Dispatchers.Main) {
-                                val cvtUri = imageFileConvertToWrap(createdTmpFile)
+                                val cvtUri = createdTmpFile.toUri()
                                 callback("takePicAndCompressFailUseOrig", cvtUri)
                             }
                         }
                     }
                 } else {
-                    val cvtUri = imageFileConvertToWrap(createdTmpFile)
+                    val cvtUri = createdTmpFile.toUri()
                     callback("takePicResultDirect", cvtUri)
                 }
             } else {
@@ -69,20 +58,12 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
             }
             null
         }, notGivePermissionBlock = {
-            errorToastBlock()
             callback("notGivePermission", null)
         })
         if (ret == -2) {
-            errorToastBlock()
             callback("permissionRejectDirect", null)
         }
 
         return ret == -2
     }
-
-    //我的cacheDir或者fileDir下的文件来转成UriWrap。
-    private fun imageFileConvertToWrap(file:File) = PickUriWrap(file.myParse(),
-        1,
-        isImage = true,
-        beCopied = true)
 }

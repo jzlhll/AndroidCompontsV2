@@ -104,21 +104,6 @@ fun LifecycleOwner.createPermissionForResult(permission:String) : IOnePermission
         = PermissionForResult(this, permission)
 
 /**
- * google新要求：尽量不要使用自定义的图片选择器，使用系统的。
- * 请求一张系统图片或者视频
- */
-fun LifecycleOwner.pickerForResult() = MultiUriPickerContractResult(this, 1, CompatMultiPickVisualMedia(1))
-
-/**
- * google新要求：尽量不要使用自定义的图片选择器，使用系统的。
- * 请求多张系统图片或视频
- */
-fun LifecycleOwner.multiPickerForResult(maxItem:Int)
-        = if(maxItem > 0)
-    MultiUriPickerContractResult(this, maxItem, CompatMultiPickVisualMedia(maxItem))
-else throw RuntimeException("max item must > 0")
-
-/**
  * 跳转到辅助服务
  */
 fun LifecycleOwner.gotoAccessibilityPermission() {

@@ -49,10 +49,9 @@ class CoroutineConcurrentLimiter(
     /**
      * 提交一个协程任务，自动限制并发数
      * @param block 要执行的挂起任务
-     * @return Deferred<T> 可用于获取任务结果/取消任务
      */
-    suspend fun <T> submit(block: suspend () -> T): Deferred<T> {
-        val deferred = coroutineScope.async(combinedContext) {
+    suspend fun submit(block: suspend () -> Unit): Job {
+        val job = coroutineScope.launch(combinedContext) {
             // 获取信号量许可（无许可时挂起等待），执行完自动释放（包括异常场景）
             semaphore.withPermit {
                 block()
@@ -61,11 +60,11 @@ class CoroutineConcurrentLimiter(
         
         // 使用 Mutex 保护列表写入，必须在 submit 返回前完成
         listMutex.withLock {
-            jobList.add(deferred)
+            jobList.add(job)
         }
         
         // 任务完成后从列表移除，避免内存泄漏
-        deferred.invokeOnCompletion {
+        job.invokeOnCompletion {
             // 这里必须启动新协程，因为 invokeOnCompletion 回调不一定是 suspend 环境，
             // 且我们需要避免阻塞回调线程。
             // 注意：这里仍然存在极小概率的竞态：如果 remove 发生在 add 之前（理论上 async 不会那么快，
@@ -74,11 +73,11 @@ class CoroutineConcurrentLimiter(
             // 只要 add 是同步等待完成的，逻辑就是安全的。
             coroutineScope.launch {
                 listMutex.withLock {
-                    jobList.remove(deferred)
+                    jobList.remove(job)
                 }
             }
         }
-        return deferred
+        return job
     }
 
     /**

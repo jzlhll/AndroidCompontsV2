@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.widget.RelativeLayout
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
+import androidx.core.net.toUri
 import com.au.module_android.Globals
 import com.au.module_android.Globals.getColor
 import com.au.module_android.click.onClick
@@ -94,11 +95,11 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
             destFile.createNewFile()
         }
         val destUri = Uri.fromFile(destFile)
-        val srcUri = requireArguments().getString("srcUri")
+        val srcUri = requireArguments().getString("srcUri")!!
         val arrayList = ArrayList<String>()
-        srcUri?.let { arrayList.add(it) }
+        srcUri.let { arrayList.add(it) }
         val uCrop : UCrop = UCrop.of(
-            Uri.parse(srcUri),
+            srcUri.toUri(),
             destUri,
             arrayList
         )

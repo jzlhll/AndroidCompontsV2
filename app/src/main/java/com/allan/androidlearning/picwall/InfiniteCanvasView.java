@@ -9,7 +9,6 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -18,7 +17,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.au.module_imagecompressed.PickUriWrap;
+import com.au.module_android.utilsmedia.UriParsedInfo;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -72,7 +71,7 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
         bitmapPaint.setFilterBitmap(true);
     }
 
-    public void setFrameImageList(@NonNull List<PickUriWrap> list) {
+    public void setFrameImageList(@NonNull List<UriParsedInfo> list) {
         blockManager.setFrameImageList(list);
     }
 

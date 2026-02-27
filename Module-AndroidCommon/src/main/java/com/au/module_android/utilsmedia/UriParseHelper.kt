@@ -12,7 +12,7 @@ import com.au.module_android.utils.ignoreError
 import kotlinx.coroutines.delay
 import java.io.File
 
-class UriParseHelper {
+internal class UriParseHelper {
     suspend fun parseSuspend(cr: ContentResolver, uri: Uri): UriParsedInfo {
         delay(0)
         return parse(cr, uri)

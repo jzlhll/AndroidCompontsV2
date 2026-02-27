@@ -1,10 +1,19 @@
-package com.au.module_imagecompressed.compressor
+package com.au.module_imagecompressed.loader
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
 import java.io.File
+
+/**
+ * 修改为android内置参数
+ */
+val SYS_MIN_SIZE = Size(512, 384)
+/**
+ * 修改为android内置参数
+ */
+val SYS_FULL_SIZE = Size(1024, 786)
 
 val LOW_SIZE = Size(240, 320)
 val MID_SIZE = Size(480, 640)
@@ -13,12 +22,12 @@ val MID_SIZE = Size(480, 640)
  * 加载原始图片，忽略压缩配置
  */
 suspend fun loadOriginalUriOrFile(context:Context, uriOrFile: Any, originalLoadConfig: ImageLoadConfig = ImageLoadConfig(
-    quality = ImageLoadQuality.High,
+    quality = ImageLoadConfig.Quality.MEMORY_POLICY_DEFAULT,
     alwaysLoadOriginal = true
 )) : Bitmap?{
     return when (uriOrFile) {
-        is Uri -> ImageLoaderUtil.loadImage(context, uriOrFile, originalLoadConfig)
-        is File -> ImageLoaderUtil.loadImage(uriOrFile, originalLoadConfig)
+        is Uri -> ImageLoadHelper.loadImage(context, uriOrFile, originalLoadConfig)
+        is File -> ImageLoadHelper.loadImage(uriOrFile, originalLoadConfig)
         else -> null
     }
 }
@@ -31,19 +40,19 @@ suspend fun loadCompressUriOrFile(context:Context,
                                   compressConfig: ImageLoadConfig = ImageLoadConfig(
     maxWidth = 1440,
     maxHeight = 1920,
-    quality = ImageLoadQuality.Low,
+    quality = ImageLoadConfig.Quality.MEMORY_POLICY_LOW_RAM,
     ignoreSizeInKB = 2000,
 )) : Bitmap? {
     return when(uriOrFile) {
-        is Uri -> ImageLoaderUtil.loadImage(context, uriOrFile, compressConfig)
-        is File -> ImageLoaderUtil.loadImage(uriOrFile, compressConfig)
+        is Uri -> ImageLoadHelper.loadImage(context, uriOrFile, compressConfig)
+        is File -> ImageLoadHelper.loadImage(uriOrFile, compressConfig)
         else -> null
     }
 }
 
 /**
  * 加载缩略图
- * @param thumbSize 缩略图尺寸 推荐使用 LOW_SIZE 或 MID_SIZE
+ * @param thumbSize 缩略图尺寸
  */
 suspend fun loadThumbnailUriOrFile(context:Context,
                                  uriOrFile: Any,
@@ -52,7 +61,7 @@ suspend fun loadThumbnailUriOrFile(context:Context,
         return loadCompressUriOrFile(context, uriOrFile)
     }
 
-    val thumbnailUtils = ThumbnailCompatUtil(context)
+    val thumbnailUtils = ThumbnailLoadHelper(context)
     return when (uriOrFile) {
         is Uri -> thumbnailUtils.loadThumbnailCompat(uriOrFile, thumbSize)
         is File -> thumbnailUtils.createImageThumbnailByPath(uriOrFile.absolutePath, thumbSize)

@@ -109,7 +109,7 @@ class CheckConsts(
         val savedDay = readSavedDay(newDayer.currentDay)
         if (savedDay != newDayer.currentDay) { //后面的天打开
             starConsts.fakeUpdateStudentsDingCount()
-            AppDataStore.save(SAVED_CUR_DAY, newDayer.currentDay)
+            AppDataStore.saveInt(SAVED_CUR_DAY, newDayer.currentDay)
         }
 
         //读取
@@ -205,6 +205,6 @@ class CheckConsts(
     }
 
     fun readSavedDay(defValue:Int) : Int {
-        return AppDataStore.readBlocked(SAVED_CUR_DAY, defValue)
+        return AppDataStore.readIntBlocked(SAVED_CUR_DAY, defValue)
     }
 }

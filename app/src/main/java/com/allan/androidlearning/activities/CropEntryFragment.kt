@@ -10,7 +10,7 @@ import com.au.module_android.glide.glideSetAnyAsCircleCrop
 import com.au.module_android.log.logd
 import com.au.module_android.utils.iteratorPrint
 import com.au.module_imagecompressed.CropCircleImageFragment
-import com.au.module_imagecompressed.pickUriWrapForResult
+import com.au.module_imagecompressed.pickForResult
 import com.au.module_nested.fragments.AbsNestedIndicatorFragment
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.createActivityForResult
@@ -24,7 +24,7 @@ import java.io.File
 @EntryFrgName
 class CropEntryFragment : AbsNestedIndicatorFragment<Void, FragmentCropEntryBinding>() {
     private val gotoUcropResult = createActivityForResult()
-    private val photoPickResult = pickUriWrapForResult()
+    private val photoPickResult = pickForResult()
 
     override fun isContentViewMergeXml(): Boolean {
         return true
@@ -41,9 +41,10 @@ class CropEntryFragment : AbsNestedIndicatorFragment<Void, FragmentCropEntryBind
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
         contentBinding.button.onClick {
-            photoPickResult.launchOneByOne(PickerType.IMAGE, null) { uri ->
+            photoPickResult.launchByAll(PickerType.IMAGE, null) { uriList ->
+                val uri = uriList.firstOrNull() ?: return@launchByAll
                 logd { "uri $uri" }
-                CropCircleImageFragment.startCropForResult(requireContext(), gotoUcropResult, uri.uriParsedInfo.uri) {
+                CropCircleImageFragment.startCropForResult(requireContext(), gotoUcropResult, uri) {
                     val intent = it.data
                     val code = it.resultCode
                     logd { "code $code, data: " + intent }

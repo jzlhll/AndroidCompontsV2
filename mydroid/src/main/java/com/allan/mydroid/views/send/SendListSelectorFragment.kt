@@ -37,10 +37,10 @@ import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.finishFragment
 import com.au.module_imagecompressed.isPhotoPickerAvailable
+import com.au.module_imagecompressed.multiPickForResult
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.createPostNotificationPermissionResult
 import com.au.module_simplepermission.getMultipleContentsForResult
-import com.au.module_simplepermission.multiPickerForResult
 import com.bumptech.glide.request.target.Target
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -127,7 +127,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
 
-    val pickerResult = multiPickerForResult(9)
+    val pickerResult = multiPickForResult(9)
     val documentResult = getMultipleContentsForResult()
 
     private var mAutoNextJob: Job? = null

@@ -54,7 +54,7 @@ class StarConsts (
     suspend fun onlyInitOnce() {
         delay(0)
         //如果version不同，名单变化，则会进行更新。
-        if (AppDataStore.read("initStarList", -1) != INIT_STAR_LIST_VERSION) {
+        if (AppDataStore.readInt("initStarList", -1) != INIT_STAR_LIST_VERSION) {
             db.runInTransaction {
                 val dao = db.getStarDao()
                 val starList = dao.queryAll()
@@ -76,7 +76,7 @@ class StarConsts (
                 }
             }
 
-            AppDataStore.save("initStarList", INIT_STAR_LIST_VERSION)
+            AppDataStore.saveInt("initStarList", INIT_STAR_LIST_VERSION)
         }
     }
 

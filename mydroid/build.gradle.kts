@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         applicationId = "com.allan.mydroid"
-        minSdk = 26
+        minSdk = 29
         targetSdk = gradle.extra["targetSdk"] as Int
         versionCode = 1
         versionName = "1.0"
