@@ -1,12 +1,17 @@
 package com.au.jobstudy.home;
 
+import com.au.module_nested.recyclerview.IMultiViewTypeBean;
+
 /**
  * @author au
- * @date :2023/12/1 16:46
- * @description:
  */
-public class HomeRcvBean {
-    public final int viewType;
+public class HomeRcvBean implements IMultiViewTypeBean {
+    @Override
+    public int getViewType() {
+        return viewType;
+    }
+
+    private final int viewType;
     public HomeRcvBean(int viewType) {
         this.viewType = viewType;
     }

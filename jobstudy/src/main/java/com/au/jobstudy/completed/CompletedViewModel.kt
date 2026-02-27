@@ -6,6 +6,7 @@ import com.au.jobstudy.check.AppDatabase
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 
 class CompletedViewModel(
     private val db: AppDatabase
@@ -13,7 +14,7 @@ class CompletedViewModel(
     /**
      * 日期 to 任务
      */
-    val completedBeans = NoStickLiveData<ArrayList<ICompletedBean>>()
+    val completedBeans = NoStickLiveData<ArrayList<IMultiViewTypeBean>>()
 
     fun updateABean(bean:CompletedBean, cb:()->Unit) {
         val workId = bean.workEntity.id
@@ -27,7 +28,7 @@ class CompletedViewModel(
 
     fun fetchWeek(weekStartDays:IntArray) {
         viewModelScope.launchOnThread {
-            val list = ArrayList<ICompletedBean>()
+            val list = ArrayList<IMultiViewTypeBean>()
 
             db.runInTransaction {
                 weekStartDays.forEach { weekStartDay->
@@ -49,7 +50,7 @@ class CompletedViewModel(
 
     fun fetch(days:IntArray) {
         viewModelScope.launchOnThread {
-            val list = ArrayList<ICompletedBean>()
+            val list = ArrayList<IMultiViewTypeBean>()
 
             db.runInTransaction {
                 for (day in days) {

@@ -9,9 +9,10 @@ import com.au.jobstudy.utils.WeekDateUtil
 import com.au.module_android.click.onClick
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.dp
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 
 class CompletedViewHolder(itemClick:(CompletedBean)->Unit
-                          , vh: HolderCompletedItemBinding) : BindViewHolder<ICompletedBean, HolderCompletedItemBinding>(vh) {
+                          , vh: HolderCompletedItemBinding) : BindViewHolder<IMultiViewTypeBean, HolderCompletedItemBinding>(vh) {
     init {
         vh.root.onClick {
             if (currentData is CompletedBean) {
@@ -20,7 +21,7 @@ class CompletedViewHolder(itemClick:(CompletedBean)->Unit
         }
     }
 
-    override fun bindData(bean: ICompletedBean) {
+    override fun bindData(bean: IMultiViewTypeBean) {
         super.bindData(bean)
         bean as CompletedBean
         binding.sucImage.visibility = if (bean.completedEntity != null) View.VISIBLE else View.GONE
@@ -34,8 +35,8 @@ class CompletedViewHolder(itemClick:(CompletedBean)->Unit
     }
 }
 
-class CompletedDateViewHolder(vh: HolderCompletedDateItemBinding) : BindViewHolder<ICompletedBean, HolderCompletedDateItemBinding>(vh) {
-    override fun bindData(bean: ICompletedBean) {
+class CompletedDateViewHolder(vh: HolderCompletedDateItemBinding) : BindViewHolder<IMultiViewTypeBean, HolderCompletedDateItemBinding>(vh) {
+    override fun bindData(bean: IMultiViewTypeBean) {
         super.bindData(bean)
         bean as CompletedDateBean
         if(bean.isWeek) {

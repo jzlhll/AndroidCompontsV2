@@ -3,15 +3,16 @@ package com.au.jobstudy.completed
 import android.view.ViewGroup
 import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
 import com.au.module_nested.recyclerview.DiffCallback
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 
-class CompletedAdapter(private val itemClick:(CompletedBean)->Unit) : AutoLoadMoreBindRcvAdapter<ICompletedBean, BindViewHolder<ICompletedBean, *>>() {
-    override fun createDiffer(a: List<ICompletedBean>?, b: List<ICompletedBean>?): DiffCallback<ICompletedBean> {
+class CompletedAdapter(private val itemClick:(CompletedBean)->Unit) : AutoLoadMoreBindRcvAdapter<IMultiViewTypeBean, BindViewHolder<IMultiViewTypeBean, *>>() {
+    override fun createDiffer(a: List<IMultiViewTypeBean>?, b: List<IMultiViewTypeBean>?): DiffCallback<IMultiViewTypeBean> {
         return Differ(a, b)
     }
 
-    class Differ(aList:List<ICompletedBean>?, bList:List<ICompletedBean>?) : DiffCallback<ICompletedBean>(aList, bList) {
-        override fun compareContent(a: ICompletedBean, b: ICompletedBean): Boolean {
+    class Differ(aList:List<IMultiViewTypeBean>?, bList:List<IMultiViewTypeBean>?) : DiffCallback<IMultiViewTypeBean>(aList, bList) {
+        override fun compareContent(a: IMultiViewTypeBean, b: IMultiViewTypeBean): Boolean {
             val aIsCompletedBean = a is CompletedBean
             val bIsCompletedBean = b is CompletedBean
 
@@ -19,7 +20,7 @@ class CompletedAdapter(private val itemClick:(CompletedBean)->Unit) : AutoLoadMo
                 if (a == b) {
                     return true
                 }
-                if ((a as CompletedBean).workEntity.id == (b as CompletedBean).workEntity.id) {
+                if (a.workEntity.id == b.workEntity.id) {
                     return true
                 }
                 return false
@@ -31,12 +32,8 @@ class CompletedAdapter(private val itemClick:(CompletedBean)->Unit) : AutoLoadMo
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindViewHolder<ICompletedBean, *> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindViewHolder<IMultiViewTypeBean, *> {
         return if(viewType == 1) CompletedViewHolder(itemClick, create(parent))
         else CompletedDateViewHolder(create(parent))
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return if(datas[position] is CompletedDateBean) 0 else 1
     }
 }

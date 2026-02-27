@@ -13,8 +13,4 @@ class RecordProjectsAllAdapter(private val itemClick:(RecordProjectsItemInfo)->U
         return RecordProjectsHolder(create((parent)), itemClick)
     }
 
-    override fun onBindViewHolder(holder: RecordProjectsHolder, position: Int) {
-        holder.bindData(datas[position])
-    }
-
 }

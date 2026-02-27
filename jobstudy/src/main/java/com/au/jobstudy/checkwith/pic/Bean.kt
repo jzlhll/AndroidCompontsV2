@@ -1,5 +1,6 @@
 package com.au.jobstudy.checkwith.pic
 
+import com.au.module_nested.recyclerview.IViewTypeBean
 import java.io.File
 
 /**
@@ -7,7 +8,7 @@ import java.io.File
  * @date :2024/7/16 9:33
  * @description:
  */
-class Bean {
+class Bean : IViewTypeBean {
     var isAdd: Boolean = false
     var file: File? = null
 

@@ -82,10 +82,6 @@ class PicAdapter(val itemClick:(bean:Bean, position:Int, clickOnDelete:Boolean)-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FeedBackPicHolder {
         return FeedBackPicHolder(create(parent), itemClick)
     }
-
-    override fun onBindViewHolder(holder: FeedBackPicHolder, position: Int) {
-        holder.bindData(datas[position])
-    }
 }
 
 class FeedBackPicHolder(binding: HolderPartialPictureBinding, itemClick:(bean:Bean, position:Int, clickOnDelete:Boolean)->Unit)

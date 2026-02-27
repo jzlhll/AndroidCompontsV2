@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.au.jobstudy.databinding.FragmentMainFriendsBinding
-import com.au.jobstudy.star.IStarBean
 import com.au.jobstudy.star.StarAdapter
 import com.au.jobstudy.star.StarConsts
 import com.au.jobstudy.star.StarHeadBean
@@ -13,6 +12,7 @@ import com.au.jobstudy.star.StarMarkupBean
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.launchOnUi
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import org.koin.android.ext.android.inject
 
 class MainStarsFragment : BindingFragment<FragmentMainFriendsBinding>() {
@@ -41,7 +41,7 @@ class MainStarsFragment : BindingFragment<FragmentMainFriendsBinding>() {
     private fun observerAllStarLiveData() {
         starConsts.allStarsLiveData.observe(viewLifecycleOwner) { allStars ->
             lifecycleScope.launchOnThread {
-                val ret = mutableListOf<IStarBean>()
+                val ret = mutableListOf<IMultiViewTypeBean>()
                 ret.add(StarHeadBean("棒棒的，现在排名为第" + "<font color='red'>" + starConsts.myRank + "</font>" + " !"))
                 ret.addAll(allStars)
                 ret.add(StarMarkupBean())

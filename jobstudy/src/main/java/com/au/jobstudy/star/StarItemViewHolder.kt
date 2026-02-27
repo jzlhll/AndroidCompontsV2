@@ -12,6 +12,7 @@ import com.au.module_android.click.onClick
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.toHtml
 import com.au.module_android.utils.unsafeLazy
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 
 const val VIEW_TYPE_MARKUP = 0
 const val VIEW_TYPE_ITEM = 1
@@ -24,7 +25,7 @@ private val grayColorList by unsafeLazy {
     ColorStateList.valueOf(Color.parseColor("#999999"))
 }
 
-class StarItemViewHolder(vh: HolderStarItemBinding, itemBeforeClick:((View, StarItemBean)->Unit)) : BindViewHolder<IStarBean, HolderStarItemBinding>(vh) {
+class StarItemViewHolder(vh: HolderStarItemBinding, itemBeforeClick:((View, StarItemBean)->Unit)) : BindViewHolder<IMultiViewTypeBean, HolderStarItemBinding>(vh) {
 
     init {
         vh.dingClick.onClick { v->
@@ -43,7 +44,7 @@ class StarItemViewHolder(vh: HolderStarItemBinding, itemBeforeClick:((View, Star
         }
     }
 
-    override fun bindData(bean: IStarBean) {
+    override fun bindData(bean: IMultiViewTypeBean) {
         super.bindData(bean)
         bean as StarItemBean
         binding.name.text = bean.name
@@ -53,12 +54,12 @@ class StarItemViewHolder(vh: HolderStarItemBinding, itemBeforeClick:((View, Star
     }
 }
 
-class StarHeadViewHolder(viewBinding: HolderStarHeadBinding) : BindViewHolder<IStarBean, HolderStarHeadBinding>(viewBinding) {
-    override fun bindData(bean: IStarBean) {
+class StarHeadViewHolder(viewBinding: HolderStarHeadBinding) : BindViewHolder<IMultiViewTypeBean, HolderStarHeadBinding>(viewBinding) {
+    override fun bindData(bean: IMultiViewTypeBean) {
         super.bindData(bean)
         bean as StarHeadBean
         binding.info.text = toHtml(bean.html)
     }
 }
 
-class StarMarkupViewHolder(viewBinding: HomeMarkupBinding) : BindViewHolder<IStarBean, HomeMarkupBinding>(viewBinding)
+class StarMarkupViewHolder(viewBinding: HomeMarkupBinding) : BindViewHolder<IMultiViewTypeBean, HomeMarkupBinding>(viewBinding)

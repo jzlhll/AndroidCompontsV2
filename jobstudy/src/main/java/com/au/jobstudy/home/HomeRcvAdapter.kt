@@ -35,12 +35,4 @@ class HomeRcvAdapter : BindRcvAdapter<HomeRcvBean, BindViewHolder<HomeRcvBean, *
             else -> throw RuntimeException("no way.")
         }
     }
-
-    override fun onBindViewHolder(holder: BindViewHolder<HomeRcvBean, *>, position: Int) {
-        holder.bindData(datas[position])
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return datas[position].viewType
-    }
 }
