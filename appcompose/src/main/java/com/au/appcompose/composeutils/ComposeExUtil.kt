@@ -36,7 +36,6 @@ fun Float.pxToSp(density: Density = LocalDensity.current) : TextUnit {
     }
 }
 
-
 /**
  * 像素数值转成Compose的Sp TextUnit
  */
@@ -61,7 +60,7 @@ fun Float.pxToDp(density: Density = LocalDensity.current) : Dp {
  * 将Dp，转成成像素
  */
 @Composable
-fun Dp.ToPx(dp: Dp, density: Density = LocalDensity.current): Float {
+fun Dp.toPxFloat(dp: Dp, density: Density = LocalDensity.current): Float {
     return with(density) { dp.toPx() }
 }
 

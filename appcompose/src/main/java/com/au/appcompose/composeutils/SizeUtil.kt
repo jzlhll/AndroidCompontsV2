@@ -10,6 +10,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 
@@ -18,7 +19,7 @@ import androidx.compose.ui.unit.Dp
  */
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun Activity.windowSizeMode() {
+fun Activity.WindowSizeMode() {
     val sizeClass = calculateWindowSizeClass(this)
     when (sizeClass.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
@@ -37,11 +38,9 @@ fun Activity.windowSizeMode() {
  * 屏幕的高宽，并不能代表应用当前的高宽，比如悬浮窗的状态
  */
 @Composable
-fun GetScreenDpValue(): Pair<Int, Int> {
-    val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp
-    val screenHeightDp = configuration.screenHeightDp
-    return Pair(screenWidthDp, screenHeightDp)
+fun getScreenDpValue(): Pair<Dp, Dp> {
+    val dpSize = LocalWindowInfo.current.containerDpSize
+    return Pair(dpSize.width, dpSize.height)
 }
 
 /**

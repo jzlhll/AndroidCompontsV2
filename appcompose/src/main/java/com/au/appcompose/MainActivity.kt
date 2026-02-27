@@ -23,7 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import com.au.appcompose.composeutils.GetScreenDpValue
+import com.au.appcompose.composeutils.getScreenDpValue
 import com.au.appcompose.composeutils.getNavigationBarHeight
 import com.au.appcompose.composeutils.getStatusBarHeight
 import com.au.appcompose.ui.theme.AndroidCompontsTheme
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val systemUiDp = getStatusBarHeight()
             val navUiDp = getNavigationBarHeight()
-            val pair = GetScreenDpValue()
+            val pair = getScreenDpValue()
             Log.d(TAG, "onCreate: pair ${pair.first} ${pair.second} systemUIHeightDp ${systemUiDp.value} navUiDp $navUiDp")
 
             AndroidCompontsTheme {
