@@ -2,13 +2,8 @@ package com.au.module_nested.recyclerview
 
 import android.util.Log
 import androidx.annotation.CallSuper
-import androidx.recyclerview.widget.DiffUtil
-import com.au.module_android.Globals
-import com.au.module_android.utils.launchOnThread
 import com.au.module_nested.recyclerview.page.PullRefreshStatus
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.lang.IllegalStateException
 
 /**
