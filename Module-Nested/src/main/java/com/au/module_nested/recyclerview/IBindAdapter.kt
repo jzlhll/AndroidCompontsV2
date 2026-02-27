@@ -5,7 +5,7 @@ package com.au.module_nested.recyclerview
  * Time: 2022/11/24
  * Desc:
  */
-interface IBindAdapter<DATA> {
+interface IBindAdapter<DATA:IViewTypeBean> {
     fun submitList(
         newList: List<DATA>?,
         isReplaceData: Boolean,

@@ -24,7 +24,7 @@ interface IOnChangeListener{
     fun onChange(info: DataExtraInfo)
 }
 
-abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView.Adapter<VH>() {
+abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : RecyclerView.Adapter<VH>() {
 
     var datas = mutableListOf<DATA>()
         internal set
@@ -48,8 +48,23 @@ abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView
     var isPlacesHolder = false //如果是搞的占位图显示；则需要调用initWithPlacesHolder。然后替换的时候，不能做差异化更新。
         internal set
 
-    override fun getItemCount(): Int {
+    //todo 放开
+    final override fun getItemCount(): Int {
         return datas.count()
+    }
+
+    //todo 放开
+    final override fun getItemViewType(position: Int): Int {
+        val data = datas[position]
+        if (data is IMultiViewTypeBean) {
+            return data.viewType
+        }
+        return 0
+    }
+
+    //todo 放开
+    final override fun onBindViewHolder(holder: VH, position: Int) {
+        holder.bindData(datas[position])
     }
 
     /**
@@ -152,10 +167,6 @@ abstract class BaseAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : RecyclerView
         } else {
             holder.payloadsRefresh(datas[position], payloads)
         }
-    }
-
-    override fun onBindViewHolder(holder: VH, position: Int) {
-        holder.bindData(datas[position])
     }
 
     internal fun submitTraditional(newList: List<DATA>?) {

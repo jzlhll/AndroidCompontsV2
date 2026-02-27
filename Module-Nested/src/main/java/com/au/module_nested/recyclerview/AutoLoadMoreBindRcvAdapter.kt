@@ -17,7 +17,7 @@ import java.lang.IllegalStateException
  * 调用[initDatas]来初始化数据和[appendDatas]来追加数据。
  *
  */
-abstract class AutoLoadMoreBindRcvAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> :
+abstract class AutoLoadMoreBindRcvAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> :
     BaseAdapter<DATA, VH>(), ILoadMoreAdapter<DATA> {
 
     internal var hasMore = false

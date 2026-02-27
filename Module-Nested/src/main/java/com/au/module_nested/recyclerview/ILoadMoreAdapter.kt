@@ -5,7 +5,7 @@ package com.au.module_nested.recyclerview
  * Time: 2022/11/22
  * Desc:
  */
-interface ILoadMoreAdapter<DATA> {
+interface ILoadMoreAdapter<DATA:IViewTypeBean> {
     /**
      * 刷新数据重载为新的一份数据。
      */

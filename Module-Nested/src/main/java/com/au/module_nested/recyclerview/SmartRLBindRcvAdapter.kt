@@ -9,7 +9,7 @@ import kotlin.collections.isNullOrEmpty
  * author: allan
  * 适用于放在SmartRefreshLayout里面
  */
-abstract class SmartRLBindRcvAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : BaseAdapter<DATA, VH>(), ILoadMoreAdapter<DATA> {
+abstract class SmartRLBindRcvAdapter<DATA:IViewTypeBean, VH: BindViewHolder<DATA, *>> : BaseAdapter<DATA, VH>(), ILoadMoreAdapter<DATA> {
     private var mRefreshLayout : SmartRefreshLayout? = null
 
     internal var hasMore = false

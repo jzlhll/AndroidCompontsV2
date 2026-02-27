@@ -14,7 +14,7 @@ import com.au.module_android.utils.withMainThread
  * 在[onCreateViewHolder]中使用create()函数来创建viewHolder。
  *
  */
-abstract class BindRcvAdapter<DATA:Any, VH: BindViewHolder<DATA, *>> : BaseAdapter<DATA, VH>(), IBindAdapter<DATA> {
+abstract class BindRcvAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : BaseAdapter<DATA, VH>(), IBindAdapter<DATA> {
 
     /**
      * 主线程刷新 如果是占位图显示；则需要调用initWithPlacesHolder。替换的时候，不能做差异化更新。

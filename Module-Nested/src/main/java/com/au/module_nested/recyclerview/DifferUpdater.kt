@@ -6,7 +6,7 @@ import com.au.module_android.utils.launchOnThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-private fun <DATA:Any> BaseAdapter<DATA, *>.diffUpdate(
+private fun <DATA: IViewTypeBean> BaseAdapter<DATA, *>.diffUpdate(
     differ : DiffCallback<DATA>,
     newList: List<DATA>,
     endCallback:()->Unit
@@ -24,7 +24,7 @@ private fun <DATA:Any> BaseAdapter<DATA, *>.diffUpdate(
     }
 }
 
-internal fun <DATA:Any> BaseAdapter<DATA, *>.initDatasCommon(
+internal fun <DATA:IViewTypeBean> BaseAdapter<DATA, *>.initDatasCommon(
     newDatas: List<DATA>?,
     differProvider : (oldDatas:List<DATA>, newDatas:List<DATA>)->DiffCallback<DATA>?,
     isTraditionalUpdate: Boolean,
