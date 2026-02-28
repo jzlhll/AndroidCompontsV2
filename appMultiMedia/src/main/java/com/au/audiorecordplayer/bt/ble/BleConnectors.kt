@@ -19,7 +19,7 @@ import java.util.Arrays
 import java.util.concurrent.atomic.AtomicInteger
 
 object BleConnectors {
-    private val taskExecutor = SingleCoroutineTaskExecutor("BleConnectorsManager")
+    private val taskExecutor = SingleCoroutineTaskExecutor()
 
     private var expectMtu = 500 //BtParams.DEFAULT_MTU_LENGTH
 
@@ -152,7 +152,7 @@ object BleConnectors {
             }
             bleConnectorMap.clear()
         }
-        taskExecutor.shutdown()
+        taskExecutor.close()
         callbackListeners.clear()
     }
 

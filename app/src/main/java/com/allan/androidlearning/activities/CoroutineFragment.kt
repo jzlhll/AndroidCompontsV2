@@ -2,15 +2,18 @@ package com.allan.androidlearning.activities
 
 import android.content.Context
 import android.view.LayoutInflater
+import androidx.lifecycle.lifecycleScope
 import androidx.viewbinding.ViewBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
 import com.au.module_android.log.logt
 import com.au.module_android.utils.dp
 import com.au.module_android.utilthread.SerialTaskExecutor
+import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
 import com.au.module_androidui.databinding.SimpleTextBinding
 import com.au.module_androidui.selectlist.SimpleItem
 import com.au.module_androidui.selectlist.SimpleListFragment
+import kotlinx.coroutines.delay
 
 /**
  * @author allan
@@ -59,11 +62,19 @@ class CoroutineFragment(override val title: String = "Coroutine")
         }
     }
 
+    private val singleCoroutineTaskExecutor = SingleCoroutineTaskExecutor(scope = lifecycleScope)
+
     private val _items = listOf(
         KotlinCoroutineSelectListItem("CoroutineConcurrentLimiter") {
 
         },
         KotlinCoroutineSelectListItem("SingleCoroutineTaskExecutor") {
+            singleCoroutineTaskExecutor.submit {
+                logt { "SingleCoroutineTaskExecutor: 开始执行" }
+//                Thread.sleep(2000)
+                delay(2000)
+                logt { "SingleCoroutineTaskExecutor: 执行完成" }
+            }
         },
 
         ////////////////////////

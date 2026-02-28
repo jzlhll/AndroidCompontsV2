@@ -24,7 +24,7 @@ class SimpleFilesLruCache(
     private var singleScope: SingleCoroutineTaskExecutor? = null
     private fun getOrCreateScope() : SingleCoroutineTaskExecutor {
         if (singleScope != null) return singleScope!!
-        val scope = SingleCoroutineTaskExecutor("file_lru_cache")
+        val scope = SingleCoroutineTaskExecutor()
         singleScope = scope
         return scope
     }
@@ -55,7 +55,7 @@ class SimpleFilesLruCache(
     fun shutdown() {
         val scope = singleScope
         singleScope = null
-        scope?.shutdown()
+        scope?.close()
     }
 
     /**
