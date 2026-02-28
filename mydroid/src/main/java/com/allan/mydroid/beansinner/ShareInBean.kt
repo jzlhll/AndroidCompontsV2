@@ -5,12 +5,14 @@ import androidx.annotation.Keep
 import androidx.core.net.toUri
 import com.allan.mydroid.R
 import com.allan.mydroid.utils.JsonUriAdapter
+import com.allan.mydroid.views.send.VIEW_TYPE_URI_INFO
 import com.au.module_android.Globals
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_android.utilsmedia.UriParsedInfo
 import com.au.module_android.utilsmedia.VideoDurationHelper
 import com.au.module_android.utilsmedia.formatBytes
 import com.au.module_android.utilsmedia.myParseSuspend
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import com.google.gson.annotations.JsonAdapter
 import kotlinx.coroutines.delay
 import java.util.UUID
@@ -21,14 +23,15 @@ const val FROM_PICKER = "picker"
 
 @Keep
 data class ShareInBean(val uriUuid:String,
-                         @JsonAdapter(JsonUriAdapter::class)
+                       @JsonAdapter(JsonUriAdapter::class)
                          val uri: Uri,
-                         val from:String,
-                         val mimeType:String,
-                         val name:String? = null,
-                         val fileSize:Long?,
-                         val fileSizeStr:String,
-                         val videoDuration:Long?) {
+                       val from:String,
+                       val mimeType:String,
+                       val name:String? = null,
+                       val fileSize:Long?,
+                       val fileSizeStr:String,
+                       val videoDuration:Long?, override val viewType: Int = VIEW_TYPE_URI_INFO
+) : IMultiViewTypeBean {
 
     /**
      * 是不是本地接收的文件

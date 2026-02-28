@@ -76,8 +76,4 @@ class LogViewAdapter(private val mRcv: RecyclerView) : AutoLoadMoreBindRcvAdapte
             else -> throw NoWayException()
         }
     }
-
-    override fun getItemViewType(position: Int): Int {
-        return if(datas[position].showBits.isWrap) AbsLogViewBinder.VIEW_TYPE_WRAP else AbsLogViewBinder.VIEW_TYPE_NO_WRAP
-    }
 }

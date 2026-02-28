@@ -1,10 +1,17 @@
 package com.allan.mydroid.views.textchat.uibean;
 
-public abstract class AbsItem {
-    public final int viewType;
+import com.au.module_nested.recyclerview.IMultiViewTypeBean;
+
+public abstract class AbsItem implements IMultiViewTypeBean {
+    private final int viewType;
 
     public AbsItem(int viewType) {
         this.viewType = viewType;
+    }
+
+    @Override
+    public int getViewType() {
+        return viewType;
     }
 
     public static final int VIEW_TYPE_STATUS = 0;

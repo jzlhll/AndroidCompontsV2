@@ -30,8 +30,4 @@ class TextChatRcvAdapter(val otherItemClick: (NormalItem) -> Unit) : BindRcvAdap
             }
         }
     }
-
-    override fun getItemViewType(position: Int): Int {
-        return datas[position].viewType
-    }
 }

@@ -9,7 +9,7 @@ public class NormalItem extends AbsItem{
     }
 
     public boolean isMe() {
-        return viewType == VIEW_TYPE_ME;
+        return getViewType() == VIEW_TYPE_ME;
     }
 
     public WSChatMessageBean message;

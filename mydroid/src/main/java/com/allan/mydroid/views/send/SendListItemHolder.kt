@@ -10,13 +10,14 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import java.util.Locale
 import kotlin.math.min
 
 class SendTitleHolder(binding: HolderMydroidSendlistTitleBinding)
-    : BindViewHolder<Any, HolderMydroidSendlistTitleBinding>(binding) {
-    override fun bindData(bean: Any) {
+    : BindViewHolder<IMultiViewTypeBean, HolderMydroidSendlistTitleBinding>(binding) {
+    override fun bindData(bean: IMultiViewTypeBean) {
         super.bindData(bean)
         if (bean !is IconTitle) return
         binding.icon.setImageResource(bean.icon)
@@ -28,7 +29,7 @@ class SendHolder(binding: HolderMydroidSendlistItemBinding,
                  val rootClick: (ShareInBean?) -> Unit,
                  val iconClick: (ShareInBean?) -> Unit,
                  val deleteClick: (ShareInBean?) -> Unit)
-    : BindViewHolder<Any, HolderMydroidSendlistItemBinding>(binding) {
+    : BindViewHolder<IMultiViewTypeBean, HolderMydroidSendlistItemBinding>(binding) {
     init {
         binding.deleteBtn.onClick {
             deleteClick(currentData.asOrNull())
@@ -41,7 +42,7 @@ class SendHolder(binding: HolderMydroidSendlistItemBinding,
         }
     }
 
-    override fun bindData(bean: Any) {
+    override fun bindData(bean: IMultiViewTypeBean) {
         super.bindData(bean)
         if (bean !is ShareInBean) return
 

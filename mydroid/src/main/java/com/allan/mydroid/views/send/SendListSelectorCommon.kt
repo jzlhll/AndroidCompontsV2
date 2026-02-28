@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.globals.ShareInUrisObj
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 
 abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) {
     private val mAdapter = SendListAdapter {it, mode->
@@ -39,7 +40,7 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) {
     }
 
     fun updateList(sendUriList: List<ShareInBean>) {
-        val newList = ArrayList<Any>()
+        val newList = ArrayList<IMultiViewTypeBean>()
         val shareInList = sendUriList.filter { !it.isLocalReceiver }
         if (shareInList.isNotEmpty()) {
             newList.add(IconTitle(R.drawable.ic_share, Globals.getString(R.string.share_in)))

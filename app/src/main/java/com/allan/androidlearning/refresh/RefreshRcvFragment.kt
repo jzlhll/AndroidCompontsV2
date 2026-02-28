@@ -12,6 +12,7 @@ import com.au.module_android.utils.withMainThread
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
 import com.au.module_nested.recyclerview.DiffCallback
+import com.au.module_nested.recyclerview.IViewTypeBean
 import com.au.module_nested.recyclerview.SmartRLBindRcvAdapter
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import com.au.module_nested.smartrefresher.setSimpleLoadingFooter
@@ -108,7 +109,7 @@ class RefreshRcvFragment : BindingFragment<FragmentRefresh1Binding>() {
     }
 }
 
-class Bean(val str: String)
+class Bean(val str: String) : IViewTypeBean
 
 class Refresh1Adapter : SmartRLBindRcvAdapter<Bean, Refresh1ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Refresh1ViewHolder {

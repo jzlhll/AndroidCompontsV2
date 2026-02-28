@@ -10,6 +10,7 @@ import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.dialogs.ConfirmBottomDialog
 import com.au.module_nested.recyclerview.BindRcvAdapter
+import com.au.module_nested.recyclerview.IViewTypeBean
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import java.util.Calendar
 
@@ -26,7 +27,7 @@ class AutoStartRcvBean(val autoFsId:String,
                        val isClose:Boolean,
                        val isLoop:Boolean,
                        val color:ColorMode,
-                       var leftTimeStr:String?)
+                       var leftTimeStr:String?) : IViewTypeBean
 
 class AutoStartAlarmAdapter(val rootClick:(autoFsId:String)->Unit) : BindRcvAdapter<AutoStartRcvBean, AutoStartAlarmItemHolder>() {
 

@@ -1,6 +1,7 @@
 package com.au.logsystem.oncelog
 
 import com.au.module_android.log.FileLog
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
 
 data class LogViewShownInfo(var isWrap: Boolean, var fullScreen: Boolean, var time: Boolean,
                             var threadProcess: Boolean, var level: Boolean, var tag: Boolean)
@@ -20,7 +21,7 @@ data class LogViewShownInfo(var isWrap: Boolean, var fullScreen: Boolean, var ti
 data class LogViewNormalBean(val index:Int,
                              val orig:String,
                              val info: FileLog.LogParserInfo?,
-                             var showBits: LogViewShownInfo) {
+                             var showBits: LogViewShownInfo) : IMultiViewTypeBean {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -33,4 +34,7 @@ data class LogViewNormalBean(val index:Int,
     override fun hashCode(): Int {
         return index
     }
+
+    override val viewType: Int
+        get() = if(showBits.isWrap) AbsLogViewBinder.VIEW_TYPE_WRAP else AbsLogViewBinder.VIEW_TYPE_NO_WRAP
 }

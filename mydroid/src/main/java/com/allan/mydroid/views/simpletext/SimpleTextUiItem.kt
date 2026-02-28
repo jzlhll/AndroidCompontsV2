@@ -1,3 +1,5 @@
 package com.allan.mydroid.views.simpletext
 
-data class SimpleTextUiItem(val leftText:String?, val rightText:String?)
+import com.au.module_nested.recyclerview.IViewTypeBean
+
+data class SimpleTextUiItem(val leftText:String?, val rightText:String?) : IViewTypeBean

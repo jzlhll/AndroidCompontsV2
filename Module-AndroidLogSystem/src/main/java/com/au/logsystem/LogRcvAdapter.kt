@@ -9,6 +9,8 @@ import com.au.module_android.Globals
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_nested.recyclerview.BindRcvAdapter
+import com.au.module_nested.recyclerview.IMultiViewTypeBean
+import com.au.module_nested.recyclerview.IViewTypeBean
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import java.io.File
 
@@ -16,9 +18,10 @@ const val TYPE_HEAD = 1
 const val TYPE_NORMAL = 0
 
 @Keep
-data class LogBean(val type:Int, val info:String, val secondInfo:String, val file: File? = null,
-                   var isSelectedMode: Boolean = false, var isSelected: Boolean = false,
-                   val clickBlock:((LogBean)->Unit)? = null)
+data class LogBean(
+    override val viewType: Int, val info:String, val secondInfo:String, val file: File? = null,
+    var isSelectedMode: Boolean = false, var isSelected: Boolean = false,
+    val clickBlock:((LogBean)->Unit)? = null) : IMultiViewTypeBean
 
 fun generateHead(head:String) :  LogBean {
     return LogBean(TYPE_HEAD, head, "")
@@ -46,10 +49,6 @@ class LogRcvAdapter : BindRcvAdapter<LogBean, BindViewHolder<LogBean, *>>() {
             return LogRcvHeadHolder(create(parent))
         }
         return LogRcvHolder(normalBackground, selectedBackground, create(parent))
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return datas[position].type
     }
 }
 

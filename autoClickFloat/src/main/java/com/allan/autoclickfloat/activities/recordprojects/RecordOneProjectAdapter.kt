@@ -5,9 +5,10 @@ import com.allan.autoclickfloat.database.Step
 import com.allan.autoclickfloat.databinding.RecordProjectOneItemBinding
 import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
 import com.au.module_nested.recyclerview.DiffCallback
+import com.au.module_nested.recyclerview.IViewTypeBean
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 
-data class StepWrap(val isSelected:Boolean, val step:Step)
+data class StepWrap(val isSelected:Boolean, val step:Step) : IViewTypeBean
 
 class RecordOneProjectAdapter : AutoLoadMoreBindRcvAdapter<StepWrap, RecordOneProjectViewHolder>() {
     override fun createDiffer(a: List<StepWrap>?, b: List<StepWrap>?): DiffCallback<StepWrap>? {
@@ -23,8 +24,6 @@ class RecordOneProjectAdapter : AutoLoadMoreBindRcvAdapter<StepWrap, RecordOnePr
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecordOneProjectViewHolder {
         return RecordOneProjectViewHolder(create(parent))
     }
-
-    override fun getItemViewType(position: Int) = 0
 }
 
 class RecordOneProjectViewHolder(binding: RecordProjectOneItemBinding) : BindViewHolder<StepWrap, RecordProjectOneItemBinding>(binding) {
