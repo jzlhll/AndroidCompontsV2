@@ -81,14 +81,17 @@ class CoroutineFragment(override val title: String = "Coroutine")
         },
 
         KotlinCoroutineSelectListItem("CoroutineConcurrentLimiter 10000") {
-            for (i in 0 until 10000) {
-                coroutineConcurrentLimiter.submit {
-                    val randomIndex = (0..1000).random()
-                    logt { "CoroutineConcurrentLimiter: 开始执行 $randomIndex" }
-                    Thread.sleep(2000)
-//                delay(2000)
-                    logt { "CoroutineConcurrentLimiter: 执行完成 $randomIndex" }
+            lifecycleScope.launchOnThread {
+                for (i in 0 until 20) {
+                    coroutineConcurrentLimiter.submit {
+                        val randomIndex = (0..1000).random()
+                        logt { "CoroutineConcurrentLimiter: 开始执行 $randomIndex" }
+                        Thread.sleep(2000)
+                        logt { "CoroutineConcurrentLimiter: 执行完成 $randomIndex" }
+                    }
                 }
+                coroutineConcurrentLimiter.joinAll()
+                logt { "CoroutineConcurrentLimiter 10000: 所有任务完成" }
             }
         },
 
