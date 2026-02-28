@@ -8,12 +8,15 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
 import com.au.module_android.log.logt
 import com.au.module_android.utils.dp
+import com.au.module_android.utils.launchOnThread
+import com.au.module_android.utilthread.CoroutineConcurrentLimiter
 import com.au.module_android.utilthread.SerialTaskExecutor
 import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
 import com.au.module_androidui.databinding.SimpleTextBinding
 import com.au.module_androidui.selectlist.SimpleItem
 import com.au.module_androidui.selectlist.SimpleListFragment
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * @author allan
@@ -43,6 +46,8 @@ class CoroutineFragment(override val title: String = "Coroutine")
         vb.root.text = item.itemName
     }
 
+    private val coroutineConcurrentLimiter = CoroutineConcurrentLimiter(2)
+
     private val mSerialTaskExecutor by lazy {
         SerialTaskExecutor<Pair<String, Long>>() { bean->
             logt{"SerialTaskExecutor: $bean"}
@@ -66,14 +71,34 @@ class CoroutineFragment(override val title: String = "Coroutine")
 
     private val _items = listOf(
         KotlinCoroutineSelectListItem("CoroutineConcurrentLimiter") {
-
+            coroutineConcurrentLimiter.submit {
+                val randomIndex = (0..1000).random()
+                logt { "CoroutineConcurrentLimiter: 开始执行 $randomIndex" }
+                Thread.sleep(2000)
+//                delay(2000)
+                logt { "CoroutineConcurrentLimiter: 执行完成 $randomIndex" }
+            }
         },
+
+        /////////////////
         KotlinCoroutineSelectListItem("SingleCoroutineTaskExecutor") {
             singleCoroutineTaskExecutor.submit {
                 logt { "SingleCoroutineTaskExecutor: 开始执行" }
-//                Thread.sleep(2000)
-                delay(2000)
+                Thread.sleep(2000)
+//                delay(2000)
                 logt { "SingleCoroutineTaskExecutor: 执行完成" }
+            }
+        },
+        KotlinCoroutineSelectListItem("SingleCoroutineTaskExecutor await") {
+            lifecycleScope.launchOnThread {
+                singleCoroutineTaskExecutor.await {
+                    logt { "SingleCoroutineTaskExecutor: 开始执行" }
+                    Thread.sleep(2000)
+//                    delay(2000)
+                    logt { "SingleCoroutineTaskExecutor: 执行完成" }
+                }
+
+                logt { "SingleCoroutineTaskExecutor: await 完成" }
             }
         },
 
