@@ -1,7 +1,10 @@
 package com.au.module_android.utilthread
 
 import com.au.module_android.Globals
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -12,11 +15,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * 其中 Bean 代表的要处理的数据类型。
  */
 class SerialTaskExecutor<Bean : Any>(
+    private val baseDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val scope: CoroutineScope = Globals.backgroundScope,
     private val worker: suspend (Bean) -> Unit
 ) {
     private val mQueue = LinkedBlockingQueue<Bean>()
     private val mIsRunning = AtomicBoolean(false)
+
+    private var mJob : Job? = null
 
     /**
      * 提交任务到队列
@@ -29,7 +35,7 @@ class SerialTaskExecutor<Bean : Any>(
     private fun processQueue() {
         if (!mIsRunning.compareAndSet(false, true)) return
 
-        scope.launch {
+        mJob = scope.launch(baseDispatcher) {
             try {
                 while (true) {
                     val nextTask = mQueue.poll() ?: break
@@ -48,7 +54,10 @@ class SerialTaskExecutor<Bean : Any>(
     /**
      * 清空待处理任务
      */
-    fun clear() {
+    fun close() {
         mQueue.clear()
+        val job = mJob
+        if (job != null && !job.isCancelled) job.cancel()
+        mJob = null
     }
 }

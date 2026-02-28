@@ -1,24 +1,16 @@
 package com.allan.androidlearning.activities
 
 import android.content.Context
-import android.os.Bundle
-import android.view.View
-import androidx.lifecycle.lifecycleScope
+import android.view.LayoutInflater
+import androidx.viewbinding.ViewBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
-import com.au.module_androidui.selectlist.SelectListFragment
-import com.au.module_androidui.selectlist.SelectListItem
-import com.au.module_android.log.ALogJ
 import com.au.module_android.log.logt
 import com.au.module_android.utils.dp
-import com.au.module_android.utilthread.CoroutineConcurrentLimiter
-import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
-import com.google.android.material.button.MaterialButton
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.au.module_android.utilthread.SerialTaskExecutor
+import com.au.module_androidui.databinding.SimpleTextBinding
+import com.au.module_androidui.selectlist.SimpleItem
+import com.au.module_androidui.selectlist.SimpleListFragment
 
 /**
  * @author allan
@@ -27,155 +19,77 @@ import kotlinx.coroutines.launch
  */
 @EntryFrgName(priority = 1)
 class CoroutineFragment(override val title: String = "Coroutine")
-        : SelectListFragment<KotlinCoroutineSelectListItem>() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
-    override fun itemHeight(): Int {
-        return 48.dp
-    }
+        : SimpleListFragment<KotlinCoroutineSelectListItem>() {
 
     override fun itemTopMargin(): Int {
         return 8.dp
     }
 
-    override fun itemPaddingHorz(): Int {
-        return 20.dp
+    override fun createItemView(
+        context: Context,
+        value: KotlinCoroutineSelectListItem
+    ): ViewBinding {
+        return SimpleTextBinding.inflate(LayoutInflater.from(context))
     }
 
-    override fun createItemView(context: Context): View {
-        return MaterialButton(context)
+    override fun bindItemView(vb: ViewBinding, item: KotlinCoroutineSelectListItem) {
+        vb as SimpleTextBinding
+        vb.root.onClick {
+            item.onItemClick.invoke()
+        }
+        vb.root.text = item.itemName
     }
 
-    val initItem = KotlinCoroutineSelectListItem("子线程") {
-
-    }
-
-    val testItem = KotlinCoroutineSelectListItem("测试") {
-
-        lifecycleScope.launch {
-            ALogJ.t("start...")
-            val deferred1 = async {
-                delay(1000)
-                "1111"
-            }
-            val deferred2 = async {
-                delay(800)
-                "2222"
-            }
-            val data1 = deferred1.await()
-            val data2 = deferred2.await()
-            //等待他们完成
-            ALogJ.t("data1 $data1, data2 $data2")
+    private val mSerialTaskExecutor by lazy {
+        SerialTaskExecutor<Pair<String, Long>>() { bean->
+            logt{"SerialTaskExecutor: $bean"}
+            Thread.sleep(bean.second)
+            logt{"SerialTaskExecutor: $bean over!"}
         }
     }
 
-    val testItem2 = KotlinCoroutineSelectListItem("测试2") {
-        lifecycleScope.launch(CoroutineExceptionHandler {
-            e, t->
-            t.printStackTrace()
-        }) {
-            val deferred = async(Dispatchers.IO) {
-                //指定运行到子线程
-                Thread.sleep(3000)
-                """ {"data":"request successfully."} """
-            }
-            ALogJ.t("运行在主线程")
-            val data = deferred.await()
-            ALogJ.t("运行在主线程得到结果 $data")
+    /**
+     *模拟另外一个串行任务执行器，确保不同的任务可以并行执行
+     */
+    private val mOtherSerialTaskExecutor by lazy {
+        SerialTaskExecutor<Pair<String, Long>> { bean->
+            logt{"Other SerialTaskExecutor: $bean"}
+            Thread.sleep(bean.second)
+            logt{"Other SerialTaskExecutor: $bean 完成!"}
         }
-    }
-    private val singleScope = SingleCoroutineTaskExecutor()
-    private var map = hashMapOf<String, String>()
-
-    private fun testSingleScope(from:String) {
-        ALogJ.t("$from 运行11")
-        lifecycleScope.launch {
-            ALogJ.t("$from 运行1122")
-            val ans = singleScope.awaitResult {
-                ALogJ.t("$from 运行22")
-                Thread.sleep(3000)
-                ALogJ.t("$from 运行2233")
-                if (map.contains("name")) {
-                    ALogJ.t("$from name 已存在")
-                    true
-                } else {
-                    ALogJ.t("$from name 不存在")
-                    map["name"] = "allan"
-                    false
-                }
-            }
-            ALogJ.t("$from 运行1122 end $ans")
-        }
-
-        ALogJ.t("$from 运行33")
     }
 
     private val _items = listOf(
-        initItem,
-        KotlinCoroutineSelectListItem("主线程") {
+        KotlinCoroutineSelectListItem("CoroutineConcurrentLimiter") {
 
         },
-        KotlinCoroutineSelectListItem("主线程2") {
+        KotlinCoroutineSelectListItem("SingleCoroutineTaskExecutor") {
+        },
 
+        ////////////////////////
+        KotlinCoroutineSelectListItem("SerialTaskExecutor") {
+            mSerialTaskExecutor.submit("test5" to 4000)
         },
-        KotlinCoroutineSelectListItem("主线程3") {
-
+        KotlinCoroutineSelectListItem("SerialTaskExecutor") {
+            mSerialTaskExecutor.submit("test1" to 2000)
         },
-        testItem,
-        testItem2,
-        KotlinCoroutineSelectListItem("测试单线程模型协程") {
-            testSingleScope("测1")
+        KotlinCoroutineSelectListItem("SerialTaskExecutor2") {
+            mSerialTaskExecutor.submit("test2" to 0)
         },
-        KotlinCoroutineSelectListItem("测试单线程模型协程2") {
-            testSingleScope("测2")
-        },
-        KotlinCoroutineSelectListItem("测试并发工具类") {
-            testCoroutineLimiter()
-        },
+        KotlinCoroutineSelectListItem("SerialTaskExecutor Other") {
+            mOtherSerialTaskExecutor.submit("other1" to 800)
+        }
     )
-
-    override val initCur: KotlinCoroutineSelectListItem
-        get() = initItem
 
     override val items: List<KotlinCoroutineSelectListItem>
         get() = _items
 
-    override fun bindItemView(v: View, item:KotlinCoroutineSelectListItem, isSelect: Boolean) {
-        v as MaterialButton
-        v.text = item.itemName
-        v.onClick(item.onClick)
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
-        singleScope.shutdownNow()
+        mSerialTaskExecutor.close()
+        mOtherSerialTaskExecutor.close()
     }
 
-    fun testCoroutineLimiter() {
-        lifecycleScope.launch {
-            val limiter = CoroutineConcurrentLimiter(3)
-            val listUrls = listOf("url1", "url2", "url3", "url4", "url5", "url6", "url7", "url8")
-            logt { "start.." }
-            for (url in listUrls) {
-                limiter.submit {
-                    logt { "downData $url" }
-                    val data = downloadData(url)
-                    logt { "downData end $data" }
-                }
-            }
-            limiter.joinAll()
-            logt { "end of all" }
-        }
-    }
-
-    suspend fun downloadData(url:String) : String {
-        delay(0)
-        Thread.sleep(2000)
-        return "download $url"
-    }
 }
 
-class KotlinCoroutineSelectListItem(override val itemName: String, val onClick: (View)->Unit) : SelectListItem()
+class KotlinCoroutineSelectListItem(override val itemName: String, override val onItemClick: () -> Unit) : SimpleItem()
