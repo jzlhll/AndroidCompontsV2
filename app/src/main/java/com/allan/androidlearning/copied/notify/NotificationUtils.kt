@@ -96,50 +96,48 @@ class ProgressNotification {
 
     fun show(pkg: String, title: String?, iconUrl: String?, progress: Int, intent: Intent? = null) {
         // 通知栏，8.0以下不需要兼容
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Globals.mainScope.launch(Dispatchers.Main) {
-                if (notificationBuilder != null) {
-                    updateProgress(pkg, progress)
-                    return@launch
+        Globals.mainScope.launch(Dispatchers.Main) {
+            if (notificationBuilder != null) {
+                updateProgress(pkg, progress)
+                return@launch
+            }
+            try {
+                val channelId = "dpc_channel_message_progress_${pkg}"
+                notificationChannel = NotificationChannel(channelId, pkg, NotificationManager.IMPORTANCE_HIGH)
+                notificationChannel?.enableLights(true)
+                notificationChannel?.lightColor = Color.BLUE
+                notificationChannel?.canBypassDnd()
+                notificationChannel?.setBypassDnd(true)
+
+                notificationChannel?.let { cn ->
+                    Globals.app.getSystemService(NotificationManager::class.java).createNotificationChannel(cn)
                 }
-                try {
-                    val channelId = "dpc_channel_message_progress_${pkg}"
-                    notificationChannel = NotificationChannel(channelId, pkg, NotificationManager.IMPORTANCE_HIGH)
-                    notificationChannel?.enableLights(true)
-                    notificationChannel?.lightColor = Color.BLUE
-                    notificationChannel?.canBypassDnd()
-                    notificationChannel?.setBypassDnd(true)
 
-                    notificationChannel?.let { cn ->
-                        Globals.app.getSystemService(NotificationManager::class.java).createNotificationChannel(cn)
-                    }
+                val largeIcon = NotificationUtils.downloadIcon(iconUrl)
 
-                    val largeIcon = NotificationUtils.downloadIcon(iconUrl)
-
-                    notificationBuilder = NotificationCompat.Builder(Globals.app, notificationChannel?.id ?: Globals.app.packageName)
-                        .setContentTitle(title ?: "正在下载")
-                        .setSmallIcon(IconCompat.createWithBitmap(AndroidSystemOSUtil.getAppIcon(Globals.app)!!.toBitmap(100, 100, null))).setAutoCancel(true)
-                        .setWhen(System.currentTimeMillis()).apply {
-                            if (largeIcon != null) {
-                                setLargeIcon(largeIcon)
-                            }
-                        }.setPriority(NotificationCompat.PRIORITY_DEFAULT).setSubText("0%").setProgress(100, 0, false).setShowWhen(true).setSilent(true)
-                        .setNumber(100).setDefaults(NotificationCompat.FLAG_ONLY_ALERT_ONCE).apply {
-                            if (intent != null) {
-                                setContentIntent(
-                                    PendingIntent.getActivity(
-                                        Globals.app,
-                                        0,
-                                        intent,
-                                        PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                                    )
-                                )
-                            }
+                notificationBuilder = NotificationCompat.Builder(Globals.app, notificationChannel?.id ?: Globals.app.packageName)
+                    .setContentTitle(title ?: "正在下载")
+                    .setSmallIcon(IconCompat.createWithBitmap(AndroidSystemOSUtil.getAppIcon(Globals.app)!!.toBitmap(100, 100, null))).setAutoCancel(true)
+                    .setWhen(System.currentTimeMillis()).apply {
+                        if (largeIcon != null) {
+                            setLargeIcon(largeIcon)
                         }
-                    notify(notificationChannel?.name?.toString() ?: Globals.app.packageName, NotificationUtils.NOTIFICATION_ID, notificationBuilder)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                    }.setPriority(NotificationCompat.PRIORITY_DEFAULT).setSubText("0%").setProgress(100, 0, false).setShowWhen(true).setSilent(true)
+                    .setNumber(100).setDefaults(NotificationCompat.FLAG_ONLY_ALERT_ONCE).apply {
+                        if (intent != null) {
+                            setContentIntent(
+                                PendingIntent.getActivity(
+                                    Globals.app,
+                                    0,
+                                    intent,
+                                    PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                                )
+                            )
+                        }
+                    }
+                notify(notificationChannel?.name?.toString() ?: Globals.app.packageName, NotificationUtils.NOTIFICATION_ID, notificationBuilder)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -147,7 +145,6 @@ class ProgressNotification {
     /**
      * 更新进度
      */
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun updateProgress(notificationChannel: NotificationChannel, progress: Int) {
         if (ActivityCompat.checkSelfPermission(Globals.app, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             return
@@ -170,7 +167,6 @@ class ProgressNotification {
     /**
      * 更新进度
      */
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun updateProgress(channelName: String, progress: Int) {
         if (ActivityCompat.checkSelfPermission(Globals.app, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             return
@@ -221,47 +217,45 @@ class MessageNotification {
 
     fun show(title: String?, content: String?, intent: Intent? = null) {
         // 通知栏，8.0以下不需要兼容
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Globals.mainScope.launch(Dispatchers.Main) {
-                try {
-                    val notificationChannel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
-                    notificationChannel.enableLights(true)
-                    notificationChannel.lightColor = Color.BLUE
-                    notificationChannel.canBypassDnd()
-                    notificationChannel.setBypassDnd(true)
+        Globals.mainScope.launch(Dispatchers.Main) {
+            try {
+                val notificationChannel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+                notificationChannel.enableLights(true)
+                notificationChannel.lightColor = Color.BLUE
+                notificationChannel.canBypassDnd()
+                notificationChannel.setBypassDnd(true)
 
-                    notificationChannel.let { cn ->
-                        Globals.app.getSystemService(NotificationManager::class.java).createNotificationChannel(cn)
-                    }
-
-                    val largeIcon = AndroidSystemOSUtil.getAppIcon(Globals.app)!!.toBitmap(200, 200, null)
-
-                    val notificationBuilder =
-                        NotificationCompat.Builder(Globals.app, notificationChannel.id)
-                            .setContentTitle(title ?: "")
-                            .setContentText(content ?: "")
-                            .setSmallIcon(IconCompat.createWithBitmap(largeIcon))
-                            .setAutoCancel(true).setWhen(System.currentTimeMillis())
-                            .setLargeIcon(largeIcon)
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            .setShowWhen(true)
-                            .setSilent(false)
-                            .setDefaults(NotificationCompat.FLAG_ONLY_ALERT_ONCE).apply {
-                                if (intent != null) {
-                                    setContentIntent(
-                                        PendingIntent.getActivity(
-                                            Globals.app,
-                                            0,
-                                            intent,
-                                            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                                        )
-                                    )
-                                }
-                            }
-                    notify(notificationBuilder)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                notificationChannel.let { cn ->
+                    Globals.app.getSystemService(NotificationManager::class.java).createNotificationChannel(cn)
                 }
+
+                val largeIcon = AndroidSystemOSUtil.getAppIcon(Globals.app)!!.toBitmap(200, 200, null)
+
+                val notificationBuilder =
+                    NotificationCompat.Builder(Globals.app, notificationChannel.id)
+                        .setContentTitle(title ?: "")
+                        .setContentText(content ?: "")
+                        .setSmallIcon(IconCompat.createWithBitmap(largeIcon))
+                        .setAutoCancel(true).setWhen(System.currentTimeMillis())
+                        .setLargeIcon(largeIcon)
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setShowWhen(true)
+                        .setSilent(false)
+                        .setDefaults(NotificationCompat.FLAG_ONLY_ALERT_ONCE).apply {
+                            if (intent != null) {
+                                setContentIntent(
+                                    PendingIntent.getActivity(
+                                        Globals.app,
+                                        0,
+                                        intent,
+                                        PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                                    )
+                                )
+                            }
+                        }
+                notify(notificationBuilder)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
