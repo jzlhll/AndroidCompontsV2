@@ -10,6 +10,7 @@ import com.au.module_android.log.logt
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utilthread.CoroutineConcurrentLimiter
+import com.au.module_android.utilthread.PauseController
 import com.au.module_android.utilthread.SerialTaskExecutor
 import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
 import com.au.module_androidui.databinding.SimpleTextBinding
@@ -129,8 +130,30 @@ class CoroutineFragment(override val title: String = "Coroutine")
         },
         KotlinCoroutineSelectListItem("SerialTaskExecutor Other") {
             mOtherSerialTaskExecutor.submit("other1" to 800)
+        },
+
+        /////测试协程等待
+        KotlinCoroutineSelectListItem("协程等待测试开始") {
+            lifecycleScope.launchOnThread {
+                for (i in 0 until 100) {
+                    val ans = pauseController.waitIfPaused()
+                    logt { "waitCode $ans 协程等待测试开始 $i" }
+                    delay(1000)
+                }
+            }
+        },
+        KotlinCoroutineSelectListItem("协程等待测试Pause") {
+            pauseController.pause()
+        },
+        KotlinCoroutineSelectListItem("协程等待测试Resume") {
+            pauseController.resume()
+        },
+        KotlinCoroutineSelectListItem("协程等待测试Stop") {
+            pauseController.stop()
         }
     )
+
+    private val pauseController = PauseController()
 
     override val items: List<KotlinCoroutineSelectListItem>
         get() = _items

@@ -67,7 +67,7 @@ val compatVideoBitmap = thumbnailUtil.loadThumbnailCompat(compatVideoUri, target
  * 整合图片/视频缩略图生成、系统缓存查询、低版本兼容逻辑
  * 普通 Class 实现，需通过构造函数传入 Context 实例使用
  */
-internal class ThumbnailLoadHelper(private val context: Context) {
+class ThumbnailLoadHelper(private val context: Context) {
     /**
      * 【方法1】通过文件路径生成图片缩略图（兼容 API 28-）
      * @param filePath 图片文件绝对路径（公共目录/私有目录均可）

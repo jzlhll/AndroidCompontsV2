@@ -5,10 +5,12 @@ package com.au.module_imagecompressed.query
  * @param bucketId 相册唯一标识（必传，MediaStore的BUCKET_ID）
  * @param name 相册名称
  * @param count 相册内媒体文件数量
+ * @param isCamera 是否为系统相机相册
  */
 data class Album(
     val bucketId: Long = -1,
     val name: String?,
     val coverUri: android.net.Uri?,
-    var count: Int = 0
+    var count: Int = 0,
+    val isCamera: Boolean = false
 )

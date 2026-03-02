@@ -22,9 +22,10 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
     val isBackground:Boolean
         get() = isInBackground
 
-    //是否后台运行
-    //如果有推送拉起的application，并没有拉起应用也会触发onStop变成true。所以这里默认无所谓。
-    private var isInBackground = false
+    /**
+     * 如果是后台启动，是不会触发onStart的。或者可能触发onStop。所以默认值给成是后台状态。
+     */
+    private var isInBackground = true
 
     private val listeners by lazy {
         CopyOnWriteArrayList<IBackgroundListener>()

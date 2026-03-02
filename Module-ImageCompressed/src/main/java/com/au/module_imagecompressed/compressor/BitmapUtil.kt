@@ -31,8 +31,14 @@ fun Bitmap.centerCropBitmapToTargetSize(
     val fitScale = maxOf(scaleForWidth, scaleForHeight) // 取大比例 → 短边占满，长边超出
 
     // 4. 缩放 Bitmap 到「短边占满」的中间尺寸
-    val fitW = (sourceW * fitScale).toInt()
-    val fitH = (sourceH * fitScale).toInt()
+    // 使用 ceil 向上取整，防止因精度丢失导致尺寸小于 targetWidth/targetHeight
+    var fitW = kotlin.math.ceil(sourceW * fitScale).toInt()
+    var fitH = kotlin.math.ceil(sourceH * fitScale).toInt()
+
+    // 双重保险：确保缩放后的尺寸至少等于目标尺寸，防止后续 crop 越界
+    if (fitW < targetWidth) fitW = targetWidth
+    if (fitH < targetHeight) fitH = targetHeight
+
     val fitBitmap = this.scale(fitW, fitH)
 
     // 5. 计算居中裁剪的坐标（仅裁剪超出目标尺寸的长边）

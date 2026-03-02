@@ -59,11 +59,13 @@ class MediaQueryManager(private val context: Context) {
                         MediaStore.Video.Media.EXTERNAL_CONTENT_URI
                     else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 
+                    val name = c.getString(nameIdx) ?: "Others"
                     albumMap[bucketId] = Album(
                         bucketId = bucketId,
-                        name = c.getString(nameIdx) ?: "Others",
+                        name = name,
                         coverUri = ContentUris.withAppendedId(baseUri, mediaId),
                         count = 1,
+                        isCamera = "Camera".equals(name, ignoreCase = true)
                     )
                 } else {
                     album.count++ // 已经在 Map 里了，累加计数
