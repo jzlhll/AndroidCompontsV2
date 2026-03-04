@@ -180,6 +180,8 @@ class ThumbnailLoadHelper(private val context: Context) {
      *  1. 仅支持系统公共媒体文件（ContentUri 由 MediaStore 生成），不支持 App 私有文件；
      *  2. Android 10+：复用 contentResolver.loadThumbnail 逻辑（优先读缓存，缓存缺失触发系统生成并写入）；
      *  4. 仅缓存缺失时会创建缩略图，后续调用直接读取系统缓存。
+     *
+     *  遇到异常时，返回 null，原因是图片是网络图没有完整下载，load thumbnail或者 ImageDecoder都将会抛出异常
      */
     fun loadThumbnailCompat(mediaUri: Uri, size: Size): Bitmap? {
         return try {
