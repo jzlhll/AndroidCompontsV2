@@ -1,6 +1,7 @@
 package com.allan.androidlearning.picwall
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -11,15 +12,20 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_android.utils.changeBarsColor
+import com.au.module_androidui.toast.ToastUtil
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
+import com.au.module_simplepermission.PermissionMediaType
+import com.au.module_simplepermission.createMediaPermissionForResult
 import eightbitlab.com.blurview.BlurView
 import kotlinx.coroutines.launch
 
 @EntryFrgName
 class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
     private val mViewModel by viewModels<PicWallViewModel>()
-    
+
+    private val mediaUtil = createMediaPermissionForResult(arrayOf(PermissionMediaType.IMAGE, PermissionMediaType.VIDEO, PermissionMediaType.AUDIO))
+
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.FullImmersive()
     }
@@ -45,8 +51,12 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
             }
         }
 
-        // 触发本地图片加载
-        mViewModel.dispatch(PicWallViewModel.RequestLocalAction(requireActivity()))
+        mediaUtil.safeRun(notGivePermissionBlock = {
+            ToastUtil.toastOnTop("请先授权媒体权限")
+        }) {
+            // 触发本地图片加载
+            mViewModel.dispatch(PicWallViewModel.RequestLocalAction(requireActivity()))
+        }
     }
 
 }
