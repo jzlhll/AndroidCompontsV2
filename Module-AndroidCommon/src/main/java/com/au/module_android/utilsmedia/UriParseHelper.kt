@@ -146,7 +146,7 @@ internal class UriParseHelper {
                     val dateModifiedIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_MODIFIED)
                     lastModified = if (dateModifiedIndex == -1) null else cursor.getLong(dateModifiedIndex)
 
-                    if (lastModified != null) {
+                    if (lastModified == null || lastModified == 0L) {
                         //解析创建时间
                         val dateAddedIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED)
                         lastModified = if (dateAddedIndex == -1) null else cursor.getLong(dateAddedIndex)

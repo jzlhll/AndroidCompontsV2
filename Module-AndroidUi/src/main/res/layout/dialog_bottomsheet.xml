@@ -24,10 +24,4 @@
         android:layout_width="match_parent"
         android:layout_height="0dp" />
 
-    <Space
-        android:visibility="gone"
-        android:id="@+id/spaceBottom"
-        android:layout_width="match_parent"
-        android:layout_height="8dp"/>
-
 </com.au.module_androidui.widget.BgBuildLinearLayout>

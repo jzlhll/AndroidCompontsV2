@@ -27,8 +27,11 @@ XXXHelper(
 # 方法2：注入到生命周期类中
 生命周期无法在构造函数中注入。因此：
 
-一般的类：在Activity/Fragment中通过如by inject() 或 get()来注入
-ViewModel类：在Activity/Fragment中通过by viewModel(ownerProducer= {requireActivity()})注入
+- 一般的类：在Activity/Fragment中通过如by inject() 或 get()来注入
+- ViewModel类：
+    - 先import org.koin.androidx.viewmodel.ext.android.viewModel
+    - 在Activity/Fragment中通过使用`by viewModels()`注入
+    - 如果ViewModel是跨多文件共享，需通过`by viewModels(ownerProducer= {requireActivity()})`注入
 
 # 方法3：注入到没有在 Application 中声明的类中
 
