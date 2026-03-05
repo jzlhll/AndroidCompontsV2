@@ -52,4 +52,4 @@ RecyclerView：xxxRcv
 
 # RecyclerView
 不主动写Adapter(除非允许)
-如果允许参考规则SKILL: [RecyclerView开发框架]
+如果允许参考规则SKILL: [RecyclerView开发框架](../基础架构_RecyclerView开发框架/SKILL.md)

@@ -39,20 +39,11 @@ init {
 
 ## 3. 状态管理
 
-### 3.1 StatusState
-- 状态包含：`Uninitialized`、`Loading`、`Success<T>`、`Error`
-- 使用扩展函数 `setLoading()`、`setSuccess(data)`、`setError(throwable)` 更新状态
-
-### 3.2 状态流创建
 - 使用 `createStatusStateFlow()` 创建 `MutableStateFlow<StatusState<T>>`
 - 通过 `asStateFlow()` 暴露只读状态流给UI层
-
-```kotlin
-private val _dataState = createStatusStateFlow<List<Item>>()
-val dataState = _dataState.asStateFlow()
-```
-
-### 3.3 状态更新
+- 状态包含：`Uninitialized`、`Loading`、`Success<T>`、`Error`
+- 使用扩展函数 `setLoading()`、`setSuccess(data)`、`setError(throwable)` 更新状态
+- 使用Flow作为数据源，参考([Flow使用规则](../框架组件_Flow使用规则/SKILL.md))
 - 遵循单向数据流：UI → Action → ViewModel → State → UI
 - 在Reducer或业务逻辑中更新状态
 
@@ -76,44 +67,17 @@ runCallCatch(hasLoading = true, call = {
 }, onState = _dataState)
 ```
 
-## 5. Flow 最佳实践
+## 5. 性能与优化
 
-### 5.1 流类型选择
-- 无粘性流：`createNoStickyFlow()`
-- 粘性流：`createStickyFlow()`
-- 状态流：`createStatusStateFlow()`
-- 共享流：`createSharedStatusFlow()`
-
-### 5.2 状态过滤
-- `filterSuccess()`：只接收成功状态数据
-- `filterError()`：只接收错误状态异常
-- `filterLoading()`：只接收加载状态
-- `filterUninitialized()`：只接收未初始化状态
-
-### 5.3 状态收集
-
-- 普通的Flow类型的流，直接使用`collect()`函数来收集状态
-- 如果是StatusState<*>类型的流，需要使用`collectStatusState()`函数来收集状态
-- 在生命周期类Fragment/Activity中使用如下代码包裹collect/collectStatusState函数：
-```kotlin
-    lifecycleScope.launch {
-    repeatOnLifecycle(Lifecycle.State.STARTED) {
-        block()
-    }
-}
-```
-
-## 6. 性能与优化
-
-### 6.1 避免不必要的状态更新
+### 5.1 避免不必要的状态更新
 - 仅当数据确实变化时更新状态
 - 频繁更新的数据考虑防抖或节流
 
-### 6.2 合理使用协程
+### 5.2 合理使用协程
 - 避免单个协程执行过多耗时操作
 - 并发任务使用 `async/await` 模式
 
-## 7. 核心原则
+## 6. 核心原则
 
 1. **单向数据流**：UI → Action → ViewModel → State → UI
 2. **状态驱动UI**：UI只负责展示状态，不包含业务逻辑
