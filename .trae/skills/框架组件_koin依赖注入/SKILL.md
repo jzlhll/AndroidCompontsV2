@@ -3,11 +3,33 @@ name: koin依赖注入
 description: 当涉及到依赖注入的使用，阅读它
 ---
 
+Application类： App.kt
 
-在Application类中申明了依赖注入的模块和类。你只需要从这里去阅读已经注入的类。
+# 注入规则
+- 如果一个新类仅被同package下的其他类使用，那么不添加到 Application 类中，采用传统new class的方式
+- 从 Application 类中阅读已经注入的类，是否存在，存在就通过后面的方法引入
 
-不要在 `Application` 文件中添加新的依赖注入模块或声明。引用外部类，优先阅读Application中是否存在声明的类。
+# 方法1：注入到ViewModel或其他普通类中
 
-# 注入方式
-在使用的地方参考koin本身的逻辑，如by inject() 或 get()，或by viewModel()
-Fragment中获取ViewModel默认使用by viewModel(ownerProducer= {requireActivity()})
+在构造函数中注入，即kt的类名括号中。
+比如：
+```kotlin
+ XXXViewModel(
+    val xx: XXXHelper
+ )
+
+XXXHelper(
+    val dao: XXXDao,
+    val scope:BackAppScope
+)
+```
+
+# 方法2：注入到生命周期类中
+生命周期无法在构造函数中注入。因此：
+
+一般的类：在Activity/Fragment中通过如by inject() 或 get()来注入
+ViewModel类：在Activity/Fragment中通过by viewModel(ownerProducer= {requireActivity()})注入
+
+# 方法3：注入到没有在 Application 中声明的类中
+
+给该类追加实现KoinComponent接口，即可在该类中通过by inject()或get()来注入。

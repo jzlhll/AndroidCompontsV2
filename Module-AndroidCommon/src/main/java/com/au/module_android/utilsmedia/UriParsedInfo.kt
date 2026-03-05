@@ -14,7 +14,8 @@ data class UriParsedInfo(
     val fullPath:String? = null, /* 二选一 */
     val relativePath:String? = null, /* 二选一 */
     val videoDuration:Long? = null,
-    val isFile: Boolean = false) {
+    val isFile: Boolean = false,
+    val lastModified:Long? = null, /* 最后修改时间 */) {
     fun isFullPath() : Boolean = fullPath != null
 
     fun isUriVideo(): Boolean {

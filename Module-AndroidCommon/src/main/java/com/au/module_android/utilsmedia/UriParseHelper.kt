@@ -86,12 +86,13 @@ internal class UriParseHelper {
         }
     }
 
-    ///////////////必须先调用parse
+    ///////////////必须先调用 parse
     fun parse(file: File, fileItsUri: Uri?=null) : UriParsedInfo{
         val extension = file.extension.lowercase()
         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
         val fileLength = file.length()
         val videoDuration = VideoDurationHelper().getDurationNormally(file.absolutePath, mimeType)
+        val lastModified = file.lastModified()
 
         return UriParsedInfo(fileItsUri ?: file.toUri(),
             file.name,
@@ -101,7 +102,8 @@ internal class UriParseHelper {
             file.absolutePath,
             null,
             videoDuration,
-            isFile = true) //todo 是否考虑fileDescriptor
+            isFile = true,
+            lastModified = lastModified) //todo 是否考虑 fileDescriptor
     }
 
     private fun parseAsContent(cr: ContentResolver, uri: Uri) : UriParsedInfo {
@@ -111,33 +113,44 @@ internal class UriParseHelper {
         var fileLength = 0L
         var name = ""
         var videoDuration:Long? = null
+        var lastModified:Long? = null
         ignoreError {
             cr.query(uri, null, null, null, null)?.use { cursor->
                 if (cursor.moveToFirst()) {
-                    //解析mimeType
+                    //解析 mimeType
                     val mimeTypeIndex = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)
                     if (mimeTypeIndex != -1) {
                         mimeType = cursor.getString(mimeTypeIndex)
                     }
 
-                    //解析relative path / full path
+                    //解析 relative path / full path
                     val dataIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
                     fullPath = if (dataIndex == -1) null else cursor.getString(dataIndex)
 
                     val relativePathIndex = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
                     relativePath = if (relativePathIndex == -1) null else cursor.getString(relativePathIndex)
 
-                    //解析length
+                    //解析 length
                     val sizeIndex = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE)
                     fileLength = if (sizeIndex == -1) 0L else cursor.getLong(sizeIndex)
 
-                    //解析name
+                    //解析 name
                     val displayNameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
                     name = if (displayNameIndex == -1) "" else cursor.getString(displayNameIndex)
 
-                    //解析video duration
+                    //解析 video duration
                     val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
                     videoDuration = if (durationIndex == -1) 0L else cursor.getLong(durationIndex)
+
+                    //解析最后修改时间
+                    val dateModifiedIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_MODIFIED)
+                    lastModified = if (dateModifiedIndex == -1) null else cursor.getLong(dateModifiedIndex)
+
+                    if (lastModified != null) {
+                        //解析创建时间
+                        val dateAddedIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED)
+                        lastModified = if (dateAddedIndex == -1) null else cursor.getLong(dateAddedIndex)
+                    }
                 }
             }
         }
@@ -167,7 +180,8 @@ internal class UriParseHelper {
             fullPath,
             relativePath,
             videoDuration,
-            isFile = false)
+            isFile = false,
+            lastModified = lastModified)
 
 //        logdNoFile { "parseAsContent parsed Info: $r" }
         return r

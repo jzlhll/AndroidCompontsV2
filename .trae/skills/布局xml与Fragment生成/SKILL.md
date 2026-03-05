@@ -28,7 +28,6 @@ app:backgroundNormal="#ffffff"
 文本：StyleAuTextNormal(常规), StyleAuTextNormalDesc(灰色描述)等等
 输入框：StyleBlankEditText
 按钮：StyleButtonPrimary(常规), StyleButtonWarn(警告)等
-文案：用tools:text编写(记得引入xmlns:tools)
 
 # 边距
 靠边间距：@dimen/ui_padding_edge
@@ -42,6 +41,9 @@ app:backgroundNormal="#ffffff"
 大容器：xxxHost
 小容器：xxxLayout
 RecyclerView：xxxRcv
+
+# 文字
+识别的文字，添加到strings.xml中，并在layout控件上@string/xxx引入。
 
 # Fragment
 继承BindingFragment<XXXBinding>
