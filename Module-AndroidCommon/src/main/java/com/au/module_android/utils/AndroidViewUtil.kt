@@ -5,12 +5,11 @@ import android.app.Dialog
 import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.Outline
+import android.graphics.Path
 import android.graphics.Rect
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewOutlineProvider
-import android.view.Window
+import android.graphics.RectF
+import android.os.Build
+import android.view.*
 import androidx.annotation.Keep
 import androidx.core.view.forEach
 import androidx.fragment.app.Fragment
@@ -126,17 +125,49 @@ fun View?.forEachChild(action: ((View) -> Unit)) {
  * 通过outlineProvider和setClipToOutline来给View设置圆角。
  */
 fun View.setOutlineProviderRoundCorner(radius:Float) {
+    setOutlineProviderRoundCorners(radius, radius, radius, radius)
+}
+
+fun View.setOutlineProviderRoundCorners(
+    topLeftRadius: Float,
+    topRightRadius: Float,
+    bottomRightRadius: Float,
+    bottomLeftRadius: Float
+) {
     val provider = object : ViewOutlineProvider() {
         override fun getOutline(view: View, outline: Outline) {
-            val rect = Rect()
-            view.getGlobalVisibleRect(rect)
-            val leftMargin = 0
-            val topMargin = 0
-            val selfRect = Rect(
-                leftMargin, topMargin,
-                rect.right - rect.left - leftMargin, rect.bottom - rect.top - topMargin
-            )
-            outline.setRoundRect(selfRect, radius)
+            val viewWidth = if (view.width > 0) view.width else view.measuredWidth
+            val viewHeight = if (view.height > 0) view.height else view.measuredHeight
+            if (viewWidth <= 0 || viewHeight <= 0) {
+                outline.setEmpty()
+                return
+            }
+            val selfRect = Rect(0, 0, viewWidth, viewHeight)
+            if (topLeftRadius == topRightRadius &&
+                topLeftRadius == bottomRightRadius &&
+                topLeftRadius == bottomLeftRadius
+            ) {
+                outline.setRoundRect(selfRect, topLeftRadius)
+                return
+            }
+            val path = Path().apply {
+                addRoundRect(
+                    RectF(selfRect),
+                    floatArrayOf(
+                        topLeftRadius, topLeftRadius,
+                        topRightRadius, topRightRadius,
+                        bottomRightRadius, bottomRightRadius,
+                        bottomLeftRadius, bottomLeftRadius
+                    ),
+                    Path.Direction.CW
+                )
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                outline.setPath(path)
+            } else {
+                @Suppress("DEPRECATION")
+                outline.setConvexPath(path)
+            }
         }
     }
 
