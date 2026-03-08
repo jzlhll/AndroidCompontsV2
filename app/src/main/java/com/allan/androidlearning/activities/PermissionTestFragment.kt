@@ -13,9 +13,7 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_androidui.ui.views.ViewFragment
-import com.au.module_simplepermission.PermissionMediaHelper
 import com.au.module_simplepermission.PermissionMediaType
-import com.au.module_simplepermission.addGhostPermissionFragment
 import com.au.module_simplepermission.createMediaPermissionForResult
 import com.au.module_simplepermission.createPostNotificationPermissionResult
 import com.au.module_simplepermission.permission.IOnePermissionResult
@@ -74,15 +72,6 @@ class PermissionTestFragment : ViewFragment() {
                 it.width = 300.dp
                 it.height = 60.dp
                 it.onClick {
-                    addGhostPermissionFragment("notificationRequest", this@PermissionTestFragment) { ghostFragment->
-                        logdNoFile {"alland ghost fragment $ghostFragment"}
-                        ghostFragment.result = ghostFragment.createPostNotificationPermissionResult()
-                        ghostFragment.canCallBlock = {
-                            ghostFragment.result.asOrNull<IOnePermissionResult>()?.safeRun {
-                                NotificationUtils.showNormalNotification("Just !!!", "aaa")
-                            }
-                        }
-                    }
                 }
             })
         }
