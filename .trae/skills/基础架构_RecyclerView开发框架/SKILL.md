@@ -53,12 +53,44 @@ data class MyMultiBean(override val viewType: Int, val data: String) : IMultiVie
 重写bindData(bean: Bean)：必须包含super.bindData(bean)
 数据访问：通过currentData获取当前绑定的数据
 
-## 点击事件传递流程
-1. 在ViewHolder的init{}中对目标View使用onClick{}监听
-2. ViewHolder构造函数添加onXxxClickBlock回调参数
-3. Holder通过currentData获取数据并回调onXxxClickBlock
-4. 创建Adapter时传入点击事件onXxxClickBlock参数
-5. Adapter在onCreateViewHolder中将onXxxClickBlock传递给Holder
+## 交互与刷新优化（按需实现）
+
+### 点击事件（Init中绑定）
+**默认不实现。仅当有点击需求时：**
+- **位置**：**必须**在 ViewHolder 的 `init {}` 中设置监听，**严禁**在 `bindData` 中设置。
+- **数据**：使用 `currentData` 属性获取当前 Item 数据（需判空）。
+- **传递**：通过 Holder 构造函数接收 Lambda 回调。
+
+### Payload 局部刷新（避免闪烁）
+**默认不实现。仅当需局部更新（如选中/进度）且需避免闪烁时：**
+- **用法**：
+  1. 调用 `notifyItemChanged(pos, payload)`（payload 非空）。
+  2. Holder 重写 `payloadsRefresh`，**必须**先调 `super`，再处理 payload。
+  3. 将 UI 更新逻辑抽取为独立方法（如 `updateSelection`），供 `bindData` 和 `payloadsRefresh` 复用。
+
+### 综合示例（按需选用）
+```kotlin
+class MyHolder(binding: MyBinding, val onClick: (MyBean) -> Unit) : BindViewHolder<MyBean, MyBinding>(binding) {
+    init {
+        // [按需] 仅有点击需求时编写
+        binding.root.onClick { (currentData as? MyBean)?.let { onClick(it) } }
+    }
+
+    override fun bindData(bean: MyBean) {
+        super.bindData(bean)
+        updateSelection(bean) // 全量更新
+    }
+
+    // [按需] 仅有Payload刷新需求时编写
+    override fun payloadsRefresh(bean: MyBean, payloads: MutableList<Any>) {
+        super.payloadsRefresh(bean, payloads) // 必须调用super
+        if (payloads.any { it == "refresh_select" }) updateSelection(bean) // 局部更新
+    }
+    
+    private fun updateSelection(bean: MyBean) { /* 更新视图状态 */ }
+}
+```
 
 ## 其他
 InViewPage2RecyclerView和InViewPageRecyclerView忽略他们的内部实现，就把他们当作普通的RecyclerView来使用。
+

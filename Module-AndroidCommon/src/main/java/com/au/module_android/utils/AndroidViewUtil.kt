@@ -128,7 +128,23 @@ fun View.setOutlineProviderRoundCorner(radius:Float) {
     setOutlineProviderRoundCorners(radius, radius, radius, radius)
 }
 
-fun View.setOutlineProviderRoundCorners(
+/**
+ * 设置顶部圆角。
+ * 内部通过setRoundRect实现，支持裁剪子View。
+ */
+fun View.setOutlineProviderTopRoundCorners(radius:Float) {
+    setOutlineProviderRoundCorners(radius, radius, 0f, 0f)
+}
+
+/**
+ * 设置底部圆角。
+ * 内部通过setRoundRect实现，支持裁剪子View。
+ */
+fun View.setOutlineProviderBottomRoundCorners(radius:Float) {
+    setOutlineProviderRoundCorners(0f, 0f, radius, radius)
+}
+
+private fun View.setOutlineProviderRoundCorners(
     topLeftRadius: Float,
     topRightRadius: Float,
     bottomRightRadius: Float,
@@ -150,23 +166,15 @@ fun View.setOutlineProviderRoundCorners(
                 outline.setRoundRect(selfRect, topLeftRadius)
                 return
             }
-            val path = Path().apply {
-                addRoundRect(
-                    RectF(selfRect),
-                    floatArrayOf(
-                        topLeftRadius, topLeftRadius,
-                        topRightRadius, topRightRadius,
-                        bottomRightRadius, bottomRightRadius,
-                        bottomLeftRadius, bottomLeftRadius
-                    ),
-                    Path.Direction.CW
-                )
+
+            if (topLeftRadius == topRightRadius && bottomLeftRadius == 0f && bottomRightRadius == 0f) {
+                outline.setRoundRect(0, 0, viewWidth, (viewHeight + topLeftRadius).toInt(), topLeftRadius)
+                return
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                outline.setPath(path)
-            } else {
-                @Suppress("DEPRECATION")
-                outline.setConvexPath(path)
+
+            if (bottomLeftRadius == bottomRightRadius && topLeftRadius == 0f && topRightRadius == 0f) {
+                outline.setRoundRect(0, -(bottomLeftRadius.toInt()), viewWidth, viewHeight, bottomLeftRadius)
+                return
             }
         }
     }

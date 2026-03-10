@@ -52,13 +52,21 @@ _dataState.setSuccess(items)
 - IO线程：`launchOnIOThread()`（`Dispatchers.IO`）
 - 主线程：`launchOnUi()`（`Dispatchers.Main.immediate`）
 
-### 4.3 异步任务封装
-- 使用 `runCallCatch()` 自动处理异常和状态更新
-
+### 4.3 异步任务try-catch写法
 ```kotlin
-runCallCatch(hasLoading = true, call = {
-    repository.getData()
-}, onState = _dataState)
+//1. 一般情况不写loading
+//xxStateFlow.setLoading()
+
+try {
+    //2. request data
+    //...
+    val result = ...
+    xxStateFlow.setSuccess(result)
+}
+catch (e: Exception) {
+    //3. error赋值
+    xxStateFlow.setError(e)
+}
 ```
 
 ## 5 Activity/Fragment使用ViewModel

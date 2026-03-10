@@ -29,6 +29,11 @@ app:backgroundNormal="#ffffff"
 输入框：StyleBlankEditText
 按钮：StyleButtonPrimary(常规), StyleButtonWarn(警告)等
 
+# 图片圆角
+使用 `com.google.android.material.imageview.ShapeableImageView`
+样式引用：`app:shapeAppearanceOverlay="@style/shape_roundXdp_Style"`
+样式定义：[images_styles.xml](../../../Module-AndroidUiEx/src/main/res/values/images_styles.xml)
+
 # 边距
 靠边间距：@dimen/ui_padding_edge
 其他间距(>10dp)：3的倍数(12,15,24等)
