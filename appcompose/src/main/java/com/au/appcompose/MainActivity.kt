@@ -1,5 +1,6 @@
 package com.au.appcompose
 
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -22,7 +23,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType.Companion.Uri
 import androidx.compose.ui.unit.Dp
+import androidx.core.net.toUri
 import com.au.appcompose.composeutils.getScreenDpValue
 import com.au.appcompose.composeutils.getNavigationBarHeight
 import com.au.appcompose.composeutils.getStatusBarHeight
@@ -60,7 +63,11 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun MainUi(name: String, modifier: Modifier = Modifier) {
-        var clicks by remember { mutableStateOf(0) }
+        var clicks by remember { mutableIntStateOf(0) }
+
+        val mutableState = remember { mutableStateOf("dddx".toUri()) }
+        var value2 by remember { mutableStateOf("dddx".toUri()) }
+        val (value4, setValue) = remember { mutableStateOf("dddx".toUri()) }
 
         Column(
             modifier = Modifier
@@ -72,6 +79,8 @@ class MainActivity : ComponentActivity() {
                 )
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally) {
+
+
             Text(
                 text = "Hello1 $name!",
                 modifier = modifier

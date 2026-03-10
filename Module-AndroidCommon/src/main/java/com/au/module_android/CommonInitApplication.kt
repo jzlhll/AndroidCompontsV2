@@ -13,6 +13,7 @@ import com.au.module_android.init.optimizeSpTask
 import com.au.module_android.log.LogTag
 import com.au.module_android.logdebug.LogDebugInit
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
+import com.au.module_android.glide.preInitGlide
 
 /**
  * @author allan
@@ -65,6 +66,7 @@ open class CommonInitApplication : Application() {
         super.onCreate()
         init(this)
         DarkModeAndLocalesConst.appOnCreated(this)
+        preInitGlide(this)
     }
 
     final override fun attachBaseContext(base: Context?) {

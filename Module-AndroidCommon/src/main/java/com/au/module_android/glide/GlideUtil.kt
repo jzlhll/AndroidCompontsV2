@@ -24,8 +24,22 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.bumptech.glide.signature.MediaStoreSignature
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+
+/**
+ * 预初始化 Glide，建议在 Application 的 onCreate 中调用。
+ * 解决首次加载图片慢的问题（因 Glide 初始化及 OkHttp 初始化耗时）。
+ */
+fun preInitGlide(context: Context) {
+    Globals.backgroundScope.launch {
+        ignoreError {
+            // 触发 Glide 初始化，进而触发 OkhttpAppGlideModule 的加载
+            Glide.get(context)
+        }
+    }
+}
 
 /**
  * 清除或者取消加载
