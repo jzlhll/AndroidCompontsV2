@@ -1,3 +1,9 @@
+/* Created on 2026/03/11.
+* Copyright (C) 2026 @jzlhll. All rights reserved.
+*
+* Licensed under the MIT License.
+* See LICENSE file in the project root for full license information.
+*/
 package com.au.module_android.utilthread
 
 import kotlinx.coroutines.*
@@ -5,6 +11,12 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Kotlin协程并发限制封装类
+ *
+ * 总结：
+ * 1. 适用场景：瞬间并发任务数较少（< 2000），且不需要严格背压（Backpressure）控制的场景。
+ * 2. 工作原理：基于 `Dispatcher.limitedParallelism`，所有任务会瞬间创建协程对象（Job），然后排队执行。
+ * 3. 注意事项：若瞬间提交大量任务（如 > 10000），会导致内存瞬间激增（创建大量挂起的协程对象），请慎用。
+ * 4. 替代方案：若需处理海量并发或严格背压，使用其他类代替。
 
 // 1. 在Activity/Fragment中创建Submitter（绑定生命周期，避免泄漏）
 val submitter = LimitedParallelismSubmitter(

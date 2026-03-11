@@ -9,15 +9,18 @@ import com.au.module_android.click.onClick
 import com.au.module_android.log.logt
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utilthread.CoroutineConcurrentLimiter
+import com.au.module_android.utilthread.CoroutineConcurrentLimiter2
+import com.au.module_android.utilthread.CoroutineConcurrentLimiter3
 import com.au.module_android.utilthread.PauseController
 import com.au.module_android.utilthread.SerialTaskExecutor
 import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
 import com.au.module_androidui.databinding.SimpleTextBinding
 import com.au.module_androidui.selectlist.SimpleItem
 import com.au.module_androidui.selectlist.SimpleListFragment
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author allan
@@ -47,7 +50,7 @@ class CoroutineFragment(override val title: String = "Coroutine")
         vb.root.text = item.itemName
     }
 
-    private val coroutineConcurrentLimiter = CoroutineConcurrentLimiter(2)
+    private val coroutineConcurrentLimiter = CoroutineConcurrentLimiter2(2)
 
     private val mSerialTaskExecutor by lazy {
         SerialTaskExecutor<Pair<String, Long>>() { bean->
@@ -91,7 +94,7 @@ class CoroutineFragment(override val title: String = "Coroutine")
                         logt { "CoroutineConcurrentLimiter: 执行完成 $randomIndex" }
                     }
                 }
-                coroutineConcurrentLimiter.joinAll()
+//                coroutineConcurrentLimiter.joinAll()
                 logt { "CoroutineConcurrentLimiter 10000: 所有任务完成" }
             }
         },
@@ -150,8 +153,65 @@ class CoroutineFragment(override val title: String = "Coroutine")
         },
         KotlinCoroutineSelectListItem("协程等待测试Stop") {
             pauseController.stop()
+        },
+        KotlinCoroutineSelectListItem("测试CoroutineConcurrentLimiter3") {
+            lifecycleScope.launch {
+                testV3()
+            }
         }
     )
+
+    suspend fun testV3() {
+        println("=== 开始测试 CoroutineConcurrentLimiter3 ===")
+
+        // 1. 创建限流器，最大并发
+        val limiter = CoroutineConcurrentLimiter3<Int>(
+            maxConcurrency = 2,
+            baseDispatcher = Dispatchers.Default // 测试用 Default
+        ) { taskId ->
+            // 模拟耗时任务
+            println("Task $taskId START at ${Thread.currentThread().name}")
+            delay(500) // 模拟 100ms 耗时
+            println("Task $taskId END")
+        }
+
+        // 2. 批量提交 20 个任务
+        println("\n--- 提交 20 个任务 ---")
+        val tasks = (1..50).toList()
+        limiter.submitList(tasks)
+
+        // 观察运行状态
+        repeat(5) {
+            delay(100)
+            println("Status: Pending=${limiter.getPendingCount()}, Running=${limiter.getRunningCount()}")
+        }
+
+        // 3. 追加任务
+        println("\n--- 追加单个任务 999 ---")
+        limiter.submit(999)
+
+        delay(3000) // 等待一部分任务跑完
+
+        // 4. 测试 StopAll (优雅停止)
+//        println("\n--- 测试 StopAll(false) - 清空队列但不杀当前任务 ---")
+//        limiter.submitList((100..110).toList()) // 再加点任务
+//        println("Before stop: Pending=${limiter.getPendingCount()}")
+//        limiter.stopAll(ifStopCurrent = false)
+//        println("After stop: Pending=${limiter.getPendingCount()} (Should be 0)")
+//
+        delay(500) // 观察是否有任务还在跑（应该只有 stop 前已经开始的在跑）
+
+        // 5. 测试 StopAll (强制停止)
+        println("\n--- 测试 StopAll(true) - 强制杀所有 ---")
+        limiter.submitList((200..210).toList())
+        delay(1500) // 让一些跑起来
+        println("Running before kill: ${limiter.getRunningCount()}")
+        limiter.stopAll(ifStopCurrent = true)
+        delay(300)
+        println("Running after kill: ${limiter.getRunningCount()} (Should be 0)")
+
+        println("\n=== 测试结束 ===")
+    }
 
     private val pauseController = PauseController()
 
@@ -162,7 +222,7 @@ class CoroutineFragment(override val title: String = "Coroutine")
         super.onDestroyView()
         mSerialTaskExecutor.close()
         mOtherSerialTaskExecutor.close()
-        coroutineConcurrentLimiter.cancelAll()
+//        coroutineConcurrentLimiter.cancelAll()
     }
 
 }
