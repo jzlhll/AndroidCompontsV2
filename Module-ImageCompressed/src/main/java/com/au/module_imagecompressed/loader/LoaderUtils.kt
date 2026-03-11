@@ -61,10 +61,9 @@ suspend fun loadThumbnailUriOrFile(context:Context,
         return loadCompressUriOrFile(context, uriOrFile)
     }
 
-    val thumbnailUtils = ThumbnailLoadHelper(context)
     return when (uriOrFile) {
-        is Uri -> thumbnailUtils.loadThumbnailCompat(uriOrFile, thumbSize)
-        is File -> thumbnailUtils.createImageThumbnailByPath(uriOrFile.absolutePath, thumbSize)
+        is Uri -> ThumbnailLoadHelper.loadThumbnailCompat(uriOrFile, thumbSize)
+        is File -> ThumbnailLoadHelper.createImageThumbnailByPath(uriOrFile.absolutePath, thumbSize)
         else -> null
     }
 }

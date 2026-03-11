@@ -1,6 +1,5 @@
 package com.au.module_imagecompressed.loader
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
@@ -8,6 +7,8 @@ import android.media.ThumbnailUtils
 import android.net.Uri
 import android.util.Size
 import androidx.core.graphics.scale
+import com.au.module_android.Globals
+import com.au.module_imagecompressed.compressor.centerCropBitmapToTargetSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -67,7 +68,7 @@ val compatVideoBitmap = thumbnailUtil.loadThumbnailCompat(compatVideoUri, target
  * 整合图片/视频缩略图生成、系统缓存查询、低版本兼容逻辑
  * 普通 Class 实现，需通过构造函数传入 Context 实例使用
  */
-class ThumbnailLoadHelper(private val context: Context) {
+object ThumbnailLoadHelper {
     /**
      * 【方法1】通过文件路径生成图片缩略图（兼容 API 28-）
      * @param filePath 图片文件绝对路径（公共目录/私有目录均可）
@@ -145,7 +146,7 @@ class ThumbnailLoadHelper(private val context: Context) {
         var mediaMetadataRetriever: MediaMetadataRetriever? = null
         return@withContext try {
             mediaMetadataRetriever = MediaMetadataRetriever()
-            mediaMetadataRetriever.setDataSource(context, uri)
+            mediaMetadataRetriever.setDataSource(Globals.app, uri)
 
             // 优先读取视频内置缩略图（无系统缓存逻辑）
             val thumbnailBytes = mediaMetadataRetriever.embeddedPicture
@@ -185,10 +186,22 @@ class ThumbnailLoadHelper(private val context: Context) {
      */
     fun loadThumbnailCompat(mediaUri: Uri, size: Size): Bitmap? {
         return try {
-            context.contentResolver.loadThumbnail(mediaUri, size, null)
+            Globals.app.contentResolver.loadThumbnail(mediaUri, size, null)
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
+    }
+
+    /**
+     * 加载并裁剪为正方形缩略图
+     * @param mediaUri 图片Uri
+     * @param targetSide 目标边长
+     */
+    fun loadSquareThumbnail(mediaUri: Uri, targetSide: Int): Bitmap? {
+        // 使用默认的缩略图尺寸加载，确保有足够的像素进行裁剪
+        // SYS_MIN_SIZE (512x384) 通常足够用于生成 224x224 的缩略图，且能较好处理长宽比问题
+        val bitmap = loadThumbnailCompat(mediaUri, SYS_MIN_SIZE) ?: return null
+        return bitmap.centerCropBitmapToTargetSize(targetSide, targetSide)
     }
 }

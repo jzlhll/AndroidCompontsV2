@@ -63,7 +63,7 @@ inline fun <THIS : Any> THIS.logdNoFile(javaClass:Class<*> = this.javaClass, cro
     }
 }
 
-inline fun CoroutineScope.logdNoFile(tag:String = "scope", crossinline block: (CoroutineScope) -> String) {
+inline fun CoroutineScope.logdNoFile(tag:String = "", crossinline block: (CoroutineScope) -> String) {
     if (ALWAYS_LOG_DEBUG) {
         val str = block(this)
         val log = ALogJ.log("D", "$tag: $str")
