@@ -6,12 +6,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.au.module_nested.decoration.GridTwoDownItemDecoration
-import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
-import com.au.module_nested.recyclerview.page.AbstractPageViewModel
 import com.au.module_android.simplelivedata.Status
 import com.au.module_android.utils.dp
+import com.au.module_nested.decoration.GridMultiDownItemDecoration
+import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
 import com.au.module_nested.recyclerview.IViewTypeBean
+import com.au.module_nested.recyclerview.page.AbstractPageViewModel
 
 /**
  * 用于联动下拉刷新框架。
@@ -80,9 +80,10 @@ open class PageRecyclerOnlyManager<Bean: IViewTypeBean>(
     private fun initGridAdapterAndRcv(savedInstanceState: Bundle?,
                                       viewLifecycleOwner: LifecycleOwner,
                                       paddingLeft:Int = 7.5f.dp.toInt(), paddingRight:Int = 7.5f.dp.toInt(),
-                                      decoration: RecyclerView.ItemDecoration = GridTwoDownItemDecoration(
+                                      decoration: RecyclerView.ItemDecoration = GridMultiDownItemDecoration(
                                        10f.dp.toInt(),
-                                       10f.dp.toInt()
+                                       12f.dp.toInt(),
+                                          2
                                    )
     ) {
         rcv.updatePadding(left = paddingLeft, right = paddingRight)

@@ -21,12 +21,23 @@ open class AbsFragment : Fragment(), IFullWindow {
      */
     open val customBackAction:(()->Boolean)? = null
 
+    /**
+     * 是否开启上面的back action功能。默认开启。
+     */
+    open var customBackActionEnable = true
+
     private val invokedBack:Any? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         OnBackInvokedCallback {
             customBack()
         }
     } else {
         null
+    }
+
+    private var backPressedCallback = object: OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            customBack()
+        }
     }
 
     /**
@@ -36,14 +47,12 @@ open class AbsFragment : Fragment(), IFullWindow {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, invokedBack as OnBackInvokedCallback)
-        } else {
-            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object: OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    customBack()
-                }
-            })
+        if (customBackActionEnable) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireActivity().onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, invokedBack as OnBackInvokedCallback)
+            } else {
+                requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressedCallback)
+            }
         }
     }
 
@@ -60,8 +69,10 @@ open class AbsFragment : Fragment(), IFullWindow {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(invokedBack as OnBackInvokedCallback)
+        if (customBackActionEnable) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireActivity().onBackInvokedDispatcher.unregisterOnBackInvokedCallback(invokedBack as OnBackInvokedCallback)
+            }
         }
     }
 

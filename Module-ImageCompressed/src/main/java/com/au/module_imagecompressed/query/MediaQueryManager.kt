@@ -1,7 +1,10 @@
 package com.au.module_imagecompressed.query
 
 import android.content.ContentUris
+import android.content.ContentResolver
 import android.content.Context
+import android.os.Build
+import android.os.Bundle
 import android.database.Cursor
 import android.provider.MediaStore
 import android.provider.MediaStore.Files.FileColumns
@@ -76,7 +79,7 @@ class MediaQueryManager(private val context: Context) {
     }
 
     // ==================== 2. 查询所有图片+视频（支持指定相册，时间逆序）- 仍用Files通用Uri ====================
-    suspend fun queryAllImageAndVideo(album: Album? = null): List<MediaFile> = withContext(Dispatchers.IO) {
+    suspend fun queryAllImageAndVideo(album: Album? = null, limit: Int? = null): List<MediaFile> = withContext(Dispatchers.IO) {
         val mediaList = mutableListOf<MediaFile>()
         // 图片/视频通用投影列
         val projection = arrayOf(
@@ -99,12 +102,15 @@ class MediaQueryManager(private val context: Context) {
         // 筛选指定相册
         addAlbumFilter(selectionBuilder, selectionArgs, album)
 
+        val baseSortOrder = "${FileColumns.DATE_MODIFIED} DESC"
+        val sortOrder = if (limit != null && limit > 0) "$baseSortOrder LIMIT $limit" else baseSortOrder
+
         val cursor: Cursor? = contentResolver.query(
             MediaStore.Files.getContentUri("external"),
             projection,
             selectionBuilder.toString(),
             selectionArgs.toTypedArray(),
-            "${FileColumns.DATE_MODIFIED} DESC"
+            sortOrder
         )
         // 解析Cursor为MediaFile
         cursor?.use { mediaList.addAll(parseMediaCursor(it, projection)) }
@@ -112,7 +118,7 @@ class MediaQueryManager(private val context: Context) {
     }
 
     // ==================== 3. 查询所有图片（支持指定相册，时间逆序）- 改用MediaStore.Images专属Uri ====================
-    suspend fun queryAllImages(album: Album? = null): List<MediaFile> = withContext(Dispatchers.IO) {
+    suspend fun queryAllImages(album: Album? = null, limit: Int? = null): List<MediaFile> = withContext(Dispatchers.IO) {
         val contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
@@ -128,12 +134,13 @@ class MediaQueryManager(private val context: Context) {
         // 仅筛选指定相册，无需筛选媒体类型（专属Uri已限定）
         addAlbumFilter(selectionBuilder, selectionArgs, album)
 
-        val cursor: Cursor? = contentResolver.query(
-            contentUri,
-            projection,
-            if (selectionBuilder.isNotEmpty()) selectionBuilder.toString() else null,
-            if (selectionArgs.isNotEmpty()) selectionArgs.toTypedArray() else null,
-            "${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+        val cursor: Cursor? = queryMediaWithLimit(
+            contentUri = contentUri,
+            projection = projection,
+            selection = if (selectionBuilder.isNotEmpty()) selectionBuilder.toString() else null,
+            selectionArgs = if (selectionArgs.isNotEmpty()) selectionArgs.toTypedArray() else null,
+            sortColumn = MediaStore.Images.Media.DATE_MODIFIED,
+            limit = limit
         )
         // 解析Cursor为MediaFile
         val mediaList = mutableListOf<MediaFile>()
@@ -144,17 +151,17 @@ class MediaQueryManager(private val context: Context) {
     }
 
     // ==================== 4. 查询所有视频（支持指定相册，时间逆序）- 改用MediaStore.Video专属Uri ====================
-    suspend fun queryAllVideos(album: Album? = null): List<MediaFile> = withContext(Dispatchers.IO) {
+    suspend fun queryAllVideos(album: Album? = null, limit: Int? = null): List<MediaFile> = withContext(Dispatchers.IO) {
         val contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
 
         val mediaList = mutableListOf<MediaFile>()
         val projection = arrayOf(
-            MediaStore.Images.Media._ID,
+            MediaStore.Video.Media._ID,
             MediaStore.MediaColumns.DISPLAY_NAME,
-            MediaStore.Images.Media.MIME_TYPE,
-            MediaStore.Images.Media.SIZE,
-            MediaStore.Images.Media.DATE_MODIFIED,
-            MediaStore.Images.Media.BUCKET_ID,
+            MediaStore.Video.Media.MIME_TYPE,
+            MediaStore.Video.Media.SIZE,
+            MediaStore.Video.Media.DATE_MODIFIED,
+            MediaStore.Video.Media.BUCKET_ID,
             MediaStore.Video.Media.DURATION,
         )
         val selectionBuilder = StringBuilder()
@@ -163,12 +170,13 @@ class MediaQueryManager(private val context: Context) {
         // 仅筛选指定相册，无需筛选媒体类型（专属Uri已限定）
         addAlbumFilter(selectionBuilder, selectionArgs, album)
 
-        val cursor: Cursor? = contentResolver.query(
-            contentUri,
-            projection,
-            if (selectionBuilder.isNotEmpty()) selectionBuilder.toString() else null,
-            if (selectionArgs.isNotEmpty()) selectionArgs.toTypedArray() else null,
-            "${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+        val cursor: Cursor? = queryMediaWithLimit(
+            contentUri = contentUri,
+            projection = projection,
+            selection = if (selectionBuilder.isNotEmpty()) selectionBuilder.toString() else null,
+            selectionArgs = if (selectionArgs.isNotEmpty()) selectionArgs.toTypedArray() else null,
+            sortColumn = MediaStore.Video.Media.DATE_MODIFIED,
+            limit = limit
         )
         // 解析Cursor为MediaFile
         cursor?.use {
@@ -304,6 +312,29 @@ class MediaQueryManager(private val context: Context) {
             )
         }
         return mediaList
+    }
+
+    private fun queryMediaWithLimit(
+        contentUri: android.net.Uri,
+        projection: Array<String>,
+        selection: String?,
+        selectionArgs: Array<String>?,
+        sortColumn: String,
+        limit: Int?
+    ): Cursor? {
+        val normalizedLimit = limit?.takeIf { it > 0 }
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val queryArgs = Bundle().apply {
+                if (!selection.isNullOrEmpty()) putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+                if (!selectionArgs.isNullOrEmpty()) putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
+                putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, "$sortColumn DESC")
+                normalizedLimit?.let { putInt(ContentResolver.QUERY_ARG_LIMIT, it) }
+            }
+            contentResolver.query(contentUri, projection, queryArgs, null)
+        } else {
+            val sortOrder = if (normalizedLimit != null) "$sortColumn DESC LIMIT $normalizedLimit" else "$sortColumn DESC"
+            contentResolver.query(contentUri, projection, selection, selectionArgs, sortOrder)
+        }
     }
 }
 /*

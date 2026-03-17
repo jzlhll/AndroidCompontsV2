@@ -318,4 +318,10 @@
         <attr name="toolbarLayoutDefault" format="boolean" />
         <attr name="toolbarNormalTitle" format="string" />
     </declare-styleable>
+
+    <!-- 固定高度ImageView的自定义属性 -->
+    <declare-styleable name="FixedHeightImageView">
+        <attr name="minWidthRatio" format="float" />
+        <attr name="maxWidthRatio" format="float" />
+    </declare-styleable>
 </resources>
