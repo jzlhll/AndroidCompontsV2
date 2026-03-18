@@ -166,52 +166,19 @@ class UnzipHelper {
         } else {
             assetPath.trimEnd('/') + "/" + assetName
         }
-        var assetSize:Long
+        var assetSize:Long = -1L
         try {
-            val afd = assetManager.openFd(assetFilePath)
-            assetSize = afd.length
-            afd.close()
+            assetManager.open(assetFilePath).use {
+                assetSize = it.available().toLong()
+            }
         } catch (_: IOException) {
-            assetSize = -1L
         }
-        val same = assetSize >= 0 && targetFile.length() == assetSize
+        val targetSize = targetFile.length()
+        val same = assetSize >= 0 && targetSize == assetSize
         if (assetSize >= 0 && !same) {
             targetFile.delete()
         }
         return same
-    }
-
-    /**
-     * 检查assets目录下的文件是否与目标目录下的文件大小一致
-     */
-    fun checkSizeSame(assetManager: AssetManager, assetPath:String = "", assetNames: Array<String>, targetDir:String) : List<String> {
-        val notSameList = mutableListOf<String>()
-        for (i in assetNames.indices) {
-            val item = assetNames[i]
-            val targetFile = File(targetDir, item)
-            if (!targetFile.exists()) {
-                notSameList.add(item)
-                continue
-            }
-            val assetFilePath = if (assetPath.isBlank()) {
-                item
-            } else {
-                assetPath.trimEnd('/') + "/" + item
-            }
-            var assetSize:Long
-            try {
-                val afd = assetManager.openFd(assetFilePath)
-                assetSize = afd.length
-                afd.close()
-            } catch (_: IOException) {
-                assetSize = -1L
-            }
-            val same = assetSize >= 0 && targetFile.length() == assetSize
-            if (!same) {
-                notSameList.add(item)
-            }
-        }
-        return notSameList
     }
 
     /**
