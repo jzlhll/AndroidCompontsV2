@@ -3,7 +3,7 @@ name: Copyright文件头申明
 description: 当要求你添加Copyright文件头申明的时候，阅读它。
 ---
 
-$name: @jzlhll
+$name: @jzlhll 
 $time：请根据当前时间填写，格式为yyyy/MM/dd
 $year: 请根据当前时间填写，格式为yyyy
 

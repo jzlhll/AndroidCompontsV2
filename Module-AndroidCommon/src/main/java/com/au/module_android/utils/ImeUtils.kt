@@ -1,30 +1,14 @@
 package com.au.module_android.utils
 
-import android.os.Build
-import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.EditText
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-
 /**
  * 监听键盘高度变化，兼容安卓11以下机型
- * 安卓11以下，不支持控制键盘移动
- *
- * 对话框使用，需要传入activity的window对象，如果传入dialog的window对象，会导致监听无效
- *
- * [Android软键盘的监听与高度控制的几种方案及常用效果 - 掘金 (juejin.cn)](https://juejin.cn/post/7150453629021847566)
-android11以上可以监听ime高度不断回调
-android11一下：简单点则直接设置state_
-
 STATE组和ADJUST可以共用。
 
 [Android-软键盘一招搞定(原理篇) - 简书 (jianshu.com)](https://www.jianshu.com/p/996dd93f8a48)
@@ -40,8 +24,6 @@ STATE组和ADJUST可以共用。
 ​	**跳转到一个新页面而非返回到当前页面，stateHidden只有在向前跳转的时候才会去调用hideCurrentInputLocked方法隐藏输入法，而stateAlwaysHidden则没有这个判断，任何情况下窗口获取到焦点都会去隐藏输入法。**
 
 目标是隐藏键盘。只是看看要不要跟随前面一个界面是否隐藏罢了。
-
-
 
 #### SOFT_INPUT_STATE_VISIBLE,
 
@@ -67,8 +49,6 @@ STATE组和ADJUST可以共用。
 
 android11通过Call Window.setDecorFitsSystemWindows(boolean) with false and install an View.OnApplyWindowInsetsListener on your root content view that fits insets of type WindowInsets.Type.ime(). 来做。
 
-
-
 #### SOFT_INPUT_ADJUST_PAN,
 
 1、当设置SOFT_INPUT_ADJUST_PAN时，如果发现键盘遮住了当前有焦点的View，那么会对RootView(此处Demo里DecorView作为RootView)的Canvas进行平移，直至有焦点的View显示到可见区域为止。
@@ -76,20 +56,10 @@ android11通过Call Window.setDecorFitsSystemWindows(boolean) with false and ins
 
  **API描述：**不跟SOFT_INPUT_ADJUST_RESIZE 一起使用。如果没有设置任何一个SOFT_INPUT_ADJUST_*，系统会选一个来适配；如果window是全屏的则不调整。实践下来基本上是选择RESIZE或者PAN。
 
-
-
 #### SOFT_INPUT_ADJUST_NOTHING,
 
 不准调整布局。
  */
-
-/**
- * 是否支持键盘动画，安卓11及以上才支持
- */
-val supportImeAnim
-    get() = Build.VERSION.SDK_INT >= 30
-
-private const val DEBUG = false
 
 //ViewCompat.getWindowInsetsController(this) 已经经常失效了。改成WindowCompat.getInsetsController(window, view)
 

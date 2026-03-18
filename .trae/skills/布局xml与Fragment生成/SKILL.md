@@ -25,7 +25,7 @@ app:backgroundNormal="#ffffff"
 
 # 样式
 [styles.xml](../../../Module-AndroidColor/src/main/res/values/styles.xml)
-文本：StyleAuTextNormal(常规), StyleAuTextNormalDesc(灰色描述)等等
+文本：StyleAuTextNormal(常规),StyleAuTextNormalDesc(灰色描述)等等
 输入框：StyleBlankEditText
 按钮：StyleButtonPrimary(常规), StyleButtonWarn(警告)等
 

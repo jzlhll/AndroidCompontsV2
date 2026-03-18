@@ -25,12 +25,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType.Companion.Uri
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.au.appcompose.composeutils.getScreenDpValue
 import com.au.appcompose.composeutils.getNavigationBarHeight
 import com.au.appcompose.composeutils.getStatusBarHeight
 import com.au.appcompose.ui.theme.AndroidCompontsTheme
 import com.au.appcompose.ui.theme.uiPaddingEdge
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     companion object {
@@ -59,6 +61,33 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @Composable
+    fun RememberUpdatedStateUsage(onTimeout: () -> Unit) {
+        val latestOnTimeout by rememberUpdatedState(newValue = onTimeout)
+
+        val lastOnTimeout2 by remember { mutableStateOf(onTimeout) }.apply {
+            value = onTimeout
+        }
+
+        LaunchedEffect(key1 = true) {
+            delay(3000)
+            lastOnTimeout2()
+        }
+
+        Text("3秒后执行回调（回调更新不重启协程）", Modifier.padding(16.dp))
+    }
+
+    @Composable
+    fun RememberUpdatedStateCaller() {
+        var message by remember { mutableStateOf("初始回调") }
+
+        RememberUpdatedStateUsage(
+            onTimeout = { message = "最新回调执行！" }
+        )
+
+        Text(message, Modifier.padding(16.dp))
     }
 
     @Composable
