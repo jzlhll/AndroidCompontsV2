@@ -21,7 +21,6 @@ import com.au.module_okhttp.creator.AbsCookieJar
 import com.au.module_okhttp.interceptors.PretreatmentInterceptor
 import com.au.module_okhttp.interceptors.SimpleRetryInterceptor
 import com.modulenative.AppNative
-import dagger.hilt.android.HiltAndroidApp
 import okhttp3.ConnectionPool
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.android.get
@@ -37,7 +36,6 @@ import java.util.concurrent.TimeUnit
  * @date :2024/9/29 16:42
  * @description:
  */
-@HiltAndroidApp
 class App : InitApplication() {
 
     override fun initBeforeAttachBaseContext() {

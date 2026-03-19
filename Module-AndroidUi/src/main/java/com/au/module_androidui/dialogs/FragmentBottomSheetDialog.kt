@@ -8,6 +8,7 @@ import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.*
 import com.au.module_androidui.R
 import com.au.module_androidui.ui.base.AbsBottomDialog

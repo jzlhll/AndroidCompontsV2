@@ -5,12 +5,10 @@ blurview = "version-2.0.6"
 cameraCamera2 = "1.5.3"
 liquidglass = "1.0.3"
 flexbox = "3.0.0"
-hiltAndroid = "2.57.2"
-hiltAndroidCompiler = "2.57.2"
 constraintlayout = "2.2.1"
-coreKtx = "1.17.0"
+coreKtx = "1.18.0"
 coreSplashscreen = "1.2.0"
-datastorePreferences = "1.2.0"
+datastorePreferences = "1.2.1"
 espressoCore = "3.7.0"
 glide = "5.0.5"
 glideTransformations = "4.3.0"
@@ -47,15 +45,15 @@ window = "1.5.1"
 lifecycleProcess = "2.10.0"
 workRuntimeKtx = "2.11.1"
 agp = "8.13.2"
-kotlin = "2.3.10"
-activityCompose = "1.12.4"
-composeBom = "2026.02.01"
-jetbrainsKotlinJvm = "2.3.10"
-activity = "1.12.4"
-uiUnit = "1.10.4"
+kotlin = "2.3.20"
+activityCompose = "1.13.0"
+composeBom = "2026.03.00"
+jetbrainsKotlinJvm = "2.3.20"
+activity = "1.13.0"
+uiUnit = "1.10.5"
 kotlinxSerializationJson = "1.10.0"
-koinBom = "4.1.1"
-media3Exoplayer = "1.9.2"
+koinBom = "4.2.0"
+media3Exoplayer = "1.9.3"
 
 [libraries]
 androidx-compose-material3-window-size-class1 = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
@@ -88,8 +86,6 @@ androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version
 blurview = { module = "com.github.Dimezis:BlurView", version.ref = "blurview" }
 liquidglass = { module = "com.qmdeve.liquidglass:core", version.ref = "liquidglass" }
 flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }
-hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
-hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
 koin-android = { module = "io.insert-koin:koin-android" }

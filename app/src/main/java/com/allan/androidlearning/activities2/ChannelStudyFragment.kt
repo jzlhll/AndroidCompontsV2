@@ -160,29 +160,4 @@ class ChannelExampleViewModel : ViewModel() {
         senderJob.join()
         logt { "Cancel example done" }
     }
-
-    // 通道作为通信桥梁示例
-    suspend fun channelAsBridgeExample() {
-        val channel = Channel<String>()
-
-        // 生产者
-        viewModelScope.launch {
-            val items = listOf("Item 1", "Item 2", "Item 3")
-            for (item in items) {
-                channel.send(item)
-                delay(300)
-            }
-            channel.close()
-        }
-
-        // 消费者
-        viewModelScope.launch {
-            channel.collect {
-                logt { "Processed: $it" }
-                // 模拟处理时间
-                delay(500)
-            }
-            logt { "Bridge example done" }
-        }
-    }
 }

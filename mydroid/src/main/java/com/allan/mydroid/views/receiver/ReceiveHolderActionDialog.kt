@@ -1,6 +1,7 @@
 package com.allan.mydroid.views.receiver
 
 import android.annotation.SuppressLint
+import android.os.Bundle
 import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.BuildConfig
@@ -39,11 +40,13 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
                 fileExportFailCallback:(String)->Unit = {},
                 refreshFileListCallback:()->Unit = {},
                 importSendCallback:()->Unit = {}) {
-            FragmentBottomSheetDialog.show<ReceiveHolderActionDialog>(manager, bundleOf("file" to file))
             this.fileExportSuccessCallback = WeakReference(fileExportSuccessCallback)
             this.fileExportFailCallback = WeakReference(fileExportFailCallback)
             this.refreshFileListCallback = WeakReference(refreshFileListCallback)
             this.importSendCallback = WeakReference(importSendCallback)
+            FragmentBottomSheetDialog.show<ReceiveHolderActionDialog>(manager, Bundle().also {
+                it.putSerializable("file", file)
+            })
         }
 
         private const val TAG_OPEN = "open"
@@ -53,21 +56,21 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
         private const val TAG_EXPORT_AND_DEL = "exportAndDelete"
     }
 
-    val mItems = listOf(
-        ItemBean(TAG_OPEN, getString(R.string.open), R.drawable.ic_open, normalColor),
-        ItemBean(TAG_SHARE, getString(R.string.share), R.drawable.ic_share, normalColor),
-        ItemBean(TAG_EXPORT_ONLY, getString(R.string.export), R.drawable.ic_export, normalColor),
-        ItemBean(TAG_DELETE, getString(R.string.delete), R.drawable.ic_delete, normalColor),
-        ItemBean(TAG_EXPORT_AND_DEL, getString(R.string.export_and_delete), R.drawable.ic_export_and_delete, normalColor))
+    override val items: List<ItemBean> by lazy {
+        listOf(
+            ItemBean(TAG_OPEN, getString(R.string.open), R.drawable.ic_open, normalColor),
+            ItemBean(TAG_SHARE, getString(R.string.share), R.drawable.ic_share, normalColor),
+            ItemBean(TAG_EXPORT_ONLY, getString(R.string.export), R.drawable.ic_export, normalColor),
+            ItemBean(TAG_DELETE, getString(R.string.delete), R.drawable.ic_delete, normalColor),
+            ItemBean(TAG_EXPORT_AND_DEL, getString(R.string.export_and_delete), R.drawable.ic_export_and_delete, normalColor)
+        )
+    }
 
-    override val items: List<ItemBean>
-        get() = mItems
-
-    private lateinit var file: File
+    private var file: File? = null
 
     override fun onStart() {
         super.onStart()
-        file = arguments?.serializableCompat<File>("file")!!
+        file = arguments?.serializableCompat<File>("file")
     }
 
     private fun export(delete: Boolean) {
@@ -77,7 +80,10 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
     }
 
     @SuppressLint("SdCardPath")
-    private suspend fun exportInThread(file: File, delete: Boolean) {
+    private suspend fun exportInThread(file: File?, delete: Boolean) {
+        if (file == null) {
+            return
+        }
         delay(0)
 
         val uri = ignoreError {
@@ -110,6 +116,8 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
     }
 
     override fun notify(tag: Any) {
+        val file = this.file ?: return
+
         when (tag.toString()) {
             TAG_OPEN -> {
                 openWith(requireActivity(),

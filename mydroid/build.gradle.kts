@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
-    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -100,11 +99,6 @@ dependencies {
     implementation(project(":Module-AuSimplePermission"))
 
     implementation(libs.jsbridgev2)
-
-    //hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.android.compiler)
-
     implementation(libs.okhttp)
 
     implementation(platform(libs.koin.bom))
