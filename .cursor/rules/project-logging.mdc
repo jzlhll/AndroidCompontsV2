@@ -1,0 +1,13 @@
+---
+description: Kotlin 源码中的日志优先级、入口写法与严重错误日志
+globs: "**/*.kt"
+alwaysApply: false
+---
+
+# 日志规范
+
+适用于 Kotlin 源文件；若在 `.kts` 中编写同类日志，同样遵守。
+
+- 优先 `logdNoFile`（仅控制台）。
+- 函数入口用 `logdNoFile{}`，函数名拆分（如 `onDeviceListChanged` → on deviceList changed）。
+- 严重错误使用 `loge{}` / `logEx(throwable){}`。

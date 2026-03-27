@@ -1,0 +1,61 @@
+---
+description: 
+alwaysApply: true
+---
+
+
+# CLAUDE.md
+
+## 语言偏好
+
+所有对话使用**中文**进行交流。
+
+## 项目概述
+
+这是一个 Android 项目，使用 Gradle 构建。
+
+### 主要模块
+
+- `ImagechoReframe/` - 主应用模块
+- `Module-AndroidColor/` - Android 颜色相关工具
+- `Module-AndroidCommon/` - Android 通用工具
+- `Module-AndroidUi/` - Android UI 组件
+- `Module-AndroidUiEx/` - Android UI 扩展组件
+- `Module-AuGsonMMKV/` - Gson 和 MMKV 存储工具
+- `Module-AuKson/` - JSON 序列化工具
+- `Module-AuSimplePermission/` - 权限管理
+- `Module-ImageCompressed/` - 图片压缩
+- `Module-Mqtt/` - MQTT 通信
+- `Module-Nested/` - 嵌套滚动组件
+- `Module-Network/` - 网络请求
+- `Module-Protected/` - 保护/加密相关
+
+## 开发规范
+
+### 通用规则
+
+在开始工作前，**必须**先阅读：`.trae/rules/project_rules.md`
+
+### 技能指南
+
+处理以下任务时，**必须**先阅读对应的 SKILL.md 文件：
+
+| 触发场景 | 技能文件路径 |
+|---------|-------------|
+| Code Review | `.trae/skills/codeReview/SKILL.md` |
+| RecyclerView 相关 | `.trae/skills/基础架构_RecyclerView开发框架/SKILL.md` |
+| ViewModel/Flow | `.trae/skills/框架组件_viewModel和Flow开发框架/SKILL.md` |
+| MMKV 存储 | `.trae/skills/Util_MMKV使用规则/SKILL.md` |
+| Gson 使用 | `.trae/skills/Util_GSON使用规则/SKILL.md` |
+| Koin 依赖注入 | `.trae/skills/框架组件_koin依赖注入/SKILL.md` |
+| API 自动生成 | `.trae/skills/业务_api自动生成/SKILL.md` |
+| Room 数据库 | `.trae/skills/基础架构_room数据库开发规范/SKILL.md` |
+| LiveData | `.trae/skills/框架组件_LiveData使用规则/SKILL.md` |
+| Bitmap 处理 | `.trae/skills/Util_Bitmap处理/SKILL.md` |
+| 图片选择器/拍照 | `.trae/skills/Util_图片选择器和拍照弹窗/SKILL.md` |
+| 布局与 Fragment | `.trae/skills/布局xml与Fragment生成/SKILL.md` |
+| WebSocket 指令 | `.trae/skills/业务_websocket指令生成/SKILL.md` |
+| Glide 图片加载 | `.trae/skills/Util_Glide加载图片到ImageView/SKILL.md` |
+| Uri 解析 | `.trae/skills/Util_Uri解析Info/SKILL.md` |
+| 输入法 | `.trae/skills/Util_InputMethod/SKILL.md` |
+| Copyright 头声明 | `.trae/skills/Copyright文件头申明/SKILL.md` |

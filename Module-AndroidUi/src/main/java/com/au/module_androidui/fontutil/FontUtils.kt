@@ -3,14 +3,13 @@ package com.au.module_androidui.fontutil
 import android.content.Context
 import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.Log
 import android.widget.TextView
-import com.au.module_androidui.R
-import com.au.module_androidui.widget.FontMode
-import com.au.module_androidui.widget.TextViewCheckMode
 import androidx.core.content.withStyledAttributes
 import com.au.module_android.utils.ignoreError
 import com.au.module_androidui.BuildConfig
+import com.au.module_androidui.R
+import com.au.module_androidui.widget.FontMode
+import com.au.module_androidui.widget.TextViewCheckMode
 
 /**
  * 全局字体默认文件。可以自行更换任意一项，目前虽然一样。
@@ -98,6 +97,11 @@ fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewC
 }
 
 fun TextView.setFontFromAsset(context: Context, mode: FontMode, isNumber:Boolean, fontName:String) {
+    if (fontName.isNotEmpty()) {
+        setFontFromAssets(context, "fonts/$fontName")
+        return
+    }
+
     //todo 根据是否存在这些字体，来决定比如mid=bold，或者num=非num。
     val isSuc = if (!isNumber) {
         when (mode) {

@@ -1,14 +1,3 @@
-/* 
-* Created by jiangzhonglun@imagecho.ai on 2026/03/17.
-*
-* Copyright (C) 2026 [imagecho.ai]. All Rights Reserved.
-*
-* This software is proprietary and confidential. Unauthorized use, copying,
-* modification, or distribution is prohibited without prior written consent.
-*
-* For inquiries, contact: [contacts@imagecho.ai]
-*/
-
 package com.au.module_androidui.widget;
 
 import android.content.Context;
