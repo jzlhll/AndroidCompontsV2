@@ -1,7 +1,9 @@
 package com.au.audiorecordplayer.recorder;
 
+import android.content.Context;
+
 public interface ISimpleRecord {
-    void start() throws Exception;
+    void start(Context context) throws Exception;
     void stop();
     boolean isRecording();
 
