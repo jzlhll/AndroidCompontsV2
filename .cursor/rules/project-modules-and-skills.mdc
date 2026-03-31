@@ -14,13 +14,11 @@ alwaysApply: true
 | MMKV 存储 | `.trae/skills/Util_MMKV使用规则/SKILL.md` |
 | Gson 使用 | `.trae/skills/Util_GSON使用规则/SKILL.md` |
 | Koin 依赖注入 | `.trae/skills/框架组件_koin依赖注入/SKILL.md` |
-| API 自动生成 | `.trae/skills/业务_api自动生成/SKILL.md` |
 | Room 数据库 | `.trae/skills/基础架构_room数据库开发规范/SKILL.md` |
 | LiveData | `.trae/skills/框架组件_LiveData使用规则/SKILL.md` |
 | Bitmap 处理 | `.trae/skills/Util_Bitmap处理/SKILL.md` |
 | 图片选择器/拍照 | `.trae/skills/Util_图片选择器和拍照弹窗/SKILL.md` |
 | 布局与 Fragment | `.trae/skills/布局xml与Fragment生成/SKILL.md` |
-| WebSocket 指令 | `.trae/skills/业务_websocket指令生成/SKILL.md` |
 | Glide 图片加载 | `.trae/skills/Util_Glide加载图片到ImageView/SKILL.md` |
 | Uri 解析 | `.trae/skills/Util_Uri解析Info/SKILL.md` |
 | 输入法 | `.trae/skills/Util_InputMethod/SKILL.md` |
