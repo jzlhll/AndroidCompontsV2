@@ -25,7 +25,7 @@ description: 当涉及到Fragment生成，Layout布局创建与修改，联动fi
   则添加如下内容，数值不做修改，并修改父控件属性clipChildren和clipToPadding为false：
 ```xml
 app:shadowBlur="8dp"
-app:shadowColor="#10000000"
+app:shadowColor="#10000000" 
 app:shadowOffsetY="4dp"
 app:backgroundNormal="#ffffff"
 ```
@@ -73,6 +73,7 @@ RecyclerView：xxxRcv
 继承BindingFragment<XXXBinding>
 重写onBindingCreated
 点击用onClick扩展
+多个View共用同一点击逻辑时，定义为`(View)->Unit`，然后对各个View直接`onClick(该lambda)`传入
 标题栏：默认用YourToolbarInfo.Defaults，自定义用YourToolbarInfo.Yours
 不要给布局的根控件添加id，使用binding.root即可(无需强转)
 

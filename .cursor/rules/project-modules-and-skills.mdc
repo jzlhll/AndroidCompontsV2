@@ -2,6 +2,20 @@
 description: 项目模块列表与技能文件映射
 alwaysApply: true
 ---
+
+## 主要模块
+
+- `Module-AndroidColor/` - Android 颜色相关工具
+- `Module-AndroidCommon/` - Android 通用工具
+- `Module-AndroidUi/` - Android UI 组件
+- `Module-AuGsonMMKV/` - Gson 和 MMKV 存储工具
+- `Module-AuKson/` - JSON 序列化工具
+- `Module-AuSimplePermission/` - 权限管理
+- `Module-ImageCompressed/` - 图片压缩
+- `Module-Nested/` - 嵌套滚动组件
+- `Module-Network/` - 网络请求
+- `Module-Native/` - 保护/加密相关
+
 ## 开发规范：技能指南
 
 处理以下任务时，**必须**先阅读对应的 SKILL.md 文件：

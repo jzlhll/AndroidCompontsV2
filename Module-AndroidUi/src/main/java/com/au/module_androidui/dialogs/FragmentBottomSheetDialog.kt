@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.annotation.IntRange
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
@@ -23,19 +24,23 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
         /**
          * @param manager 基于哪个fragment的childFragmentManger而弹出。
          * @param fgBundle 创建的内容Fragment携带了arguments
-         * @param height 弹出的高度
+         * @param height 取值范围为0~Int.MAX_VALUE；0时按内容自适应高度，大于0时尽量以给定高度为准，但最大不会超过screenHeight-statusBarHeight，传Int.MAX_VALUE可占满该最大值
          * @param paddingMode 是否需要padding模式, 指的是没有横杠，左右两边有padding
          * @param showHeadLine 是否需要显示headLine
          */
         inline fun <reified T : Fragment> show(
             manager: FragmentManager,
             fgBundle: Bundle? = null,
-            height: Int? = null,
+            @IntRange(from = 0)
+            height: Int = 0,
             paddingMode:Boolean = false,
             hasEditText: Boolean = false,
             canCancel:Boolean = true,
             showHeadLine: Boolean = true,
         ): FragmentBottomSheetDialog {
+            if (height < 0) {
+                throw IllegalArgumentException("height must be >= 0")
+            }
             val dialog = FragmentBottomSheetDialog(hasEditText)
             dialog.arguments = Bundle().also {
                 it.putSerializable("fgClass", T::class.java)
@@ -43,7 +48,7 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
                 if (fgBundle != null) {
                     it.putBundle("fgBundle", fgBundle)
                 }
-                if(height != null) it.putInt("height", height)
+                it.putInt("height", height)
                 it.putBoolean("canCancel", canCancel)
                 it.putBoolean("showHeadLine", showHeadLine)
             }
@@ -56,7 +61,7 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
         arguments?.serializableCompat<Class<Fragment>>("fgClass")
     }
     private val fgBundle by unsafeLazy { arguments?.getBundle("fgBundle") }
-    private val height by unsafeLazy { arguments?.getInt("height") }
+    private val height by unsafeLazy { arguments?.getInt("height") ?: 0 }
 
     private val fragment by unsafeLazy { fgClass?.getDeclaredConstructor()?.newInstance() }
     private val canCancel by unsafeLazy { arguments?.getBoolean("canCancel") ?: true }
@@ -82,16 +87,18 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
             val navigationBarHeight = staAndNavHeight?.second ?: 0
 
             val maxHeight:Int = screenSize.second - statusBarHeight
-            val height = this.height ?: 0
+            val height = this.height
 
             if (height == 0) {
+                // behavior.maxHeight 只限制最大可达高度，实际仍会按内容高度自适应显示。
                 dialog.asOrNull<BottomSheetDialog>()?.behavior?.let { behavior->
                     behavior.maxHeight = maxHeight
                 }
             } else {
-                //fragment的高度height + 补充navigationbar的高度
-                val targetHeight = height + (if (isPaddingNavigationBarHeight) navigationBarHeight else 0)
-                val fixHeight = min(targetHeight, maxHeight)
+                // else分支约定优先使用传入高度，但最终会限制在最大全屏高度screenHeight-statusBarHeight以内。
+                // 转成Long后再相加，避免传Int.MAX_VALUE时叠加navigationBarHeight发生溢出。
+                val targetHeight = height.toLong() + (if (isPaddingNavigationBarHeight) navigationBarHeight.toLong() else 0L)
+                val fixHeight = min(targetHeight, maxHeight.toLong()).toInt()
                 root.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, fixHeight)
             }
 
