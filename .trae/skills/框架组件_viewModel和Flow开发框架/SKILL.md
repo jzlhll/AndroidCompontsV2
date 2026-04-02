@@ -82,6 +82,7 @@ catch (e: Exception) {
 ### 5.3 状态收集 (Collect)
 - **StatusState Flow** ：推荐使用 `collectStatusState`，并包裹在 `repeatOnLifecycle` 中。
 - **普通 Flow**：使用标准 `collect`。
+- 如果是页面相关的业务 Flow 监听，优先放在 `Fragment/Activity` 中，使用 `lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.STARTED) { ... } }` 收集，然后再调用 `ViewModel` 的公开函数或 `dispatch(Action)` 执行，避免把界面生命周期监听直接写进 `ViewModel`。
 
 ```kotlin
 // 示例：在Fragment中收集状态

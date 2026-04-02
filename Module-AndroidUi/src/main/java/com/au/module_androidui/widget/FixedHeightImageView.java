@@ -9,7 +9,7 @@ import com.au.module_androidui.R;
 import com.google.android.material.imageview.ShapeableImageView;
 
 /**
- *  固定高度、宽度随原图比例变化的图片区域（ShapeableImageView）。
+ * 固定高度、宽度随原图比例变化的图片区域（ShapeableImageView）。
  * <p>
  * <b>测量</b>：{@code layout_height} 须为 EXACTLY（定值或 {@code match_parent}）。宽度 = 固定高度 × 原图「宽/高」像素比，
  * 再夹紧到 {@code [高度×minWidthRatio, 高度×maxWidthRatio]}（属性表示的是视图「宽/高」相对高度的倍率上下限）。
