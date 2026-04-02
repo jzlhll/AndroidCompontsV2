@@ -1,11 +1,12 @@
 ---
 name: 布局xml与Fragment生成
-description: 当涉及到Fragment生成，Layout xml布局创建修改，和dimen，style等属性使用时，遵守它。
+description: 当涉及到Fragment生成，Layout布局创建与修改，联动figma生成layout，dimen，style等属性使用时，遵守它。
 ---
 
 # 控件
+
 全路径 com.au.module_androidui.widget.XXX
-文本：CustomFontText (全称标签)
+文本：CustomFontText
 按钮：CustomButton
 输入框：CustomEditText
 圆角容器：BgBuildXXXLayout
@@ -13,9 +14,15 @@ description: 当涉及到Fragment生成，Layout xml布局创建修改，和dime
 流式布局：FlowLayout (属性flChildSpacing, flRowSpacing)
 
 # 容器
-有圆角：BgBuildXXXLayout, 相关属性：backgroundNormal, cornerRadius
+有圆角：BgBuildXXXLayout, 相关属性：backgroundNormal, cornerRadius等
 无圆角：常规布局(如ConstraintLayout)
-默认没有阴影；如果我要求添加阴影效果，则添加如下内容，数值不做修改，并修改该控件的父控件clipChildren和clipToPadding为false：
+
+## 阴影处理
+- 默认不添加阴影；
+
+- 如果我要求添加阴影效果：
+
+  则添加如下内容，数值不做修改，并修改父控件属性clipChildren和clipToPadding为false：
 ```xml
 app:shadowBlur="8dp"
 app:shadowColor="#10000000"
@@ -23,11 +30,23 @@ app:shadowOffsetY="4dp"
 app:backgroundNormal="#ffffff"
 ```
 
+- [联动figma]需注意，转变为以下5个shadow相关属性：
+  ```xml
+  <attr name="shadowColor" />
+  <attr name="shadowOffsetX" />
+  <attr name="shadowOffsetY" />
+  <attr name="shadowBlur" />
+  <attr name="shadowSpread" />
+  ```
+
 # 样式
+
 [styles.xml](../../../Module-AndroidColor/src/main/res/values/styles.xml)
 文本：StyleAuTextNormal(常规),StyleAuTextNormalDesc(灰色描述)等等
 输入框：StyleBlankEditText
 按钮：StyleButtonPrimary(常规), StyleButtonWarn(警告)等
+必要时增加：如果与figma联动或者我要求时，追加新的style并引用
+注意：必须使用style，不得直接添加textColor，textSize属性
 
 # 图片圆角
 使用 `com.google.android.material.imageview.ShapeableImageView`
@@ -60,3 +79,8 @@ RecyclerView：xxxRcv
 # RecyclerView
 不主动写Adapter(除非允许)
 如果允许参考规则SKILL: [RecyclerView开发框架](../基础架构_RecyclerView开发框架/SKILL.md)
+
+# 布局要求
+- 最外层通常是ConstraintLayout
+- 如果不超过3层，使用ConstraintLayout+LinearLayout+RelativeLayout来控制整个layout层级不超过3层
+- 平铺布局时，不要追加一个模拟layout的空背景View
