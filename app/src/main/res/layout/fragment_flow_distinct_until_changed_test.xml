@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/appendBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Random Append Websocket" />
+
+    <Button
+        android:id="@+id/removeBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Random Remove Websocket" />
+
+    <Button
+        android:id="@+id/toggleBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Random Toggle State" />
+
+    <Button
+        android:id="@+id/tickBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Tick Current Frame" />
+
+    <TextView
+        android:id="@+id/resultText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:text="Result will appear here" />
+
+</LinearLayout>
