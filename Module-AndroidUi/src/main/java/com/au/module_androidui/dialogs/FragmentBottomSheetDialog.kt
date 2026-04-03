@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.annotation.ColorInt
 import androidx.annotation.IntRange
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
@@ -26,6 +27,7 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
          * @param manager 基于哪个fragment的childFragmentManger而弹出。
          * @param fgBundle 创建的内容Fragment携带了arguments
          * @param height 取值范围为0~Int.MAX_VALUE；0时按内容自适应高度，大于0时尽量以给定高度为准，但最大不会超过screenHeight-statusBarHeight，传Int.MAX_VALUE可占满该最大值
+         * @param backgroundColor 弹窗根布局背景色；为null时不额外设置
          * @param paddingMode 是否需要padding模式, 指的是没有横杠，左右两边有padding
          * @param showHeadLine 是否需要显示headLine
          */
@@ -34,6 +36,8 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
             fgBundle: Bundle? = null,
             @IntRange(from = 0)
             height: Int = 0,
+            @ColorInt
+            backgroundColor: Int? = null,
             paddingMode:Boolean = false,
             hasEditText: Boolean = false,
             canCancel:Boolean = true,
@@ -50,6 +54,9 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
                     it.putBundle("fgBundle", fgBundle)
                 }
                 it.putInt("height", height)
+                if (backgroundColor != null) {
+                    it.putInt("backgroundColor", backgroundColor)
+                }
                 it.putBoolean("canCancel", canCancel)
                 it.putBoolean("showHeadLine", showHeadLine)
             }
@@ -61,6 +68,7 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
          * @param manager 基于哪个fragment的childFragmentManger而弹出。
          * @param fgBundle 创建的内容Fragment携带了arguments
          * @param maxHeightInset 从最大可用高度screenHeight-statusBarHeight中再额外减去的高度，取值范围为0~Int.MAX_VALUE
+         * @param backgroundColor 弹窗根布局背景色；为null时不额外设置
          * @param paddingMode 是否需要padding模式, 指的是没有横杠，左右两边有padding
          * @param showHeadLine 是否需要显示headLine
          */
@@ -69,6 +77,8 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
             fgBundle: Bundle? = null,
             @IntRange(from = 0)
             maxHeightInset: Int = 0,
+            @ColorInt
+            backgroundColor: Int? = null,
             paddingMode:Boolean = false,
             hasEditText: Boolean = false,
             canCancel:Boolean = true,
@@ -87,6 +97,9 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
                 // inset模式与height模式分离；这里固定按最大高度模式处理，再额外扣减maxHeightInset。
                 it.putInt("height", Int.MAX_VALUE)
                 it.putInt("maxHeightInset", maxHeightInset)
+                if (backgroundColor != null) {
+                    it.putInt("backgroundColor", backgroundColor)
+                }
                 it.putBoolean("canCancel", canCancel)
                 it.putBoolean("showHeadLine", showHeadLine)
             }
@@ -101,6 +114,9 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
     private val fgBundle by unsafeLazy { arguments?.getBundle("fgBundle") }
     private val height by unsafeLazy { arguments?.getInt("height") ?: 0 }
     private val maxHeightInset by unsafeLazy { arguments?.getInt("maxHeightInset") ?: 0 }
+    private val backgroundColor by unsafeLazy {
+        if (arguments?.containsKey("backgroundColor") == true) arguments?.getInt("backgroundColor") else null
+    }
 
     private val fragment by unsafeLazy { fgClass?.getDeclaredConstructor()?.newInstance() }
     private val canCancel by unsafeLazy { arguments?.getBoolean("canCancel") ?: true }
@@ -112,6 +128,13 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
     override fun onCreatingView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layoutId = if (paddingMode) { R.layout.dialog_bottomsheet_padding } else { R.layout.dialog_bottomsheet }
         val root = inflater.inflate(layoutId, container, false)
+        backgroundColor?.let {
+            val bg = ViewBackgroundBuilder()
+                .setBackground(it)
+                .setCornerRadius(topLeft = 24f.dp, topRight = 24f.dp, 0f, 0f)
+            root.background = bg.build()
+        }
+
         val fcv = root.findViewById<FragmentContainerView>(R.id.fcv)
 
         val headLine = root.findViewById<View>(R.id.headLine)

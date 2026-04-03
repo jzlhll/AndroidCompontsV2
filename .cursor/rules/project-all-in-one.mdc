@@ -1,6 +1,6 @@
 ---
 description: 项目规则，包含行为, 说中文, 禁止项, skills大全和日志规范
-trigger: always_on
+alwaysApply: true
 ---
 
 # 行为准则

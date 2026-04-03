@@ -32,7 +32,7 @@ abstract class AbsSimpleLoading @JvmOverloads constructor(context: Context?, att
     init {
         inflate(context, getLayoutId(), this)
         val thisView: View = this
-        mIndicator = thisView.findViewById<CircularProgressIndicator>(getIndicatorId())
+        mIndicator = thisView.findViewById(getIndicatorId())
         initExtraUi(thisView)
     }
 

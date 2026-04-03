@@ -1,18 +1,22 @@
 ---
 name: viewModel开发框架
-description: 当涉及到编写ViewModel和Flow的代码时候遵守该技能。
+description: 当涉及到编写ViewModel 或 Flow的代码时候遵守该技能。
 ---
 
 # ViewModel 开发框架
 代码位置：`Module-AndroidCommon/src/main/java/com/au/module_android/simpleflow`
 
-**核心原则**：单向数据流UI → Action → ViewModel → State → UI、状态驱动UI、生命周期安全。
+**核心原则**：状态驱动UI、生命周期安全；是否引入 Action/Reducer 取决于业务复杂度，不强制所有 ViewModel 都走 `UI → Action → ViewModel → State → UI`。
 
 ## 1. 核心架构
-- 继承 `AbsActionDispatcherViewModel`，提供Action分发机制。
 - 构造函数注入依赖（Repository等）。
+- **默认先判断复杂度**：
+  - action 很少、只有 1~3 个明确入口、函数调用已经足够清晰时：继承普通 `ViewModel()`，由 `Fragment/Activity` 直接调用公开函数触发逻辑。
+  - 页面状态复杂、入口多、需要统一收口、跨事件复用 reducer 逻辑时：再继承 `AbsActionDispatcherViewModel`。
+- 不要为了“形式统一”给简单页面硬套 `Action + reduce`。
 
 ## 2. Action 设计
+- **仅在使用 `AbsActionDispatcherViewModel` 时才需要本节内容。**
 - 定义Action：
     实现 `IStateAction`，无参用 `object`，有参用 `data class`，放在 `init{}` 前。
 
@@ -76,8 +80,17 @@ catch (e: Exception) {
 - **跨页面共享**：使用 `by viewModel(ownerProducer = { requireActivity() })`。
 - **禁止**：直接 `new ViewModel()`。
 
-### 5.2 触发 Action
-- 调用 `viewModel.dispatch(Action)` 触发业务逻辑。
+### 5.2 触发业务逻辑
+- 简单场景：直接调用 `viewModel.xxx()`。
+- 复杂场景：调用 `viewModel.dispatch(Action)` 触发业务逻辑。
+
+```kotlin
+// 简单场景
+viewModel.refresh(currentFrame, forceRefresh = true)
+
+// 复杂场景
+viewModel.dispatch(RefreshAction(currentFrame))
+```
 
 ### 5.3 状态收集 (Collect)
 - **StatusState Flow** ：推荐使用 `collectStatusState`，并包裹在 `repeatOnLifecycle` 中。

@@ -6,7 +6,6 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.ImageView
 import androidx.cardview.widget.CardView
-import com.au.module_androidui.widget.CustomFontText
 import com.au.module_androidui.R
 import com.au.module_androidui.databinding.AvatarViewBinding
 import kotlin.math.absoluteValue
@@ -34,6 +33,9 @@ class AvatarView @JvmOverloads constructor(
             }
             getString(R.styleable.AvatarView_avatarDefaultText)?.takeIf { it.isNotEmpty() }?.let {
                 setAvatarText(it)
+            }
+            getInt(R.styleable.AvatarView_avatarDefaultTextSizeSp, 12).let {
+                avatarText.textSize = it.toFloat()
             }
             recycle()
         }

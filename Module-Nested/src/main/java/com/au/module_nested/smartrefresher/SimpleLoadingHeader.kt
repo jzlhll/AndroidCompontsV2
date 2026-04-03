@@ -1,16 +1,15 @@
 package com.au.module_nested.smartrefresher
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.View
-import com.au.module_android.log.logdNoFile
+import com.au.module_android.utils.visible
 import com.au.module_nested.R
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.scwang.smart.refresh.layout.api.RefreshHeader
 import com.scwang.smart.refresh.layout.api.RefreshLayout
 import com.scwang.smart.refresh.layout.constant.RefreshState
-import com.scwang.smart.refresh.layout.simple.SimpleComponent
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * 我定制的：
@@ -28,16 +27,17 @@ class SimpleLoadingHeader @JvmOverloads constructor(context: Context?, attrs: At
 
     override fun initExtraUi(thisView: View) {
         mIndicator.setIndicatorColor(pullColor)
+        hideIndicator()
     }
 
     override fun onMoving(isDragging: Boolean, percent: Float, offset: Int, height: Int, maxDragHeight: Int) {
         super.onMoving(isDragging, percent, offset, height, maxDragHeight)
-        if (isDragging) {
-            mIndicator.isIndeterminate = false
-            mIndicator.progress = (percent * 100).toInt()
-        } else {
-            mIndicator.isIndeterminate = true
+        if (!isDragging) {
+            return
         }
+        mIndicator.visible()
+        mIndicator.isIndeterminate = false
+        mIndicator.progress = min(100, max(0, (percent * 100).toInt()))
     }
 
     override fun onStateChanged(refreshLayout: RefreshLayout, oldState: RefreshState, newState: RefreshState) {
@@ -51,10 +51,38 @@ class SimpleLoadingHeader @JvmOverloads constructor(context: Context?, attrs: At
                 changeIndicatorColor(true)
             }
         }
+        when (newState) {
+            RefreshState.None -> hideIndicator()
+            else -> {
+                when {
+                    newState.isOpening -> {
+                        mIndicator.visibility = View.VISIBLE
+                        mIndicator.isIndeterminate = true
+                    }
+                    newState.isDragging || newState.isReleaseToOpening -> {
+                        mIndicator.visibility = View.VISIBLE
+                        mIndicator.isIndeterminate = false
+                    }
+                    newState == RefreshState.RefreshReleased -> {
+                        mIndicator.visibility = View.VISIBLE
+                        mIndicator.isIndeterminate = true
+                    }
+                    newState.isFinishing -> hideIndicator()
+                    else -> hideIndicator()
+                }
+            }
+        }
     }
 
     override fun onFinish(refreshLayout: RefreshLayout, success: Boolean): Int {
         changeIndicatorColor(true)
+        hideIndicator()
         return super.onFinish(refreshLayout, success)
+    }
+
+    private fun hideIndicator() {
+        mIndicator.isIndeterminate = false
+        mIndicator.progress = 0
+        mIndicator.visibility = View.GONE
     }
 }
