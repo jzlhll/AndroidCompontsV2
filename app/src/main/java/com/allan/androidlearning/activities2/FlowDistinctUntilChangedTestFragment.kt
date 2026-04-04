@@ -11,9 +11,10 @@ import com.au.module_android.click.onClick
 import com.au.module_androidui.ui.bindings.BindingFragment
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 
-@EntryFrgName
+@EntryFrgName(priority = 10)
 class FlowDistinctUntilChangedTestFragment : BindingFragment<FragmentFlowDistinctUntilChangedTestBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
@@ -27,7 +28,7 @@ class FlowDistinctUntilChangedTestFragment : BindingFragment<FragmentFlowDistinc
         }
 
         binding.toggleBtn.onClick {
-            WebsocketFlowResearch.randomToggleWebsocketState()
+            WebsocketFlowResearch.randomAdvanceWebsocketState()
         }
 
         binding.tickBtn.onClick {
@@ -36,16 +37,9 @@ class FlowDistinctUntilChangedTestFragment : BindingFragment<FragmentFlowDistinc
 
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                combine(
-                    WebsocketFlowResearch.currentFrameFlow,
-                    WebsocketFlowResearch.connectorsStateChangedFlow
-                ) { frame, changed ->
-                    Log.d("alland", "change $changed")
-                    "Frame: $frame\n" +
-                    "List Size: ${WebsocketFlowResearch.websocketList.size}\n"
-                   // "Details: ${WebsocketFlowResearch.websocketList.joinToString("\n")}"
-                }.distinctUntilChanged().collect { result ->
-                    Log.d("alland", "final changed")
+                WebsocketFlowResearch.deviceStateFlow
+                    .collect { result ->
+                    Log.d("alland", "final changed $result")
                     binding.resultText.text = "" + System.currentTimeMillis() + " " + result
                 }
 

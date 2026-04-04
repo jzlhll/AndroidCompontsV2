@@ -5,18 +5,28 @@ package com.allan.androidlearning.activities2
  * 可复制到带 kotlinx-coroutines-core 的 JVM 工程运行 main；本仓库根目录默认不参与 Gradle 编译。
  */
 
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.random.Random
 
-/** 模拟连接器：nameTag 唯一标识，state 仅 0 / 1 */
-class Websocket(val nameTag: String, var state: Int) {
-    private val myAddr = UUID.randomUUID().toString().take(8)
+enum class DeviceState {
+    Connected,
+    Connecting,
+    Disconnected,
+    Disconnecting
+}
+
+/** 模拟连接器：deviceId 唯一标识 */
+class Device(val deviceId: String, var state: DeviceState) {
+    private val beanAddr = UUID.randomUUID().toString().take(8)
 
     override fun toString(): String {
-        return "Websocket('$myAddr': nameTag='$nameTag', state=$state)"
+        return "Device('$beanAddr': deviceId='$deviceId', state=$state)"
     }
 }
 
@@ -26,9 +36,10 @@ class Websocket(val nameTag: String, var state: Int) {
  */
 object WebsocketFlowResearch {
     private val listLock = Any()
+    private var websocketIndex = 1
 
     /** 当前连接器列表（模拟 BaseAllConnectors 等处的 List） */
-    val websocketList = CopyOnWriteArrayList<Websocket>()
+    val websocketList = CopyOnWriteArrayList<Device>()
 
     private val mConnectorsStateChangedFlow = MutableStateFlow(0L)
     val connectorsStateChangedFlow: StateFlow<Long> = mConnectorsStateChangedFlow
@@ -38,27 +49,47 @@ object WebsocketFlowResearch {
     )
     val currentFrameFlow: StateFlow<String> = mCurrentFrameFlow
 
+    val deviceStateFlow = combine(
+        currentFrameFlow,
+        connectorsStateChangedFlow
+    ) { frame, changed ->
+        android.util.Log.d("alland", "frame $frame change $changed\n"
+                + "Details: \n---\n${websocketList.joinToString("\n")}\n")
+        websocketList.find { it.deviceId == frame }
+    }.distinctUntilChangedBy {
+        it?.deviceId + it?.state.toString()
+    }
+    
+    //.distinctUntilChanged()
+
+
+
     /** 推进 connectors 版本号，触发 combine */
     private fun notifyConnectorsChanged() {
         mConnectorsStateChangedFlow.value = System.currentTimeMillis()
     }
 
     fun tickCurrentFrameFromTime() {
-        val s = "${System.currentTimeMillis()}-${UUID.randomUUID().toString().take(8)}"
-        mCurrentFrameFlow.value = s
+        synchronized(listLock) {
+            if (websocketList.isNotEmpty()) {
+                val idx = Random.nextInt(websocketList.size)
+                val selectedNameTag = websocketList[idx].deviceId
+                mCurrentFrameFlow.value = selectedNameTag
+            }
+        }
     }
 
-    /** 随机追加一个 Websocket（nameTag 随机，state 为 0 或 1） */
+    /** 随机追加一个 Device（deviceId 递增，state 随机） */
     fun randomAppendWebsocket() {
-        val tag = UUID.randomUUID().toString().take(8)
-        val st = Random.nextInt(0, 2)
+        val st = DeviceState.entries.random()
         synchronized(listLock) {
-            websocketList.add(Websocket(tag, st))
+            val tag = String.format("websocket-%02d", websocketIndex++)
+            websocketList.add(Device(tag, st))
         }
         notifyConnectorsChanged()
     }
 
-    /** 随机删除一个 Websocket；列表为空则无操作 */
+    /** 随机删除一个 Device；列表为空则无操作 */
     fun randomRemoveWebsocket() {
         synchronized(listLock) {
             if (websocketList.isEmpty()) return@synchronized
@@ -68,13 +99,19 @@ object WebsocketFlowResearch {
         notifyConnectorsChanged()
     }
 
-    /** 随机选一个 Websocket，将 state 在 0 / 1 间切换 */
-    fun randomToggleWebsocketState() {
+    /** 随机选一个 Device，将 state 按逻辑流转推进下一个状态 */
+    fun randomAdvanceWebsocketState() {
         synchronized(listLock) {
             if (websocketList.isEmpty()) return@synchronized
             val idx = Random.nextInt(websocketList.size)
             val old = websocketList[idx]
-            old.state = if (old.state == 0) 1 else 0
+            Log.d("alland", "change ${old.deviceId}...")
+            old.state = when (old.state) {
+                DeviceState.Disconnected -> DeviceState.Connecting
+                DeviceState.Connecting -> DeviceState.Connected
+                DeviceState.Connected -> DeviceState.Disconnecting
+                DeviceState.Disconnecting -> DeviceState.Disconnected
+            }
         }
         notifyConnectorsChanged()
     }
