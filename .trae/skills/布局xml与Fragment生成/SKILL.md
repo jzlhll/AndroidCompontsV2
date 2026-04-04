@@ -23,12 +23,12 @@ description: 当涉及到Fragment生成，Layout布局创建与修改，联动fi
 - 如果我要求添加阴影效果：
 
   则添加如下内容，数值不做修改，并修改父控件属性clipChildren和clipToPadding为false：
-```xml
-app:shadowBlur="8dp"
-app:shadowColor="#10000000" 
-app:shadowOffsetY="4dp"
-app:backgroundNormal="#ffffff"
-```
+  ```xml
+  app:shadowBlur="8dp"
+  app:shadowColor="@color/i8o_color_shadow_default"
+  app:shadowOffsetY="4dp"
+  app:backgroundNormal="#ffffff"
+  ```
 
 - [联动figma]需注意，转变为以下5个shadow相关属性：
   ```xml
@@ -42,7 +42,7 @@ app:backgroundNormal="#ffffff"
 # 样式
 
 [styles.xml](../../../Module-AndroidColor/src/main/res/values/styles.xml)
-文本：StyleAuTextNormal(常规),StyleAuTextNormalDesc(灰色描述)等等
+文本：StyleI8o14sp(常规), StyleI8o14Desc(灰色描述)等等
 输入框：StyleBlankEditText
 按钮：StyleButtonPrimary(常规), StyleButtonWarn(警告)等
 必要时增加：如果与figma联动或者我要求时，追加新的style并引用

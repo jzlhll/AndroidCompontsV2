@@ -7,6 +7,9 @@ description: 当涉及到ROOM数据库开发时，遵守它。
 遵循 Entity -> DAO -> Repository 的分层架构。
 
 ## 1. 命名与目录规范
+
+位于 `imagecho.reframe.database` 包下：
+
 - **entity/**: `[ModelName]Entity.kt` (表名 snake_case)
 - **dao/**: `[ModelName]Dao.kt`
 - **repositories/**: `[ModelName]DatabaseRepository.kt` 或 `[ModelName]Repository.kt`

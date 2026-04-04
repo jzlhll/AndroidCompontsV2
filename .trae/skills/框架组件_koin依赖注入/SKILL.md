@@ -3,7 +3,7 @@ name: koin依赖注入
 description: 当涉及到依赖注入的使用，阅读它
 ---
 
-Application类 ： App.kt
+Application类： ImagechoApp
 
 # 注入规则
 - 如果一个新类仅被同package下的其他类使用，那么不添加到 Application 类中，采用传统new class的方式
