@@ -373,7 +373,7 @@ public class RenderNodeBlurController implements BlurController {
 
             int[] colors = new int[]{c1, c1, c2};
             // 保持前60%完全模糊，后40%才开始渐变透明。避免人眼对底层清晰边缘过于敏感导致"感觉不到模糊"
-            float[] positions = new float[]{0f, 0.5f, 1f};
+            float[] positions = new float[]{0f, 0.33f, 1f};
 
             Shader linearGradient = switch (gradientDirection) {
                 case BlurView.GRADIENT_TOP_TO_BOTTOM ->

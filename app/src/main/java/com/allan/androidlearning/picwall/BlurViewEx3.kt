@@ -42,7 +42,7 @@ class BlurViewEx3(private val blurView: BlurView,
 //
 //    // Optionally pass a custom BlurAlgorithm and scale factor as additional parameters.
 //    // You might want to set a smaller scale factor on API 31+ to have a more precise blur with less flickering.
-            blurView.setupWith(target)
+            blurView.setupWith(target, 4f, false) // false表示关闭Noise噪点
                 .setOverlayGradientColor(overlayColor, overlayColor and 0x00FFFFFF, direction)
                 //.setFrameClearDrawable(windowBackground) // Optional. Useful when your root has a lot of transparent background, which results in semi-transparent blurred content. This will make the background opaque
                 .setBlurRadius(blurRadius)
