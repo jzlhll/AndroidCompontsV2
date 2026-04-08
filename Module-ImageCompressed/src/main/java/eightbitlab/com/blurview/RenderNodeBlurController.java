@@ -371,13 +371,17 @@ public class RenderNodeBlurController implements BlurController {
             float right = left + w;
             float bottom = top + h;
 
+            int[] colors = new int[]{c1, c1, c2};
+            // 保持前60%完全模糊，后40%才开始渐变透明。避免人眼对底层清晰边缘过于敏感导致"感觉不到模糊"
+            float[] positions = new float[]{0f, 0.5f, 1f};
+
             Shader linearGradient = switch (gradientDirection) {
                 case BlurView.GRADIENT_TOP_TO_BOTTOM ->
                     // Top: Blur (Opaque), Bottom: Sharp (Transparent)
-                        new LinearGradient(0, top, 0, bottom, c1, c2, Shader.TileMode.CLAMP);
-                case BlurView.GRADIENT_BOTTOM_TO_TOP -> new LinearGradient(0, bottom, 0, top, c1, c2, Shader.TileMode.CLAMP);
-                case BlurView.GRADIENT_LEFT_TO_RIGHT -> new LinearGradient(left, 0, right, 0, c1, c2, Shader.TileMode.CLAMP);
-                case BlurView.GRADIENT_RIGHT_TO_LEFT -> new LinearGradient(right, 0, left, 0, c1, c2, Shader.TileMode.CLAMP);
+                        new LinearGradient(0, top, 0, bottom, colors, positions, Shader.TileMode.CLAMP);
+                case BlurView.GRADIENT_BOTTOM_TO_TOP -> new LinearGradient(0, bottom, 0, top, colors, positions, Shader.TileMode.CLAMP);
+                case BlurView.GRADIENT_LEFT_TO_RIGHT -> new LinearGradient(left, 0, right, 0, colors, positions, Shader.TileMode.CLAMP);
+                case BlurView.GRADIENT_RIGHT_TO_LEFT -> new LinearGradient(right, 0, left, 0, colors, positions, Shader.TileMode.CLAMP);
                 default -> null;
             };
 
