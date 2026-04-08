@@ -3,7 +3,7 @@ name: koin-di
 description: 规定 Koin 的模块注册与在 ViewModel、生命周期类、普通类中的注入方式。在添加依赖注入或新单例注册时使用。
 ---
 
-Application类： ImagechoApp
+Application类
 
 # 注入规则
 - 如果一个新类仅被同package下的其他类使用，那么不添加到 Application 类中，采用传统new class的方式

@@ -13,11 +13,11 @@ $year: 请根据当前时间填写，格式为yyyy
 /* 
 * Created by $email on $time.
 *
-* Copyright (C) $year [imagecho.ai]. All Rights Reserved.
+* Copyright (C) $year [allan]. All Rights Reserved.
 *
 * This software is proprietary and confidential. Unauthorized use, copying,
 * modification, or distribution is prohibited without prior written consent.
 *
-* For inquiries, contact: [contacts@imagecho.ai]
+* For inquiries, contact: [contacts@allan]
 */
 ```

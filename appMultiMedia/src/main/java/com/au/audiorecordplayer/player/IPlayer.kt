@@ -1,12 +1,12 @@
 /*
-* Created by jiangzhonglun@imagecho.ai on 2026/03/27.
+* Created by allan on 2026/03/27.
 *
-* Copyright (C) 2026 [imagecho.ai]. All Rights Reserved.
+* Copyright (C) 2026 [allan]. All Rights Reserved.
 *
 * This software is proprietary and confidential. Unauthorized use, copying,
 * modification, or distribution is prohibited without prior written consent.
 *
-* For inquiries, contact: [contacts@imagecho.ai]
+* For inquiries, contact: [contacts@allan]
 */
 
 package com.au.audiorecordplayer.player
