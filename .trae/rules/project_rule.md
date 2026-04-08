@@ -1,1 +1,0 @@
-/Users/allan/Documents/codes/mycodes/AndroidCompontsV2/.cursor/rules/project-all-in-one.mdc
