@@ -1,0 +1,8 @@
+cd .cursor/rules/
+pwd
+mkdir -p .trae/rules
+ln -s /PATH/project-all-in-one.mdc .trae/rules/project_rule.md
+
+cd .cursor/skills
+pwd
+ln -s /PATH/skills .trae/skills

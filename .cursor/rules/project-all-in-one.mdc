@@ -1,5 +1,5 @@
 ---
-description: 项目规则，包含行为, 说中文, 禁止项, skills大全和日志规范
+description: 项目规则，包含行为、说中文、禁止项与日志规范
 alwaysApply: true
 ---
 
@@ -25,17 +25,17 @@ alwaysApply: true
 - 不使用 `coerceAtLeast`、`coerceAtMost`、`coerceIn`、`minOf`、`maxOf`，统一使用 `min` / `max`
 
 ## 任务完成后的输出格式
-
-任务完成后，不输出实现细节、原因解释或废话，使用 Markdown 列表格式（`-` 开头）逐行输出:
-- 类名(不要全路径)：一句话概括变更
-- 总结(多文件)：一句话概括整体变更
-- 如果只有1-2个文件被修改，则只做一句话总结
+- 收尾不写实现细节与废话
+- 按**本轮改动源文件数**二选一：
+    - **≤2** 仅一句中文
+    - **≥3** 用 `-` 列表（类名勿全路径，每行一句）且末行「总结：」一句整体
 
 # kotlin/kts文件日志规范
 
 - 优先 `logdNoFile`（仅控制台）替代Log.d
 - 函数名拆分（如 `onDeviceListChanged` → on deviceList changed）
 - 严重错误使用 `loge { "" + e.message }` / `logEx(throwable = e) { "xxx" }`
+<<<<<<< HEAD
 
 # 开发规范：skills大全
 
@@ -55,3 +55,5 @@ alwaysApply: true
 - Uri 解析：`./trae/skills/Util_Uri解析Info/SKILL.md`
 - 输入法：`./trae/skills/Util_InputMethod/SKILL.md`
 - Copyright 头声明：`./trae/skills/Copyright文件头申明/SKILL.md`
+=======
+>>>>>>> 43273ff (trae)
