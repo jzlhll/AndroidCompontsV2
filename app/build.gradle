@@ -96,6 +96,7 @@ dependencies {
     implementation  libs.refresh.footer.ball        //球脉冲加载
     implementation  libs.refresh.footer.classics    //经典加载
     implementation  libs.liquidglass
+    implementation  libs.blurview
 //    kapt project(':ClassNameAnnotations-compiler')
 }
 
