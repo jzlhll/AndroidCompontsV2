@@ -8,11 +8,20 @@ alwaysApply: true
 ## 常规
 - 只修改指定部分
 - **重要**：每次修改代码之前，一定要以最新的代码为准
-- Plan模式下，反复思考只要有疑问就询问我，直到没有任何疑问
+- Plan模式下，反复思考，只要有疑问就询问我，直到没有任何疑问
 
 ## 说中文
 - **十分重要**：任何输出，包括并不限于plan/checklist/spec/tasks 等 markdown 或文本，必须中文。
-- **注释**：代码中注释必须使用中文，日志英文。
+- **注释**：代码中注释必须使用中文，日志英文
+
+## 函数注释规则
+- 函数级注释
+    公开函数：必须添加标准doc注释（包含功能描述、入参、出参、异常）
+    私有函数：不注释
+- 函数内代码注释
+    - 简单顺序执行逻辑：不添加注释
+    - 仅为以下关键逻辑注释：多层条件嵌套、循环内业务计算 / 判断、非直观算法、核心业务 / 边界值处理
+    - 一段完整相关代码仅注释 1 次，注释写在逻辑块顶部，极简描述业务意图，不逐行冗余
 
 ## 禁止项
 - 严格按需求输出，不加额外内容
@@ -35,25 +44,3 @@ alwaysApply: true
 - 优先 `logdNoFile`（仅控制台）替代Log.d
 - 函数名拆分（如 `onDeviceListChanged` → on deviceList changed）
 - 严重错误使用 `loge { "" + e.message }` / `logEx(throwable = e) { "xxx" }`
-<<<<<<< HEAD
-
-# 开发规范：skills大全
-
-当涉及如下任务时，**必须**先阅读对应的 SKILL.md 文件：
-- Code Review：`./trae/skills/codeReview/SKILL.md`
-- RecyclerView 相关：`./trae/skills/基础架构_RecyclerView开发框架/SKILL.md`
-- ViewModel/Flow：`./trae/skills/框架组件_viewModel和Flow开发框架/SKILL.md`
-- MMKV 存储：`./trae/skills/Util_MMKV使用规则/SKILL.md`
-- Gson 使用：`./trae/skills/Util_GSON使用规则/SKILL.md`
-- Koin 依赖注入：`./trae/skills/框架组件_koin依赖注入/SKILL.md`
-- Room 数据库：`./trae/skills/基础架构_room数据库开发规范/SKILL.md`
-- LiveData：`./trae/skills/框架组件_LiveData使用规则/SKILL.md`
-- Bitmap 处理：`./trae/skills/Util_Bitmap处理/SKILL.md`
-- 图片选择器/拍照：`./trae/skills/Util_图片选择器和拍照弹窗/SKILL.md`
-- 布局与 Fragment：`./trae/skills/布局xml与Fragment生成/SKILL.md`
-- Glide 图片加载：`./trae/skills/Util_Glide加载图片到ImageView/SKILL.md`
-- Uri 解析：`./trae/skills/Util_Uri解析Info/SKILL.md`
-- 输入法：`./trae/skills/Util_InputMethod/SKILL.md`
-- Copyright 头声明：`./trae/skills/Copyright文件头申明/SKILL.md`
-=======
->>>>>>> 43273ff (trae)

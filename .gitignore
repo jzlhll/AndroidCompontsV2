@@ -5,7 +5,6 @@
 /local.properties
 /.idea
 /.trae
-/.vscode
 .DS_Store
 /build
 ClassNameAnnotations/build/

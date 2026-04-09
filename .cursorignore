@@ -1,0 +1,5 @@
+# 由 .cursorignore 排除，不进入 Cursor 索引/上下文（规范以 .cursor/rules 为准）
+CLAUDE.md
+/.github
+/.vscode
+/.trae

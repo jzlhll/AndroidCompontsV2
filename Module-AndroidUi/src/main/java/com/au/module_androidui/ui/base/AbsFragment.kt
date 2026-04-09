@@ -23,6 +23,7 @@ open class AbsFragment : Fragment(), IFullWindow {
 
     /**
      * 是否开启上面的back action功能。默认开启。
+     * 返回false，则表示当做嵌入的Fragment， 不影响外部Fragment的返回逻辑。
      */
     open var customBackActionEnable = true
 
