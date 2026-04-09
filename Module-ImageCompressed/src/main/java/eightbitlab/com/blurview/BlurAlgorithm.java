@@ -29,7 +29,7 @@ public interface BlurAlgorithm {
     boolean canModifyBitmap();
 
     /**
-     * Retrieve the {@link Bitmap.Config} on which the {@link BlurAlgorithm}
+     * Retrieve the {@link android.graphics.Bitmap.Config} on which the {@link BlurAlgorithm}
      * can actually work.
      *
      * @return bitmap config supported by the given blur algorithm.

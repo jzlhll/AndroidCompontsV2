@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
-import android.graphics.Paint;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -43,10 +42,6 @@ public final class PreDrawBlurController implements BlurController {
     @SuppressWarnings("WeakerAccess")
     final View blurView;
     private int overlayColor;
-    private int overlayStartColor = Color.TRANSPARENT;
-    private int overlayEndColor = Color.TRANSPARENT;
-    private int overlayGradientDirection = BlurView.GRADIENT_NONE;
-    private final Paint overlayPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private final ViewGroup rootView;
     private final int[] rootLocation = new int[2];
@@ -194,21 +189,7 @@ public final class PreDrawBlurController implements BlurController {
         if (applyNoise) {
             Noise.apply(canvas, blurView.getContext(), blurView.getWidth(), blurView.getHeight());
         }
-        if (overlayStartColor != Color.TRANSPARENT || overlayEndColor != Color.TRANSPARENT) {
-            int w = blurView.getWidth();
-            int h = blurView.getHeight();
-            if (w > 0 && h > 0) {
-                // If gradient direction is NONE, we can't draw a meaningful gradient unless we default it.
-                // Assuming we default to TOP_TO_BOTTOM if NONE, OR we don't draw.
-                // But for "overlay" it might be better to just draw solid startColor if NONE.
-                // However, user asked for gradient. Let's use TOP_TO_BOTTOM as default fallback if needed,
-                // or just rely on gradientDirection being set.
-                // Given the context of "progressive blur", we assume direction matches blur direction.
-                Shader shader = overlayGradientCache.getShader(w, h, overlayStartColor, overlayEndColor, overlayGradientDirection);
-                overlayPaint.setShader(shader);
-                canvas.drawRect(0, 0, w, h, overlayPaint);
-            }
-        } else if (overlayColor != TRANSPARENT) {
+        if (overlayColor != TRANSPARENT) {
             canvas.drawColor(overlayColor);
         }
         // restore clip rect
@@ -281,20 +262,6 @@ public final class PreDrawBlurController implements BlurController {
     public BlurViewFacade setOverlayColor(int overlayColor) {
         if (this.overlayColor != overlayColor) {
             this.overlayColor = overlayColor;
-            // Clear gradient colors to prefer solid color if this is called last
-            this.overlayStartColor = Color.TRANSPARENT;
-            this.overlayEndColor = Color.TRANSPARENT;
-            blurView.invalidate();
-        }
-        return this;
-    }
-
-    @Override
-    public BlurViewFacade setOverlayGradientColor(int startColor, int endColor, int direction) {
-        if (this.overlayStartColor != startColor || this.overlayEndColor != endColor || this.overlayGradientDirection != direction) {
-            this.overlayStartColor = startColor;
-            this.overlayEndColor = endColor;
-            this.overlayGradientDirection = direction;
             blurView.invalidate();
         }
         return this;

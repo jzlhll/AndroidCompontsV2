@@ -172,13 +172,6 @@ public class BlurView extends FrameLayout {
         return blurController.setBlurGradient(direction);
     }
 
-    /**
-     * @see BlurViewFacade#setOverlayGradientColor(int, int, int)
-     */
-    public BlurViewFacade setOverlayGradientColor(@ColorInt int startColor, @ColorInt int endColor, int direction) {
-        return blurController.setOverlayGradientColor(startColor, endColor, direction);
-    }
-
     @Override
     public void setRotation(float rotation) {
         super.setRotation(rotation);

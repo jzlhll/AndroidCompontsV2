@@ -1,5 +1,6 @@
 package com.allan.androidlearning.picwall
 
+import android.R.attr.direction
 import android.os.Bundle
 import android.widget.Toast
 import androidx.core.graphics.toColorInt
@@ -12,6 +13,7 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_android.utils.changeBarsColor
+import com.au.module_android.utils.dp
 import com.au.module_androidui.toast.ToastUtil
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
@@ -33,10 +35,17 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         requireActivity().changeBarsColor(false, false)
 
-        BlurViewEx3(binding.blurView, 0).setBlur(binding.blurTarget, 6f, "#8fffffff".toColorInt(), BlurView.GRADIENT_TOP_TO_BOTTOM)
-        binding.blurView.setBlurGradient(BlurView.GRADIENT_TOP_TO_BOTTOM)
-        BlurViewEx3(binding.blurView2, 0).setBlur(binding.blurTarget, 3f, "#ffffff".toColorInt(), BlurView.GRADIENT_BOTTOM_TO_TOP)
-        //binding.blurView2.setBlurGradient(BlurView.GRADIENT_BOTTOM_TO_TOP)
+//        测试了：blurView，圆角，模糊半径，过时的替代颜色
+//        BlurViewEx3(binding.blurView, 16, 3f).setBlur(binding.blurTarget, "#ccffffff".toColorInt())
+//        BlurViewEx3(binding.blurView2, 0, 12f).setBlur(binding.blurTarget, "#ccffffff".toColorInt())
+
+        //测试了：渐变模糊，applyNoise推荐false，否则会有明显的分界线
+        BlurViewEx3(binding.blurView, 0, 16f).setProgressiveBlur(binding.blurTarget,  BlurView.GRADIENT_TOP_TO_BOTTOM,
+            applyNoise = false,
+            "#ccffffff".toColorInt(), "#00ffffff".toColorInt()) //good
+        BlurViewEx3(binding.blurView2, 0, 16f).setProgressiveBlur(binding.blurTarget, BlurView.GRADIENT_BOTTOM_TO_TOP,
+            applyNoise = true,
+            "#ccffffff".toColorInt(), "#00ffffff".toColorInt()) //一般
 
         // 收集状态
         lifecycleScope.launch {
