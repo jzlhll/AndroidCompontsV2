@@ -1,6 +1,5 @@
 package com.allan.androidlearning.picwall;
 
-import android.R.attr.angle
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.dp
 import android.graphics.Outline

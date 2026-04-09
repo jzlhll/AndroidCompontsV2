@@ -46,8 +46,6 @@ public final class PreDrawBlurController implements BlurController {
     private final ViewGroup rootView;
     private final int[] rootLocation = new int[2];
     private final int[] blurViewLocation = new int[2];
-    private int gradientDirection = BlurView.GRADIENT_NONE;
-    private final OverlayGradientCache overlayGradientCache = new OverlayGradientCache();
 
     private final ViewTreeObserver.OnPreDrawListener drawListener = new ViewTreeObserver.OnPreDrawListener() {
         @Override
@@ -254,7 +252,6 @@ public final class PreDrawBlurController implements BlurController {
 
     @Override
     public BlurViewFacade setBlurGradient(int direction) {
-        this.gradientDirection = direction;
         return this;
     }
 
@@ -265,64 +262,5 @@ public final class PreDrawBlurController implements BlurController {
             blurView.invalidate();
         }
         return this;
-    }
-
-    private static class OverlayGradientCache {
-        @Nullable
-        private Shader shader;
-        int w;
-        int h;
-        int startColor;
-        int endColor;
-        int direction = -1;
-
-        @Nullable
-        Shader getShader(int w, int h, int startColor, int endColor, int gradientDirection) {
-            // Check if cache is valid
-            if (isCacheValid(w, h, startColor, endColor, gradientDirection)) {
-                return shader;
-            }
-
-            // Cache miss, create new shader
-            float right = w;
-            float bottom = h;
-
-            Shader shader = switch (gradientDirection) {
-                case BlurView.GRADIENT_TOP_TO_BOTTOM -> new LinearGradient(0, 0, 0, bottom, startColor, endColor, Shader.TileMode.CLAMP);
-                case BlurView.GRADIENT_BOTTOM_TO_TOP -> new LinearGradient(0, bottom, 0, 0, startColor, endColor, Shader.TileMode.CLAMP);
-                case BlurView.GRADIENT_LEFT_TO_RIGHT -> new LinearGradient(0, 0, right, 0, startColor, endColor, Shader.TileMode.CLAMP);
-                case BlurView.GRADIENT_RIGHT_TO_LEFT -> new LinearGradient(right, 0, 0, 0, startColor, endColor, Shader.TileMode.CLAMP);
-                default -> {
-                    // Fallback or default for NONE?
-                    // Let's assume Top-to-Bottom as a sensible default for an explicit gradient request
-                    // Or maybe we should just return null?
-                    // User said "linear transparency function", implying vertical usually.
-                    yield new LinearGradient(0, 0, 0, bottom, startColor, endColor, Shader.TileMode.CLAMP);
-                }
-            };
-
-            // Update cache
-            update(shader, w, h, startColor, endColor, gradientDirection);
-
-            return shader;
-        }
-
-        private boolean isCacheValid(int w, int h, int startColor, int endColor, int direction) {
-            return shader != null &&
-                    this.w == w &&
-                    this.h == h &&
-                    this.startColor == startColor &&
-                    this.endColor == endColor &&
-                    this.direction == direction;
-        }
-
-        private void update(Shader shader, int w, int h, int startColor, int endColor, int direction) {
-            this.shader = shader;
-            this.w = w;
-            this.h = h;
-            this.startColor = startColor;
-            this.endColor = endColor;
-            this.direction = direction;
-        }
     }
 }
