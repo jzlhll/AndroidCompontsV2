@@ -10,6 +10,7 @@ import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.WorkerThread
 import androidx.core.graphics.drawable.toDrawable
+import androidx.core.net.toUri
 import com.au.module_android.Globals
 import com.au.module_android.R
 import com.au.module_android.utils.deleteAll
@@ -45,7 +46,8 @@ fun preInitGlide(context: Context) {
  * 清除或者取消加载
  */
 fun ImageView.clearByGlide() {
-    Glide.with(this).clear(this)
+    // Activity 销毁过程中 onDestroyView 仍会清理 ImageView，Glide.with(view) 会绑定 Activity 并抛 IllegalArgumentException
+    Glide.with(context.applicationContext).clear(this)
 }
 
 /**
@@ -111,6 +113,20 @@ fun ImageView.glideSetAnyWithResDefault(
     glideSetAny(load) {
         it.error(resId).placeholder(resId)
     }
+}
+
+/**
+ * 加载 assets 目录下的图片。
+ * @param assetPath assets 内的相对路径，如 "archive_templates/basic_16_9.png"
+ * @param errorDrawableId 加载失败时的占位图资源
+ */
+fun ImageView.glideLoadAsset(assetPath: String, errorDrawableId: Int? = null) {
+    Glide.with(context)
+        .load("file:///android_asset/$assetPath".toUri())
+        .diskCacheStrategy(DiskCacheStrategy.NONE)
+        .skipMemoryCache(false)
+        .error(errorDrawableId)
+        .into(this)
 }
 
 /**

@@ -71,6 +71,7 @@ description: 规定 Android 布局 XML、dimen/style、Fragment 与 Figma 联动
 
 # ID 命名
 
+- `android:id` 一律驼峰（如 `currentEditorHost`），不用蛇形（`current_editor_host`）
 - 文本：`xxxTv`
 - 输入框：`xxxEdit`
 - 按钮：`xxxBtn`

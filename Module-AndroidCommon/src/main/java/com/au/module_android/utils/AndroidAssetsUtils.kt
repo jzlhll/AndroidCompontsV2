@@ -72,6 +72,20 @@ class AndroidAssetsUtils {
         }
 
         /**
+         * 一次性列出 assets 指定目录下的所有文件名。
+         * @param context Context
+         * @param dirPath assets 内的目录路径
+         * @return 文件名集合（不含路径前缀），失败返回空集合
+         */
+        fun listAssetFiles(context: Context, dirPath: String): Set<String> {
+            return try {
+                context.assets.list(dirPath)?.toSet() ?: emptySet()
+            } catch (e: IOException) {
+                emptySet()
+            }
+        }
+
+        /**
          * 可以获取drawable资源的uri
          *
          * @param context Context

@@ -26,4 +26,10 @@
         <item name="android:progressDrawable">@drawable/au_seekbar_progress_bg_disable</item>
         <item name="android:duplicateParentState">true</item> <!-- true不要material按压效果-->
     </style>
+
+    <!-- EditText：无输入区背景（无底纹/边框/下划线），仅使用光标 drawable -->
+    <style name="StyleEditTextNoInputBackground">
+        <item name="android:background">@null</item>
+        <item name="android:textCursorDrawable">@drawable/text_cursor</item>
+    </style>
 </resources>

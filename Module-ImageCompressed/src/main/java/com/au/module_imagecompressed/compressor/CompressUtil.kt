@@ -1,6 +1,52 @@
 package com.au.module_imagecompressed.compressor
 
+import android.content.Context
+import android.graphics.ImageDecoder
+import android.net.Uri
+import java.io.File
 import kotlin.math.roundToInt
+
+/**
+ * 使用 ImageDecoder 从本地文件读取图片像素宽高（分配器设为 NONE，避免解码全尺寸位图）。
+ *
+ * @param file 图片文件
+ * @return 宽与高；失败或尺寸无效时返回 null
+ */
+fun decodeImagePixelSizeByImageDecoder(file: File): Pair<Int, Int>? {
+    return try {
+        decodeImagePixelSizeFromSource(ImageDecoder.createSource(file))
+    } catch (_: Throwable) {
+        null
+    }
+}
+
+/**
+ * 使用 ImageDecoder 从 Uri 读取图片像素宽高（分配器设为 NONE，避免解码全尺寸位图）。
+ *
+ * @param context 上下文
+ * @param uri 图片 Uri
+ * @return 宽与高；失败或尺寸无效时返回 null
+ */
+fun decodeImagePixelSizeByImageDecoder(context: Context, uri: Uri): Pair<Int, Int>? {
+    return try {
+        decodeImagePixelSizeFromSource(
+            ImageDecoder.createSource(context.contentResolver, uri)
+        )
+    } catch (_: Throwable) {
+        null
+    }
+}
+
+private fun decodeImagePixelSizeFromSource(source: ImageDecoder.Source): Pair<Int, Int>? {
+    var width = 0
+    var height = 0
+    ImageDecoder.decodeDrawable(source) { decoder, info, _ ->
+        width = info.size.width
+        height = info.size.height
+        decoder.allocator = ImageDecoder.ALLOCATOR_DEFAULT
+    }
+    return if (width > 0 && height > 0) width to height else null
+}
 
 /**
  * 根据文件大小选择压缩质量。适配现在的需求
