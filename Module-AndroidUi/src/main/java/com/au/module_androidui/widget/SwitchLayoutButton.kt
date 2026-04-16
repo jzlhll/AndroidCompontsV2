@@ -1,19 +1,21 @@
 package com.au.module_androidui.widget
 
-import com.au.module_android.click.onClick
-import com.au.module_android.utils.invisible
-import com.au.module_android.utils.visible
-import com.au.module_androidui.R
-import com.au.module_androidui.databinding.LayoutSwitchButtonsBinding
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.EmptySuper
+import com.au.module_android.click.onClick
+import com.au.module_android.utils.invisible
+import com.au.module_android.utils.visible
+import com.au.module_androidui.R
+import com.au.module_androidui.databinding.LayoutSwitchButtonsBinding
+import kotlin.math.max
 
 /**
  * 自定义SwitchView 全新设计。 滑块。
@@ -97,38 +99,7 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
             setValue(newIsLeft)
             valueCallback?.invoke(newIsLeft)
         }
-
-        post {
-            if (paddingInner == 0) {
-                padding.visibility = View.GONE
-            } else if (paddingInner > 0) {
-                padding.layoutParams = padding.layoutParams.apply {
-                    width = paddingInner
-                }
-            }
-
-            val leftWidth = leftTv.width
-            val rightWidth = rightTv.width
-            if (leftWidth > rightWidth) {
-                rightTv.layoutParams = rightTv.layoutParams.apply {
-                    width = leftWidth
-                }
-            } else if (leftWidth < rightWidth) {
-                leftTv.layoutParams = leftTv.layoutParams.apply {
-                    width = rightWidth
-                }
-            }
-            if (!isLeft) { //如果initValue比我们post要早。在这里初始化。
-                padding.post { //需要2层post才能确定位置。第一次post设置后，第二post才能得到selectBgView的变化
-                    selectBgView.translationX = (selectBgView.width + padding.width).toFloat()
-                    selectBgViewDisable.translationX = (selectBgView.width + padding.width).toFloat()
-                    isPost = true
-                }
-            } else {
-                isPost = true
-            }
-            changeTextColor()
-        }
+        initBeforeFirstDraw(paddingInner)
     }
 
     private fun changeTextColor() {
@@ -150,10 +121,80 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
             }
         }
 
-        if (isDisabled) {
+        if (!isPost) {
+            selectBgView.invisible()
+            selectBgViewDisable.invisible()
+        } else if (isDisabled) {
             selectBgViewDisable.visible()
             selectBgView.invisible()
+        } else {
+            selectBgView.visible()
+            selectBgViewDisable.invisible()
         }
+    }
+
+    private fun initBeforeFirstDraw(paddingInner: Int) {
+        viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (!viewTreeObserver.isAlive) {
+                    return true
+                }
+                var needRelayout = false
+
+                if (paddingInner == 0) {
+                    if (padding.visibility != GONE) {
+                        padding.visibility = GONE
+                        needRelayout = true
+                    }
+                } else if (paddingInner > 0) {
+                    if (padding.layoutParams.width != paddingInner) {
+                        padding.layoutParams = padding.layoutParams.apply {
+                            width = paddingInner
+                        }
+                        needRelayout = true
+                    }
+                }
+
+                val leftWidth = leftTv.width
+                val rightWidth = rightTv.width
+                if (leftWidth > 0 && rightWidth > 0) {
+                    val targetWidth = max(leftWidth, rightWidth)
+                    if (leftTv.layoutParams.width != targetWidth) {
+                        leftTv.layoutParams = leftTv.layoutParams.apply {
+                            width = targetWidth
+                        }
+                        needRelayout = true
+                    }
+                    if (rightTv.layoutParams.width != targetWidth) {
+                        rightTv.layoutParams = rightTv.layoutParams.apply {
+                            width = targetWidth
+                        }
+                        needRelayout = true
+                    }
+                }
+
+                if (needRelayout || selectBgView.width == 0) {
+                    requestLayout()
+                    return false
+                }
+
+                viewTreeObserver.removeOnPreDrawListener(this)
+                syncSelectBgPosition()
+                isPost = true
+                changeTextColor()
+                return true
+            }
+        })
+    }
+
+    private fun syncSelectBgPosition() {
+        val targetTranslationX = if (isLeft) {
+            0f
+        } else {
+            (selectBgView.width + padding.width).toFloat()
+        }
+        selectBgView.translationX = targetTranslationX
+        selectBgViewDisable.translationX = targetTranslationX
     }
 
     fun initValue(isLeft:Boolean, disable:Boolean, leftRightStrs:Pair<String, String>? = null) {
@@ -168,10 +209,7 @@ open class SwitchLayoutButton @JvmOverloads constructor(context: Context, attrs:
         }
 
         if (isPost) {
-            if (!isLeft) { //我们默认true。初始化为false。则需要特殊处理移动下block向右。
-                selectBgView.translationX = (selectBgView.width + padding.width).toFloat()
-                selectBgViewDisable.translationX = (selectBgView.width + padding.width).toFloat()
-            }
+            syncSelectBgPosition()
             changeTextColor()
         }
     }

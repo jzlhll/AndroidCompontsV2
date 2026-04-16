@@ -11,6 +11,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.EmptySuper
@@ -32,6 +33,8 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
      * 点击切换的回调函数
      */
     var valueCallback : ((isLeft:Boolean)->Unit)? = null
+
+    private var isPost = false
 
     private val textColor:Int
     private val textSelectColor:Int
@@ -75,8 +78,6 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
         val leftStr = typedArray.getString(R.styleable.SwitchLayoutButton_first_str)
         val rightStr = typedArray.getString(R.styleable.SwitchLayoutButton_second_str)
 
-        val paddingInner = typedArray.getDimension(R.styleable.SwitchLayoutButton_padding_inner, -1f).toInt()
-
         typedArray.recycle()
 
         initLayoutBinding()
@@ -96,21 +97,8 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
             if(isDisabled) return@onClick
             switchIt()
         }
-    }
 
-    private fun updateSelectionState() {
-        // 更新背景位置
-        if (!isLeft) {
-            val halfWidth = selectBgView.width
-            selectBgView.translationX = halfWidth.toFloat()
-            selectBgViewDisable.translationX = halfWidth.toFloat()
-        } else {
-            selectBgView.translationX = 0f
-            selectBgViewDisable.translationX = 0f
-        }
-        
-        // 更新文本颜色
-        changeTextColor()
+        initBeforeFirstDraw()
     }
 
     private fun changeTextColor() {
@@ -122,8 +110,6 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
                 rightTv.setTextColor(textSelectColorDisable)
                 leftTv.setTextColor(textColorDisable)
             }
-            selectBgViewDisable.visible()
-            selectBgView.invisible()
         } else {
             if (isLeft) {
                 leftTv.setTextColor(textSelectColor)
@@ -132,9 +118,47 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
                 leftTv.setTextColor(textColor)
                 rightTv.setTextColor(textSelectColor)
             }
+        }
+
+        if (!isPost) {
+            selectBgView.invisible()
+            selectBgViewDisable.invisible()
+        } else if (isDisabled) {
+            selectBgViewDisable.visible()
+            selectBgView.invisible()
+        } else {
             selectBgViewDisable.invisible()
             selectBgView.visible()
         }
+    }
+
+    private fun initBeforeFirstDraw() {
+        viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (!viewTreeObserver.isAlive) {
+                    return true
+                }
+                if (selectBgView.width == 0) {
+                    requestLayout()
+                    return false
+                }
+                viewTreeObserver.removeOnPreDrawListener(this)
+                syncSelectBgPosition()
+                isPost = true
+                changeTextColor()
+                return true
+            }
+        })
+    }
+
+    private fun syncSelectBgPosition() {
+        val targetX = if (isLeft) {
+            0f
+        } else {
+            selectBgView.width.toFloat()
+        }
+        selectBgView.translationX = targetX
+        selectBgViewDisable.translationX = targetX
     }
 
     fun initValue(isLeft:Boolean, disable:Boolean, leftRightStrs:Pair<String, String>? = null) {
@@ -147,30 +171,23 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
             rightTv.text = leftRightStrs.second
         }
 
-        // 更新状态
-        updateSelectionState()
+        if (isPost) {
+            syncSelectBgPosition()
+            changeTextColor()
+        }
     }
 
     fun setValue(isLeft: Boolean) {
         if (!isInit) throw RuntimeException("SwitchLayoutButton2 not initialized. Call initValue() first.")
         if (isDisabled) return
         if (this.isLeft == isLeft) return
-        
+
         this.isLeft = isLeft
-        
-        // 执行动画
-        val halfWidth = selectBgView.width
-        val targetX = if (isLeft) 0f else halfWidth.toFloat()
-        
-        val bgAnimator = ObjectAnimator.ofFloat(selectBgView, "translationX", targetX)
-        bgAnimator.duration = 160
-        bgAnimator.start()
-        
-        // 同步更新禁用状态下的背景位置
-        selectBgViewDisable.translationX = targetX
-        
-        // 更新文本颜色
-        changeTextColor()
+
+        if (isPost) {
+            handleAnimal()
+            changeTextColor()
+        }
     }
 
     /*
@@ -180,5 +197,17 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
         val newIsLeft = !isLeft
         setValue(newIsLeft)
         valueCallback?.invoke(newIsLeft)
+    }
+
+    private fun handleAnimal() {
+        val targetX = if (isLeft) {
+            0f
+        } else {
+            selectBgView.width.toFloat()
+        }
+        val bgAnimator = ObjectAnimator.ofFloat(selectBgView, "translationX", targetX)
+        bgAnimator.duration = 160
+        bgAnimator.start()
+        selectBgViewDisable.translationX = targetX
     }
 }

@@ -4,9 +4,10 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewTreeObserver
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.au.module_android.click.onClick
-import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.databinding.SwitchButtonBinding
 
 /**
@@ -32,11 +33,7 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
      */
     var abort = false
 
-    private val moveDistance by unsafeLazy {
-        val width = width - context.resources.getDimension(com.au.module_androidcolor.R.dimen.switch_button_padding) * 2
-        val btnWidth = mViewBinding.selectBgView.width
-        width - btnWidth
-    }
+    private var isPost = false
 
     /**
      * 点击切换的回调函数
@@ -44,6 +41,7 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
     var valueCallback : ((Boolean)->Unit)? = null
 
     init {
+        mViewBinding.selectBgView.visibility = View.INVISIBLE
         mViewBinding.root.onClick {
             if (!abort) {
                 val newIsClosed = !isClosed
@@ -51,16 +49,15 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
                 valueCallback?.invoke(newIsClosed)
             }
         }
+        initBeforeFirstDraw()
     }
 
     fun initValue(close:Boolean) {
         isInit = true
-        if (!close) { //我们默认true。初始化为false。则需要特殊处理移动下block。
-            this.isClosed = false
-            post { //直接delay处理，初始化为非左边即可。
-                mViewBinding.selectBgView.translationX = moveDistance
-                mViewBinding.root.setBackgroundResource(com.au.module_androidcolor.R.drawable.switch_btn_opened)
-            }
+        this.isClosed = close
+        updateRootState()
+        if (isPost) {
+            syncSelectBgPosition()
         }
     }
 
@@ -71,7 +68,10 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
         }
         //后续也可能后台改动，进而触发notifyItemChange bindData，则动画
         this.isClosed = close
-        handleAnimal()
+        updateRootState()
+        if (isPost) {
+            handleAnimal()
+        }
     }
 
     private fun handleAnimal() {
@@ -82,11 +82,49 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
         } else { //从 true - false
             ObjectAnimator.ofFloat(
                 mViewBinding.selectBgView, "translationX",
-                0f, moveDistance
+                0f, getMoveDistance()
             )
         }
         bgAnimator.duration = 160
         bgAnimator.start()
+        updateRootState()
+    }
+
+    private fun initBeforeFirstDraw() {
+        viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                if (!viewTreeObserver.isAlive) {
+                    return true
+                }
+                if (mViewBinding.selectBgView.width == 0) {
+                    requestLayout()
+                    return false
+                }
+                viewTreeObserver.removeOnPreDrawListener(this)
+                syncSelectBgPosition()
+                isPost = true
+                mViewBinding.selectBgView.visibility = View.VISIBLE
+                updateRootState()
+                return true
+            }
+        })
+    }
+
+    private fun syncSelectBgPosition() {
+        mViewBinding.selectBgView.translationX = if (isClosed) {
+            0f
+        } else {
+            getMoveDistance()
+        }
+    }
+
+    private fun getMoveDistance(): Float {
+        val rootWidth = width - context.resources.getDimension(com.au.module_androidcolor.R.dimen.switch_button_padding) * 2
+        val btnWidth = mViewBinding.selectBgView.width
+        return rootWidth - btnWidth
+    }
+
+    private fun updateRootState() {
         if (!isClosed) {
             mViewBinding.root.setBackgroundResource(com.au.module_androidcolor.R.drawable.switch_btn_opened)
         } else {

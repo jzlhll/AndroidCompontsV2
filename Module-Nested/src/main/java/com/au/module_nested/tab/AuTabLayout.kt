@@ -6,15 +6,15 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.widget.TextView
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
-import com.au.module_androidui.fontutil.setFontFromAsset
 import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.forEachChild
+import com.au.module_androidcolor.R
+import com.au.module_androidui.fontutil.setFontFromAsset
 import com.au.module_androidui.widget.CustomFontText
 import com.au.module_androidui.widget.FontMode
-import com.au.module_androidcolor.R
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -24,6 +24,13 @@ import com.google.android.material.tabs.TabLayoutMediator
  * @description:
  */
 class AuTabLayout : TabLayout {
+    data class TabStyle(
+        @ColorRes val textColor: Int,
+        @DrawableRes val backgroundRes: Int = 0,
+        val textSize: Float? = null,
+        val fontMode: FontMode? = null
+    )
+
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
@@ -32,44 +39,37 @@ class AuTabLayout : TabLayout {
         defStyleAttr
     )
 
-    @ColorRes
-    var tabNotSelectColor:Int = R.color.color_tab_text_no_select
-    
-    @ColorRes
-    var tabSelectTextColor:Int = R.color.color_tab_text_select
+    private val notSelectTabStyle = TabStyle(
+        textColor = R.color.color_tab_text_no_select,
+        textSize = 16f,
+        fontMode = FontMode.NORMAL
+    )
 
-    inline fun attachViewPager2(
-        viewPage2: ViewPager2,
-        autoRefresh: Boolean = true,
-        crossinline tabBlock: ((tab: Tab, position: Int) -> Unit) = { _, _ -> }
-    ) {
-        TabLayoutMediator(this, viewPage2, autoRefresh) { tab: Tab, position: Int ->
-            tabBlock.invoke(tab, position)
-        }.attach()
+    private val selectTabStyle = TabStyle(
+        textColor = R.color.color_tab_text_select,
+        textSize = 16f,
+        fontMode = FontMode.MID
+    )
+
+    var notSelectTabStyleBlock: (position: Int) -> TabStyle = {
+        notSelectTabStyle
     }
 
-    override fun onFinishInflate() {
-        super.onFinishInflate()
-        setFont()
+    var selectTabStyleBlock: (position: Int) -> TabStyle = {
+        selectTabStyle
     }
 
-    var isBlod = false
+    private var hasInitSelectedListener = false
 
-    /**
-     * 设置字体样式
-     */
-    private fun setFont() {
-        val context = context
-        forEachChild {
-            if (it is TextView) {
-                if (isBlod){
-                    it.setFontFromAsset(context, FontMode.BOLD, false, "")
-                }else{
-                    it.setFontFromAsset(context, FontMode.NORMAL, false, "")
-                }
-            }
-        }
-    }
+//    inline fun attachViewPager2(
+//        viewPage2: ViewPager2,
+//        autoRefresh: Boolean = true,
+//        crossinline tabBlock: ((tab: Tab, position: Int) -> Unit) = { _, _ -> }
+//    ) {
+//        TabLayoutMediator(this, viewPage2, autoRefresh) { tab: Tab, position: Int ->
+//            tabBlock.invoke(tab, position)
+//        }.attach()
+//    }
 
     /**
      * 使用CustomFontText来作为customview设置给TabLayout。
@@ -77,33 +77,23 @@ class AuTabLayout : TabLayout {
      */
     fun initAttachToViewPage2AsCustomFontText(viewPage2: ViewPager2, pages:List<Pair<String, Class<out Fragment>>>) {
         TabLayoutMediator(this, viewPage2, true) { tab: Tab, position: Int ->
-            val tv = CustomFontText(viewPage2.context)
-            tv.gravity = Gravity.CENTER
-            tv.fontMode = FontMode.MID
-            tv.text = pages[position].first
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            val colorId = if (viewPage2.currentItem == position)
-                tabSelectTextColor
-            else
-                tabNotSelectColor
-
-            tv.setTextColor(ContextCompat.getColor(tv.context, colorId))
-            tab.customView = tv
+            tab.customView = createFont(viewPage2.context, pages[position].first)
+            applyTabStyle(tab, position, viewPage2.currentItem == position)
         }.attach()
 
         initSelectedListener()
     }
 
-    fun initSelectedListener() {
+    private fun initSelectedListener() {
+        if (hasInitSelectedListener) return
+        hasInitSelectedListener = true
         addOnTabSelectedListener(object : OnTabSelectedListener {
             override fun onTabSelected(tab: Tab?) {
-                val v = tab?.customView.asOrNull<TextView>()
-                v?.setTextColor(ContextCompat.getColor(v.context, tabSelectTextColor))
+                applyTabStyle(tab, tab?.position ?: return, true)
             }
 
             override fun onTabUnselected(tab: Tab?) {
-                val v = tab?.customView.asOrNull<TextView>()
-                v?.setTextColor(ContextCompat.getColor(v.context, tabNotSelectColor))
+                applyTabStyle(tab, tab?.position ?: return, false)
             }
 
             override fun onTabReselected(tab: Tab?) {
@@ -111,20 +101,55 @@ class AuTabLayout : TabLayout {
         })
     }
 
-    fun newTextTab(text:String, initSelect:Boolean, fontSize:Float = 16f) : Tab {
-        val tab = super.newTab()
-        val tv = CustomFontText(context)
-        tv.gravity = Gravity.CENTER
-        tv.fontMode = FontMode.MID
-        tv.text = text
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize)
-        val colorId = if (initSelect)
-            tabSelectTextColor
-        else
-            tabNotSelectColor
+    /**
+     * 当外部动态修改样式配置后，可调用此方法刷新全部Tab样式。
+     */
+    fun refreshTabStyles() {
+        for (index in 0 until tabCount) {
+            getTabAt(index)?.let {
+                applyTabStyle(it, index, it.isSelected)
+            }
+        }
+    }
 
-        tv.setTextColor(ContextCompat.getColor(tv.context, colorId))
-        tab.customView = tv
+    fun newTextTab(text:String, initSelect:Boolean) : Tab {
+        val tab = super.newTab()
+        tab.customView = createFont(context, text)
+        applyTabStyle(tab, tab.position, initSelect)
         return tab
+    }
+
+    // 统一创建使用自定义字体的 Tab 文案视图。
+    private fun createFont(context: Context, text: String): CustomFontText {
+        return CustomFontText(context).apply {
+            gravity = Gravity.CENTER
+            this.text = text
+        }
+    }
+
+    // 统一处理文字和背景，使用按位置计算的选中/未选中样式。
+    private fun applyTabStyle(tab: Tab?, position: Int, isSelected: Boolean) {
+        val view = tab?.customView.asOrNull<TextView>() ?: return
+        val style = if (isSelected) {
+            selectTabStyleBlock(position)
+        } else {
+            notSelectTabStyleBlock(position)
+        }
+        view.setTextColor(ContextCompat.getColor(view.context, style.textColor))
+        style.textSize?.let {
+            view.setTextSize(TypedValue.COMPLEX_UNIT_SP, it)
+        }
+        style.fontMode?.let {
+            if (view is CustomFontText) {
+                view.fontMode = it
+            } else {
+                view.setFontFromAsset(view.context, it, false, "")
+            }
+        }
+        if (style.backgroundRes != 0) {
+            view.setBackgroundResource(style.backgroundRes)
+        } else {
+            view.background = null
+        }
     }
 }

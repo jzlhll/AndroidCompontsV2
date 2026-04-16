@@ -16,6 +16,7 @@ import com.google.android.material.imageview.ShapeableImageView
  * @date :2024/3/12 14:46
  * @description:
  */
+@Deprecated("效果不太好，被图片本身的绘制给覆盖部分逻辑，阴影效果不太适用")
 class BgBuildImageView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : ShapeableImageView(context, attrs) {
