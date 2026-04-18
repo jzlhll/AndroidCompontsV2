@@ -14,7 +14,6 @@ import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.ShareInUrisObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.au.module_android.Globals
-import com.au.module_android.click.onClick
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_androidui.ui.views.YourToolbarInfo
@@ -26,8 +25,10 @@ import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.useSimpleHtmlText
 import com.au.module_android.utils.visible
+import com.au.module_androidui.widget.FontMode
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_nested.decoration.VertPaddingItemDecoration
+import com.au.module_nested.tab.AuTabLayout
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
 
@@ -94,8 +95,20 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         binding.tabLayout.apply {
-            tabSelectTextColor = R.color.logic_receiver
-            tabNotSelectColor = com.au.module_androidcolor.R.color.color_text_desc
+            selectTabStyleBlock = {
+                AuTabLayout.TabStyle(
+                    textColor = R.color.logic_receiver,
+                    textSize = 16.5f,
+                    fontMode = FontMode.MID
+                )
+            }
+            notSelectTabStyleBlock = {
+                AuTabLayout.TabStyle(
+                    textColor = com.au.module_androidcolor.R.color.color_text_desc,
+                    textSize = 16.5f,
+                    fontMode = FontMode.NORMAL
+                )
+            }
         }
 
         MyDroidConst.onFileMergedData.observeUnStick(this) { file->
@@ -166,29 +179,50 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     }
 
     private fun initTabs() {
-        val transferFileList = binding.tabLayout.newTextTab(getString(R.string.transfer_list), true, 16.5f)
-        transferFileList.view.onClick {
-            binding.receiveRcv.visible()
-            binding.exportHistoryHost.gone()
-            receivedFileListTab.customView.asOrNull<TextView>()?.let { tabTv ->
-                tabTv.text = getString(R.string.transfer_list)
-            }
-            changeRcvEmptyTextVisible()
-        }
+        val transferFileList = binding.tabLayout.newTextTab(getString(R.string.transfer_list), true)
         receivedFileListTab = transferFileList
-        val exportHistory = binding.tabLayout.newTextTab(getString(R.string.export_history), false, 16.5f)
-        exportHistory.view.onClick {
-            binding.receiveRcv.gone()
-            binding.exportHistoryHost.visible()
-            exportHistoryTab.customView.asOrNull<TextView>()?.let { tabTv ->
-                tabTv.text = getString(R.string.export_history)
-            }
-            changeRcvEmptyTextVisible()
-        }
+        val exportHistory = binding.tabLayout.newTextTab(getString(R.string.export_history), false)
         exportHistoryTab = exportHistory
         binding.tabLayout.addTab(transferFileList)
         binding.tabLayout.addTab(exportHistory)
-        binding.tabLayout.initSelectedListener()
+        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                binding.tabLayout.refreshTabStyles()
+                when (tab?.position) {
+                    0 -> showReceiveFileListTab()
+                    1 -> showExportHistoryTab()
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+                binding.tabLayout.refreshTabStyles()
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+                when (tab?.position) {
+                    0 -> showReceiveFileListTab()
+                    1 -> showExportHistoryTab()
+                }
+            }
+        })
+    }
+
+    private fun showReceiveFileListTab() {
+        binding.receiveRcv.visible()
+        binding.exportHistoryHost.gone()
+        receivedFileListTab.customView.asOrNull<TextView>()?.let { tabTv ->
+            tabTv.text = getString(R.string.transfer_list)
+        }
+        changeRcvEmptyTextVisible()
+    }
+
+    private fun showExportHistoryTab() {
+        binding.receiveRcv.gone()
+        binding.exportHistoryHost.visible()
+        exportHistoryTab.customView.asOrNull<TextView>()?.let { tabTv ->
+            tabTv.text = getString(R.string.export_history)
+        }
+        changeRcvEmptyTextVisible()
     }
 
     fun initRcv() {

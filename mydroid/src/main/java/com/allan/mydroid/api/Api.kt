@@ -44,8 +44,4 @@ object Api : AbsOkhttpApi() {
         val request: Request = Request.Builder().url("ws://$ip:$port").build()
         client.newWebSocket(request, listener)
     }
-
-    suspend fun requestIpPort() : IpPortBean? {
-        return TEXT_CHAT_READ_WEBSOCKET_IP_PORT.requestResultGet<IpPortBean>()
-    }
 }

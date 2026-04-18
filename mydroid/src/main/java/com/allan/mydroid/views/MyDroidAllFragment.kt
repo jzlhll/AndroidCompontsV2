@@ -9,8 +9,6 @@ import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.views.receiver.ReceiveFromH5Fragment
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.parseShareImportIntent
-import com.allan.mydroid.views.textchat.TextChatSelectorDialog
-import com.allan.mydroid.views.transferserver.MyDroidTransferServerFragment
 import com.au.module_android.click.onClick
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
@@ -60,11 +58,6 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
                 FragmentShellActivity.start(requireActivity(), ReceiveFromH5Fragment::class.java)
             }
         }
-        binding.textChatBtn.onClick {
-            runCheckIp {
-                TextChatSelectorDialog.show(this)
-            }
-        }
         binding.sendFileLogicBtn.onClick {
             if (CHECK_NEED_ALL_MANAGER) {
                 if (ifGotoMgrAll {
@@ -84,11 +77,6 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
                 runCheckIp {
                     SendListSelectorFragment.start(requireActivity(), false)
                 }
-            }
-        }
-        binding.middleLogicBtn.onClick {
-            runCheckIp {
-                FragmentShellActivity.start(requireActivity(), MyDroidTransferServerFragment::class.java)
             }
         }
     }

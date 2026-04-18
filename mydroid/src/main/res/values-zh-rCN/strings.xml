@@ -13,10 +13,7 @@
     <string name="send_list">发送列表</string>
     <string name="my_droid_mode_receiver">发送给手机</string>
     <string name="my_droid_mode_send">从手机接收</string>
-    <string name="my_droid_mode_middle">中转</string>
-    <string name="my_droid_mode_none">无</string>
-    <string name="my_droid_mode_image">图片浏览</string>
-    <string name="my_droid_mode_video">视频点播</string>
+    <string name="my_droid_mode_none">未知</string>
     <string name="send_files_to_html">发送文件到HTML</string>
     <string name="unknown_size">大小未知</string>
     <string name="new_webpage_access">%s 新的网页接入！</string>
@@ -69,14 +66,9 @@
     <string name="transfer_list_title">传输列表</string>
     <string name="file_send">文件发送</string>
     <string name="app_file_send">文件发送</string>
-    <string name="app_simple_text">简单文字聊天</string>
+
     <string name="file_receive">文件接收</string>
-    <string name="text_chat_pro">文字聊天 pro</string>
-    <string name="text_chat_server_next">文字聊天服务: %d ▶</string>
-    <string name="text_chat_client_next">文字聊天 ▶</string>
     <string name="transfer_server">中转服务器 pro</string>
-    <string name="image_preview">图片预览 pro</string>
-    <string name="video_playback">视频点播 pro</string>
     <string name="select_files_to_send">选择要发送的文件</string>
     <string name="empty_file_hint">暂无文件，从相册、文件管理器\n或其他应用分享进来吧。</string>
     <string name="send_success_fmt">%s 发送成功！</string>
@@ -89,18 +81,13 @@
     <string name="select_videos">选择视频</string>
     <string name="select_files">选择文件</string>
     <string name="send">发送</string>
-    <string name="as_server">作为服务器</string>
-    <string name="as_client">作为客户端</string>
-    <string name="textchat_selector_desc">选择您的文本聊天模式</string>
-    <string name="textchat_input_ipport_title">请输入服务器的IP和端口</string>
-    <string name="port_m">端口：</string>
-    <string name="something_error">发生错误</string>
-    <string name="someone_online">%s 在线</string>
-    <string name="someone_offline">%s 离线</string>
+
+    <string name="port_m">端口: </string>
+    <string name="something_error">发生了一些错误</string>
+    <string name="someone_offline">%s 离线了。</string>
     <string name="server_is_closed">服务器已关闭！</string>
-    <string name="server_is_not_textchat">服务器不是\"文本聊天\"模式！</string>
     <string name="server_not_support">不支持</string>
 
-    <string name="app_middle_server">中转服务器</string>
+
     <string name="more_actions">更多操作</string>
 </resources>

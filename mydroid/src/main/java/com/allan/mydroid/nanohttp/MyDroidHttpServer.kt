@@ -6,7 +6,6 @@ import com.allan.mydroid.api.MERGE_CHUNKS
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.api.READ_WEBSOCKET_IP_PORT
 import com.allan.mydroid.api.REQUEST_FILE_LIST
-import com.allan.mydroid.api.TEXT_CHAT_READ_WEBSOCKET_IP_PORT
 import com.allan.mydroid.api.UPLOAD_CHUNK
 import com.allan.mydroid.beans.httpdata.IpPortResult
 import com.allan.mydroid.globals.CODE_SUC
@@ -93,9 +92,6 @@ class MyDroidHttpServer(httpPort: Int,
                     MyDroidMode.Receiver -> {
                         return serveAssetFile("transfer/SendToPhone.html", mimeHtml)
                     }
-                    MyDroidMode.Middle -> {
-                        return serveAssetFile("transfer/MiddleServer.html", mimeHtml)
-                    }
                     else -> {
                         error = Globals.getString(R.string.server_not_support) + "(E02)"
                     }
@@ -103,9 +99,6 @@ class MyDroidHttpServer(httpPort: Int,
             }
             url == READ_WEBSOCKET_IP_PORT ->
                 return getWebsocketIpPort()
-            url == TEXT_CHAT_READ_WEBSOCKET_IP_PORT -> {
-                return getWebsocketIpPortWrap()
-            }
             url.startsWith("/file_download_uuid/") -> {
                 return fileDownload(url.substring("/file_download_uuid/".length))
             }
@@ -196,7 +189,6 @@ class MyDroidHttpServer(httpPort: Int,
             MERGE_CHUNKS -> chunksMgr.handleMergeChunk(session)
             ABORT_UPLOAD_CHUNKS -> chunksMgr.handleAbortChunk(session)
             READ_WEBSOCKET_IP_PORT -> getWebsocketIpPort()
-            TEXT_CHAT_READ_WEBSOCKET_IP_PORT -> getWebsocketIpPortWrap()
             REQUEST_FILE_LIST -> getFileList()
             else -> newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
         }
@@ -211,15 +203,6 @@ class MyDroidHttpServer(httpPort: Int,
             } else {
                 newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
             }
-        }
-    }
-
-    private fun getWebsocketIpPortWrap(): Response {
-        if (MyDroidConst.currentDroidMode == MyDroidMode.TextChat) {
-            return getWebsocketIpPort()
-        } else {
-            val error = Globals.getString(R.string.server_is_not_textchat)
-            return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, error)
         }
     }
 

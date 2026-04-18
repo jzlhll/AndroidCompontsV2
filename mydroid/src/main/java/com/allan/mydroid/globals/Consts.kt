@@ -11,16 +11,6 @@ import fi.iki.elonen.NanoHTTPD.Response.Status
 import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
 import java.io.File
 
-/**
- * 调试模式下，上传文件会变慢。
- */
-const val DEBUG_SLOW_RECEIVER_TRANSFER = false
-/**
- * 调试模式下，上传文件会变慢。
- */
-const val DEBUG_SLOW_SEND_TRANSFER = false
-
-
 const val CACHE_IMPORT_COPY_DIR = "nanoImport"
 fun cacheImportCopyDir() = Globals.goodCacheDir.absolutePath + File.separatorChar + CACHE_IMPORT_COPY_DIR
 
@@ -35,33 +25,11 @@ fun nanoTempCacheMergedDir()  = Globals.goodCacheDir.absolutePath + File.separat
 
 const val MIME_TYPE_JSON = "application/json; charset=UTF-8"
 
-/**
- * 认为是小文件。
- */
-const val SMALL_FILE_DEFINE_SIZE = 150 * 1024 * 1024L
-
 const val CODE_SUC = "0"
 const val CODE_FAIL = "-1"
-const val CODE_FAIL_FILE_SEND_ERR = "-2"
 const val CODE_FAIL_RECEIVER_CHUNK = "-101"
 const val CODE_FAIL_MERGE_CHUNK = "-102"
 const val CODE_FAIL_MD5_CHECK = "-103"
-
-// 64k 600kb/s 256k 2MB/s 512k 2.8~3MB/s 1M 6MB/s 分块越大，越快。
-fun getWSSendFileChunkSize(fileSize:Long?) : Long{
-    val b = 1024L
-    val mb = 1024 * 1024L
-    if (fileSize == null) return mb
-    return if (fileSize <= 10 * mb) {
-        b * 256
-    } else if (fileSize <= 100 * mb) {
-        b * 512
-    } else if (fileSize <= 500 * mb) {
-        mb
-    } else {
-        2 * mb
-    }
-}
 
 fun ResultBean<*>.okJsonResponse() : Response{
     return newFixedLengthResponse(

@@ -1,17 +1,10 @@
 package com.allan.mydroid.nanohttp
 
 import com.allan.mydroid.api.MyDroidMode
-import com.allan.mydroid.beans.WSChatMessageBean
 import com.allan.mydroid.beansinner.WebSocketClientInfo
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
-import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
-import com.au.module_gson.toGsonString
-import com.au.module_android.utils.isMainThread
-import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.launchOnUi
-import com.au.module_android.log.logd
 import com.au.module_android.log.logdNoFile
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import fi.iki.elonen.NanoWSD
@@ -35,8 +28,6 @@ class WebsocketServer(
          * 服务端开启的一条webSocket通道的最长心跳时间。因此设置的心跳要比这个值短。
          */
         const val WEBSOCKET_READ_TIMEOUT = 22 * 1000 //HEARTBEAT_INTERVAL * 2 + HEARTBEAT_INTERVAL / 2
-
-        const val WS_CODE_CLOSE_BY_CLIENT = 1000
     }
 
     private val executor = Executors.newSingleThreadExecutor()
@@ -48,11 +39,6 @@ class WebsocketServer(
     val scope = CoroutineScope(singleThreadDispatcher)
 
     private val clients: MutableList<WebsocketClientInServer> = CopyOnWriteArrayList()
-
-    /**
-     * 将客户端的消息往外通知，主要是给到UI做追加显示
-     */
-    var onTransferBothMsgCallback:((message: WSChatMessageBean)->Unit)? = null
 
     fun addIntoConnections(websocket: WebsocketClientInServer) {
         aliveTrigger.updateAliveTs("when new client add")
@@ -86,12 +72,8 @@ class WebsocketServer(
         val client = WebsocketClientInServer(handshake, this, nextColor)
         val parser = when (MyDroidConst.currentDroidMode) {
             MyDroidMode.Receiver -> WebsocketNoneModeMessenger(client) //接受文件，都走http而非ws。所以给空实现即可。
-            MyDroidMode.TextChat -> WebsocketTextChatModeMessenger(client)
             MyDroidMode.Send,
-            MyDroidMode.Middle,
-            MyDroidMode.None,
-            MyDroidMode.Image,
-            MyDroidMode.Video -> WebsocketNoneModeMessenger(client)
+            MyDroidMode.None, -> WebsocketNoneModeMessenger(client)
         }
         client.messenger = parser
         return client
@@ -108,43 +90,6 @@ class WebsocketServer(
         scope.cancel()
         executor.shutdown()
         MyDroidConst.clientListLiveData.setValueSafe(emptyList())
-    }
-
-    //textChat////
-    /**
-     * 当新的客户端消息来了。
-     */
-    fun onTextChatMessageArrived(client:WebsocketClientInServer, message: WSChatMessageBean) {
-        logdNoFile { "${client.clientName} arrived $message" }
-        message.timestamp = System.currentTimeMillis()
-        message.setStatusToDelivered()
-        serverSendTextChatMessage(message)
-    }
-
-    /**
-     * 服务器发送消息给所有客户端
-     * 从客户端或者自己发出去的都会经过这里
-     */
-    fun serverSendTextChatMessage(message: WSChatMessageBean) {
-        if (isMainThread) {
-            scope.launchOnThread {
-                serverSendMsgBoth(message)
-            }
-        } else {
-            serverSendMsgBoth(message)
-        }
-    }
-
-    private fun serverSendMsgBoth(message: WSChatMessageBean) {
-        val json = message.toGsonString()
-        logd { "serverSendMsg: $json" }
-        clients.forEach { c ->
-            c.send(json)
-        }
-
-        scope.launchOnUi {
-            onTransferBothMsgCallback?.invoke(message)
-        }
     }
 
     //color示例////

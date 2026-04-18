@@ -69,11 +69,8 @@
     <string name="transfer_list_title">Transfer List</string>
     <string name="file_send">File Send</string>
     <string name="app_file_send">File Send</string>
-    <string name="app_simple_text">Simple Text Chat</string>
+
     <string name="file_receive">File Receive</string>
-    <string name="text_chat_pro">Text Chat (pro)</string>
-    <string name="text_chat_server_next">Text Chat Server: %d ▶</string>
-    <string name="text_chat_client_next">Text Chat ▶</string>
     <string name="transfer_server">Transit Server (pro)</string>
     <string name="image_preview">Image Preview (pro)</string>
     <string name="video_playback">Video Playback (pro)</string>
@@ -89,18 +86,14 @@
     <string name="select_videos">Select Videos</string>
     <string name="select_files">Select Files</string>
     <string name="send">Send</string>
-    <string name="as_server">As Server</string>
-    <string name="as_client">As Client</string>
-    <string name="textchat_selector_desc">Select your Text Chat mode.</string>
-    <string name="textchat_input_ipport_title">Please input Server\'s ip and port.</string>
+
     <string name="port_m">Port: </string>
     <string name="something_error">Something error.</string>
     <string name="someone_online">%s is online.</string>
     <string name="someone_offline">%s is offline.</string>
     <string name="server_is_closed">Server is closed!</string>
-    <string name="server_is_not_textchat">Server is not \"Text Chat\" mode!</string>
     <string name="server_not_support">Not support.</string>
 
-    <string name="app_middle_server">Transit Server</string>
+
     <string name="more_actions">More actions</string>
 </resources>
