@@ -179,4 +179,44 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
             immersive(this, findViewById(android.R.id.content))
         }
     }
+
+    ///////尺寸静态变量
+    private var _bottomMargin = 0
+
+    private val dp20 by unsafeLazy {
+        (resources.getDimension(com.au.module_androidcolor.R.dimen.btn_margin_bottom) * 20f).toInt()
+    }
+
+    /**
+     * 获取底部间距
+     */
+    fun getBottomMargin() : Int {
+        if (_bottomMargin == 0) {
+            val bm = resources.getDimension(com.au.module_androidcolor.R.dimen.btn_margin_bottom)
+            _bottomMargin = bm.toInt()
+        }
+        return _bottomMargin
+    }
+
+    /**
+     * 分级推荐底部间距
+     */
+    fun recommendBottomMargin(navBarHeight: Int): Int {
+        val bm = getBottomMargin()
+        return when {
+            navBarHeight < dp20 -> (bm - (navBarHeight shr 1)) //底部间距减去导航栏高度的一半
+            else -> bm shr 1 //底部间距减半32dp 减少到16dp
+        }
+    }
+
+    /**
+     * 如果我们只是想额外给某个控件追加一些间距，这个方法来推荐额外的间距值
+     */
+    fun recommendBottomMarginExtra(navBarHeight: Int) : Int {
+        return when {
+            navBarHeight > dp20 -> getBottomMargin() shr 1 //底部间距的一半
+            navBarHeight < dp20 -> (navBarHeight shr 1) //导航栏高度的一半
+            else -> 0 //否则不额外追加间距
+        }
+    }
 }

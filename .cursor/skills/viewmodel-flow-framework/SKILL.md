@@ -6,32 +6,46 @@ description: 规定 ViewModel、Flow、StatusState 与 AbsActionDispatcherViewMo
 # ViewModel 开发框架
 代码位置：`Module-AndroidCommon/src/main/java/com/au/module_android/simpleflow`
 
-**核心原则**：状态驱动UI、生命周期安全；是否引入 Action/Reducer 取决于业务复杂度，不强制所有 ViewModel 都走 `UI → Action → ViewModel → State → UI`。
+**核心原则**：状态驱动UI、生命周期安全。默认使用普通 `ViewModel()` + 公开函数；除非我明确要求使用 `AbsActionDispatcherViewModel` / `Action + Dispatcher`，否则不得主动引入，不强制所有 ViewModel 都走 `UI → Action → ViewModel → State → UI`。
 
 ## 1. 核心架构
 - 构造函数注入依赖（Repository等）。
-- **默认先判断复杂度**：
-  - action 很少、只有 1~3 个明确入口、函数调用已经足够清晰时：继承普通 `ViewModel()`，由 `Fragment/Activity` 直接调用公开函数触发逻辑。
-  - 页面状态复杂、入口多、需要统一收口、跨事件复用 reducer 逻辑时：再继承 `AbsActionDispatcherViewModel`。
 - 不要为了“形式统一”给简单页面硬套 `Action + reduce`。
 
-## 2. Action 设计
+## 2. ViewModel 实现
+
+### 2.1 简单场景
+- **默认使用这一节**。
+- 继承普通 `ViewModel()`
+- 由 `Fragment/Activity` 直接调用 `ViewModel` 的公开函数实现业务逻辑
+- 适用场景：
+  - action 很少、只有 <= 4个明确入口
+  - 不需要统一 Action 收口，也不需要复用 reducer 逻辑
+
+### 2.2 复杂场景
+- **仅在我明确要求时(比如出现viewModel+dispatch/reduce等字样)，才使用 `AbsActionDispatcherViewModel`。**
+- 适用场景：
+  - 页面状态复杂、入口多。
+- 如果使用 `Action + Dispatcher` 模式，调用方应直接 `dispatch(Action)`。
+- **禁止** 在 `ViewModel` 中再追加“仅用于构造 Action 再转调 `dispatch(...)`”的公开包装函数，避免堆积一批无实际业务意义的函数。
+
+## 3. Action 设计
 - **仅在使用 `AbsActionDispatcherViewModel` 时才需要本节内容。**
-- 定义Action：
+- 定义 Action：
     实现 `IStateAction`，无参用 `object`，有参用 `data class`，放在 `init{}` 前。
 
-- 注册Reducer：
+- 注册 Reducer：
    在 `init` 中注册：`getActionStore().reduce(XxxAction::class.java) { ... }`。
 
-## 3. Flow状态管理
+## 4. Flow状态管理
 
-### 3.1 Flow 创建
+### 4.1 Flow 创建
 - `createStatusStateFlow()`: 创建 `MutableStateFlow<StatusState<T>>` (带状态的数据流)。
 - `createSharedStatusFlow()`: 创建 `MutableSharedFlow<StatusState<T>>` (带状态的事件流，如Toast)。
 - `createStickyFlow()`: 创建粘性普通Flow (新订阅者会立即收到最新值)。
 - `createNoStickyFlow()`: 创建非粘性普通Flow (仅新订阅后的数据更新会触发)。
 
-### 3.2 状态更新与使用
+### 4.2 状态更新与使用
 - **状态类型**：`Uninitialized`, `Loading`, `Success<T>`, `Error`。
 - **更新方法**：`setLoading()`, `setSuccess(data)`, `setError(e)`。
 
@@ -45,18 +59,18 @@ _dataState.setSuccess(items)
 ```
 
 
-## 4. 协程与线程管理
+## 5. 协程与线程管理
 
-### 4.1 协程作用域
+### 5.1 协程作用域
 - 使用 `viewModelScope` 作为协程作用域
 - 禁止使用全局协程作用域
 
-### 4.2 线程切换
+### 5.2 线程切换
 - 后台线程：`launchOnThread()`（`Dispatchers.Default`）
 - IO线程：`launchOnIOThread()`（`Dispatchers.IO`）
 - 主线程：`launchOnUi()`（`Dispatchers.Main.immediate`）
 
-### 4.3 异步任务try-catch写法
+### 5.3 异步任务try-catch写法
 ```kotlin
 //1. 一般情况不写loading
 //xxStateFlow.setLoading()
@@ -73,26 +87,27 @@ catch (e: Exception) {
 }
 ```
 
-## 5 Activity/Fragment使用ViewModel
+## 6 Activity/Fragment使用ViewModel
 
-### 5.1 依赖注入
+### 6.1 依赖注入
 - **标准注入**：使用 `by viewModel()` (Koin扩展)。
 - **跨页面共享**：使用 `by viewModel(ownerProducer = { requireActivity() })`。
 - **禁止**：直接 `new ViewModel()`。
 
-### 5.2 触发业务逻辑
-- 简单场景：直接调用 `viewModel.xxx()`。
-- 复杂场景：调用 `viewModel.dispatch(Action)` 触发业务逻辑。
+### 6.2 触发业务逻辑
+- 默认场景：直接调用 `viewModel.xxx()`。
+- 仅当该页面已明确采用 `Action + Dispatcher` 模式时，才调用 `viewModel.dispatch(Action)`。
+- 如果采用 `Action + Dispatcher`，就在调用处直接构造并传递 Action，不要回到 `ViewModel` 中补一层公开包装函数。
 
 ```kotlin
-// 简单场景
+// 默认场景
 viewModel.refresh(currentFrame, forceRefresh = true)
 
-// 复杂场景
+// 已明确采用 Action + Dispatcher 的场景
 viewModel.dispatch(RefreshAction(currentFrame))
 ```
 
-### 5.3 状态收集 (Collect)
+### 6.3 状态收集 (Collect)
 - **StatusState Flow** ：推荐使用 `collectStatusState`，并包裹在 `repeatOnLifecycle` 中。
 - **普通 Flow**：使用标准 `collect`。
 - 如果是页面相关的业务 Flow 监听，优先放在 `Fragment/Activity` 中，使用 `lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.STARTED) { ... } }` 收集，然后再调用 `ViewModel` 的公开函数或 `dispatch(Action)` 执行，避免把界面生命周期监听直接写进 `ViewModel`。
@@ -110,6 +125,6 @@ viewLifecycleOwner.lifecycleScope.launch {
 }
 ```
 
-## 6. 其他
+## 7. 其他
 - 性能：避免不必要更新，耗时操作用 `async/await`。
 - 过滤：`filterSuccess()`, `filterError()`, `filterLoading()`, `filterUninitialized()`。
