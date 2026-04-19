@@ -11,5 +11,7 @@ class WSApisConst {
 
         val API_WS_INIT = /*Encrypted: c_wsInit*/ sp.StringEncrypt.decrypt("qSsu5EQIKjb86D+hEJ5ynu1MmUI7HWdq+3jMrxKvY+VC4C9+")
         val API_WS_PING = /*Encrypted: c_ping*/ sp.StringEncrypt.decrypt("VZb1Tu+UrT2TZ71DczpD1ZAfdcf3wRPAIjnxXGVqo4iW5w==")
+        val API_WS_TEXT_CHAT_SEND = "c_textChat"
+        val API_WS_TEXT_CHAT_CALLBACK = "s_textChat"
     }
 }

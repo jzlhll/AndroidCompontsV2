@@ -13,6 +13,7 @@
     <string name="send_list">發送列表</string>
     <string name="my_droid_mode_receiver">發送給手機</string>
     <string name="my_droid_mode_send">從手機接收</string>
+    <string name="my_droid_mode_text_chat">文字對話</string>
     <string name="my_droid_mode_none">未知</string>
     <string name="send_files_to_html">發送檔案到HTML</string>
     <string name="unknown_size">大小未知</string>
@@ -83,6 +84,7 @@
     <string name="send">發送</string>
     <string name="text_chat_room">文字對話</string>
     <string name="text_chat_input_hint">輸入文字後使用鍵盤發送</string>
+    <string name="text_chat_copy_success">已複製</string>
 
     <string name="port_m">端口: </string>
     <string name="something_error">發生了一些錯誤</string>

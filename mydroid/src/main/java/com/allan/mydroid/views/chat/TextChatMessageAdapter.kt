@@ -1,18 +1,20 @@
 package com.allan.mydroid.views.chat
 
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.graphics.toColorInt
+import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.databinding.HolderTextChatMessageBinding
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.dp
 import com.au.module_nested.recyclerview.BindRcvAdapter
-import com.au.module_nested.recyclerview.IViewTypeBean
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.random.Random
-
-data class TextChatMessageBean(val text: String, val ip: String, val host: String) : IViewTypeBean
 
 class TextChatMessageAdapter : BindRcvAdapter<TextChatMessageBean, TextChatMessageHolder>() {
     private val colorPalette = listOf(
@@ -34,6 +36,7 @@ class TextChatMessageAdapter : BindRcvAdapter<TextChatMessageBean, TextChatMessa
             create(parent),
             selfChecker = { bean -> isSelfMessage(bean) },
             colorProvider = { ip -> getIconColor(ip) },
+            onMessageLongClick = onMessageLongClick,
         )
     }
 
@@ -58,13 +61,29 @@ class TextChatMessageAdapter : BindRcvAdapter<TextChatMessageBean, TextChatMessa
             colorPalette[Random.nextInt(colorPalette.size)].toColorInt()
         }
     }
+
+    var onMessageLongClick: (String) -> Unit = {}
 }
 
 class TextChatMessageHolder(
     binding: HolderTextChatMessageBinding,
     private val selfChecker: (TextChatMessageBean) -> Boolean,
     private val colorProvider: (String) -> Int,
+    private val onMessageLongClick: (String) -> Unit,
 ) : BindViewHolder<TextChatMessageBean, HolderTextChatMessageBinding>(binding) {
+    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+    init {
+        binding.messageBubbleTv.setOnLongClickListener {
+            val text = currentData?.text
+            if (text.isNullOrEmpty()) {
+                false
+            } else {
+                onMessageLongClick(text)
+                true
+            }
+        }
+    }
 
     override fun bindData(bean: TextChatMessageBean) {
         super.bindData(bean)
@@ -75,25 +94,39 @@ class TextChatMessageHolder(
         contentLp.marginStart = if (isSelf) 50.dp else 0
         contentLp.marginEnd = if (isSelf) 0 else 50.dp
         binding.contentHost.layoutParams = contentLp
+        binding.contentHost.gravity = if (isSelf) Gravity.END else Gravity.START
 
-        binding.iconView.background = ViewBackgroundBuilder()
-            .setBackground(colorProvider(bean.ip))
-            .setCornerRadius(12f.dp)
-            .build()
-        binding.ipHostTv.text = if (bean.host.isBlank()) {
-            "${bean.ip}:-"
+        val iconColor = if (bean.iconColor.isBlank()) {
+            colorProvider(bean.ip)
         } else {
-            "${bean.ip}:${bean.host}"
+            bean.iconColor.toColorInt()
         }
-        binding.messageTv.text = bean.text
+        binding.iconView.background = ViewBackgroundBuilder()
+            .setBackground(iconColor)
+            .setCornerRadius(11f.dp)
+            .build()
+        val timeText = timeFormat.format(Date(bean.timestamp))
+        binding.ipHostTv.text = if (bean.host.isBlank()) {
+            "${bean.ip}:-  $timeText"
+        } else {
+            "${bean.ip}:${bean.host}  $timeText"
+        }
+        binding.messageBubbleTv.text = bean.text
+        binding.messageBubbleTv.setTextSize(
+            TypedValue.COMPLEX_UNIT_SP,
+            if (isSelf) 15f else 16f
+        )
 
-        binding.contentHost.background = if (isSelf) {
+        binding.messageBubbleTv.background = if (isSelf) {
             ViewBackgroundBuilder()
                 .setBackground("#DCF8C6".toColorInt())
                 .setCornerRadius(16f.dp)
                 .build()
         } else {
-            null
+            ViewBackgroundBuilder()
+                .setBackground("#f0f0f0".toColorInt())
+                .setCornerRadius(16f.dp)
+                .build()
         }
     }
 }

@@ -7,6 +7,7 @@ enum class MyDroidMode {
     None,
     Receiver,
     Send,
+    TextChat,
 }
 
 /**
@@ -16,6 +17,7 @@ fun MyDroidMode.toName(): String {
     return when (this) {
         MyDroidMode.Receiver -> Globals.getString(R.string.my_droid_mode_receiver)
         MyDroidMode.Send -> Globals.getString(R.string.my_droid_mode_send)
+        MyDroidMode.TextChat -> Globals.getString(R.string.my_droid_mode_text_chat)
         else -> Globals.getString(R.string.my_droid_mode_none)
     }
 }

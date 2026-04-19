@@ -14,7 +14,7 @@ window.loc = {
 "start_upload": "🚀 开始上传",
 "drag_drop_hint": "⬇️ 或拖拽文件至此区域",
 "connection_lost": "⚠️ 连接已断开",
-"reconnect_prompt": "按F5刷新重连",
+"reconnect_prompt": "请重新刷新连接。",
 "refresh_list_by_f5": "按F5刷新列表",
 "filename": "文件名",
 "size": "大小",
@@ -37,6 +37,11 @@ window.loc = {
 "md5_error": "md5 错误",
 "download": "下载",
 "cancel": "取消",
+"copy": "复制",
+"text_chat_browser_subtitle": "文本对话",
+"text_chat_browser_placeholder": "输入文本后发送",
+"text_chat_browser_send": "发送",
+"text_chat_copy_success": "已复制",
 }
     } else if (systemLang == "zh-TW") {
 window.loc = {
@@ -52,7 +57,7 @@ window.loc = {
 "start_upload": "🚀 開始上傳",
 "drag_drop_hint": "⬇️ 或拖曳檔案至此區域",
 "connection_lost": "⚠️ 連線已中斷",
-"reconnect_prompt": "按F5刷新重新連線",
+"reconnect_prompt": "請重新刷新連線。",
 "refresh_list_by_f5": "按F5刷新列表",
 "filename": "文件名",
 "size": "大小",
@@ -75,6 +80,11 @@ window.loc = {
 "md5_error": "md5 錯誤",
 "download": "傳輸",
 "cancel": "取消",
+"copy": "複製",
+"text_chat_browser_subtitle": "文字對話",
+"text_chat_browser_placeholder": "輸入文字後發送",
+"text_chat_browser_send": "發送",
+"text_chat_copy_success": "已複製",
 }
     } else {
 window.loc = {
@@ -90,7 +100,7 @@ window.loc = {
 "start_upload": "🚀 Start upload",
 "drag_drop_hint": "⬇️ Or drag and drop files here",
 "connection_lost": "⚠️ Connection lost",
-"reconnect_prompt": "Press F5 to Refresh Connection",
+"reconnect_prompt": "Please refresh the connection.",
 "refresh_list_by_f5": "Press F5 to refresh list",
 "filename": "Filename",
 "size": "Size",
@@ -113,6 +123,11 @@ window.loc = {
 "md5_error": "md5 Error",
 "download": "Download",
 "cancel": "Cancel",
+"copy": "Copy",
+"text_chat_browser_subtitle": "Text chat",
+"text_chat_browser_placeholder": "Type text and send",
+"text_chat_browser_send": "Send",
+"text_chat_copy_success": "Copied",
 }
     }
 })();

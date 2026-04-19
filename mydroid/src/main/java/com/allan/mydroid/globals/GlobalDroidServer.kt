@@ -11,6 +11,7 @@ import com.au.module_android.init.InterestActivityCallbacks
 import com.au.module_android.scopes.MainAppScope
 import com.au.module_android.simpleflow.createStatusStateFlow
 import com.au.module_android.simpleflow.setSuccess
+import com.au.module_android.simpleflow.setUninitialized
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
@@ -139,7 +140,12 @@ class GlobalDroidServer(
         logd { ">>>stop server." }
         httpServer?.closeAllConnections()
         websocketServer?.closeAllConnections()
+        httpServer?.stop()
+        websocketServer?.stop()
+        httpServer = null
+        websocketServer = null
         MyDroidConst.serverIsOpen = false
+        portsFlow.setUninitialized()
     }
 
     //////////////////////////life////

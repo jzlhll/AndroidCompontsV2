@@ -17,6 +17,7 @@
     <string name="my_droid_mode_none">None</string>
     <string name="my_droid_mode_image">Image browsing</string>
     <string name="my_droid_mode_video">Video on demand</string>
+    <string name="my_droid_mode_text_chat">Text Chat</string>
     <string name="send_files_to_html">Send files to HTML</string>
     <string name="unknown_size">Unknown Size</string>
     <string name="new_webpage_access">%s New Webpage Access!</string>
@@ -88,6 +89,7 @@
     <string name="send">Send</string>
     <string name="text_chat_room">Text Chat</string>
     <string name="text_chat_input_hint">Type message and send with keyboard</string>
+    <string name="text_chat_copy_success">Copied</string>
 
     <string name="port_m">Port: </string>
     <string name="something_error">Something error.</string>

@@ -1,16 +1,22 @@
 package com.allan.mydroid.nanohttp
 
 import com.allan.mydroid.api.MyDroidMode
+import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_CALLBACK
+import com.allan.mydroid.beans.wsdata.TextChatMessageBean
+import com.allan.mydroid.beans.wsdata.TextChatWsData
 import com.allan.mydroid.beansinner.WebSocketClientInfo
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
+import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
+import android.util.Base64
 import com.au.module_android.log.logdNoFile
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import fi.iki.elonen.NanoWSD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 
@@ -73,7 +79,8 @@ class WebsocketServer(
         val parser = when (MyDroidConst.currentDroidMode) {
             MyDroidMode.Receiver,
             MyDroidMode.Send,
-            MyDroidMode.None, -> WebsocketNoneModeMessenger(client)  //接受文件，都走http而非ws。所以给空实现即可。
+            MyDroidMode.None -> WebsocketNoneModeMessenger(client)  //接受文件，都走http而非ws。所以给空实现即可。
+            MyDroidMode.TextChat -> WebsocketTextChatModeMessenger(client)
         }
         client.messenger = parser
         return client
@@ -90,6 +97,20 @@ class WebsocketServer(
         scope.cancel()
         executor.shutdown()
         MyDroidConst.clientListLiveData.setValueSafe(emptyList())
+    }
+
+    fun broadcastTextChatFromApp(bean: TextChatMessageBean) {
+        val textBase64 = Base64.encodeToString(bean.text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+        val data = TextChatWsData(textBase64, bean.ip, bean.host, bean.timestamp, bean.iconColor)
+        scope.launch {
+            clients.forEach { client ->
+                try {
+                    client.sendApiResult(API_WS_TEXT_CHAT_CALLBACK, data)
+                } catch (e: Exception) {
+                    logdNoFile { "broadcast text chat error ${e.message}" }
+                }
+            }
+        }
     }
 
     //color示例////

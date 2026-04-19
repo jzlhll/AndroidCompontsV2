@@ -92,6 +92,9 @@ class MyDroidHttpServer(httpPort: Int,
                     MyDroidMode.Receiver -> {
                         return serveAssetFile("transfer/SendToPhone.html", mimeHtml)
                     }
+                    MyDroidMode.TextChat -> {
+                        return serveAssetFile("transfer/TextChat.html", mimeHtml)
+                    }
                     else -> {
                         error = Globals.getString(R.string.server_not_support) + "(E02)"
                     }

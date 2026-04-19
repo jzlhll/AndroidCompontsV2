@@ -34,6 +34,9 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
                               val color: String) : NanoWSD.WebSocket(httpSession) {
     private val remoteIpStr: String? = httpSession.remoteIpAddress
 
+    val remoteIp: String
+        get() = remoteIpStr ?: ""
+
     /**
      * 初始化的同时赋值
      */
@@ -44,6 +47,9 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
      */
     var clientName = "$remoteIpStr@--"
         private set
+
+    val hostName: String
+        get() = clientName.substringAfter("@", "--")
 
     var platform = ""
 
@@ -104,8 +110,7 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
         when (api) {
             API_WS_INIT -> {
                 val targetName = json.optString("wsName")
-                val platform = json.optString("platform")
-                this.platform = platform
+                platform = json.optString("platform")
                 clientName = "$remoteIpStr@$targetName"
                 server.triggerConnectionsList()
 
@@ -145,6 +150,12 @@ class WebsocketClientInServer(httpSession: NanoHTTPD.IHTTPSession,
                 color)
         ).toGsonString()
         logt { "send: $json" }
+        send(json)
+    }
+
+    fun sendApiResult(api: String, data: Any?, msg: String? = null) {
+        val json = WSResultBox(CODE_SUC, msg, api, data).toGsonString()
+        logt { "send api: $json" }
         send(json)
     }
 

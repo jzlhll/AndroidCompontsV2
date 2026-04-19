@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDroid</title>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #eef1f5;
+            color: #222;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .page {
+            max-width: 880px;
+            height: 100vh;
+            margin: 0 auto;
+            padding: 20px 14px 0;
+        }
+
+        .chat-shell {
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            text-align: center;
+            padding: 8px 0 16px;
+        }
+
+        .chat-header h1 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 30px;
+        }
+
+        .chat-subtitle {
+            margin-top: 10px;
+            color: #6f7783;
+            font-size: 15px;
+        }
+
+        .message-list {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 8px 8px 20px;
+        }
+
+        .message-item {
+            display: flex;
+            margin: 10px 0;
+        }
+
+        .message-item.self {
+            justify-content: flex-end;
+            padding-left: 56px;
+        }
+
+        .message-item.client {
+            justify-content: flex-start;
+            padding-right: 56px;
+        }
+
+        .message-content {
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            min-width: 160px;
+        }
+
+        .message-item.self .message-content {
+            align-items: flex-end;
+        }
+
+        .message-item.client .message-content {
+            align-items: flex-start;
+        }
+
+        .message-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex: 0 0 20px;
+        }
+
+        .message-host {
+            color: #7a808a;
+            font-size: 13px;
+            line-height: 1.2;
+            word-break: break-all;
+        }
+
+        .message-text {
+            color: #23262d;
+            font-size: 15px;
+            line-height: 1.55;
+            word-break: break-word;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .message-bubble {
+            margin-top: 8px;
+            display: inline-block;
+            border-radius: 18px;
+            padding: 10px 12px;
+        }
+
+        .message-item.self .message-bubble {
+            background: #eadbff;
+        }
+
+        .message-item.client .message-bubble {
+            background: #ffffff;
+        }
+
+        .input-bar {
+            position: sticky;
+            bottom: 0;
+            background: #eef1f5;
+            border-top: 1px solid #dde3ec;
+            padding: 12px 8px calc(24px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            min-height: 40px;
+            max-height: 120px;
+            resize: none;
+            border: 1px solid #d7d8de;
+            border-radius: 18px;
+            padding: 10px 14px;
+            font-size: 15px;
+            line-height: 1.4;
+            outline: none;
+            overflow-y: hidden;
+            background: #fff;
+        }
+
+        .send-button {
+            height: 40px;
+            min-width: 86px;
+            border: none;
+            border-radius: 20px;
+            background: #7b4dff;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 0 18px;
+        }
+
+        .copy-toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+            transform: translateX(-50%);
+            background: rgba(28, 28, 30, 0.9);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 13px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+        }
+
+        .context-menu {
+            position: fixed;
+            display: none;
+            min-width: 110px;
+            background: #ffffff;
+            border: 1px solid #d8dfe8;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(28, 35, 49, 0.16);
+            padding: 6px;
+            z-index: 10000;
+        }
+
+        .context-menu-item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #23262d;
+            cursor: pointer;
+        }
+
+        .context-menu-item:hover {
+            background: #f1f4f8;
+        }
+
+        #overlayView {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+
+        #overlayView-content {
+            text-align: center;
+            padding: 30px;
+            max-width: 80%;
+        }
+
+        #overlayView h2 {
+            color: #ff4444;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #overlayView p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 640px) {
+            .page {
+                padding: 14px 10px 0;
+            }
+
+            .chat-header h1 {
+                font-size: 26px;
+            }
+
+            .message-item.self {
+                padding-left: 50px;
+            }
+
+            .message-item.client {
+                padding-right: 50px;
+            }
+
+            .send-button {
+                min-width: 72px;
+                padding: 0 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="chat-shell">
+        <div class="chat-header">
+            <h1>MyDroid</h1>
+            <div id="chatSubtitle" class="chat-subtitle"></div>
+        </div>
+
+        <div id="messageList" class="message-list"></div>
+
+        <div class="input-bar">
+            <div class="input-row">
+                <textarea id="messageInput" class="message-input" rows="1"></textarea>
+                <button id="sendButton" class="send-button" type="button"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="copyToast" class="copy-toast"></div>
+<div id="messageContextMenu" class="context-menu">
+    <button id="copyMenuItem" class="context-menu-item" type="button"></button>
+</div>
+<div id="overlayView">
+    <div id="overlayView-content">
+        <h2 id="overlayError1"></h2>
+        <p id="overlayError2"></p>
+    </div>
+</div>
+
+<script src="mydroid-locales.js"></script>
+<script src="mydroid-utils.js"></script>
+<script src="mydroid-websockets.js"></script>
+<script src="mydroid-text-chat.js"></script>
+</body>
+</html>

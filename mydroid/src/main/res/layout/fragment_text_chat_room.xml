@@ -35,6 +35,14 @@
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         tools:text="192.168.1.2:8080" />
 
+    <LinearLayout
+        android:id="@+id/clientsHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/title" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRcv"
         android:layout_width="0dp"
@@ -47,7 +55,7 @@
         app:layout_constraintBottom_toTopOf="@id/inputHost"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/clientsHost"
         tools:listitem="@layout/holder_text_chat_message" />
 
     <LinearLayout
@@ -64,22 +72,43 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <com.au.module_androidui.widget.CustomEditText
-            android:id="@+id/inputEdit"
-            style="@style/StyleBlankEditText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingVertical="8dp"
-            android:paddingHorizontal="12dp"
-            android:hint="@string/text_chat_input_hint"
-            android:imeOptions="actionSend"
-            android:inputType="text"
-            android:layout_marginBottom="18dp"
-            android:maxLines="1"
             android:layout_marginTop="8dp"
-            android:minHeight="32dp"
-            android:singleLine="true"
-            tools:text="你好，先只做一个本地文本聊天界面" />
+            android:layout_marginBottom="18dp"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <com.au.module_androidui.widget.CustomEditText
+                android:id="@+id/inputEdit"
+                style="@style/StyleBlankEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="top|start"
+                android:hint="@string/text_chat_input_hint"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxHeight="120dp"
+                android:minHeight="40dp"
+                android:overScrollMode="ifContentScrolls"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:scrollbars="vertical"
+                tools:text="你好，先只做一个本地文本聊天界面" />
+
+            <com.au.module_androidui.widget.CustomButton
+                android:id="@+id/sendBtn"
+                android:layout_width="72dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:text="@string/send"
+                android:textColor="#ffffff"
+                android:gravity="center"
+                android:textSize="15sp"
+                app:backgroundNormal="#069a4a"
+                app:cornerRadius="20dp" />
+        </LinearLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
