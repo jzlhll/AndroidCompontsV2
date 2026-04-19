@@ -8,6 +8,7 @@
 
     <View
         android:id="@+id/topSpace"
+        tools:layout_height="24dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -75,6 +76,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/copyBtn"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:text="Copy"/>
+
         <Button
             android:id="@+id/checkAndUploadBtn"
             android:layout_width="0dp"
