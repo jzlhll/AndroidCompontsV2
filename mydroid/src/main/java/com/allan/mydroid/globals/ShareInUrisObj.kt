@@ -240,7 +240,11 @@ object ShareInUrisObj {
 
     fun takeHostPermission(uri: Uri) {
         if (CHECK_URI_PERMISSION) {
-            Globals.app.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            try {
+                Globals.app.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            }
         }
     }
 }

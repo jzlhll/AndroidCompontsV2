@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">快鴿傳輸2</string>
+    <string name="file_receive">檔案接收</string>
+    <string name="file_send">檔案發送</string>
+</resources>
