@@ -74,14 +74,24 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        //判断是否是输入法范围
-        if (isAutoHideIme() && ev?.action == MotionEvent.ACTION_DOWN) {
-            val focusView = currentFocus
-            if (focusView != null && isShouldHideInput(focusView, ev)) {
-                hideImeNew(window, focusView)
-            }
+        if (!isAutoHideIme() || ev == null) {
+            return super.dispatchTouchEvent(ev)
         }
-        return super.dispatchTouchEvent(ev)
+
+        val handled = super.dispatchTouchEvent(ev)
+        if (ev.actionMasked == MotionEvent.ACTION_UP) {
+            handleAutoHideImeUp(ev)
+        }
+        return handled
+    }
+
+    // 在点击完成后仅根据抬手位置决定是否隐藏键盘。
+    private fun handleAutoHideImeUp(event: MotionEvent) {
+        val focusView = currentFocus as? EditText ?: return
+
+        if (isShouldHideInput(focusView, event)) {
+            hideImeNew(window, focusView)
+        }
     }
 
     private fun isShouldHideInput(v: View, event: MotionEvent):Boolean {
