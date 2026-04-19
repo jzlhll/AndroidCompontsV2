@@ -153,6 +153,10 @@ class MyDroidHttpServer(httpPort: Int,
                             charset("ISO-8859-1")) + "\"; " +
                         "filename*=UTF-8''" + encodedFileName
             )
+            // Avoid browser/proxy caching large binary downloads in memory or disk cache.
+            response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            response.addHeader("Pragma", "no-cache")
+            response.addHeader("Expires", "0")
 
             // 3. （可选但推荐）设置 Content-Length 头
             response.addHeader("Content-Length", "" + fileSize)

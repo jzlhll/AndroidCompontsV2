@@ -6,6 +6,7 @@ import com.allan.mydroid.CHECK_NEED_ALL_MANAGER
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidAllBinding
 import com.allan.mydroid.globals.GlobalNetworkMonitor
+import com.allan.mydroid.views.chat.TextChatRoomFragment
 import com.allan.mydroid.views.receiver.ReceiveFromH5Fragment
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.parseShareImportIntent
@@ -77,6 +78,11 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
                 runCheckIp {
                     SendListSelectorFragment.start(requireActivity(), false)
                 }
+            }
+        }
+        binding.textChatLogicBtn.onClick {
+            runCheckIp {
+                FragmentShellActivity.start(requireActivity(), TextChatRoomFragment::class.java)
             }
         }
     }

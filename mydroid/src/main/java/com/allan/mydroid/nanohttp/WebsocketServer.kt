@@ -71,9 +71,9 @@ class WebsocketServer(
         //uri = uri.replaceFirst("/", "", true)
         val client = WebsocketClientInServer(handshake, this, nextColor)
         val parser = when (MyDroidConst.currentDroidMode) {
-            MyDroidMode.Receiver -> WebsocketNoneModeMessenger(client) //接受文件，都走http而非ws。所以给空实现即可。
+            MyDroidMode.Receiver,
             MyDroidMode.Send,
-            MyDroidMode.None, -> WebsocketNoneModeMessenger(client)
+            MyDroidMode.None, -> WebsocketNoneModeMessenger(client)  //接受文件，都走http而非ws。所以给空实现即可。
         }
         client.messenger = parser
         return client

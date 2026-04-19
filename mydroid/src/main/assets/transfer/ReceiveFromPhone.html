@@ -282,7 +282,13 @@
         }
         
         function startDownload(uriUuid) {
-            window.open(`http://${window.mydroidIpPort.ip}:${window.mydroidIpPort.httpPort}/file_download_uuid/${uriUuid}`, '_blank');
+            const url = `http://${window.mydroidIpPort.ip}:${window.mydroidIpPort.httpPort}/file_download_uuid/${uriUuid}`;
+            const tmpLink = document.createElement('a');
+            tmpLink.href = url;
+            tmpLink.style.display = 'none';
+            document.body.appendChild(tmpLink);
+            tmpLink.click();
+            document.body.removeChild(tmpLink);
         };
 
         ////////run init functions//////

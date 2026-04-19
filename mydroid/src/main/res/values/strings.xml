@@ -86,6 +86,8 @@
     <string name="select_videos">Select Videos</string>
     <string name="select_files">Select Files</string>
     <string name="send">Send</string>
+    <string name="text_chat_room">Text Chat</string>
+    <string name="text_chat_input_hint">Type message and send with keyboard</string>
 
     <string name="port_m">Port: </string>
     <string name="something_error">Something error.</string>

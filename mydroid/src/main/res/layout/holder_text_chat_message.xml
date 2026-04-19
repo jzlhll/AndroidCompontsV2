@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
+        android:id="@+id/contentHost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="10dp"
+        tools:background="#DCF8C6"
+        tools:layout_gravity="end"
+        tools:layout_marginStart="50dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/iconView"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                tools:background="#5CCE99" />
+
+            <com.au.module_androidui.widget.CustomFontText
+                android:id="@+id/ipHostTv"
+                style="@style/StyleAuTextThinDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                tools:text="192.168.1.2:8080" />
+        </LinearLayout>
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/messageTv"
+            style="@style/StyleAuTextThin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            tools:text="这里只是先做左右气泡和输入滚动处理，暂时不接任何 ws。" />
+    </LinearLayout>
+
+</FrameLayout>
