@@ -60,8 +60,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
 
         fun parseShareImportIntent(fragment: Fragment) {
-            val isFromNewShareImportUris = fragment.arguments?.getString(MY_DROID_SHARE_IMPORT_URIS)
-            fragment.arguments?.remove(MY_DROID_SHARE_IMPORT_URIS)
+            val isFromNewShareImportUris = fragment.arguments?.getString(KEY_START_TYPE)
+            fragment.arguments?.remove(KEY_START_TYPE)
             logdNoFile { "parse ShareImport Intent $isFromNewShareImportUris" }
             if (isFromNewShareImportUris == MY_DROID_SHARE_IMPORT_URIS) {
                 fragment.lifecycleScope.launch {
@@ -167,25 +167,20 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     private fun initActionButtons() {
-        if (!isPhotoPickerAvailable(requireActivity())) {
-            binding.selectImageAndVideoText.gone()
-            binding.selectImageAndVideoBtn.gone()
-        } else {
-            val selectGalleryRun:(view: View)->Unit  = {
-                pickerResult.setCurrentMaxItems(9)
-                pickerResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
-                    logd { "file uri: $uris" }
-                    val urisList = ArrayList<Uri>()
-                    for (uri in uris) {
-                        urisList.add(uri)
-                    }
-                    onUrisBack(urisList, true)
+        val selectGalleryRun:(view: View)->Unit  = {
+            pickerResult.setCurrentMaxItems(9)
+            pickerResult.launchByAll(PickerType.IMAGE_AND_VIDEO, null) { uris->
+                logd { "file uri: $uris" }
+                val urisList = ArrayList<Uri>()
+                for (uri in uris) {
+                    urisList.add(uri)
                 }
+                onUrisBack(urisList, true)
             }
-
-            binding.selectImageAndVideoBtn.onClick(selectGalleryRun)
-            binding.selectImageAndVideoText.onClick(selectGalleryRun)
         }
+
+        binding.selectImageAndVideoBtn.onClick(selectGalleryRun)
+        binding.selectImageAndVideoText.onClick(selectGalleryRun)
 
         val documentRun:(view: View)->Unit = {
             documentResult.start(arrayOf("*/*")) { uris->
