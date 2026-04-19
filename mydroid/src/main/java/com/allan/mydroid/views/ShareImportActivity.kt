@@ -25,10 +25,6 @@ import com.au.module_androidui.ui.startActivityFix
 import kotlinx.coroutines.launch
 
 class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
-    override fun onDestroy() {
-        super.onDestroy()
-        MyDroidKeepLiveService.Companion.stopMyDroidAlive()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -16,7 +16,6 @@ import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendListSelectorBinding
 import com.allan.mydroid.globals.ShareInUrisObj
-import com.allan.mydroid.views.MyDroidKeepLiveService
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
@@ -167,13 +166,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         FragmentShellActivity.start(requireActivity(), SendListFilesFragment::class.java)
     }
 
-    val permissionUtil = createPostNotificationPermissionResult()
-
-    override fun onDestroy() {
-        super.onDestroy()
-        MyDroidKeepLiveService.Companion.stopMyDroidAlive()
-    }
-
     private fun initActionButtons() {
         if (!isPhotoPickerAvailable(requireActivity())) {
             binding.selectImageAndVideoText.gone()
@@ -218,10 +210,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        permissionUtil.safeRun {
-            MyDroidKeepLiveService.keepMyDroidAlive()
-        }
-
         initActionButtons()
 
         binding.adHost.setColor(Globals.getColor(com.au.module_androidcolor.R.color.color_normal_block0))
