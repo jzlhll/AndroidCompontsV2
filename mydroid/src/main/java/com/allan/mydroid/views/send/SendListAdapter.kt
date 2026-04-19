@@ -7,7 +7,7 @@ import com.au.module_nested.recyclerview.BindRcvAdapter
 import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 
-class IconTitle(@DrawableRes val icon:Int, val title:String, override val viewType: Int = VIEW_TYPE_ICON_TEXT) : IMultiViewTypeBean
+class IconTitle(val title:String, override val viewType: Int = VIEW_TYPE_ICON_TEXT) : IMultiViewTypeBean
 
 private const val VIEW_TYPE_ICON_TEXT = 1
 const val VIEW_TYPE_URI_INFO = 2

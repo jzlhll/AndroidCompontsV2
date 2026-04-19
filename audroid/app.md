@@ -1,2 +1,0 @@
-android官方推荐的单Activity+多Fragment+navigation3的开发模式，并使用compose实现。
-该文档优先级高于项目skills。

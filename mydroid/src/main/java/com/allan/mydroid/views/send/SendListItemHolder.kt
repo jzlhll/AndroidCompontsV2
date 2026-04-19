@@ -20,7 +20,6 @@ class SendTitleHolder(binding: HolderMydroidSendlistTitleBinding)
     override fun bindData(bean: IMultiViewTypeBean) {
         super.bindData(bean)
         if (bean !is IconTitle) return
-        binding.icon.setImageResource(bean.icon)
         binding.title.text = bean.title
     }
 }

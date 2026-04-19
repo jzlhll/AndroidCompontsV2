@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">快鸽传输2</string>
-    <string name="file_receive">文件接收</string>
-    <string name="file_send">文件发送</string>
-</resources>

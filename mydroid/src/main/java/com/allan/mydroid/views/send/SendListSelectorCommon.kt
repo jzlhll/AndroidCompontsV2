@@ -43,7 +43,7 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) {
         val newList = ArrayList<IMultiViewTypeBean>()
         val shareInList = sendUriList.filter { !it.isLocalReceiver }
         if (shareInList.isNotEmpty()) {
-            newList.add(IconTitle(R.drawable.ic_share, Globals.getString(R.string.share_in)))
+            newList.add(IconTitle(Globals.getString(R.string.share_in)))
             for (bean in shareInList) {
                 bean.isNoDeleteBtn = isNoDeleteBtn
             }
@@ -52,7 +52,7 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) {
 
         val receiverList = sendUriList.filter { it.isLocalReceiver }
         if (receiverList.isNotEmpty()) {
-            newList.add(IconTitle(R.drawable.ic_receivered, Globals.getString(R.string.my_transfer_list).trim()))
+            newList.add(IconTitle(Globals.getString(R.string.my_transfer_list).trim()))
             for (bean in receiverList) {
                 bean.isNoDeleteBtn = isNoDeleteBtn
             }
