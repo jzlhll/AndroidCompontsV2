@@ -17,6 +17,11 @@
     <color name="logic_watch_picture">#00838F</color>
     <color name="logic_watch_video">#D84315</color>
 
+    <color name="text_chat_bubble_self_bg">#DCF8C6</color>
+    <color name="text_chat_bubble_self_text">#111111</color>
+    <color name="text_chat_bubble_other_bg">#F0F0F0</color>
+    <color name="text_chat_bubble_other_text">#111111</color>
+
 
     <color name="blur_overlay">#bbffffff</color>
 </resources>

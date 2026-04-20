@@ -14,10 +14,7 @@ import com.au.module_android.BuildConfig
 import com.au.module_android.DarkModeAndLocalesConst
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
-import com.au.module_android.utils.enableEdgeToEdgeFix
-import com.au.module_android.utils.hideImeNew
-import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.unsafeLazy
+import com.au.module_android.utils.*
 import com.au.module_androidui.ui.KEY_ENTER_ANIM
 import com.au.module_androidui.ui.KEY_EXIT_ANIM
 import com.au.module_androidui.ui.immersive

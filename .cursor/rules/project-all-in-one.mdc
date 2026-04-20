@@ -43,7 +43,7 @@ alwaysApply: true
     - **≤2** 仅一句中文
     - **≥3** 用 `-` 列表（类名勿全路径，每行一句）且末行「总结：」一句整体
 
-# kotlin/kts文件日志规范
+# kotlin日志规范
 
 - 优先 `logdNoFile`（仅控制台）替代Log.d
 - 函数名拆分（如 `onDeviceListChanged` → on deviceList changed）

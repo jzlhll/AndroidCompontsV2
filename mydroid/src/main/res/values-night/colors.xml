@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="text_chat_bubble_self_bg">#2F6B3E</color>
+    <color name="text_chat_bubble_self_text">#F4FFF4</color>
+    <color name="text_chat_bubble_other_bg">#454545</color>
+    <color name="text_chat_bubble_other_text">#FFFFFF</color>
     <color name="blur_overlay">#ad000000</color>
 </resources>

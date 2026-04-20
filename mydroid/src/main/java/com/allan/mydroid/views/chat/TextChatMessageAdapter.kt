@@ -4,7 +4,9 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
+import com.allan.mydroid.R
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.databinding.HolderTextChatMessageBinding
 import com.au.module_android.utils.ViewBackgroundBuilder
@@ -116,17 +118,22 @@ class TextChatMessageHolder(
             TypedValue.COMPLEX_UNIT_SP,
             if (isSelf) 15f else 16f
         )
-
-        binding.messageBubbleTv.background = if (isSelf) {
-            ViewBackgroundBuilder()
-                .setBackground("#DCF8C6".toColorInt())
-                .setCornerRadius(16f.dp)
-                .build()
+        val context = binding.root.context
+        val bubbleColorRes = if (isSelf) {
+            R.color.text_chat_bubble_self_bg
         } else {
-            ViewBackgroundBuilder()
-                .setBackground("#f0f0f0".toColorInt())
-                .setCornerRadius(16f.dp)
-                .build()
+            R.color.text_chat_bubble_other_bg
         }
+        val textColorRes = if (isSelf) {
+            R.color.text_chat_bubble_self_text
+        } else {
+            R.color.text_chat_bubble_other_text
+        }
+        binding.messageBubbleTv.setTextColor(ContextCompat.getColor(context, textColorRes))
+
+        binding.messageBubbleTv.background = ViewBackgroundBuilder()
+            .setBackground(ContextCompat.getColor(context, bubbleColorRes))
+            .setCornerRadius(16f.dp)
+            .build()
     }
 }
