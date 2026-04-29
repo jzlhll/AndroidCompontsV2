@@ -71,6 +71,19 @@
 
     <string name="file_receive">文件接收</string>
     <string name="fragment_my_droid_all_file_receive">网页-文件接收</string>
+    <string name="fragment_my_droid_all_native_file_receive">Native-文件接收</string>
+    <string name="native_receive_title">Native 从手机接收</string>
+    <string name="native_receive_ip_hint">手机IP</string>
+    <string name="native_receive_port_hint">手机HTTP端口</string>
+    <string name="native_receive_connect">连接</string>
+    <string name="native_receive_connecting">连接中...</string>
+    <string name="native_receive_connected">已连接</string>
+    <string name="native_receive_refresh">刷新</string>
+    <string name="native_receive_empty_files">暂无远端文件</string>
+    <string name="native_receive_downloading">下载中...</string>
+    <string name="native_receive_invalid_ip_port">IP或端口不正确</string>
+    <string name="native_receive_read_port_failed">读取远端端口失败</string>
+    <string name="native_receive_download_failed">下载失败</string>
     <string name="transfer_server">中转服务器 pro</string>
     <string name="select_files_to_send">选择要发送的文件</string>
     <string name="empty_file_hint">暂无文件，从相册、文件管理器\n或其他应用分享进来吧。</string>

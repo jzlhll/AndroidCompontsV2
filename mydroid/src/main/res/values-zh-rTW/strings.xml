@@ -71,6 +71,19 @@
 
     <string name="file_receive">檔案接收</string>
     <string name="fragment_my_droid_all_file_receive">網頁-檔案接收</string>
+    <string name="fragment_my_droid_all_native_file_receive">Native-檔案接收</string>
+    <string name="native_receive_title">Native 從手機接收</string>
+    <string name="native_receive_ip_hint">手機IP</string>
+    <string name="native_receive_port_hint">手機HTTP端口</string>
+    <string name="native_receive_connect">連接</string>
+    <string name="native_receive_connecting">連接中...</string>
+    <string name="native_receive_connected">已連接</string>
+    <string name="native_receive_refresh">刷新</string>
+    <string name="native_receive_empty_files">暫無遠端檔案</string>
+    <string name="native_receive_downloading">下載中...</string>
+    <string name="native_receive_invalid_ip_port">IP或端口不正確</string>
+    <string name="native_receive_read_port_failed">讀取遠端端口失敗</string>
+    <string name="native_receive_download_failed">下載失敗</string>
     <string name="transfer_server">中轉服務器 pro</string>
     <string name="select_files_to_send">選擇要傳送的檔案</string>
     <string name="empty_file_hint">暫無檔案，從相簿、檔案管理器\n或其他應用分享進來吧。</string>

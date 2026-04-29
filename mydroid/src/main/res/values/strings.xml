@@ -74,6 +74,19 @@
 
     <string name="file_receive">File Receive</string>
     <string name="fragment_my_droid_all_file_receive">Webpage-File Receive</string>
+    <string name="fragment_my_droid_all_native_file_receive">Native-File Receive</string>
+    <string name="native_receive_title">Native Receive From Phone</string>
+    <string name="native_receive_ip_hint">Phone IP</string>
+    <string name="native_receive_port_hint">Phone HTTP Port</string>
+    <string name="native_receive_connect">Connect</string>
+    <string name="native_receive_connecting">Connecting...</string>
+    <string name="native_receive_connected">Connected</string>
+    <string name="native_receive_refresh">Refresh</string>
+    <string name="native_receive_empty_files">No remote files</string>
+    <string name="native_receive_downloading">Downloading...</string>
+    <string name="native_receive_invalid_ip_port">Invalid IP or port</string>
+    <string name="native_receive_read_port_failed">Failed to read remote port</string>
+    <string name="native_receive_download_failed">Download failed</string>
     <string name="transfer_server">Transit Server (pro)</string>
     <string name="image_preview">Image Preview (pro)</string>
     <string name="video_playback">Video Playback (pro)</string>

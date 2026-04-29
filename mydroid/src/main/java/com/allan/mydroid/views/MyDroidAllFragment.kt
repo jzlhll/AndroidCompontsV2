@@ -8,6 +8,7 @@ import com.allan.mydroid.databinding.FragmentMyDroidAllBinding
 import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.views.chat.TextChatRoomFragment
 import com.allan.mydroid.views.receiver.ReceiveFromH5Fragment
+import com.allan.mydroid.views.receiver.nativefiles.ReceiveFromPhoneNativeFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.parseShareImportIntent
 import com.au.module_android.click.onClick
@@ -57,6 +58,11 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
         binding.receiveFileLogicBtn.onClick {
             runCheckIp {
                 FragmentShellActivity.start(requireActivity(), ReceiveFromH5Fragment::class.java)
+            }
+        }
+        binding.nativeReceiveFileLogicBtn.onClick {
+            runCheckIp {
+                FragmentShellActivity.start(requireActivity(), ReceiveFromPhoneNativeFragment::class.java)
             }
         }
         binding.sendFileLogicBtn.onClick {

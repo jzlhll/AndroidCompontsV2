@@ -6,6 +6,7 @@ import com.allan.mydroid.globals.GlobalDroidServer
 import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.cacheImportCopyDir
+import com.allan.mydroid.globals.nanoTempCacheMergedDir
 import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
 import com.au.logsystem.DefaultActivitiesFollowCallback
@@ -29,6 +30,7 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.binds
 import org.koin.dsl.module
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -117,6 +119,12 @@ class App : InitApplication() {
         Globals.mainScope.launchOnIOThread {
             AppNative.strEk(this@App)
             clearDirOldFiles(cacheImportCopyDir(), 0)
+            // 启动时清理未完成下载留下的临时文件。
+            File(nanoTempCacheMergedDir()).listFiles()?.forEach {
+                if (it.isFile && it.name.endsWith(".tmp")) {
+                    it.delete()
+                }
+            }
             //AppNative.astf(this@App, "device_test.zip", Globals.goodCacheDir.absolutePath + "/cached.zip")
         }
     }
