@@ -66,9 +66,11 @@
     <string name="exit_with_wifi_reminder">點擊退出，請連接WI-FI或開啟熱點，然後重新進入。</string>
     <string name="transfer_list_title">傳輸清單</string>
     <string name="file_send">檔案傳送</string>
+    <string name="fragment_my_droid_all_file_send">網頁-檔案傳送</string>
     <string name="app_file_send">檔案傳送</string>
 
     <string name="file_receive">檔案接收</string>
+    <string name="fragment_my_droid_all_file_receive">網頁-檔案接收</string>
     <string name="transfer_server">中轉服務器 pro</string>
     <string name="select_files_to_send">選擇要傳送的檔案</string>
     <string name="empty_file_hint">暫無檔案，從相簿、檔案管理器\n或其他應用分享進來吧。</string>
@@ -83,6 +85,7 @@
     <string name="select_files">選擇檔案</string>
     <string name="send">發送</string>
     <string name="text_chat_room">文字對話</string>
+    <string name="fragment_my_droid_all_text_chat_room">網頁-文字對話</string>
     <string name="text_chat_input_hint">輸入文字後使用鍵盤發送</string>
     <string name="text_chat_copy_success">已複製</string>
 

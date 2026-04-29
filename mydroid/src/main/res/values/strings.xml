@@ -69,9 +69,11 @@
     <string name="exit_with_wifi_reminder">Click to exit. Please connect to WI-FI or enable hotspot, then enter again.</string>
     <string name="transfer_list_title">Transfer List</string>
     <string name="file_send">File Send</string>
+    <string name="fragment_my_droid_all_file_send">Webpage-File Send</string>
     <string name="app_file_send">File Send</string>
 
     <string name="file_receive">File Receive</string>
+    <string name="fragment_my_droid_all_file_receive">Webpage-File Receive</string>
     <string name="transfer_server">Transit Server (pro)</string>
     <string name="image_preview">Image Preview (pro)</string>
     <string name="video_playback">Video Playback (pro)</string>
@@ -88,6 +90,7 @@
     <string name="select_files">Select Files</string>
     <string name="send">Send</string>
     <string name="text_chat_room">Text Chat</string>
+    <string name="fragment_my_droid_all_text_chat_room">Webpage-Text Chat</string>
     <string name="text_chat_input_hint">Type message and send with keyboard</string>
     <string name="text_chat_copy_success">Copied</string>
 
