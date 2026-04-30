@@ -1,5 +1,5 @@
 
-package com.au.module_androidui.widget;
+package  com.au.module_androidui.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;

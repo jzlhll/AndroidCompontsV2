@@ -191,7 +191,7 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
     private var _bottomMargin = 0
 
     private val dp20 by unsafeLazy {
-        (resources.getDimension(com.au.module_androidcolor.R.dimen.btn_margin_bottom) * 20f).toInt()
+        20.dp
     }
 
     /**

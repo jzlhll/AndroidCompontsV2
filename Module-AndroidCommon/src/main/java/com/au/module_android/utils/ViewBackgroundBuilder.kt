@@ -41,12 +41,12 @@ class ViewBackgroundBuilder {
             fun convert() = floatArrayOf(
                 topLeft, topLeft,
                 topRight, topRight,
-                bottomLeft, bottomLeft,
-                bottomRight, bottomRight
+                bottomRight, bottomRight,
+                bottomLeft, bottomLeft
             )
 
             override fun size(): Float {
-                return max(topLeft, topRight)
+                return max(max(topLeft, topRight), max(bottomLeft, bottomRight))
             }
         }
 

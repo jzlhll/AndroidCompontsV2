@@ -355,7 +355,7 @@ fun test() {
             val allVideos = mediaManager.queryAllVideos()
             logdNoFile { "allVideos ${allVideos.size}" }
 
-            val allImages = mediaManager.queryAllImages()
+            val allImages = mediaManager.query AllImages()
             logdNoFile { "allImages ${allImages.size}" }
 // 4. 查询所有音频
              val allAudios = mediaManager.queryAllAudios()
@@ -365,7 +365,7 @@ fun test() {
 // 3. 查询指定相册的图片（传相册参数）
             val targetAlbum = albums[0] // 从相册列表中取目标相册
             logdNoFile { "targetAlbum $targetAlbum" }
-            val albumImages = mediaManager.queryAllImages(targetAlbum)
+            val albumImages = mediaManager.query AllImages(targetAlbum)
             logdNoFile { "albumImages $albumImages" }
 
             val albumVideos = mediaManager.queryAllVideos(targetAlbum)
