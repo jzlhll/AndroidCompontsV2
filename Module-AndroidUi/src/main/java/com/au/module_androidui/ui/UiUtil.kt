@@ -118,6 +118,31 @@ fun finishFragment(clz: Class<out Fragment>) {
     }
 }
 
+/**
+ * 退出多个fragment承载的activity
+ */
+fun finishFragments(classList: List<Class<out Fragment>>) {
+    Globals.activityList.forEach {
+        if (it is FragmentShellActivity) {
+            val fragmentClass = it.fragmentClass
+            if (fragmentClass != null && classList.contains(fragmentClass)) {
+                it.finish()
+            }
+        }
+    }
+}
+
+/**
+ * 退出某个AbsFragment承载的activity
+ */
+fun finishAbsFragment(clz: Class<out Fragment>) {
+    Globals.activityList.forEach {
+        if (it is FragmentShellActivity && clz.isAssignableFrom(it.fragmentClass)) {
+            it.finish()
+        }
+    }
+}
+
 fun IFullWindow.immersive(activity: Activity, root: View) {
     val pair = activity.currentStatusBarAndNavBarHeight()
     val statusBarsHeight = pair?.first ?: 0

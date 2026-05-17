@@ -4,11 +4,10 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.ContextWrapper
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Outline
-import android.graphics.Path
 import android.graphics.Rect
-import android.graphics.RectF
-import android.os.Build
 import android.view.*
 import androidx.annotation.Keep
 import androidx.core.view.forEach
@@ -104,6 +103,63 @@ fun View.visibleOrInvisible(visible:Boolean) {
     } else {
         invisible()
     }
+}
+
+/**
+ * 将 View 离屏绘制为 Bitmap。
+ */
+fun View.renderToBitmap(): Bitmap? {
+    val widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+    return renderToBitmapByMeasureSpec(widthSpec, heightSpec)
+}
+
+/**
+ * 按指定宽高将 View 离屏绘制为 Bitmap。
+ */
+fun View.renderToBitmapWithSize(width: Int, height: Int): Bitmap? {
+    if (width <= 0 || height <= 0) {
+        return null
+    }
+    val widthSpec = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY)
+    val heightSpec = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+    return renderToBitmapByMeasureSpec(widthSpec, heightSpec)
+}
+
+/**
+ * 按指定 areaView 在屏幕上的区域截取当前 ViewGroup 的绘制内容。
+ */
+fun ViewGroup.renderAreaToBitmap(areaView: View): Bitmap? {
+    val width = areaView.width
+    val height = areaView.height
+    if (width <= 0 || height <= 0) {
+        return null
+    }
+    val sourceLocation = IntArray(2)
+    val areaLocation = IntArray(2)
+    getLocationOnScreen(sourceLocation)
+    areaView.getLocationOnScreen(areaLocation)
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    canvas.translate(
+        (sourceLocation[0] - areaLocation[0]).toFloat(),
+        (sourceLocation[1] - areaLocation[1]).toFloat(),
+    )
+    draw(canvas)
+    return bitmap
+}
+
+private fun View.renderToBitmapByMeasureSpec(widthSpec: Int, heightSpec: Int): Bitmap? {
+    measure(widthSpec, heightSpec)
+    val bitmapWidth = measuredWidth
+    val bitmapHeight = measuredHeight
+    if (bitmapWidth <= 0 || bitmapHeight <= 0) {
+        return null
+    }
+    layout(0, 0, bitmapWidth, bitmapHeight)
+    val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
+    draw(Canvas(bitmap))
+    return bitmap
 }
 
 /**

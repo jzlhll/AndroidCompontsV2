@@ -29,6 +29,22 @@ public final class ALogJ {
         return lvl + ": " + s;
     }
 
+    public static String log(String s, Class<?> javaClass) {
+        var log = javaClass.toString();
+        var prefix = log.substring(log.lastIndexOf('.') + 1);
+        int firstDollar = prefix.indexOf('$');
+        if (firstDollar >= 0) {
+            int lastDollar = prefix.lastIndexOf('$');
+            if (lastDollar > firstDollar) {
+                int secondLastDollar = prefix.lastIndexOf('$', lastDollar - 1);
+                var head = prefix.substring(0, firstDollar);
+                var tail = prefix.substring(secondLastDollar + 1, lastDollar);
+                prefix = head + ".." + tail;
+            }
+        }
+        return prefix + ": " + s;
+    }
+
     public static String log(String lvl, String s, Class<?> javaClass) {
         var log = javaClass.toString();
         var prefix = log.substring(log.lastIndexOf('.') + 1);

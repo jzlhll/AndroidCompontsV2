@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.au.module_android.simplelivedata.NoStickLiveData
 import com.au.module_android.simplelivedata.Status
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
 import com.au.module_nested.BuildConfig
 import kotlinx.coroutines.launch
 
@@ -61,9 +60,6 @@ abstract class AbstractPageViewModel<Bean:Any> : ViewModel() {
      * 真实进行请求数据，如果想做异常处理，可以进行复写。
      */
     open fun realLoadDataError(message:String? = null) {
-        if (message != null) {
-            toastOnTop(message)
-        }
     }
 
     /**

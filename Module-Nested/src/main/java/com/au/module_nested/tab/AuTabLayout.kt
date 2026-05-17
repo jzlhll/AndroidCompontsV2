@@ -122,6 +122,7 @@ class AuTabLayout : TabLayout {
     // 统一创建使用自定义字体的 Tab 文案视图。
     private fun createFont(context: Context, text: String): CustomFontText {
         return CustomFontText(context).apply {
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
             gravity = Gravity.CENTER
             this.text = text
         }

@@ -75,11 +75,7 @@ private fun fmtNotLinkNotBold(part: HtmlPart) : String {
     }
 }
 
-/**
- * 将一些常用的东西，封装一些常用且简单的代码。
- * 至于更复杂的组合，比如textSize，斜体，等，自行编写。
- */
-fun TextView.useSimpleHtmlText(vararg items : HtmlPart) {
+fun toSpanned(vararg items : HtmlPart) : Spanned {
     val sb = StringBuilder("")
     items.forEach {
         val fmt =
@@ -127,7 +123,15 @@ fun TextView.useSimpleHtmlText(vararg items : HtmlPart) {
         }
         sb.append(part)
     }
-    text = toHtml(sb.toString())
+    return toHtml(sb.toString())
+}
+
+/**
+ * 将一些常用的东西，封装一些常用且简单的代码。
+ * 至于更复杂的组合，比如textSize，斜体，等，自行编写。
+ */
+fun TextView.useSimpleHtmlText(vararg items : HtmlPart) {
+    text = toSpanned(*items)
 }
 
 private fun htmlPartColor(color: String): String {

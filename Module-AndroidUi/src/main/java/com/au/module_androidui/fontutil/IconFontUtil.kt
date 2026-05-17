@@ -1,11 +1,11 @@
 package com.au.module_androidui.fontutil
 
-import android.graphics.Color
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import com.au.module_android.Globals
 
 /**
@@ -40,17 +40,17 @@ unicode的由来是iconfont的16进制，比如 `&#xe602;` 改成`\ue602`
 /**
  * 一部分一部分的拼接
  */
-interface IIconFontPart
+sealed interface IIconFontPart {
+    /**
+     * 拼接文字
+     */
+    data class IconFontNormalPart(val normalText:String, val colorStr:String? = null) : IIconFontPart
 
-/**
- * 拼接文字
- */
-data class IconFontNormalPart(val normalText:String) : IIconFontPart
-
-/**
- * 拼接上一个unicode的iconFont
- */
-open class IconFontIconPart(val unicode:Char, val colorStr:String? = null, val relativeSize:Float? = null) : IIconFontPart
+    /**
+     * 拼接上一个unicode的iconFont
+     */
+    class IconFontIconPart(val unicode:Char, val colorStr:String? = null, val relativeSize:Float? = null) : IIconFontPart
+}
 
 /**
  * 要求TextView自身已经具有常规的字体；常规的textSize；常规的颜色。
@@ -60,9 +60,9 @@ open class IconFontIconPart(val unicode:Char, val colorStr:String? = null, val r
 fun TextView.setIconFont(vararg parts: IIconFontPart) {
     val sb = StringBuilder()
     parts.forEach {
-        if (it is IconFontNormalPart) {
+        if (it is IIconFontPart.IconFontNormalPart) {
             sb.append(it.normalText)
-        } else if (it is IconFontIconPart) {
+        } else if (it is IIconFontPart.IconFontIconPart) {
             sb.append(it.unicode)
         }
     }
@@ -70,14 +70,20 @@ fun TextView.setIconFont(vararg parts: IIconFontPart) {
     val ss = SpannableStringBuilder(text)
 
     var len = 0
-    val iconTf = getOrCreateFontFace(Globals.app, "fonts/iconfont.ttf")!!
+    val iconTf = getOrCreateFontFace(Globals.app, "fonts/iconfont.ttf")
     parts.forEach {
-        if (it is IconFontNormalPart) {
+        if (it is IIconFontPart.IconFontNormalPart) {
             len += it.normalText.length
-        } else if (it is IconFontIconPart) {
+            if (it.colorStr != null) {
+                ss.setSpan(ForegroundColorSpan(it.colorStr.toColorInt()), len, len + 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
+            }
+        } else if (it is IIconFontPart.IconFontIconPart) {
+            if (iconTf == null) {
+                return@forEach
+            }
             ss.setSpan(CustomTypefaceSpan("", iconTf), len, len + 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
             if (it.colorStr != null) {
-                ss.setSpan(ForegroundColorSpan(Color.parseColor(it.colorStr)), len, len + 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
+                ss.setSpan(ForegroundColorSpan(it.colorStr.toColorInt()), len, len + 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
             }
             if (it.relativeSize != null) {
                 ss.setSpan(RelativeSizeSpan(it.relativeSize), len, len + 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)

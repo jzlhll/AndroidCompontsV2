@@ -8,6 +8,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 
 /**
  * @author Allan
@@ -25,7 +26,7 @@ abstract class IContractResult<I, O> (val cxt:Any, resultContract:ActivityResult
             cxt.registerForActivityResult(resultContract, mResultCallback)
         }
 
-        is AppCompatActivity -> {
+        is FragmentActivity -> {
             cxt.registerForActivityResult(resultContract, mResultCallback)
         }
 
