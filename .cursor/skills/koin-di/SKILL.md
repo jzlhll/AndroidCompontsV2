@@ -35,7 +35,7 @@ XXXHelper(
     - 如果ViewModel是跨多文件共享，需通过`by viewModels(ownerProducer= {requireActivity()})`注入
 
 - 如果被注入对象还需要生命周期类在运行时传参（例如把当前 Fragment/Activity 本身传给 Adapter、Helper 等），则：
-    - 在 `ImagechoApp` 中使用 `factory { (fragment: XxxFragment) -> XxxAdapter(get(), ..., fragment) }` 这类带参数的 `factory`
+    - 在 主工程Application 中使用 `factory { (fragment: XxxFragment) -> XxxAdapter(get(), ..., fragment) }` 这类带参数的 `factory`
     - 在 `Fragment/Activity` 中使用 `by inject { parametersOf(this) }` 传入当前实例
     - 这种写法适用于「依赖由 Koin 提供，但其中一个参数必须在页面现场决定」的场景
     - 示例模式：某个页面专属的 `XxxAdapter` / `XxxHelper` 需要持有当前 `XxxFragment` 或 `XxxActivity` 时，统一按上述方式注册与注入

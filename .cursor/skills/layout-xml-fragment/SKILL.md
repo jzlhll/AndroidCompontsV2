@@ -34,7 +34,7 @@ description: 规定 Android 布局 XML、dimen/style、Fragment 与 Figma 联动
 
   ```xml
   app:shadowBlur="8dp"
-  app:shadowColor="@color/i8o_color_shadow_default"
+  app:shadowColor="@color/color_shadow_default"
   app:shadowOffsetY="4dp"
   app:backgroundNormal="#ffffff"
   ```
@@ -52,7 +52,7 @@ description: 规定 Android 布局 XML、dimen/style、Fragment 与 Figma 联动
 # 样式
 
 - 主文件：[styles.xml](../../../Module-AndroidColor/src/main/res/values/styles.xml)
-- 文本：`StyleI8o14sp`（常规）、`StyleI8o14Desc`（灰色描述）等
+- 文本：`StyleAuTextNormal`（常规）、`StyleAuTextNormalDesc`（灰色描述）等
 - 输入框：`StyleBlankEditText`
 - 按钮：`StyleButtonPrimary`（常规）、`StyleButtonWarn`（警告）等
 - 与 Figma 联动或我要求时，可新增 style 并引用

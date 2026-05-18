@@ -32,4 +32,13 @@
         <item name="android:background">@null</item>
         <item name="android:textCursorDrawable">@drawable/text_cursor</item>
     </style>
+
+    <!-- 没有alpha，水波纹等比较特殊的场景。-->
+    <declare-styleable name="TinyProgressBar">
+        <attr name="pbProgressColor" format="color|reference" />
+        <attr name="pbProgressBgColor" format="color|reference" />
+        <attr name="pbCornerRadius" format="dimension" />
+        <attr name="pbProgress" format="integer" />
+        <attr name="pbMax" format="integer" />
+    </declare-styleable>
 </resources>

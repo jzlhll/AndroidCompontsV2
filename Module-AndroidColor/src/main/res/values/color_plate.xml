@@ -82,4 +82,7 @@
 
     <!-- 悬浮floatingButton的背景色 -->
     <color name="color_floating_btn_bg">#8b414141</color>
+
+    <!-- shadow 默认颜色 -->
+    <color name="color_shadow_default">#10000000</color>
 </resources>

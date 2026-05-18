@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat
 import com.au.module_androidui.R
 import kotlin.math.max
 import kotlin.math.min
+import androidx.core.content.withStyledAttributes
 
 /**
  * 自定义进度条，支持背景色、进度色、圆角、进度值设置。
@@ -20,8 +21,8 @@ class TinyProgressBar @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private var progressColor: Int = ContextCompat.getColor(context, com.au.module_androidcolor.R.color.i8o_color_text_normal)
-    private var progressBgColor: Int = ContextCompat.getColor(context, com.au.module_androidcolor.R.color.i8o_color_text_desc)
+    private var progressColor: Int = ContextCompat.getColor(context, com.au.module_androidcolor.R.color.color_text_normal)
+    private var progressBgColor: Int = ContextCompat.getColor(context, com.au.module_androidcolor.R.color.color_text_desc)
     private var cornerRadius: Float = -1f // -1 表示使用高度的一半
     
     var progress: Int = 0
@@ -47,13 +48,13 @@ class TinyProgressBar @JvmOverloads constructor(
 
     init {
         attrs?.let {
-            val typedArray = context.obtainStyledAttributes(it, R.styleable.TinyProgressBar)
-            progressColor = typedArray.getColor(R.styleable.TinyProgressBar_pbProgressColor, progressColor)
-            progressBgColor = typedArray.getColor(R.styleable.TinyProgressBar_pbProgressBgColor, progressBgColor)
-            cornerRadius = typedArray.getDimension(R.styleable.TinyProgressBar_pbCornerRadius, -1f)
-            maxProgress = typedArray.getInt(R.styleable.TinyProgressBar_pbMax, 100)
-            progress = typedArray.getInt(R.styleable.TinyProgressBar_pbProgress, 0)
-            typedArray.recycle()
+            context.withStyledAttributes(it, R.styleable.TinyProgressBar) {
+                progressColor = getColor(R.styleable.TinyProgressBar_pbProgressColor, progressColor)
+                progressBgColor = getColor(R.styleable.TinyProgressBar_pbProgressBgColor, progressBgColor)
+                cornerRadius = getDimension(R.styleable.TinyProgressBar_pbCornerRadius, -1f)
+                maxProgress = getInt(R.styleable.TinyProgressBar_pbMax, 100)
+                progress = getInt(R.styleable.TinyProgressBar_pbProgress, 0)
+            }
         }
     }
 
