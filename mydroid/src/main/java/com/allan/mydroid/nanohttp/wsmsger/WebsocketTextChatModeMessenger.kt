@@ -1,8 +1,10 @@
 package com.allan.mydroid.nanohttp.wsmsger
 
 import android.util.Base64
+import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_CALLBACK
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_SEND
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
+import com.allan.mydroid.beans.wsdata.TextChatWsData
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.nanohttp.AbsWebSocketClientMessenger
 import com.allan.mydroid.nanohttp.WebsocketClientInServer
@@ -10,7 +12,27 @@ import com.au.module_android.log.logdNoFile
 import org.json.JSONObject
 
 class WebsocketTextChatModeMessenger(client: WebsocketClientInServer) : AbsWebSocketClientMessenger(client) {
+    private val GAP_MS = 5 * 60 * 1000L
+
     override fun onOpen() {
+        val history = MyDroidConst.textChatHistory
+        if (history.isEmpty()) return
+        // 从最新倒查，相邻消息间隔>3min则断开，只推最近一段连续对话
+        val end = history.lastIndex
+        var start = end
+        for (i in end downTo 1) {
+            if (history[i].timestamp - history[i - 1].timestamp > GAP_MS) {
+                start = i
+                break
+            }
+            start = i - 1
+        }
+        for (i in start..end) {
+            val bean = history[i]
+            val textBase64 = Base64.encodeToString(bean.text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+            val data = TextChatWsData(textBase64, bean.ip, bean.host, bean.timestamp, bean.iconColor)
+            client.sendApiResult(API_WS_TEXT_CHAT_CALLBACK, data)
+        }
     }
 
     override fun onClose() {
@@ -45,7 +67,7 @@ class WebsocketTextChatModeMessenger(client: WebsocketClientInServer) : AbsWebSo
             timestamp = json.optLong("timestamp").takeIf { it > 0 } ?: System.currentTimeMillis(),
             iconColor = json.optString("iconColor").ifBlank { client.color },
         )
-        MyDroidConst.textChatHistory.add(bean)
+        MyDroidConst.addTextChatMessage(bean)
         MyDroidConst.textChatIncomingData.setValueSafe(bean)
     }
 }

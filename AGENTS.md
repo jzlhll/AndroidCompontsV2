@@ -1,7 +1,35 @@
-# 项目规则
+# 一、行为准则
 
-- 必读：.cursor/rules/project-all-in-one.mdc
-- 项目 skills 位于 .cursor/skills/*/SKILL.md
-- 全局 skills 位于 ~/.codex/skills/*/SKILL.md
+## 常规与语言
+- **精准修改**：仅修改指定代码，禁主动修改/重构未提及部分；需额外改动先询问。修改前确保基于最新代码
+- **Plan模式**：遇疑问必问，直至完全清晰
+- **全中文输出**：所有文本输出(含plan/tasks等)及代码注释必须中文；仅代码日志用英文
+
+## 注释规范
+- **声明注释**：公开函数/变量用标准doc注释(`/**...*/`)，私有用双斜杠(`//`)简要说明
+- **内部注释**：简单顺序逻辑不注；仅在复杂嵌套、核心算法、边界处理块的顶部注1次，极简描述意图，严禁逐行冗余
+- **类注释**：类用标准doc注释(`/**...*/`)
+
+## 严格禁止
+- 禁废话：无开场白/结束语/代码概览/重复用户话，严格按需输出
+- 禁多余操作：禁重构未要求代码、禁生成测试/示例代码、禁主动 `git commit`, 无问题不提示lint
+- 禁主动编译或构建：不主动运行Gradle命令(除非要求，参考 `build-install` skill)
+- 禁用特定API：禁用 `coerce*` 及 `minOf/maxOf`，统一用 `min` / `max`
+- 不主动添加copyright头：编写代码时不添加；codeReview的时候检查并报告
+- 一个类中，私有函数只有5行以内，且只有一个调用处，不要创建独立函数，内联实现
+
+## 任务收尾输出
+- 禁实现细节与废话
+- **改动≤2文件**：仅回一句中文
+- **改动≥3文件**：用 `-` 列表简述（类名勿全路径，每行一句），末行加「总结：xxx」整体概括
+
+## Kotlin日志规范
+- 优先用 `logdNoFile` 替代 `Log.d`
+- 拆分函数名记录（如 `onDeviceListChanged` → `on deviceList changed`）
+- 严重错误用 `loge { "" + e.message }` 或 `logEx(throwable = e) { "xxx" }`
+
+# 二、Skills
+
+- 项目 skills 位于 .agents/skills/*/SKILL.md, 以 apps/android 为根目录解析
 - 任务命中项目 skill 描述时，先读取对应项目 SKILL.md
 - 若项目 skill 不覆盖该场景，再参考全局 skill

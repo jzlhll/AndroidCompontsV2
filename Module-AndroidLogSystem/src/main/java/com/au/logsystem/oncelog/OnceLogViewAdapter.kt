@@ -60,6 +60,13 @@ class LogViewAdapter(private val mRcv: RecyclerView) : AutoLoadMoreBindRcvAdapte
     }
 
     private class Differ(aList:List<LogViewNormalBean>?, bList:List<LogViewNormalBean>?) : DiffCallback<LogViewNormalBean>(aList, bList) {
+        override fun compareItem(
+            a: LogViewNormalBean,
+            b: LogViewNormalBean
+        ): Boolean {
+            return a == b
+        }
+
         override fun compareContent(a: LogViewNormalBean, b: LogViewNormalBean): Boolean {
             return a.index == b.index
         }

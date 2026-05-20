@@ -91,6 +91,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     private fun initRecyclerView() {
         binding.chatRcv.layoutManager = LinearLayoutManager(requireContext())
         binding.chatRcv.adapter = messageAdapter
+        MyDroidConst.loadTextChatHistory()
         if (MyDroidConst.textChatHistory.isNotEmpty()) {
             messageList.addAll(MyDroidConst.textChatHistory)
             messageAdapter.submitList(messageList.toList(), false)
@@ -206,7 +207,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     // 将消息写入本地会话并刷新界面。
     private fun appendMessage(bean: TextChatMessageBean, saveHistory: Boolean, scrollBottom: Boolean) {
         if (saveHistory) {
-            MyDroidConst.textChatHistory.add(bean)
+            MyDroidConst.addTextChatMessage(bean)
         }
         messageList.add(bean)
         messageAdapter.submitList(messageList.toList(), false)

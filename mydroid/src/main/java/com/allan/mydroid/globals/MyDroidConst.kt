@@ -34,5 +34,18 @@ object MyDroidConst {
     // 文本对话会话期内的消息历史。
     val textChatHistory = CopyOnWriteArrayList<TextChatMessageBean>()
 
+    /** 添加消息到历史并持久化备份 */
+    fun addTextChatMessage(bean: TextChatMessageBean) {
+        textChatHistory.add(bean)
+        TextChatBackup.save(textChatHistory)
+    }
+
+    /** 首次使用时从MMKV加载历史备份 */
+    fun loadTextChatHistory() {
+        if (textChatHistory.isEmpty()) {
+            textChatHistory.addAll(TextChatBackup.load())
+        }
+    }
+
     val aliveStoppedData = NoStickLiveData<Unit>()
 }
