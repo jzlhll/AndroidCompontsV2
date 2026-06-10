@@ -50,6 +50,7 @@ include ':app'
 include ':Module-AndroidCommon'
 include ':Module-AndroidColor'
 include ':Module-AndroidUi'
+include ':Module-AndroidUiEx'
 include ':Module-Okhttp'
 
 include ':Module-Nested'
