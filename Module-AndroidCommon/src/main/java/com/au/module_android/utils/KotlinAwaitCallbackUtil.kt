@@ -1,59 +1,17 @@
 package com.au.module_android.utils
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-
-/*
-// 1. 基本使用
-suspend fun resolveServiceWithRetry(serviceInfo: NsdServiceInfo): NsdServiceInfo? {
-    return try {
-        suspendCallback<NsdServiceInfo> { callback ->
-            nsdManager.resolveService(serviceInfo, createResolveListener(callback))
-        }
-    } catch (e: Exception) {
-        loge(TAG, e) { "Failed to resolve service" }
-        null
-    }
-}
-
-// 2. 带取消清理的示例（如果 API 需要取消注册）
-suspend fun discoverServices(): List<NsdServiceInfo> = suspendCallback(
-    onRegister = { callback ->
-        val listener = createDiscoveryListener(callback)
-        nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, listener)
-    },
-    onCancel = { callback ->
-        nsdManager.stopServiceDiscovery(callback as NsdManager.DiscoveryListener)
-    }
-)
-
-// 3. 组合多个回调转换
-suspend fun performNetworkOperation(): Result {
-    val step1 = suspendCallback<Data> { callback ->
-        api.operation1(object : ApiCallback<Data> {
-            override fun onSuccess(data: Data) = callback.onSuccess(data)
-            override fun onFailure(error: ApiError) = callback.onError(error.toException())
-        })
-    }
-
-    val step2 = suspendCallback<Data> { callback ->
-        api.operation2(step1, object : ApiCallback<Data> {
-            override fun onSuccess(data: Data) = callback.onSuccess(data)
-            override fun onFailure(error: ApiError) = callback.onError(error.toException())
-        })
-    }
-
-    return Result(step1, step2)
-}
-*/
+import kotlin.time.Duration.Companion.milliseconds
 
 suspend fun <T> awaitTimeoutCallback(
     timeoutMillis: Long,
     onRegister: (callback: SuspendCallback<T>) -> Unit,
     onCancel: ((callback: SuspendCallback<T>) -> Unit)? = null
-): T? = withTimeoutOrNull(timeoutMillis) {
+): T? = withTimeoutOrNull(timeoutMillis.milliseconds) {
     awaitCallback(
         onRegister = onRegister,
         onCancel = onCancel
@@ -122,4 +80,107 @@ interface SuspendCallback<T> {
     fun onSuccess(value: T)
     fun onError(error: Throwable)
     fun onError(code: Int, message: String) = onError(Exception("Error $code: $message"))
+}
+
+/**
+ * 支持挂起函数注册和取消清理的回调转换封装
+ * 适用于：
+ * 1. 注册/创建函数本身是挂起函数（suspend）
+ * 2. 注册/创建函数返回一个句柄（Handle），且在取消/超时时需要对该句柄进行清理（如 disconnect/close）
+ *
+ * @param onRegister 挂起注册函数，返回一个句柄 R
+ * @param onCancel 取消或超时时的清理回调，接收句柄 R
+ */
+suspend fun <T, R> awaitSuspendCallback(
+    onRegister: suspend (callback: SuspendCallback<T>) -> R,
+    onCancel: ((handle: R) -> Unit)? = null
+): T {
+    val deferred = CompletableDeferred<T>()
+    val callback = object : SuspendCallback<T> {
+        override fun onSuccess(value: T) {
+            deferred.complete(value)
+        }
+
+        override fun onError(error: Throwable) {
+            deferred.completeExceptionally(error)
+        }
+    }
+
+    val handle = onRegister(callback)
+    return try {
+        deferred.await()
+    } finally {
+        if (!deferred.isCompleted) {
+            onCancel?.invoke(handle)
+        }
+    }
+}
+
+/**
+ * 支持挂起函数注册和取消清理的回调转换封装（支持注册函数返回 null 的情况）
+ * 如果注册函数返回 null，则直接返回 null，不进行后续的 await 等待。
+ *
+ * @param onRegister 挂起注册函数，返回一个可空句柄 R?
+ * @param onCancel 取消或超时时的清理回调，接收非空句柄 R
+ */
+suspend fun <T, R : Any> awaitSuspendCallbackOrNull(
+    onRegister: suspend (callback: SuspendCallback<T>) -> R?,
+    onCancel: ((handle: R) -> Unit)? = null
+): T? {
+    val deferred = CompletableDeferred<T>()
+    val callback = object : SuspendCallback<T> {
+        override fun onSuccess(value: T) {
+            deferred.complete(value)
+        }
+
+        override fun onError(error: Throwable) {
+            deferred.completeExceptionally(error)
+        }
+    }
+
+    val handle = onRegister(callback) ?: return null
+    return try {
+        deferred.await()
+    } finally {
+        if (!deferred.isCompleted) {
+            onCancel?.invoke(handle)
+        }
+    }
+}
+
+/**
+ * 支持挂起函数注册、取消清理和超时控制的回调转换封装
+ *
+ * @param timeoutMillis 超时时间（毫秒）
+ * @param onRegister 挂起注册函数，返回一个句柄 R
+ * @param onCancel 取消或超时时的清理回调，接收句柄 R
+ */
+suspend fun <T, R> awaitTimeoutSuspendCallback(
+    timeoutMillis: Long,
+    onRegister: suspend (callback: SuspendCallback<T>) -> R,
+    onCancel: ((handle: R) -> Unit)? = null
+): T? = withTimeoutOrNull(timeoutMillis.milliseconds) {
+    awaitSuspendCallback(
+        onRegister = onRegister,
+        onCancel = onCancel
+    )
+}
+
+/**
+ * 支持挂起函数注册、取消清理和超时控制的回调转换封装（支持注册函数返回 null 的情况）
+ * 如果注册函数返回 null，则直接返回 null，不进行后续的 await 等待。
+ *
+ * @param timeoutMillis 超时时间（毫秒）
+ * @param onRegister 挂起注册函数，返回一个可空句柄 R?
+ * @param onCancel 取消或超时时的清理回调，接收非空句柄 R
+ */
+suspend fun <T, R : Any> awaitTimeoutSuspendCallbackOrNull(
+    timeoutMillis: Long,
+    onRegister: suspend (callback: SuspendCallback<T>) -> R?,
+    onCancel: ((handle: R) -> Unit)? = null
+): T? = withTimeoutOrNull(timeoutMillis.milliseconds) {
+    awaitSuspendCallbackOrNull(
+        onRegister = onRegister,
+        onCancel = onCancel
+    )
 }

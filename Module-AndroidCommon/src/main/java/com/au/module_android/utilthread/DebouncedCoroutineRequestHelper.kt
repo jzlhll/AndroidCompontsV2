@@ -19,13 +19,17 @@ class DebouncedCoroutineRequestHelper<K>(
 
     fun request(
         readDebounceKey: () -> K,
+        force: Boolean = false,
         onSkippedWithinDebounce: () -> Unit = {},
         block: suspend CoroutineScope.() -> Unit,
     ) {
         val currentKey = readDebounceKey()
         val now = System.currentTimeMillis()
         val sameKey = recordedKey?.let { keysEqual(it, currentKey) } == true
-        if (sameKey) {
+        if (force) {
+            activeJob?.cancel()
+            recordedKey = currentKey
+        } else if (sameKey) {
             if (now - lastDispatchWallClockMs < debounceIntervalMs) {
                 onSkippedWithinDebounce()
                 return

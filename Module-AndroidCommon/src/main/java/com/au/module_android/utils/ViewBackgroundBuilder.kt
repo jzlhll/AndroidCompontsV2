@@ -205,7 +205,7 @@ class ViewBackgroundBuilder {
         }
 
         if (mNeedRippleColor) {
-            val color = Globals.app.resources.getColor(R.color.ripple_default, null)
+            val color = androidx.core.content.ContextCompat.getColor(Globals.app, R.color.ripple_default)
             return it.setRippleColor(color)
         }
         return it

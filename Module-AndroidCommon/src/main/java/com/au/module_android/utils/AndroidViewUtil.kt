@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.ColorSpace
 import android.graphics.Outline
 import android.graphics.Rect
 import android.view.*
@@ -139,14 +140,14 @@ fun ViewGroup.renderAreaToBitmap(areaView: View): Bitmap? {
     val areaLocation = IntArray(2)
     getLocationOnScreen(sourceLocation)
     areaView.getLocationOnScreen(areaLocation)
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    canvas.translate(
-        (sourceLocation[0] - areaLocation[0]).toFloat(),
-        (sourceLocation[1] - areaLocation[1]).toFloat(),
-    )
-    draw(canvas)
-    return bitmap
+    return createSrgbBitmap(width, height).also { bitmap ->
+        val canvas = Canvas(bitmap)
+        canvas.translate(
+            (sourceLocation[0] - areaLocation[0]).toFloat(),
+            (sourceLocation[1] - areaLocation[1]).toFloat(),
+        )
+        draw(canvas)
+    }
 }
 
 private fun View.renderToBitmapByMeasureSpec(widthSpec: Int, heightSpec: Int): Bitmap? {
@@ -157,9 +158,19 @@ private fun View.renderToBitmapByMeasureSpec(widthSpec: Int, heightSpec: Int): B
         return null
     }
     layout(0, 0, bitmapWidth, bitmapHeight)
-    val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
+    val bitmap = createSrgbBitmap(bitmapWidth, bitmapHeight)
     draw(Canvas(bitmap))
     return bitmap
+}
+
+private fun createSrgbBitmap(width: Int, height: Int): Bitmap {
+    return Bitmap.createBitmap(
+        width,
+        height,
+        Bitmap.Config.ARGB_8888,
+        true,
+        ColorSpace.get(ColorSpace.Named.SRGB),
+    )
 }
 
 /**

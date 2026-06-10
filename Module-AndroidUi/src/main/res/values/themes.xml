@@ -13,6 +13,11 @@ app:strokeWidth -->
         <item name="cornerSize">16dp</item>
     </style>
 
+    <style name="shape_round12dp_Style">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
     <!-- ShapeableImageView shapeAppearanceOverlay 圆形 -->
     <style name="shape_circle_Style">
         <item name="cornerFamily">rounded</item>

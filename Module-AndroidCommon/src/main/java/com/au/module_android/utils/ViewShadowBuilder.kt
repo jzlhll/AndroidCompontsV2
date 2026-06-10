@@ -1,6 +1,7 @@
 package com.au.module_android.utils
 
 import android.graphics.*
+import androidx.core.graphics.withTranslation
 
 /**
  * 独立的阴影构建器，负责处理 View 的阴影绘制
@@ -47,7 +48,7 @@ class ViewShadowBuilder {
     private val mShadowRect = RectF()
     private var mCachedShadowBlur = -1f
     private var mCachedMaskFilter: BlurMaskFilter? = null
-    
+
     // 引用 ViewBackgroundBuilder 的 CornerRadius 定义，保持一致性
     // 但为了解耦，这里接收 float array 或者 ViewBackgroundBuilder.CornerRadius
     private var mCornerRadii: FloatArray? = null
@@ -69,7 +70,7 @@ class ViewShadowBuilder {
         if (mShadowColor == Color.TRANSPARENT) return
 
         val inset = strokeWidth / 2f
-        
+
         mShadowRect.set(
             inset - mShadowSpread,
             inset - mShadowSpread,
@@ -94,9 +95,8 @@ class ViewShadowBuilder {
             mShadowPaint.maskFilter = null // 锐利边缘
         }
 
-        canvas.save()
-        canvas.translate(mShadowOffsetX, mShadowOffsetY)
-        canvas.drawPath(mShadowPath, mShadowPaint)
-        canvas.restore()
+        canvas.withTranslation(mShadowOffsetX, mShadowOffsetY) {
+            drawPath(mShadowPath, mShadowPaint)
+        }
     }
 }

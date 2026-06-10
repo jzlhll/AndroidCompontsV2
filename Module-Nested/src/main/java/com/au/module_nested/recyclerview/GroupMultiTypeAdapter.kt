@@ -146,7 +146,7 @@ abstract class GroupMultiTypeAdapter<HEADER : Any, CHILD : Any, VH : BindViewHol
      */
     fun submitGroups(
         newGroups: List<GroupMultiType<HEADER, CHILD>>?,
-        isTraditionalUpdate: Boolean = true,
+        isTraditionalUpdate: Boolean = false,
     ) {
         groups.clear()
         if (!newGroups.isNullOrEmpty()) {
@@ -202,9 +202,7 @@ abstract class GroupMultiTypeAdapter<HEADER : Any, CHILD : Any, VH : BindViewHol
         } else {
             val removeCount = visibleChildrenCount(headerPosition, groupKey)
             if (removeCount > 0) {
-                repeat(removeCount) {
-                    datas.removeAt(headerPosition + 1)
-                }
+                datas.subList(headerPosition + 1, headerPosition + 1 + removeCount).clear()
                 notifyItemRangeRemoved(headerPosition + 1, removeCount)
             }
         }

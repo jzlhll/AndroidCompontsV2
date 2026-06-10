@@ -172,8 +172,9 @@ fun LifecycleOwner.tryGetContext() : Context? {
 inline fun LifecycleOwner.launchRepeatOnStarted(
     crossinline block: suspend () -> Unit
 ) {
-    lifecycleScope.launch {
-        repeatOnLifecycle(Lifecycle.State.STARTED) {
+    val owner = if (this is Fragment) viewLifecycleOwner else this
+    owner.lifecycleScope.launch {
+        owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             block()
         }
     }
@@ -188,8 +189,9 @@ inline fun <T> LifecycleOwner.launchRepeatOnStarted(
     flow: Flow<T>,
     crossinline collector: (T) -> Unit
 ) {
-    lifecycleScope.launch {
-        repeatOnLifecycle(Lifecycle.State.STARTED) {
+    val owner = if (this is Fragment) viewLifecycleOwner else this
+    owner.lifecycleScope.launch {
+        owner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             flow.collect { value ->
                 collector(value)
             }

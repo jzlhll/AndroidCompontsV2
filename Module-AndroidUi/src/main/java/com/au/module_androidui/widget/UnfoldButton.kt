@@ -77,7 +77,7 @@ class UnfoldButton @JvmOverloads constructor(context: Context,
                 rootView.width,
                 rootView.height
             )
-            setBackgroundColor(resources.getColor(com.au.module_androidcolor.R.color.color_floating_btn_bg, null))
+            setBackgroundColor(androidx.core.content.ContextCompat.getColor(context, com.au.module_androidcolor.R.color.color_floating_btn_bg))
             setOnClickListener { v: View? -> expendMenu() }
             alpha = 0f
             visibility = INVISIBLE

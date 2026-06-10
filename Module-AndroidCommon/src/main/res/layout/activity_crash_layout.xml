@@ -17,9 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_marginTop="4dp"
-        android:text="Sorry!\nScreenshot and feedback!"
-        android:textSize="16sp"
+        android:text="Sorry! Screenshot and feedback!"
+        android:textSize="14sp"
         android:textStyle="bold" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -28,11 +27,8 @@
         android:textColor="#666666"
         android:id="@+id/versionName"
         android:gravity="center"
-        android:layout_marginBottom="12dp"
-        android:lineSpacingMultiplier="1.2"
         tools:text="1.2.0"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:textSize="14sp" />
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollView"
@@ -48,57 +44,32 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:lineSpacingMultiplier="1.2"
+            android:includeFontPadding="false"
             android:textSize="13sp" />
     </androidx.core.widget.NestedScrollView>
 
     <LinearLayout
-        android:layout_marginTop="12dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <Button
-            android:id="@+id/clearupBtn"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:text="Clear cache"/>
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/restartBtn"
             android:layout_width="0dp"
+            android:layout_height="42dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:text="Restart"/>
-    </LinearLayout>
+            android:text="Restart" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
         <Button
             android:id="@+id/copyBtn"
             android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:text="Copy"/>
-
-        <Button
-            android:id="@+id/checkAndUploadBtn"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:text="Check and Update"/>
+            android:text="Copy" />
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/feedbackText"
-        android:layout_marginTop="6dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="16dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
 </LinearLayout>
