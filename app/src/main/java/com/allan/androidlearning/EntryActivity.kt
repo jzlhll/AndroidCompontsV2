@@ -27,6 +27,7 @@ import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.core.graphics.toColorInt
+import com.au.module_android.DarkModeAndLocalesConst
 import com.au.module_nested.smartrefresher.setSimpleLoadingHeader
 
 class EntryActivity : BindingActivity<ActivityEntryBinding>() {
@@ -68,7 +69,8 @@ class EntryActivity : BindingActivity<ActivityEntryBinding>() {
                 if (entryData.backgroundColor.isNotEmpty()) {
                     bgBuilder.setBackground(entryData.backgroundColor.toColorInt())
                 } else {
-                    bgBuilder.setBackground("#eeeeee".toColorInt())
+                    val isDark = DarkModeAndLocalesConst.detectDarkMode(this)
+                    bgBuilder.setBackground(if (isDark) "#333333".toColorInt() else "#eeeeee".toColorInt())
                 }
                 bgBuilder.setCornerRadius(6f.dp)
 

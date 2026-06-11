@@ -121,6 +121,10 @@ class Refresh1Adapter : SmartRLBindRcvAdapter<Bean, Refresh1ViewHolder>() {
     }
 
     class Differ(olds: List<Bean>?, news: List<Bean>?) : DiffCallback<Bean>(olds, news) {
+        override fun compareItem(a: Bean, b: Bean): Boolean {
+            return a.str == b.str
+        }
+
         override fun compareContent(a: Bean, b: Bean): Boolean {
             return a.str == b.str
         }

@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
     alias(libs.plugins.jetbrains.kotlin.serialization)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -40,6 +41,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        compose = true
     }
 
 }
@@ -69,6 +71,7 @@ dependencies {
     implementation project(':Module-AndroidCommon')
 
     implementation project(':Module-AndroidUi')
+    implementation project(':Module-AndroidUiEx')
     implementation project(":Module-Nested")
     implementation project(":Module-ImageCompressed")
 
@@ -81,6 +84,9 @@ dependencies {
     implementation project(':Module-AuGsonMMKV')
 
     implementation(libs.okhttp)
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.foundation
 
     implementation libs.kotlinx.serialization.json
     implementation(libs.androidx.media3.exoplayer)
