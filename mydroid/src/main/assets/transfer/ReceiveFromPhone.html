@@ -55,6 +55,18 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             width: 100%;
             display: block;
+            user-select: none;
+            -webkit-user-select: none;
+            caret-color: transparent;
+        }
+
+        .custom-button:focus {
+            outline: none;
+        }
+
+        .custom-button:focus-visible {
+            outline: 2px solid #2980b9;
+            outline-offset: 2px;
         }
 
         .custom-button:hover {
@@ -155,6 +167,9 @@
             text-decoration: none;
             transition: color 0.2s;
             white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+            caret-color: transparent;
         }
 
         .download-link:hover {
@@ -180,6 +195,18 @@
             font-size: 14px;
             margin-left: 10px;
             transition: background-color 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            caret-color: transparent;
+        }
+
+        .cancel-btn:focus {
+            outline: none;
+        }
+
+        .cancel-btn:focus-visible {
+            outline: 2px solid #e04444;
+            outline-offset: 2px;
         }
         .cancel-btn:hover {
             background-color: #e04444;

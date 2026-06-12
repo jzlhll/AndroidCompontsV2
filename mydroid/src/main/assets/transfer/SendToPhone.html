@@ -56,6 +56,18 @@
             font-size: 16px;
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            user-select: none;
+            -webkit-user-select: none;
+            caret-color: transparent;
+        }
+
+        .custom-button:focus {
+            outline: none;
+        }
+
+        .custom-button:focus-visible {
+            outline: 2px solid #2980b9;
+            outline-offset: 2px;
         }
 
         .custom-button:hover {
@@ -373,12 +385,12 @@
         
         if (reset) {
             // 重置为上传状态（原始样式）
-            uploadButton.innerHTML = loc["start_upload"];
+            uploadButton.textContent = loc["start_upload"];
             uploadButton.style.backgroundColor = '#27ae60';
             uploadButton.onclick = startUpload;
         } else {
             // 变为取消状态
-            uploadButton.innerHTML = loc["cancel_upload"];
+            uploadButton.textContent = loc["cancel_upload"];
             uploadButton.style.backgroundColor = '#e74c3c'; // 红色
             uploadButton.onclick = cancelUpload;
         }

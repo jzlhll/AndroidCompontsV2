@@ -173,6 +173,18 @@
             font-size: 15px;
             cursor: pointer;
             padding: 0 18px;
+            user-select: none;
+            -webkit-user-select: none;
+            caret-color: transparent;
+        }
+
+        .send-button:focus {
+            outline: none;
+        }
+
+        .send-button:focus-visible {
+            outline: 2px solid #5f39d9;
+            outline-offset: 2px;
         }
 
         .copy-toast {
@@ -216,6 +228,18 @@
             font-size: 14px;
             color: #23262d;
             cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            caret-color: transparent;
+        }
+
+        .context-menu-item:focus {
+            outline: none;
+        }
+
+        .context-menu-item:focus-visible {
+            outline: 2px solid #7b4dff;
+            outline-offset: -2px;
         }
 
         .context-menu-item:hover {
