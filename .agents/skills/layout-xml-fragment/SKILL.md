@@ -26,11 +26,26 @@ description: 规定 Android 布局 XML、dimen/style、Fragment 与 Figma 联动
 
 - 有圆角：`BgBuildXXXLayout`，相关属性：`backgroundNormal`、`cornerRadius` 等
 - 无圆角：常规布局（如 `ConstraintLayout`）
+- **禁止**为圆角容器新增 `shape drawable` 作为常规背景；优先使用 `BgBuildXXXLayout`，并通过 `backgroundNormal`、`cornerRadius`、`strokeColor`、`strokeWidth`、`shadow*` 属性直接实现。
+- 仅当背景逻辑超出 `BgBuildXXXLayout` 能力范围（如复杂多层渐变、特殊遮罩、位图纹理）时，才允许单独新增 drawable，并需要先确认。
+
+### 正反例
+
+- 正例：白底圆角卡片、描边按钮、带阴影浮层，直接使用 `BgBuildConstraintLayout` / `BgBuildFrameLayout` + `app:backgroundNormal`、`app:cornerRadius`、`app:stroke*`、`app:shadow*`
+- 反例：仅为了白底圆角、半透明圆角、1dp 描边而新建 `bg_xxx.xml`，再通过 `android:background` 挂到常规 `FrameLayout` / `ConstraintLayout`
+- 反例：为了实现卡片背景，额外插入一个只负责铺底色和圆角的空 View
 
 ## 阴影处理
 
 - 默认不添加阴影。
-- 若我明确要求阴影：追加下列属性（数值不改），并将父控件 `clipChildren`、`clipToPadding` 设为 `false`：
+- 若识别到 Figma 有阴影，优先使用 [styles.xml](../../../Module-AndroidUiEx/src/main/res/values/styles.xml) 中现成样式，不直接在布局中手写阴影属性：
+
+  - `StyleShadowWhiteBlock`：白底、描边、16dp 圆角的阴影块
+  - `StyleShadowNoBgBlock`：无背景、16dp 圆角的阴影块
+
+- 使用上述阴影 style 时，将父控件 `clipChildren`、`clipToPadding` 设为 `false`。
+- `clipChildren`、`clipToPadding` 仅用于阴影被父容器裁剪等明确裁剪场景；如果当前改动不涉及 shadow 裁剪或可见溢出，不要给普通布局、MotionLayout、卡片内容容器顺手新增这两个属性。
+- 仅当现有 style 无法覆盖 Figma 阴影表现，且我明确允许时，才可以在布局中追加下列阴影属性（数值不改）：
 
   ```xml
   app:shadowBlur="8dp"
@@ -48,6 +63,11 @@ description: 规定 Android 布局 XML、dimen/style、Fragment 与 Figma 联动
   <attr name="shadowBlur" />
   <attr name="shadowSpread" />
   ```
+
+### android clip 相关属性正反例
+
+- 正例：`StyleShadowWhiteBlock` / `StyleShadowNoBgBlock` 的外层父容器需要展示阴影时，父容器设置 `android:clipChildren="false"`、`android:clipToPadding="false"`。
+- 反例：普通 `ConstraintLayout`、`MotionLayout`、无阴影卡片内容容器，只因为“可能更安全”就追加 `clipChildren` / `clipToPadding`。
 
 # 样式
 

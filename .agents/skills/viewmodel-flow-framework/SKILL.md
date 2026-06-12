@@ -128,3 +128,4 @@ viewLifecycleOwner.lifecycleScope.launch {
 ## 7. 其他
 - 性能：避免不必要更新，耗时操作用 `async/await`。
 - 过滤：`filterSuccess()`, `filterError()`, `filterLoading()`, `filterUninitialized()`。
+- (重要)命名采用Flow作为后缀。

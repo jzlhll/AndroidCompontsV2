@@ -1,6 +1,6 @@
 ---
 name: room-database
-description: 规定 Entity、DAO、Repository、Migration 与 Koin 注册在本项目 database 包下的分层与线程约定。在开发或修改 Room 数据库相关代码时使用。
+description: 规定 Entity、DAO、Repository、Migration 与 Koin 注册在本项目主工程 database 包下的分层与线程约定。在开发或修改 Room 数据库相关代码时使用。
 ---
 
 # Room 数据库开发指南
