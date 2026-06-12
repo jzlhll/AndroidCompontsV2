@@ -21,6 +21,16 @@ class ShineView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
     private var mProgress = 0f
     private val mShineWidth = 100
     private var mShineAngle = 30
+    private var animator: ValueAnimator? = null
+
+    /** 是否启用闪光动画，默认 true */
+    var shineEnabled: Boolean = true
+        set(value) {
+            field = value
+            if (!value) {
+                stopAnimation()
+            }
+        }
 
     // 新增角度设置方法
     fun setShineAngle(angle: Int) {
@@ -39,6 +49,7 @@ class ShineView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 
     protected override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        if (!shineEnabled) return
         // 计算斜向矩形路径
         val width: Float = width.toFloat()
         val height: Float = height.toFloat()
@@ -64,13 +75,23 @@ class ShineView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
     }
 
     fun startAnimation() {
-        val animator: ValueAnimator = ValueAnimator.ofFloat(0f, 1f)
-        animator.setDuration(3000)
-        animator.repeatCount = ValueAnimator.INFINITE
-        animator.addUpdateListener { animation ->
+        if (!shineEnabled) return
+        stopAnimation()
+        val valueAnimator = ValueAnimator.ofFloat(0f, 1f)
+        valueAnimator.setDuration(3000)
+        valueAnimator.repeatCount = ValueAnimator.INFINITE
+        valueAnimator.addUpdateListener { animation ->
             mProgress = animation.getAnimatedValue() as Float
             invalidate()
         }
-        animator.start()
+        valueAnimator.start()
+        animator = valueAnimator
+    }
+
+    private fun stopAnimation() {
+        animator?.cancel()
+        animator = null
+        mProgress = 0f
+        invalidate()
     }
 }
