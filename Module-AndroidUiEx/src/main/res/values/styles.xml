@@ -8,7 +8,9 @@
         <item name="cornerRadius">16dp</item>
     </style>
 
-    <!-- 白色圆角块样式 带阴影 不往y轴扩展 -->
+    <!-- 阴影相关的样式 -->
+
+    <!-- 阴影1：白色圆角块样式 不往y轴扩展 -->
     <style name="StyleShadowWhiteBlock">
         <item name="backgroundNormal">@color/color_shadow_white_block_background</item>
         <item name="strokeColor">@color/color_shadow_white_block_stroke</item>
@@ -19,7 +21,7 @@
         <item name="shadowColor">@color/color_shadow_default</item>
     </style>
 
-    <!-- 无背景圆角块样式 带阴影 不往y轴扩展 -->
+    <!-- 阴影2：无背景圆角块样式 不往y轴扩展 -->
     <style name="StyleShadowNoBgBlock">
         <item name="shadowBlur">32dp</item>
         <item name="shadowSpread">1dp</item>

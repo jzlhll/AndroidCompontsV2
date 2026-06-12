@@ -36,8 +36,8 @@ data class UiExLineTabLayoutStyle(
     val itemHorizontalPadding: Dp = 20.dp,
     val bottomLineHeight: Dp = 0.5.dp,
     val indicatorHeight: Dp = 1.5.dp,
-    val selectedTextStyle: TextStyle = UiExTypography.Text16M,
-    val unselectedTextStyle: TextStyle = UiExTypography.Text16,
+    val selectedTextStyle: TextStyle = UiExTypography.Font16M,
+    val unselectedTextStyle: TextStyle = UiExTypography.Font16,
 )
 
 /** 常规下划线 TabLayout 的默认样式。 */
