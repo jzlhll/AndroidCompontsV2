@@ -3,7 +3,7 @@ package com.au.module_androiduiex.styles
 import androidx.compose.ui.graphics.Color
 
 /** Compose 色板。 */
-object UiExColors {
+object ComposeColors {
     // 背景
     val PrimaryBg = Color(0xFFFCFAF7)
     val SelectCover = Color(0x99FFFFFF)

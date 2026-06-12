@@ -24,7 +24,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
 import com.allan.classnameanno.EntryFrgName
-import com.au.module_androiduiex.styles.UiExLineTabLayout
+import com.au.module_androiduiex.styles.ComposeLineTabLayout
 import kotlinx.coroutines.launch
 
 /** Compose 版本 ViewPager 与 TabLayout 测试页。 */
@@ -63,7 +63,7 @@ private fun ComposeUiTestScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.height(3.dp))
-        UiExLineTabLayout(
+        ComposeLineTabLayout(
             tabs = pages.map { it.first },
             selectedIndex = pagerState.currentPage,
         ) { index ->

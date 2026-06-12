@@ -29,29 +29,29 @@ import androidx.compose.ui.unit.dp
 import com.au.module_androidcolor.R
 
 /** Compose 版本常规下划线 TabLayout 样式。 */
-data class UiExLineTabLayoutStyle(
+data class ComposeLineTabLayoutStyle(
     val height: Dp = 44.dp,
     val startPadding: Dp = 12.dp,
     val itemMinWidth: Dp = 80.dp,
     val itemHorizontalPadding: Dp = 20.dp,
     val bottomLineHeight: Dp = 0.5.dp,
     val indicatorHeight: Dp = 1.5.dp,
-    val selectedTextStyle: TextStyle = UiExTypography.Font16M,
-    val unselectedTextStyle: TextStyle = UiExTypography.Font16,
+    val selectedTextStyle: TextStyle = ComposeTypography.Font16M,
+    val unselectedTextStyle: TextStyle = ComposeTypography.Font16,
 )
 
 /** 常规下划线 TabLayout 的默认样式。 */
-object UiExLineTabLayoutDefaults {
-    val StyleNormally = UiExLineTabLayoutStyle()
+object ComposeLineTabLayoutDefaults {
+    val StyleNormally = ComposeLineTabLayoutStyle()
 }
 
 /** Compose 版本的常规下划线 TabLayout。 */
 @Composable
-fun UiExLineTabLayout(
+fun ComposeLineTabLayout(
     tabs: List<String>,
     selectedIndex: Int,
     modifier: Modifier = Modifier,
-    style: UiExLineTabLayoutStyle = UiExLineTabLayoutDefaults.StyleNormally,
+    style: ComposeLineTabLayoutStyle = ComposeLineTabLayoutDefaults.StyleNormally,
     selectedTextColor: Color = colorResource(R.color.color_tab_text_select),
     unselectedTextColor: Color = colorResource(R.color.color_tab_text_no_select),
     lineColor: Color = colorResource(R.color.color_line),
@@ -77,7 +77,7 @@ fun UiExLineTabLayout(
                 .padding(start = style.startPadding),
         ) {
             tabs.forEachIndexed { index, title ->
-                UiExLineTabItem(
+                ComposeLineTabItem(
                     title = title,
                     selected = selectedIndex == index,
                     style = style,
@@ -93,10 +93,10 @@ fun UiExLineTabLayout(
 }
 
 @Composable
-private fun UiExLineTabItem(
+private fun ComposeLineTabItem(
     title: String,
     selected: Boolean,
-    style: UiExLineTabLayoutStyle,
+    style: ComposeLineTabLayoutStyle,
     selectedTextColor: Color,
     unselectedTextColor: Color,
     indicatorColor: Color,
