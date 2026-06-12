@@ -44,7 +44,7 @@ data class ShareInBean(val uriUuid:String,
             delay(0)
             val fileSize = info.file.length()
             val fileLen = formatBytes(fileSize)
-            val uriUuid = UUID.randomUUID().toString().replace("-", "")
+            val uriUuid = info.md5
 
             val mimeType = ExtensionMimeUtil.getMimeTypePath(info.file.absolutePath)
             val videoDuration = VideoDurationHelper().getDurationNormally(info.file.absolutePath, mimeType)

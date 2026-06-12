@@ -12,7 +12,6 @@ import com.allan.mydroid.beansinner.ShareInBean
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.simpleflow.StatusState
-import com.au.module_android.utils.Md5Util
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchOnThread
 import com.au.module_cached.AppDataStore
@@ -193,7 +192,7 @@ object ShareInUrisObj {
         val fileList = ArrayList<MergedFileInfo>()
         if (nanoMergedDir.exists()) {
             nanoMergedDir.listFiles()?.forEach {
-                fileList.add(MergedFileInfo(it, Md5Util.getFileMD5(it.absolutePath), formatSize(it.length())))
+                fileList.add(MergedFileInfo.fromCacheFile(it, formatSize(it.length())))
             }
         }
         fileList.sortByDescending { it.file.lastModified() }

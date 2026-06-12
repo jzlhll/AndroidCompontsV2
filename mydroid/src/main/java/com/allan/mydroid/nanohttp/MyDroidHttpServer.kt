@@ -8,11 +8,14 @@ import com.allan.mydroid.api.READ_WEBSOCKET_IP_PORT
 import com.allan.mydroid.api.REQUEST_FILE_LIST
 import com.allan.mydroid.api.UPLOAD_CHUNK
 import com.allan.mydroid.beans.httpdata.IpPortResult
+import com.allan.mydroid.beansinner.FROM_LOCAL
+import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.globals.CODE_SUC
 import com.allan.mydroid.globals.GlobalNetworkMonitor
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.globals.nanoTempCacheMergedDir
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
 import com.au.module_okhttp.api.ResultBean
@@ -24,8 +27,11 @@ import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
+import java.io.File
+import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
 import java.net.URLEncoder
 
 interface IChunkMgr {
@@ -138,8 +144,8 @@ class MyDroidHttpServer(httpPort: Int,
                 logdNoFile { "file Download this uri is donot has permission." }
                 return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "No permission yet todo translate.")
             }
-            val inputStream = Globals.app.contentResolver.openInputStream(uri)
-            logdNoFile { "file Download2 $uri ${inputStream?.available()}" }
+            val inputStream = openDownloadInputStream(info)
+            logdNoFile { "file Download2 ${info.from} $filename ${inputStream.available()}" }
             // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
             val response = newFixedLengthResponse(Status.OK,
                 "application/octet-stream", inputStream, fileSize)
@@ -180,6 +186,24 @@ class MyDroidHttpServer(httpPort: Int,
             logdNoFile { "file Download error3" }
             return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 3.")
         }
+    }
+
+    /** nanoMerged 本地文件直接用绝对路径读取，避免 file:// Uri 解析问题 */
+    private fun openDownloadInputStream(info: ShareInBean): InputStream {
+        if (info.from == FROM_LOCAL) {
+            val name = info.name
+            if (name.isNullOrEmpty()) {
+                throw FileNotFoundException("local merged file name empty")
+            }
+            val file = File(nanoTempCacheMergedDir(), name)
+            if (!file.exists()) {
+                throw FileNotFoundException("local merged file not exists: ${file.absolutePath}")
+            }
+            return FileInputStream(file)
+        }
+        val stream = Globals.app.contentResolver.openInputStream(info.uri)
+            ?: throw FileNotFoundException("Cannot open uri: ${info.uri}")
+        return stream
     }
 
     private fun fileNotFoundResponse() : NanoHTTPD.Response {
