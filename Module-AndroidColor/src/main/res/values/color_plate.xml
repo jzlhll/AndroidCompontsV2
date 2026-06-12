@@ -85,4 +85,8 @@
 
     <!-- shadow 默认颜色 -->
     <color name="color_shadow_default">#10000000</color>
+
+    <!-- 阴影白底圆角块 -->
+    <color name="color_shadow_white_block_background">#ccffffff</color>
+    <color name="color_shadow_white_block_stroke">#ffffff</color>
 </resources>

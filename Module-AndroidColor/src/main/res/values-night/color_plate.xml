@@ -77,10 +77,16 @@
     <!-- toolBar相关 -->
 <!--    <color name="color_toolbar_text">@color/color_text_normal</color>-->
 
-
     <!-- 悬挂提醒DING信息背景色 -->
     <color name="color_ding_bg">#996699</color>
 
     <!-- 悬浮floatingButton的背景色 -->
     <color name="color_floating_btn_bg">#9b414141</color>
+
+    <!-- shadow 默认颜色 -->
+    <color name="color_shadow_default">#40000000</color>
+
+    <!-- 阴影白底圆角块 -->
+    <color name="color_shadow_white_block_background">#cc343434</color>
+    <color name="color_shadow_white_block_stroke">#444445</color>
 </resources>

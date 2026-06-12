@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- block样式 -->
+    <style name="StyleWhiteBlock">
+        <item name="backgroundNormal">@color/color_shadow_white_block_background</item>
+        <item name="strokeColor">@color/color_shadow_white_block_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+
+    <!-- 白色圆角块样式 带阴影 不往y轴扩展 -->
+    <style name="StyleShadowWhiteBlock">
+        <item name="backgroundNormal">@color/color_shadow_white_block_background</item>
+        <item name="strokeColor">@color/color_shadow_white_block_stroke</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="shadowBlur">32dp</item>
+        <item name="shadowSpread">1dp</item>
+        <item name="shadowColor">@color/color_shadow_default</item>
+    </style>
+
+    <!-- 无背景圆角块样式 带阴影 不往y轴扩展 -->
+    <style name="StyleShadowNoBgBlock">
+        <item name="shadowBlur">32dp</item>
+        <item name="shadowSpread">1dp</item>
+        <item name="shadowColor">@color/color_shadow_default</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+</resources>
