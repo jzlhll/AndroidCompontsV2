@@ -24,21 +24,22 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
 import com.allan.classnameanno.EntryFrgName
+import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_androiduiex.styles.ComposeLineTabLayout
 import kotlinx.coroutines.launch
 
 /** Compose 版本 ViewPager 与 TabLayout 测试页。 */
 @EntryFrgName(customName = "ComposeUiTest")
-class ComposeUiTestFragment : Fragment() {
+class ComposeUiTestFragment : ViewFragment() {
     private val pages = listOf(
         Pair("Components", AndroidUi1Fragment::class.java),
         Pair("Action", AndroidUi2Fragment::class.java),
     )
 
-    override fun onCreateView(
+    override fun onUiCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
