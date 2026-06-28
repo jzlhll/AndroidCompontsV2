@@ -4,12 +4,11 @@ import androidx.core.widget.NestedScrollView
 import com.scwang.smart.refresh.layout.SmartRefreshLayout
 
 /**
- * 设置简单的我的简易效果，加载头，默认高度为42dp，触发率为1.25倍。
+ * 设置简单的我的简易效果，加载头，默认高度为42dp。
  */
 fun SmartRefreshLayout.setSimpleLoadingHeader(headerHeight: Float = 42f) : SmartRefreshLayout {
     setRefreshHeader(SimpleLoadingHeader(context))
     setHeaderHeight(headerHeight)
-    setHeaderTriggerRate(1.25f)
     return this
 }
 

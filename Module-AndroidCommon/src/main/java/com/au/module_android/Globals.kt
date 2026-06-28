@@ -60,6 +60,9 @@ object Globals {
      */
     val app: Application get() = internalApp
 
+    /** Application 是否已在 [CommonInitApplication.onCreate] 中绑定。 */
+    fun isAppInitialized(): Boolean = ::internalApp.isInitialized
+
     private var _filesLruCache: SimpleFilesLruCache? = null
     private var filesLruCacheDirName = "au_cache_common"
     private var filesLruCacheSize = 250 * 1024 * 1024L

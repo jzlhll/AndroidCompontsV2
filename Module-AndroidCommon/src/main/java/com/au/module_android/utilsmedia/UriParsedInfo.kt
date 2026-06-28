@@ -1,6 +1,7 @@
 package com.au.module_android.utilsmedia
 
 import android.net.Uri
+import android.util.Size
 import androidx.annotation.Keep
 import java.io.File
 
@@ -15,7 +16,8 @@ data class UriParsedInfo(
     val relativePath:String? = null, /* 二选一 */
     val videoDuration:Long? = null,
     val isFile: Boolean = false,
-    val lastModified:Long? = null, /* 最后修改时间 */) {
+    val lastModified:Long? = null, /* 最后修改时间 */
+    val size: Size? = null, /* 图片像素尺寸 */) {
     fun isFullPath() : Boolean = fullPath != null
 
     fun isUriVideo(): Boolean {

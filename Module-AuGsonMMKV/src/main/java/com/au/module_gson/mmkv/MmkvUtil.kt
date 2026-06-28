@@ -106,6 +106,13 @@ fun mmkvGetString(key:String, defaultValue:String = "") : String {
 /**
  * 通过mmkv获取，常规的数据类型。
  */
+fun mmkvGetBool(key:String, defaultValue:Boolean = false) : Boolean {
+    return mmkv.getBoolean(key, defaultValue)
+}
+
+/**
+ * 通过mmkv获取，常规的数据类型。
+ */
 fun mmkvGetInt(key:String, defaultValue:Int = 0) : Int {
     return mmkv.getInt(key, defaultValue)
 }

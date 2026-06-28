@@ -1,18 +1,31 @@
 package com.au.module_simplepermission
 
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.LifecycleOwner
 
 /**
  * 必须在成员变量初始化。否则multiPermissionHelp不生效
  * Fragment {
  *   private val blePermissionHelp = BlePermissionHelp(this)
  * }
+ * FragmentActivity {
+ *   private val blePermissionHelp = BlePermissionHelp(this)
+ * }
  */
-class BtPermissionHelp(private val f: Fragment) {
+class BtPermissionHelp private constructor(
+    lifecycleOwner: LifecycleOwner,
+    private val contextProvider: () -> Context
+) {
+    constructor(f: Fragment) : this(f, { f.requireContext() })
+
+    constructor(activity: FragmentActivity) : this(activity, { activity })
+
     //android12上下高低版本的不同权限类型
     val blePermissions =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
@@ -25,7 +38,7 @@ class BtPermissionHelp(private val f: Fragment) {
                 Manifest.permission.BLUETOOTH_ADMIN,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
 
-    val multiPermissionHelp = f.createMultiPermissionForResult(blePermissions)
+    val multiPermissionHelp = lifecycleOwner.createMultiPermissionForResult(blePermissions)
 
     /**
      * 仅限于请求蓝牙，做一下这种控制；
@@ -58,6 +71,6 @@ class BtPermissionHelp(private val f: Fragment) {
     }
 
     fun isPermissionGrant() : Boolean {
-        return f.requireContext().hasPermission(*blePermissions)
+        return contextProvider().hasPermission(*blePermissions)
     }
 }

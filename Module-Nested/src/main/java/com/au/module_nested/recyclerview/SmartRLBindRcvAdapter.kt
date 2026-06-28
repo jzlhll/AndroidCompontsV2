@@ -1,6 +1,5 @@
 package com.au.module_nested.recyclerview
 
-import androidx.annotation.CallSuper
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import com.scwang.smart.refresh.layout.SmartRefreshLayout
 import kotlin.collections.isNullOrEmpty

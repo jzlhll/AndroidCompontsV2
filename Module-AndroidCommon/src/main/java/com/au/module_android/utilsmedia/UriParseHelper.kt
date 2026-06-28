@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
 import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
 import androidx.core.net.toUri
@@ -114,8 +115,34 @@ internal class UriParseHelper {
         var name = ""
         var videoDuration:Long? = null
         var lastModified:Long? = null
+        var size: Size? = null
         ignoreError {
-            cr.query(uri, null, null, null, null)?.use { cursor->
+            val projection = if (uri.authority == MediaStore.AUTHORITY) {
+                arrayOf(
+                    MediaStore.MediaColumns.MIME_TYPE,
+                    MediaStore.MediaColumns.DATA,
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    MediaStore.MediaColumns.SIZE,
+                    MediaStore.MediaColumns.DISPLAY_NAME,
+                    MediaStore.MediaColumns.DURATION,
+                    MediaStore.MediaColumns.DATE_MODIFIED,
+                    MediaStore.MediaColumns.DATE_ADDED,
+                    MediaStore.MediaColumns.WIDTH,
+                    MediaStore.MediaColumns.HEIGHT
+                )
+            } else {
+                null
+            }
+            val cursor = ignoreError {
+                cr.query(uri, projection, null, null, null)
+            } ?: if (projection == null) {
+                null
+            } else {
+                ignoreError {
+                    cr.query(uri, null, null, null, null)
+                }
+            }
+            cursor?.use { cursor->
                 if (cursor.moveToFirst()) {
                     //解析 mimeType
                     val mimeTypeIndex = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)
@@ -139,7 +166,7 @@ internal class UriParseHelper {
                     name = if (displayNameIndex == -1) "" else cursor.getString(displayNameIndex)
 
                     //解析 video duration
-                    val durationIndex = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+                    val durationIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION)
                     videoDuration = if (durationIndex == -1) 0L else cursor.getLong(durationIndex)
 
                     //解析最后修改时间
@@ -150,6 +177,17 @@ internal class UriParseHelper {
                         //解析创建时间
                         val dateAddedIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED)
                         lastModified = if (dateAddedIndex == -1) null else cursor.getLong(dateAddedIndex)
+                    }
+
+                    //解析图片像素尺寸
+                    val widthIndex = cursor.getColumnIndex(MediaStore.MediaColumns.WIDTH)
+                    val heightIndex = cursor.getColumnIndex(MediaStore.MediaColumns.HEIGHT)
+                    if (mimeType.startsWith("image/") && widthIndex != -1 && heightIndex != -1) {
+                        val width = cursor.getInt(widthIndex)
+                        val height = cursor.getInt(heightIndex)
+                        if (width > 0 && height > 0) {
+                            size = Size(width, height)
+                        }
                     }
                 }
             }
@@ -181,7 +219,8 @@ internal class UriParseHelper {
             relativePath,
             videoDuration,
             isFile = false,
-            lastModified = lastModified)
+            lastModified = lastModified,
+            size = size)
 
 //        logdNoFile { "parseAsContent parsed Info: $r" }
         return r

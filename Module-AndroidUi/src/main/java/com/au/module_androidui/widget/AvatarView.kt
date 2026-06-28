@@ -56,15 +56,23 @@ class AvatarView @JvmOverloads constructor(
     val avatarText : CustomFontText
         get() = binding.textAvatar
     val avatarImage : ImageView
-        get() = binding.urlAvatar
+        get() {
+            showAvatarImage()
+            return binding.urlAvatar
+        }
+
+    private fun showAvatarImage() {
+        super.setCardBackgroundColor(Color.WHITE)
+        binding.urlAvatar.visibility = VISIBLE
+        binding.textAvatar.visibility = GONE
+    }
 
     /**
      * 设置头像的图片资源
      */
     fun setAvatarResource(resId: Int) {
-        avatarImage.setImageResource(resId)
-        avatarImage.visibility = VISIBLE
-        avatarText.visibility = GONE
+        binding.urlAvatar.setImageResource(resId)
+        showAvatarImage()
     }
 
     /**
@@ -75,8 +83,8 @@ class AvatarView @JvmOverloads constructor(
         avatarText.text = upperText
         avatarText.setTextColor(Color.WHITE)
         super.setCardBackgroundColor(getColorFromText(upperText))
-        avatarImage.visibility = GONE
-        avatarText.visibility = VISIBLE
+        binding.urlAvatar.visibility = GONE
+        binding.textAvatar.visibility = VISIBLE
     }
 
     override fun setCardBackgroundColor(color: Int) {

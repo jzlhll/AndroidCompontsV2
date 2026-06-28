@@ -82,6 +82,12 @@
         <attr name="inflatedCornerSize" format="dimension"/>
     </declare-styleable>
 
+    <declare-styleable name="RoundCornerConstaintLayout">
+        <attr name="cornerRadius" />
+        <attr name="roundTopNormal" format="boolean" />
+        <attr name="roundBottomNormal" format="boolean" />
+    </declare-styleable>
+
     <declare-styleable name="CustomFontText">
         <attr name="customFontIsNum" />
         <attr name="customFontMode" />
@@ -106,6 +112,14 @@
     </declare-styleable>
 
     <!-- 没有alpha，水波纹等比较特殊的场景。-->
+    <declare-styleable name="TinyProgressBar">
+        <attr name="pbProgressColor" format="color|reference" />
+        <attr name="pbProgressBgColor" format="color|reference" />
+        <attr name="pbCornerRadius" format="dimension" />
+        <attr name="pbProgress" format="integer" />
+        <attr name="pbMax" format="integer" />
+    </declare-styleable>
+
     <declare-styleable name="BgBuildRelativeLayout">
         <attr name="backgroundNormal" />
         <attr name="backgroundAlpha" />
@@ -324,5 +338,9 @@
     <declare-styleable name="FixedHeightImageView">
         <attr name="minWidthRatio" format="float" />
         <attr name="maxWidthRatio" format="float" />
+    </declare-styleable>
+    <declare-styleable name="FixedWidthImageView">
+        <attr name="minAspectRatio" format="float" />
+        <attr name="maxAspectRatio" format="float" />
     </declare-styleable>
 </resources>

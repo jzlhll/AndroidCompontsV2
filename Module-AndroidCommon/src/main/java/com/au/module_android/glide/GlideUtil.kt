@@ -16,6 +16,7 @@ import com.au.module_android.R
 import com.au.module_android.utils.deleteAll
 import com.au.module_android.utils.ignoreError
 import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -65,6 +66,20 @@ fun clearAppFileDir() {
         Globals.app.filesDir?.deleteAll()
         Globals.app.getExternalFilesDir(null)?.deleteAll()
     }
+}
+
+/**
+ * 按需禁用 Glide transform。
+ */
+fun RequestOptions.applyDontTransform(enabled: Boolean): RequestOptions {
+    return if (enabled) dontTransform() else this
+}
+
+/**
+ * 按需禁用 Glide transform。
+ */
+fun <T> RequestBuilder<T>.applyDontTransform(enabled: Boolean): RequestBuilder<T> {
+    return if (enabled) dontTransform() else this
 }
 
 /**
@@ -134,12 +149,15 @@ fun ImageView.glideLoadAsset(assetPath: String, errorDrawableId: Int? = null) {
  */
 fun ImageView.glideLoadFile(localFile: File,
                             errorDrawableId:Int,
-                            cacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC) {
+                            cacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
+                            optionsTransform: ((RequestOptions)-> RequestOptions)? = null) {
+    val opt = RequestOptions.diskCacheStrategyOf(cacheStrategy)
+        .skipMemoryCache(false)
+        .error(errorDrawableId)
+    val options = optionsTransform?.invoke(opt) ?: opt
     Glide.with(context)
         .load(localFile)
-        .diskCacheStrategy(cacheStrategy) // 本地文件无需磁盘缓存
-        .skipMemoryCache(false) // 保留内存缓存提升滑动流畅性
-        .error(errorDrawableId)
+        .apply(options)
         .into(this)
 }
 
@@ -210,13 +228,20 @@ fun ImageView.glideLoadVideoFirstFrame(url: Any, sizeCall: Function3<Drawable, I
  *     // 2. 创建MediaStoreSignature（核心：元数据变，签名就变）
  *     val signature = MediaStoreSignature(mimeType, dateModified, orientation)
  */
-fun ImageView.glideLoadContentUri(contentUri: Uri, signature: MediaStoreSignature) {
+fun ImageView.glideLoadContentUri(
+    contentUri: Uri,
+    signature: MediaStoreSignature,
+    cacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
+    optionsTransform: ((RequestOptions)-> RequestOptions)? = null,
+) {
     val context = Globals.app
+    val opt = RequestOptions.diskCacheStrategyOf(cacheStrategy)
+        .signature(signature)
+    val options = optionsTransform?.invoke(opt) ?: opt
     // 3. 加载Content URI并绑定签名
     Glide.with(context)
         .load(contentUri) // 传入Content URI
-        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-        .signature(signature) // 绑定媒体库签名
+        .apply(options)
         .into(this)
 }
 

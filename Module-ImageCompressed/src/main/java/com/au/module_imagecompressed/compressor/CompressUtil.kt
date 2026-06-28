@@ -2,6 +2,10 @@ package com.au.module_imagecompressed.compressor
 
 import android.content.Context
 import android.net.Uri
+import android.util.Size
+import com.au.module_android.utilsmedia.UriParsedInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -9,10 +13,16 @@ import kotlin.math.roundToInt
  * 从本地文件读取图片像素宽高。常规格式优先走 BitmapFactory 读取 bounds，失败时回退 ImageDecoder。
  *
  * @param file 图片文件
+ * @param applyOrientation 是否按图片方向信息修正宽高
  * @return 宽与高；失败或尺寸无效时返回 null
  */
-fun decodeImagePixelSizeByImageDecoder(file: File): Pair<Int, Int>? {
-    return SizeParseUtil().decodeImagePixelSize(file)
+fun decodeImagePixelSizeByImageDecoder(
+    file: File,
+    applyOrientation: Boolean = false
+): Pair<Int, Int>? {
+    return SizeParseUtil().decodeImagePixelSize(file, applyOrientation)?.let {
+        it.width to it.height
+    }
 }
 
 /**
@@ -20,10 +30,33 @@ fun decodeImagePixelSizeByImageDecoder(file: File): Pair<Int, Int>? {
  *
  * @param context 上下文
  * @param uri 图片 Uri
+ * @param applyOrientation 是否按图片方向信息修正宽高
  * @return 宽与高；失败或尺寸无效时返回 null
  */
-fun decodeImagePixelSizeByImageDecoder(context: Context, uri: Uri): Pair<Int, Int>? {
-    return SizeParseUtil().decodeImagePixelSize(context, uri)
+fun decodeImagePixelSizeByImageDecoder(
+    context: Context,
+    uri: Uri,
+    applyOrientation: Boolean = false
+): Pair<Int, Int>? {
+    return SizeParseUtil().decodeImagePixelSize(context, uri, applyOrientation)?.let {
+        it.width to it.height
+    }
+}
+
+/**
+ * 从 UriParsedInfo 解析图片像素尺寸，优先复用 parse 阶段读取到的尺寸。
+ *
+ * @param context 上下文
+ * @param applyOrientation 是否按图片方向信息修正宽高
+ * @return 图片像素尺寸；失败或尺寸无效时返回 null
+ */
+suspend fun UriParsedInfo.resolveImageSize(
+    context: Context,
+    applyOrientation: Boolean = false
+): Size? {
+    return withContext(Dispatchers.IO) {
+        SizeParseUtil().resolveImageSize(context, this@resolveImageSize, applyOrientation)
+    }
 }
 
 /**

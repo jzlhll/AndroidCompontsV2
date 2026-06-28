@@ -1,36 +1,19 @@
 package com.au.module_androiduiex.styles
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
+import com.au.module_androidcolor.R
 
-/** Compose 色板。 */
 object ComposeColors {
-    // 背景
-    val PrimaryBg = Color(0xFFFCFAF7)
-    val SelectCover = Color(0x99FFFFFF)
-    val WhiteBlockBackground = Color(0xCCFFFFFF)
+    val PrimaryBg @Composable @ReadOnlyComposable get() = colorResource(R.color.colorPrimary)
+    val BackgroundBg @Composable @ReadOnlyComposable get() = colorResource(R.color.windowBackground)
 
-    // 文字
-    val TextPrimary = Color(0xFF404040)
-    val TextSecondary = Color(0xFF919191)
-    val TextDescD9 = Color(0xFFD9D9D9)
-    val TextDesc = Color(0xFFC0C0C0)
-    val TextDesc80Percent = Color(0xCCD9D9D9)
-    val TextLightDesc = Color(0xFFAEAEAE)
+    val TextPrimary @Composable @ReadOnlyComposable get() = colorResource(R.color.color_text_normal)
+    val TextSecondary @Composable @ReadOnlyComposable get() = colorResource(R.color.color_second_btn_text)
+    val TextDesc @Composable @ReadOnlyComposable get() = colorResource(R.color.color_text_desc)
 
-    // 品牌 / 功能色
-    val Orange = Color(0xFFFF8C00)
-    val Orange80p = Color(0xCCFF8C00)
-    val Orange60p = Color(0x66FF8C00)
-    val Orange8p = Color(0xFFFEF0DE)
-    val Orange6p = Color(0xFFFFF8F0)
-    val BlueLink = Color(0xFF007AFF)
-    val Red = Color(0xFFFF3C00)
-    val Green = Color(0xFF34C759)
-    val Yellow = Color(0xFFF6EAD7)
-    val Alert = Color(0xFFF5C92F)
-    val AlertPress = Color(0xCCF5C92F)
-
-    // 阴影 / 占位
-    val ShadowDefault = Color(0x10000000)
-    val Placeholder = Color(0xFFE8E8E8)
+    val ShadowDefault @Composable @ReadOnlyComposable get() = colorResource(R.color.color_shadow_default)
+    val Placeholder @Composable @ReadOnlyComposable get() = colorResource(R.color.color_switch_block_sel_dis_bg)
 }
