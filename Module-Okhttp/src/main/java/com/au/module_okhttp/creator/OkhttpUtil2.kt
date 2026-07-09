@@ -10,8 +10,14 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+
+// 生成带随机后缀的临时下载文件名，避免并发下载写入同一个临时文件。
+private fun randomDownloadTempFileName(fileName: String): String {
+    return "$fileName.tmp_${UUID.randomUUID().toString().substring(0, 8)}"
+}
 
 /**
  * 下载文件
@@ -72,7 +78,7 @@ suspend fun OkHttpClient.downloadFile(
  * @param fileName 保存的文件名
  * @param byteArraySize 读写缓冲区大小（默认1024字节）
  * @param deleteFileIfNoSuccess 下载失败时是否删除文件（默认true）
- * @param useTempFile 是否使用临时文件下载（下载中为.tmp后缀，成功后改名，默认false）
+ * @param useTempFile 是否使用临时文件下载（下载中为.tmp_随机后缀，成功后改名，默认false）
  * @return 成功返回下载后的File，失败返回null
  */
 suspend fun OkHttpClient.downloadFile(
@@ -92,7 +98,7 @@ suspend fun OkHttpClient.downloadFile(
     // 2. 处理临时文件/最终文件路径
     val finalFile = File(dir, fileName)
     val targetFile = if (useTempFile) {
-        File(dir, "$fileName.tmp") // 临时文件后缀.tmp
+        File(dir, randomDownloadTempFileName(fileName))
     } else {
         finalFile
     }
@@ -190,7 +196,7 @@ suspend fun OkHttpClient.downloadFile(
  * @param fileName 保存的文件名
  * @param byteArraySize 读写缓冲区大小（默认1024字节）
  * @param deleteFileIfNoSuccess 下载失败时是否删除文件（默认true）
- * @param useTempFile 是否使用临时文件下载（下载中为.tmp后缀，成功后改名，默认false）
+ * @param useTempFile 是否使用临时文件下载（下载中为.tmp_随机后缀，成功后改名，默认false）
  * @param progressListener 下载进度监听（已下载长度、总长度、进度[0-1]）
  * @return 成功返回下载后的File，失败返回null
  */
@@ -221,7 +227,7 @@ suspend fun OkHttpClient.downloadFile(
     // 2. 处理临时文件/最终文件路径
     val finalFile = File(dir, fileName)
     val targetFile = if (useTempFile) {
-        File(dir, "$fileName.tmp") // 临时文件后缀.tmp
+        File(dir, randomDownloadTempFileName(fileName))
     } else {
         finalFile
     }

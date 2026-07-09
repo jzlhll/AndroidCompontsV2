@@ -10,6 +10,7 @@ import androidx.annotation.IntRange
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentResultListener
 import com.au.module_android.utils.*
 import com.au.module_androidui.R
 import com.au.module_androidui.ui.base.AbsBottomDialog
@@ -23,6 +24,21 @@ import kotlin.math.min
  */
 class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(hasEditText) {
     companion object {
+        /**
+         * 监听 BottomSheet 内容 Fragment 返回的结果。
+         */
+        fun setFragmentResultListener(
+            f: Fragment,
+            requestKey: String,
+            listener: FragmentResultListener,
+        ) {
+            f.childFragmentManager.setFragmentResultListener(
+                requestKey,
+                f.viewLifecycleOwner,
+                listener,
+            )
+        }
+
         /**
          * @param manager 基于哪个fragment的childFragmentManger而弹出。
          * @param fgBundle 创建的内容Fragment携带了arguments

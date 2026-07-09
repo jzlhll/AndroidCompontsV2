@@ -41,7 +41,6 @@
     <declare-styleable name="AvatarView">
         <attr name="avatarDefaultSrc" format="reference" />
         <attr name="avatarDefaultText" format="string" />
-        <attr name="avatarDefaultTextSizeSp" format="integer" />
     </declare-styleable>
 
     <declare-styleable name="FlowLayout">

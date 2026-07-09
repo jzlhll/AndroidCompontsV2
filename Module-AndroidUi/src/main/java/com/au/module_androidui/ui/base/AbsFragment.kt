@@ -100,6 +100,13 @@ open class AbsFragment : Fragment(), IFullWindow {
 
     open fun isAutoHideIme() = false
 
+    /**
+     * 向承载当前内容页的 Dialog 所在 FragmentManager 返回结果。
+     */
+    protected fun setDialogFragmentResult(requestKey: String, bundle: Bundle) {
+        findDialog(this)?.parentFragmentManager?.setFragmentResult(requestKey, bundle)
+    }
+
     override fun immersiveMode() : ImmersiveMode = ImmersiveMode.PaddingBars
 
     @Deprecated("这个禁用，因为我们自己的框架")

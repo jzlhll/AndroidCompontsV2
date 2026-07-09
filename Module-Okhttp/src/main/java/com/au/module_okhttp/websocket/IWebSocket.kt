@@ -17,7 +17,7 @@ interface IWebSocket {
      * 重新创建连接，会重新发起连接
      */
     @WorkerThread
-    fun connect()
+    fun connect(onceStateConnected:((IWebSocket)->Unit)?)
 
     /**
      * 发送消息
@@ -30,14 +30,15 @@ interface IWebSocket {
      * 发送消息
      * 返回值只是一个回执，并不代表对面收到了
      * callback将会回调你相同的msgIDInMessage的消息内容
+     *
+     * @param successCallback text/jo是原始数据和他的JSONObject
      */
-    @WorkerThread
     fun sendMsg(message:String, msgIDInMessage:String,
-                timeoutSecond:Int = 0,
-                successCallback:(response:String, mode:SendMsgCallbackMode)->Unit) : Boolean
+                timeoutTs: Long = 0,
+                successCallback:(text:String, jo:JSONObject, mode:SendMsgCallbackMode)->Unit) : Boolean
 
-    /** 当前连接状态 0 未连接, 1 已连接, -1重试中...*/
-    val state: Int
+    /** 当前连接状态 */
+    val state: State
 
     val ip: String
 
@@ -58,7 +59,7 @@ interface IWebSocket {
         private var nameTag: String = ""
 
         var extraParser: IExtraParser = object : IExtraParser {
-            override fun onExtraParse(text: String, jo: JSONObject) {
+            override fun onExtraParse(nameTag: String, text: String, jo: JSONObject) {
                 // 默认空实现
             }
         }
@@ -105,11 +106,21 @@ interface IWebSocket {
             return if (cf == null) {
                 ReconnectWebSocket(tag, ip, wsUrl, headers, maxReconnectAttempts)
             } else {
-                CertReconnectWebSocket(tag, ip, wsUrl, cf, headers)
+                CertReconnectWebSocket(tag, ip, wsUrl, cf, headers, maxReconnectAttempts)
             }.also {
                 it.extraParser = extraParser
 //                it.setConnectedListener(listener)
             }
         }
     }
+
+    enum class State {
+        DISCONNECTED,
+        CONNECTED,
+        RECONNECTING
+    }
+}
+
+interface IWebSocketClose {
+    fun disconnect(isDestroy: Boolean)
 }

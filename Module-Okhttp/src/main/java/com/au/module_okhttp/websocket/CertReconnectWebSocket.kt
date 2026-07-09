@@ -9,7 +9,8 @@ internal class CertReconnectWebSocket(
     ip:String,
     url: String,
     private val certStr: String,
-    headers: Map<String, String> = emptyMap()) : ReconnectWebSocket(nameTag, ip, url, headers, 0) {
+    headers: Map<String, String> = emptyMap(),
+    maxReconnectAttempts: Int) : ReconnectWebSocket(nameTag, ip, url, headers, maxReconnectAttempts) {
 
     override fun toString(): String {
         return "Cert" + super.toString()

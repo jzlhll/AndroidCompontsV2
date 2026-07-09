@@ -1,4 +1,4 @@
-package com.au.module_simplepermission
+package  com.au.module_simplepermission
 
 import android.Manifest
 import android.annotation.SuppressLint

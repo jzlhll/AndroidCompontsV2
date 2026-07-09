@@ -126,6 +126,7 @@ abstract class AbsOkhttpApi(private val cacheMgr: AbsOkhttpCacheManager = NoOkht
                 builder.url(url)
                 when (method) {
                     HttpMethod.POST -> builder.post(body)
+                    HttpMethod.PUT -> builder.put(body)
                     HttpMethod.PATCH -> builder.patch(body)
                     HttpMethod.DELETE -> builder.delete(body)
                     else -> {}
