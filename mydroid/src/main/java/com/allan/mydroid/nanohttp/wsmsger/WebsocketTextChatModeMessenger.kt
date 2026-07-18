@@ -7,11 +7,11 @@ import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.beans.wsdata.TextChatWsData
 import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.nanohttp.AbsWebSocketClientMessenger
-import com.allan.mydroid.nanohttp.WebsocketClientInServer
+import com.allan.mydroid.nanohttp.InServerWebsocketClient
 import com.au.module_android.log.logdNoFile
 import org.json.JSONObject
 
-class WebsocketTextChatModeMessenger(client: WebsocketClientInServer) : AbsWebSocketClientMessenger(client) {
+class WebsocketTextChatModeMessenger(client: InServerWebsocketClient) : AbsWebSocketClientMessenger(client) {
     private val GAP_MS = 5 * 60 * 1000L
 
     override fun onOpen() {

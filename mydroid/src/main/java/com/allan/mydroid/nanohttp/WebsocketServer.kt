@@ -44,15 +44,15 @@ class WebsocketServer(
      */
     val scope = CoroutineScope(singleThreadDispatcher)
 
-    private val clients: MutableList<WebsocketClientInServer> = CopyOnWriteArrayList()
+    private val clients: MutableList<InServerWebsocketClient> = CopyOnWriteArrayList()
 
-    fun addIntoConnections(websocket: WebsocketClientInServer) {
+    fun addIntoConnections(websocket: InServerWebsocketClient) {
         aliveTrigger.updateAliveTs("when new client add")
         clients.add(websocket)
         triggerConnectionsList()
     }
 
-    fun removeFromConnections(websocket: WebsocketClientInServer) {
+    fun removeFromConnections(websocket: InServerWebsocketClient) {
         clients.remove(websocket)
         triggerConnectionsList()
     }
@@ -75,7 +75,7 @@ class WebsocketServer(
         val nextColor = nextColor()
         logdNoFile { "open web Socket handshake uri: $uri nextColor $nextColor" }
         //uri = uri.replaceFirst("/", "", true)
-        val client = WebsocketClientInServer(handshake, this, nextColor)
+        val client = InServerWebsocketClient(handshake, this, nextColor)
         val parser = when (MyDroidConst.currentDroidMode) {
             MyDroidMode.Receiver,
             MyDroidMode.Send,

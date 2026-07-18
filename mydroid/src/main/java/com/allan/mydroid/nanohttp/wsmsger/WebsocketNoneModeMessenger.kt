@@ -1,10 +1,10 @@
 package com.allan.mydroid.nanohttp.wsmsger
 
 import com.allan.mydroid.nanohttp.AbsWebSocketClientMessenger
-import com.allan.mydroid.nanohttp.WebsocketClientInServer
+import com.allan.mydroid.nanohttp.InServerWebsocketClient
 import org.json.JSONObject
 
-class WebsocketNoneModeMessenger(client: WebsocketClientInServer) : AbsWebSocketClientMessenger(client) {
+class WebsocketNoneModeMessenger(client: InServerWebsocketClient) : AbsWebSocketClientMessenger(client) {
     override fun onOpen() {
     }
 
