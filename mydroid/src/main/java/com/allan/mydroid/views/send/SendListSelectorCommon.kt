@@ -13,8 +13,12 @@ import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.au.module_nested.recyclerview.IMultiViewTypeBean
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean, private val shareInRepository: GlobalShareInRepoObj) {
+abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponent {
+    private val shareInRepository: GlobalShareInRepoObj by inject()
+
     private val mAdapter = SendListAdapter {it, mode->
         onItemClick(it, mode)
     }

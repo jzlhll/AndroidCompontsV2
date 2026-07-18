@@ -39,8 +39,10 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     private val serverRuntimeState: GlobalServerRuntimeObj by inject()
     private val clientListState: GlobalClientListFlowsObj by inject()
     private val shareInRepository: GlobalShareInRepoObj by inject()
+
+    override fun getMode() = MyDroidMode.Send
     private val common by unsafeLazy {
-        object : SendListSelectorCommon(true, shareInRepository) {
+        object : SendListSelectorCommon(true) {
             override fun rcv() = binding.rcv
             override fun empty() = null
             override fun onItemClick(bean: ShareInBean?, mode: String) {
@@ -150,7 +152,6 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     }
 
     override fun onStart() {
-        serverRuntimeState.setMode(MyDroidMode.Send)
         super.onStart()
         lifecycleScope.launchOnThread {
             common.reload()

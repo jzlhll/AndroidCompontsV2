@@ -3,7 +3,6 @@ package com.allan.mydroid.views.receiver
 import android.graphics.Color
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.os.bundleOf
 import androidx.core.view.updatePadding
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
@@ -18,7 +17,6 @@ import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.changeBarsColor
@@ -41,7 +39,7 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
                 R.id.more -> {
                     FragmentShellActivity.start(requireActivity(),
                         ReceiveFromH5FileListFragment::class.java,
-                        bundleOf("isActivityMode" to true)
+                        Bundle().apply { putBoolean("isActivityMode", true) }
                     )
                 }
             }
@@ -100,8 +98,5 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         }
     }
 
-    override fun onStart() {
-        serverRuntimeState.setMode(MyDroidMode.Receiver)
-        super.onStart()
-    }
+    override fun getMode() = MyDroidMode.Receiver
 }

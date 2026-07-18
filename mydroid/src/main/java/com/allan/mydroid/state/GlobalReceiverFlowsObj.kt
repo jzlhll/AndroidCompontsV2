@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import java.io.File
 
 class GlobalReceiverFlowsObj {
-    val receiverProgressFlow: MutableSharedFlow<Map<String, ReceivingFileInfo>> = createNoStickyFlow()
+    val receiverProgressFlow: MutableSharedFlow<Map<String, ReceivingFileInfo>> =
+        createNoStickyFlow()
     val fileMergedFlow: MutableSharedFlow<File> = createNoStickyFlow()
 
     fun emitProgress(map: Map<String, ReceivingFileInfo>) { receiverProgressFlow.tryEmit(map) }

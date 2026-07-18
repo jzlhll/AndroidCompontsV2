@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.os.bundleOf
 import com.allan.mydroid.ui.theme.AndroidCompontsTheme
 import com.allan.mydroid.views.MyDroidAllFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
@@ -30,7 +29,7 @@ class MyDroidActivity : ComponentActivity() {
 //        }
 
         FragmentShellActivity.start(this@MyDroidActivity, MyDroidAllFragment::class.java,
-            bundleOf(KEY_START_TYPE to intent.getStringExtra(KEY_START_TYPE))
+            Bundle().apply { putString(KEY_START_TYPE, intent.getStringExtra(KEY_START_TYPE)) }
         )
         intent.removeExtra(KEY_START_TYPE)
         finish()

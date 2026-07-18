@@ -1,57 +1,33 @@
 package com.allan.mydroid.nanohttp
 
-import com.allan.mydroid.R
-import com.allan.mydroid.api.ABORT_UPLOAD_CHUNKS
-import com.allan.mydroid.api.MERGE_CHUNKS
-import com.allan.mydroid.api.MyDroidMode
-import com.allan.mydroid.api.READ_WEBSOCKET_IP_PORT
-import com.allan.mydroid.api.REQUEST_FILE_LIST
-import com.allan.mydroid.api.UPLOAD_CHUNK
-import com.allan.mydroid.beans.httpdata.IpPortResult
-import com.allan.mydroid.beansinner.FROM_LOCAL
-import com.allan.mydroid.beansinner.ShareInBean
-import com.allan.mydroid.globals.CODE_SUC
-import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
-import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.nanohttp.handlers.AbsHttpRequestHandler
+import com.allan.mydroid.nanohttp.handlers.ChunkUploadHandler
+import com.allan.mydroid.nanohttp.handlers.CommandRequestHandler
+import com.allan.mydroid.nanohttp.handlers.FileDownloadHandler
+import com.allan.mydroid.nanohttp.handlers.StaticAssetHandler
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
-import com.allan.mydroid.repository.GlobalShareInRepoObj
-import com.allan.mydroid.repository.UriPermissionChecker
-import com.allan.mydroid.globals.nanoTempCacheMergedDir
-import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
-import com.au.module_okhttp.api.ResultBean
-import com.au.module_gson.toGsonString
 import com.au.module_android.log.logdNoFile
-import com.modulenative.AppNative
 import fi.iki.elonen.NanoHTTPD
-import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
-import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.InputStream
-import java.net.URLEncoder
-
-interface IChunkMgr {
-    fun handleUploadChunk(session: NanoHTTPD.IHTTPSession): Response
-    fun handleMergeChunk(session: NanoHTTPD.IHTTPSession) : Response
-    fun handleAbortChunk(session: NanoHTTPD.IHTTPSession) : Response
-}
 
 class MyDroidHttpServer(httpPort: Int,
                         private val aliveTrigger: IDroidServerAliveTrigger,
                         private val globalNetworkMonitor: GlobalNetworkMonitorObj,
     ) : NanoHTTPD(httpPort), KoinComponent {
-    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
-    private val receiverEventBus: GlobalReceiverFlowsObj by inject()
-    private val shareInRepository: GlobalShareInRepoObj by inject()
-    private val uriPermissionChecker: UriPermissionChecker by inject()
-    private val chunksMgr: IChunkMgr = MyDroidHttpChunksMgr(receiverEventBus)
+
+    private val receiverFlowsObj: GlobalReceiverFlowsObj by inject()
+
+    private val handlers: List<AbsHttpRequestHandler> = listOf(
+        CommandRequestHandler(globalNetworkMonitor),
+        FileDownloadHandler(),
+        StaticAssetHandler(),
+        ChunkUploadHandler(receiverFlowsObj),
+    )
 
     init {
         tempFileManagerFactory = MyDroidTempFileMgrFactory()
@@ -66,220 +42,38 @@ class MyDroidHttpServer(httpPort: Int,
         val ct = ContentType(session.headers["content-type"]).tryUTF8()
         session.headers["content-type"] = ct.contentTypeHeader
 
+        aliveTrigger.updateAliveTs("http ${session.method.name.lowercase()} request")
+        val uri = session.uri ?: ""
+        logdNoFile { "handle ${session.method} request $uri" }
+
+        for (handler in handlers) {
+            val response = handler.tryHandle(session.method, uri, session)
+            if (response != null) return response
+        }
         return when (session.method) {
-            Method.GET -> handleGetRequest(session)
-            Method.POST -> handlePostRequest(session)
-            else -> newFixedLengthResponse(Status.NOT_FOUND, mimePlain, "404")
+            Method.GET -> NanoHTTPD.newFixedLengthResponse(
+                Status.NOT_FOUND,
+                MIME_PLAINTEXT,
+                Globals.getString(com.allan.mydroid.R.string.server_not_support) + "(E01)"
+            )
+            else -> NanoHTTPD.newFixedLengthResponse(Globals.getString(com.allan.mydroid.R.string.invalid_request_from_appserver))
         }
     }
 
-    /*
-     response.addHeader("Access-Control-Allow-Headers", "Content-Type, Accept, token, Authorization, " +
-         "X-Auth-Token,X-XSRF-TOKEN,Access-Control-Allow-Headers");
- response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, HEAD");
- response.addHeader("Access-Control-Allow-Credentials", "true");
- response.addHeader("Access-Control-Allow-Origin", "*");
- response.addHeader("Access-Control-Max-Age", "" + 42 * 60 * 60);
-     */
-
     private fun handleOptionRequest(): Response {
-        val response = newFixedLengthResponse(Status.OK, mimePlain, "")
+        val response = newFixedLengthResponse(Status.OK, MIME_PLAINTEXT, "")
         response.addHeader("Access-Control-Allow-Origin", "*")
         response.addHeader("Access-Control-Allow-Methods", "GET, POST")
         response.addHeader("Access-Control-Allow-Headers", "Content-Type")
         return response
     }
 
-    private fun handleGetRequest(session: IHTTPSession): Response {
-        val url = session.uri ?: ""
-        logdNoFile { "handle Get Request $url" }
-        aliveTrigger.updateAliveTs("http get request")
-        val error:String
-        when {
-            // 主页面请求
-            url == "/" -> {
-                when (serverRuntimeState.currentDroidModeFlow.value) {
-                    MyDroidMode.Send -> {
-                        return serveAssetFile("transfer/ReceiveFromPhone.html", mimeHtml)
-                    }
-                    MyDroidMode.Receiver -> {
-                        return serveAssetFile("transfer/SendToPhone.html", mimeHtml)
-                    }
-                    MyDroidMode.TextChat -> {
-                        return serveAssetFile("transfer/TextChat.html", mimeHtml)
-                    }
-                    else -> {
-                        error = Globals.getString(R.string.server_not_support) + "(E02)"
-                    }
-                }
-            }
-            url == READ_WEBSOCKET_IP_PORT ->
-                return getWebsocketIpPort()
-            url.startsWith("/file_download_uuid/") -> {
-                return fileDownload(url.substring("/file_download_uuid/".length))
-            }
-            // JS / html 文件请求
-            url.endsWith(".html") -> {
-                val jsName = url.substring(1)
-                return serveAssetFile("transfer/$jsName", mimeHtml)
-            }
-            url.endsWith(".js") -> {
-                val jsName = url.substring(1)
-                return serveAssetFile("transfer/$jsName", mimeJs)
-            }
-            else -> {
-                error = Globals.getString(R.string.server_not_support) + "(E01)"
-            }
-        }
-
-        return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, error)
-    }
-
-
-    fun fileDownload(uriUuid:String) : NanoHTTPD.Response {
-        try {
-            val info = shareInRepository.shareInAndReceiveBeans?.find { it.uriUuid == uriUuid }  ?: return fileNotFoundResponse()
-            val fileSize = info.fileSize ?: 0
-            if (fileSize <= 0) {
-                return fileSizeIs0Response()
-            }
-            val uri = info.uri
-            val filename = info.name ?: "file"
-            logdNoFile { "file Download1 $uri size:$fileSize" }
-
-            if (!uriPermissionChecker.isHostThisUri(info)) {
-                logdNoFile { "file Download this uri is donot has permission." }
-                return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "No permission yet todo translate.")
-            }
-            val inputStream = openDownloadInputStream(info)
-            logdNoFile { "file Download2 ${info.from} $filename ${inputStream.available()}" }
-            // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
-            val response = newFixedLengthResponse(Status.OK,
-                "application/octet-stream", inputStream, fileSize)
-            logdNoFile { "file response1111" }
-            // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
-            // 使用 "attachment" 表示希望浏览器将响应体保存为文件
-            // filename 指定建议的文件名，浏览器可能会使用它作为默认保存名
-            val encodedFileName = URLEncoder.encode(filename, "UTF-8")
-                .replace("\\+".toRegex(), "%20") // 替换空格编码
-            response.addHeader(
-                "Content-Disposition",
-                "attachment; filename=\"" +
-                        String(filename.toByteArray(charset("GBK")),
-                            charset("ISO-8859-1")) + "\"; " +
-                        "filename*=UTF-8''" + encodedFileName
-            )
-            // Avoid browser/proxy caching large binary downloads in memory or disk cache.
-            response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-            response.addHeader("Pragma", "no-cache")
-            response.addHeader("Expires", "0")
-
-            // 3. （可选但推荐）设置 Content-Length 头
-            response.addHeader("Content-Length", "" + fileSize)
-            // 4. （可选）设置 Content-Type，如果你确切知道文件类型，可以设置更具体的 MIME 类型
-            // 例如 "image/jpeg", "application/pdf"
-            // 但对于强制下载，"application/octet-stream" 是通用选择
-            return response
-        } catch (e: FileNotFoundException) {
-            logdNoFile { "file Download error1 ${e.message}" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 1.")
-        } catch (e: IOException) {
-            logdNoFile { "file Download error2 ${e.message}" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 2.")
-        } catch (e: Exception) {
-            logdNoFile { "file Download error3 ${e.message}" }
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 3.")
-        }
-    }
-
-    /** nanoMerged 本地文件直接用绝对路径读取，避免 file:// Uri 解析问题 */
-    private fun openDownloadInputStream(info: ShareInBean): InputStream {
-        if (info.from == FROM_LOCAL) {
-            val name = info.name
-            if (name.isNullOrEmpty()) {
-                throw FileNotFoundException("local merged file name empty")
-            }
-            val file = File(nanoTempCacheMergedDir(), name)
-            if (!file.exists()) {
-                throw FileNotFoundException("local merged file not exists: ${file.absolutePath}")
-            }
-            return FileInputStream(file)
-        }
-        val stream = Globals.app.contentResolver.openInputStream(info.uri)
-            ?: throw FileNotFoundException("Cannot open uri: ${info.uri}")
-        return stream
-    }
-
-    private fun fileNotFoundResponse() : NanoHTTPD.Response {
-        return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, "File not found.")
-    }
-    private fun fileSizeIs0Response() : NanoHTTPD.Response {
-        return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, "File size is 0.")
-    }
-
-    private fun handlePostRequest(session: IHTTPSession): Response {
-        aliveTrigger.updateAliveTs("http post request")
-        return when (session.uri) {
-            UPLOAD_CHUNK -> chunksMgr.handleUploadChunk(session)
-            MERGE_CHUNKS -> chunksMgr.handleMergeChunk(session)
-            ABORT_UPLOAD_CHUNKS -> chunksMgr.handleAbortChunk(session)
-            READ_WEBSOCKET_IP_PORT -> getWebsocketIpPort()
-            REQUEST_FILE_LIST -> getFileList()
-            else -> newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
-        }
-    }
-
-    private fun getFileList() : Response {
-        return runBlocking {
-            val beans= shareInRepository.loadShareInAndReceiveBeans()
-            val json = beans.toGsonString()
-            if (json.isNotEmpty()) {
-                ResultBean(CODE_SUC, "Success!", json).okJsonResponse()
-            } else {
-                newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
-            }
-        }
-    }
-
-    private fun getWebsocketIpPort() : Response{
-        val data = globalNetworkMonitor.networkInfoFlow.value
-        logdNoFile { "get websocket ip port $data" }
-        if (data == null) {
-            val error = Globals.getString(R.string.invalid_request_from_appserver)
-            return newFixedLengthResponse(Status.NOT_FOUND, mimePlain, error)
-        }
-
-        val ip = data.ip
-        val wsPort = data.wsPort
-        val httpPort = data.httpPort
-
-        return if (wsPort != null && httpPort != null) {
-            val info = IpPortResult(ip ?: "", wsPort, httpPort)
-            logdNoFile { "get websocket ipPort $info" }
-            ResultBean(CODE_SUC, "Success!", info).okJsonResponse()
-        } else {
-            newFixedLengthResponse(Globals.getString(R.string.invalid_request_from_appserver)) // 或者其他默认响应
-        }
-    }
-
-    val mimePlain = "text/plain"
-    val mimeHtml = "text/html"
-    val mimeJs = "application/javascript"
-    private fun serveAssetFile(assetFile: String,
-                               mimeType:String,
-                               replacementBlock:((String)->String) = { it }) : Response {
-        return try {
-            val text = AppNative.asts(Globals.app, assetFile)
-            val response =  newFixedLengthResponse(Status.OK, mimeType, replacementBlock(text))
-            logdNoFile { "serve Asset File read success $assetFile." }
-            return response
-        } catch (_: FileNotFoundException) {
-            newFixedLengthResponse(Status.INTERNAL_ERROR, "application/json", """"{"error": "File $assetFile not found"}""")
-        }
-    }
-
     override fun stop() {
         logdNoFile { "stop all." }
         super.stop()
+    }
+
+    companion object {
+        private const val MIME_PLAINTEXT = "text/plain"
     }
 }

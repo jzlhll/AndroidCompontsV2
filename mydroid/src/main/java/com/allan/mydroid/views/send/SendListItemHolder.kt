@@ -3,7 +3,7 @@ package com.allan.mydroid.views.send
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.HolderMydroidSendlistItemBinding
 import com.allan.mydroid.databinding.HolderMydroidSendlistTitleBinding
-import com.allan.mydroid.globals.getIcon
+import com.allan.mydroid.views.getIcon
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
 import com.au.module_android.utils.asOrNull

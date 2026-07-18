@@ -1,6 +1,5 @@
 package com.allan.mydroid.nanohttp
 
-import com.allan.mydroid.AppGlobals
 import com.allan.mydroid.R
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_CLIENT_INIT_CALLBACK
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_INIT
@@ -10,7 +9,6 @@ import com.allan.mydroid.api.toName
 import com.allan.mydroid.beans.WSResultBox
 import com.allan.mydroid.beans.wsdata.LeftSpaceData
 import com.allan.mydroid.beans.wsdata.MyDroidModeData
-import com.allan.mydroid.globals.CODE_SUC
 import com.au.module_android.Globals
 import com.au.module_gson.toGsonString
 import com.au.module_android.utils.launchOnThread
@@ -28,7 +26,7 @@ import kotlinx.coroutines.delay
 import org.json.JSONObject
 import java.io.IOException
 
-class InServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
+class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
                               val server: WebsocketServer,
                               val color: String) : NanoWSD.WebSocket(httpSession) {
     private val remoteIpStr: String? = httpSession.remoteIpAddress
@@ -105,7 +103,7 @@ class InServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
         val json = JSONObject(text)
         val api = json.optString("api")
 
-        AppGlobals.droidServerLiveTrigger.updateAliveTs("when ws on message $api")
+        server.updateAliveFromClient(api)
         when (api) {
             API_WS_INIT -> {
                 val targetName = json.optString("wsName")
@@ -139,7 +137,7 @@ class InServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
             .setIcon("success")
             .setOnTopLater(200).toast()
 
-        val mode = server.serverRuntimeState.currentDroidModeFlow.value.toName()
+        val mode = server.serverRuntimeObj.currentDroidModeFlow.value.toName()
         val json = WSResultBox(
             CODE_SUC, null,
             API_WS_CLIENT_INIT_CALLBACK,

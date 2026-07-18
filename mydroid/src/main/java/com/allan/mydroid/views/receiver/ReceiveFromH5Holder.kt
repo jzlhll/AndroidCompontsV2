@@ -3,7 +3,7 @@ package com.allan.mydroid.views.receiver
 import android.annotation.SuppressLint
 import com.allan.mydroid.beansinner.MergedFileInfo
 import com.allan.mydroid.databinding.HolderReceiveFileItemBinding
-import com.allan.mydroid.globals.getIcon
+import com.allan.mydroid.views.getIcon
 import com.au.module_android.click.onClick
 import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import java.io.File

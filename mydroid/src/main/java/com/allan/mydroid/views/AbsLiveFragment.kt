@@ -10,8 +10,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewbinding.ViewBinding
 import com.allan.mydroid.R
+import com.allan.mydroid.api.MyDroidMode
+import com.allan.mydroid.globals.GlobalDroidServerObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
-import com.allan.mydroid.state.GlobalServerLifecycleFlowsObj
+import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.au.module_android.Globals
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
@@ -21,6 +23,11 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
+
+    /**
+     * 子类返回当前模式,用于在 onBindingCreated 末尾统一 setMode,避免在 onStart 中设置造成竞态。
+     */
+    abstract fun getMode(): MyDroidMode
     companion object {
         fun showExitDialogLater() {
             Globals.mainHandler.postDelayed({
@@ -44,7 +51,8 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
     var waitDialog:ConfirmBottomSingleDialog? = null
 
     private val networkMonitor : GlobalNetworkMonitorObj by inject()
-    private val serverLifecycleEventBus : GlobalServerLifecycleFlowsObj by inject()
+    private val globalDroidServer : GlobalDroidServerObj by inject()
+    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
 
     @CallSuper
     override fun onBindingCreated(savedInstanceState: Bundle?) {
@@ -57,7 +65,7 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
 
         if (autoExistLongTimeInActive) {
             launchRepeatOnStarted {
-                serverLifecycleEventBus.aliveStoppedFlow.collect {
+                globalDroidServer.aliveStoppedFlow.collect {
                     requireActivity().finishAfterTransition()
                     showExitDialogLater()
                 }
@@ -91,5 +99,7 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
                 }
             }
         }
+
+        serverRuntimeState.setMode(getMode())
     }
 }

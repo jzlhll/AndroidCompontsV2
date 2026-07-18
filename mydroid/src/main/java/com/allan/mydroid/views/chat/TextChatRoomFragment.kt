@@ -3,7 +3,6 @@ package com.allan.mydroid.views.chat
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
-import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.view.updatePadding
@@ -17,7 +16,6 @@ import com.allan.mydroid.databinding.FragmentTextChatRoomBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.state.GlobalClientListFlowsObj
-import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.clipboard.ClipBoardHelp
@@ -43,7 +41,6 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         private const val SELF_ICON_COLOR = "#6A1B9A"
     }
 
-    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
     private val clientListState: GlobalClientListFlowsObj by inject()
     private val textChatStore: GlobalTextChatObj by inject()
 
@@ -89,10 +86,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         }
     }
 
-    override fun onStart() {
-        serverRuntimeState.setMode(MyDroidMode.TextChat)
-        super.onStart()
-    }
+    override fun getMode() = MyDroidMode.TextChat
 
     // 初始化消息列表。
     private fun initRecyclerView() {
@@ -207,7 +201,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
             iconColor = SELF_ICON_COLOR,
         )
         appendMessage(bean, true, true)
-        AppGlobals.globalDroidServer.websocketServer?.broadcastTextChatFromApp(bean)
+        AppGlobals.globalDroidServer.broadcastTextChatFromApp(bean)
         binding.inputEdit.setText("")
         updateInputEditHeight()
         updateRecyclerBottomPadding()

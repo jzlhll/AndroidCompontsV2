@@ -1,4 +1,4 @@
-package com.allan.mydroid.globals
+package com.allan.mydroid.state
 
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.au.module_gson.mmkv.mmkvGetArrayList

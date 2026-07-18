@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.os.bundleOf
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -59,7 +58,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
             finishFragment(SendListSelectorFragment::class.java)
             FragmentShellActivity.start(
                 context, SendListSelectorFragment::class.java,
-                bundleOf(KEY_AUTO_ENTER_SEND_VIEW to autoEnterSendView)
+                Bundle().apply { putBoolean(KEY_AUTO_ENTER_SEND_VIEW, autoEnterSendView) }
             )
         }
 
@@ -76,7 +75,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
     }
 
-    private val common = object : SendListSelectorCommon(false, shareInRepository) {
+    private val common = object : SendListSelectorCommon(false) {
         override fun rcv() = binding.rcv
 
         override fun empty() = binding.empty

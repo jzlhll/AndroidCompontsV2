@@ -1,7 +1,7 @@
 package com.allan.mydroid
 
 import android.content.Intent
-import androidx.core.os.bundleOf
+import android.os.Bundle
 import com.allan.mydroid.views.MyDroidAllFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
 import com.au.module_android.init.AbsSplashActivity
@@ -20,7 +20,7 @@ class SplashActivity : AbsSplashActivity() {
         } else {
             intent.removeExtra(KEY_START_TYPE)
             FragmentShellActivity.start(this, MyDroidAllFragment::class.java,
-                bundleOf(KEY_START_TYPE to startTypeValue)
+                Bundle().apply { putString(KEY_START_TYPE, startTypeValue) }
             )
         }
     }

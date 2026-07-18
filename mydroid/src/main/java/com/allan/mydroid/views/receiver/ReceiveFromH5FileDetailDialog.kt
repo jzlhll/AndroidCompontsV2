@@ -1,6 +1,6 @@
 package com.allan.mydroid.views.receiver
 
-import androidx.core.os.bundleOf
+import android.os.Bundle
 import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.databinding.ShowReceiveItemInfosBinding
 import com.au.module_androidui.ui.bindings.BindingFragment
@@ -12,7 +12,7 @@ class ReceiveFromH5FileDetailDialog : BindingFragment<ShowReceiveItemInfosBindin
         fun pop(manager: FragmentManager,
                 texts:Array<String>) {
             assert(texts.size >= 3)
-            FragmentBottomSheetDialog.show<ReceiveFromH5FileDetailDialog>(manager, bundleOf("texts" to texts))
+            FragmentBottomSheetDialog.show<ReceiveFromH5FileDetailDialog>(manager, Bundle().apply { putStringArray("texts", texts) })
         }
     }
 

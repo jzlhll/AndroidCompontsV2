@@ -9,8 +9,8 @@ import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.state.GlobalClientListFlowsObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.state.GlobalTextChatObj
-import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
-import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
+import com.allan.mydroid.nanohttp.messengers.WebsocketNoneModeMessenger
+import com.allan.mydroid.nanohttp.messengers.WebsocketTextChatModeMessenger
 import android.util.Base64
 import com.au.module_android.log.logdNoFile
 import fi.iki.elonen.NanoHTTPD.Response.Status
@@ -49,21 +49,27 @@ class WebsocketServer(
     val scope = CoroutineScope(singleThreadDispatcher)
 
     // P1 state: injected via KoinComponent
-    val serverRuntimeState: GlobalServerRuntimeObj by inject()
-    private val clientListState: GlobalClientListFlowsObj by inject()
-    val textChatStore: GlobalTextChatObj by inject()
+    val serverRuntimeObj: GlobalServerRuntimeObj by inject()
+    private val clientListFlowsObj: GlobalClientListFlowsObj by inject()
 
-    private val clients: MutableList<InServerWebsocketClient> = CopyOnWriteArrayList()
+    private val clients: MutableList<ServerWebsocketClient> = CopyOnWriteArrayList()
 
-    fun addIntoConnections(websocket: InServerWebsocketClient) {
+    fun addIntoConnections(websocket: ServerWebsocketClient) {
         aliveTrigger.updateAliveTs("when new client add")
         clients.add(websocket)
         triggerConnectionsList()
     }
 
-    fun removeFromConnections(websocket: InServerWebsocketClient) {
+    fun removeFromConnections(websocket: ServerWebsocketClient) {
         clients.remove(websocket)
         triggerConnectionsList()
+    }
+
+    /**
+     * WS 客户端收到消息时通过 server 中转更新 aliveTs,避免 ServerWebsocketClient 静态依赖 AppGlobals。
+     */
+    fun updateAliveFromClient(api: String) {
+        aliveTrigger.updateAliveTs("when ws on message $api")
     }
 
     /**
@@ -76,7 +82,7 @@ class WebsocketServer(
         }
         list.sortByDescending { it.enterTs }
         logdNoFile { "after change websocket client size ${list.size}" }
-        clientListState.set(list)
+        clientListFlowsObj.set(list)
     }
 
     override fun openWebSocket(handshake: IHTTPSession): WebSocket {
@@ -84,8 +90,8 @@ class WebsocketServer(
         val nextColor = nextColor()
         logdNoFile { "open web Socket handshake uri: $uri nextColor $nextColor" }
         //uri = uri.replaceFirst("/", "", true)
-        val client = InServerWebsocketClient(handshake, this, nextColor)
-        val parser = when (serverRuntimeState.currentDroidModeFlow.value) {
+        val client = ServerWebsocketClient(handshake, this, nextColor)
+        val parser = when (serverRuntimeObj.currentDroidModeFlow.value) {
             MyDroidMode.Receiver,
             MyDroidMode.Send,
             MyDroidMode.None -> WebsocketNoneModeMessenger(client)  //接受文件，都走http而非ws。所以给空实现即可。
@@ -105,7 +111,7 @@ class WebsocketServer(
         logdNoFile { "stopped and cancel heartbeat scope" }
         scope.cancel()
         executor.shutdown()
-        clientListState.clear()
+        clientListFlowsObj.clear()
     }
 
     fun broadcastTextChatFromApp(bean: TextChatMessageBean) {

@@ -35,7 +35,7 @@ import org.koin.android.ext.android.inject
 import kotlinx.coroutines.launch
 
 class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveListBinding>() {
-    private val receiverEventBus: GlobalReceiverFlowsObj by inject()
+    private val receiverFlowsObj: GlobalReceiverFlowsObj by inject()
     private val fileListRepository: GlobalFileListRepoObj by inject()
     lateinit var receivedFileListTab: TabLayout.Tab
     lateinit var exportHistoryTab: TabLayout.Tab
@@ -116,7 +116,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
         }
 
         launchRepeatOnStarted {
-            receiverEventBus.fileMergedFlow.collect { file->
+            receiverFlowsObj.fileMergedFlow.collect { file->
             val strFmt = getString(R.string.file_received_success_fmt)
             ToastBuilder().setOnTop()
                 .setMessage(String.format(strFmt, file.name))

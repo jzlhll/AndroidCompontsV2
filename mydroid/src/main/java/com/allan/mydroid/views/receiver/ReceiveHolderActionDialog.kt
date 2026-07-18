@@ -2,7 +2,6 @@ package com.allan.mydroid.views.receiver
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.BuildConfig
 import com.allan.mydroid.R

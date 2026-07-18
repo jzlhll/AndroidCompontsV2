@@ -12,7 +12,6 @@ import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.state.GlobalClientListFlowsObj
-import com.allan.mydroid.state.GlobalServerLifecycleFlowsObj
 import com.allan.mydroid.repository.GlobalFileListRepoObj
 import com.allan.mydroid.repository.ExportHistoryRepository
 import com.allan.mydroid.repository.UriPermissionChecker
@@ -107,7 +106,6 @@ class App : InitApplication() {
             singleOf(::GlobalReceiverFlowsObj)
             singleOf(::GlobalTextChatObj)
             singleOf(::GlobalClientListFlowsObj)
-            singleOf(::GlobalServerLifecycleFlowsObj)
 
             // P2 repository classes
             singleOf(::GlobalFileListRepoObj)

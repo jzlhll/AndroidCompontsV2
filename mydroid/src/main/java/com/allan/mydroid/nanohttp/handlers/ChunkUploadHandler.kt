@@ -1,6 +1,9 @@
-package com.allan.mydroid.nanohttp
+package com.allan.mydroid.nanohttp.handlers
 
 import com.allan.mydroid.R
+import com.allan.mydroid.api.ABORT_UPLOAD_CHUNKS
+import com.allan.mydroid.api.MERGE_CHUNKS
+import com.allan.mydroid.api.UPLOAD_CHUNK
 import com.allan.mydroid.api.WSApisConst2.PROCESS_CHUNK
 import com.allan.mydroid.api.WSApisConst2.PROCESS_CHUNK_ERROR
 import com.allan.mydroid.api.WSApisConst2.PROCESS_COMPLETED
@@ -8,30 +11,41 @@ import com.allan.mydroid.api.WSApisConst2.PROCESS_MERGE_ERROR
 import com.allan.mydroid.api.WSApisConst2.PROCESS_MERGING
 import com.allan.mydroid.beans.httpdata.ChunkInfoResult
 import com.allan.mydroid.beansinner.ReceivingFileInfo
-import com.allan.mydroid.globals.CODE_FAIL
-import com.allan.mydroid.globals.CODE_FAIL_MD5_CHECK
-import com.allan.mydroid.globals.CODE_FAIL_MERGE_CHUNK
-import com.allan.mydroid.globals.CODE_FAIL_RECEIVER_CHUNK
-import com.allan.mydroid.globals.CODE_SUC
+import com.allan.mydroid.nanohttp.CODE_FAIL
+import com.allan.mydroid.nanohttp.CODE_FAIL_MD5_CHECK
+import com.allan.mydroid.nanohttp.CODE_FAIL_MERGE_CHUNK
+import com.allan.mydroid.nanohttp.CODE_FAIL_RECEIVER_CHUNK
+import com.allan.mydroid.nanohttp.CODE_SUC
+import com.allan.mydroid.nanohttp.badRequestJsonResponse
+import com.allan.mydroid.nanohttp.jsonResponse
+import com.allan.mydroid.nanohttp.okJsonResponse
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
-import com.allan.mydroid.globals.badRequestJsonResponse
-import com.allan.mydroid.globals.jsonResponse
 import com.allan.mydroid.globals.nanoTempCacheChunksDir
 import com.allan.mydroid.globals.nanoTempCacheMergedDir
-import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
 import com.au.module_okhttp.api.ResultBean
 import com.au.module_android.log.ALogJ
 import com.au.module_android.log.logd
 import com.au.module_android.log.logt
 import com.au.module_android.utils.Md5Util.Companion.getFileMD5
+import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.IHTTPSession
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import org.json.JSONObject
 import java.io.File
 
-class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj) : IChunkMgr{
+class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) : AbsHttpRequestHandler() {
+
+    override fun tryHandle(method: NanoHTTPD.Method, uri: String, session: IHTTPSession): Response? {
+        if (method != NanoHTTPD.Method.POST) return null
+        return when (uri) {
+            UPLOAD_CHUNK -> handleUploadChunk(session)
+            MERGE_CHUNKS -> handleMergeChunk(session)
+            ABORT_UPLOAD_CHUNKS -> handleAbortChunk(session)
+            else -> null
+        }
+    }
     /**
      * key是fileName-md5
      * value是chunkInfo组
@@ -41,7 +55,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
      * 用于加锁上面的操作
      */
     private val cLock = Any()
-    
+
     private fun addChunkInfo(chunkInfo: ChunkInfoResult) {
         synchronized(cLock) {
             val fileName = chunkInfo.fileName
@@ -59,7 +73,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         }
     }
 
-    override fun handleUploadChunk(session: IHTTPSession) : Response {
+    fun handleUploadChunk(session: IHTTPSession) : Response {
         var fileName = ""
         var chunkIndex:Int = -1
         var totalChunks = 0
@@ -97,7 +111,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
             val chunkInfo = ChunkInfoResult(fileName, chunkIndex, totalChunks, md5, chunkTmpFile)
             addChunkInfo(chunkInfo)
 
-            receiverEventBus.emitProgress(
+            receiverFlowsObj.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -114,7 +128,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
                 "$fileName Chunk $chunkIndex/$totalChunks received success.", chunkInfo).okJsonResponse()
         } catch (e: Exception) {
             logd { ALogJ.ex(e) }
-            receiverEventBus.emitProgress(
+            receiverFlowsObj.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -133,7 +147,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         }
     }
 
-    override fun handleMergeChunk(session: IHTTPSession): Response {
+    fun handleMergeChunk(session: IHTTPSession): Response {
         val body = parseRequestBody(session)
         val params = JSONObject(body)
         // 3. 提取关键参数
@@ -148,7 +162,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         }
         logt { "handle Merge Chunk $fileName , $md5 , totalChunks:$totalChunks" }
 
-        receiverEventBus.emitProgress(
+        receiverFlowsObj.emitProgress(
             mapOf(
                 "$fileName-$md5" to ReceivingFileInfo(
                     fileName,
@@ -164,7 +178,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         if (chunkInfoList == null) {
             val noChunkStr = Globals.getString(R.string.no_chunks)
 
-            receiverEventBus.emitProgress(
+            receiverFlowsObj.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -182,7 +196,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         chunkInfoList.sortBy { it.chunkIndex }
         if (chunkInfoList.size != totalChunks) {
             val chunkNumNotMatchStr = Globals.getString(R.string.chunks_number_not_match)
-            receiverEventBus.emitProgress(
+            receiverFlowsObj.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -206,7 +220,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         outputFile.outputStream().use { output ->
             chunkInfoList.forEach { chunkInfo->
                 chunkInfo.chunkTmpFile.inputStream().use { input ->
-                    input.copyTo(output)
+                    input.copyTo(output, 8 * 1024)
                 }
                 chunkInfo.chunkTmpFile.delete() // 删除已合并的分片
             }
@@ -216,9 +230,9 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         val fileMd5 = getFileMD5(outputFile.absolutePath)
         if (fileMd5 == md5) {
             outputFile.setLastModified(lastModified)
-            receiverEventBus.emitFileMerged(outputFile)
+            receiverFlowsObj.emitFileMerged(outputFile)
 
-            receiverEventBus.emitProgress(
+            receiverFlowsObj.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -236,7 +250,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         } else {
             outputFile.delete()
             val md5FailStr = Globals.getString(R.string.md5_check_failed)
-            receiverEventBus.emitProgress(
+            receiverFlowsObj.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -255,7 +269,7 @@ class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj)
         }
     }
 
-    override fun handleAbortChunk(session: IHTTPSession): Response {
+    fun handleAbortChunk(session: IHTTPSession): Response {
         logt { "clear up when abort chunk." }
         val body = parseRequestBody(session)
         val params = JSONObject(body)
