@@ -6,12 +6,13 @@ import androidx.annotation.MainThread
 import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
 import com.allan.mydroid.views.AbsLiveFragment
+import com.allan.mydroid.state.GlobalReceiverFlowsObj
+import com.allan.mydroid.state.GlobalServerLifecycleFlowsObj
+import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.au.module_android.Globals
 import com.au.module_android.init.InterestActivityCallbacks
 import com.au.module_android.scopes.MainAppScope
-import com.au.module_android.simpleflow.createStatusStateFlow
-import com.au.module_android.simpleflow.setSuccess
-import com.au.module_android.simpleflow.setUninitialized
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
@@ -30,35 +31,31 @@ import org.koin.core.parameter.parametersOf
 import java.io.IOException
 import java.net.ServerSocket
 
-class GlobalDroidServer(
+class GlobalDroidServerObj(
     private val mainScope : MainAppScope
 ) : InterestActivityCallbacks(), KoinComponent, IDroidServerAliveTrigger {
 
-    private val networkMonitor: GlobalNetworkMonitor by inject()
+    private val networkMonitor: GlobalNetworkMonitorObj by inject()
+    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
+    private val receiverEventBus: GlobalReceiverFlowsObj by inject()
+    private val serverLifecycleEventBus: GlobalServerLifecycleFlowsObj by inject()
 
+    @Volatile
     private var httpServer: MyDroidHttpServer?= null
+    @Volatile
     var websocketServer: WebsocketServer?= null
 
     private var mLastHttpServerPort = 15555
     private var mLastWsServerPort = 16555
 
-    private val aliveDeadTime = 5 * 60 * 1000L //N分钟不活跃主动关闭服务
-    private val aliveTsTooFastTime = 6 * 1000L //n秒内的更新，只干一次就好。很严谨来讲需要考虑再次post，但是由于相去很远忽略这几秒。
+    private val aliveDeadTime = 5 * 60 * 1000L
+    private val aliveTsTooFastTime = 6 * 1000L
 
-    /**
-     * 端口信息：左值httpPort，右值websocketPort
-     * 状态容器（重放最新状态）
-     */
-    val portsFlow = createStatusStateFlow<Pair<Int, Int>>()
-
-    /**
-     * 如果很久没有从html端请求接口，则主动关闭服务
-     */
     private var aliveTs = SystemClock.elapsedRealtime()
     private val aliveCheckRun = Runnable {
         if (SystemClock.elapsedRealtime() - aliveTs > aliveDeadTime) {
             logd { "alive Ts timeout, stop server." }
-            MyDroidConst.aliveStoppedData.setValueSafe(Unit)
+            serverLifecycleEventBus.emitAliveStopped()
         }
     }
 
@@ -95,7 +92,7 @@ class GlobalDroidServer(
     }
 
     private fun startServerWrap() {
-        if (!MyDroidConst.serverIsOpen && hasLifeActivity()) {
+        if (!serverRuntimeState.serverIsOpenFlow.value && hasLifeActivity()) {
             startServer { msg ->
                 scope.launch {
                     ToastBuilder()
@@ -120,11 +117,10 @@ class GlobalDroidServer(
             httpServer?.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
             websocketServer?.start(WebsocketServer.WEBSOCKET_READ_TIMEOUT.toInt(), false)
 
-            MyDroidConst.serverIsOpen = true
+            serverRuntimeState.setServerOpen(true)
             logt { "start server and websocket success and setPort $p to $wsPort" }
-            portsFlow.setSuccess( p to wsPort)
+            serverRuntimeState.setPorts(p, wsPort)
 
-            //检查并清理过期temp文件
             Globals.mainScope.launchOnIOThread {
                 clearDirOldFiles(nanoTempCacheChunksDir())
                 clearDirOldFiles(cacheImportCopyDir())
@@ -144,11 +140,10 @@ class GlobalDroidServer(
         websocketServer?.stop()
         httpServer = null
         websocketServer = null
-        MyDroidConst.serverIsOpen = false
-        portsFlow.setUninitialized()
+        serverRuntimeState.setServerOpen(false)
+        serverRuntimeState.clearPorts()
     }
 
-    //////////////////////////life////
     private var isObserverIpChanged = false
     private fun observerIpChanged() {
         if (isObserverIpChanged) {
@@ -158,13 +153,13 @@ class GlobalDroidServer(
         networkMonitor.networkFlow
             .onEach { netSt->
                 when (netSt) {
-                    is GlobalNetworkMonitor.NetworkStatus.Connected -> {
+                    is GlobalNetworkMonitorObj.NetworkStatus.Connected -> {
                         logd { "network status change to connected." }
                         startServerWrap()
                     }
 
-                    GlobalNetworkMonitor.NetworkStatus.Disconnected,
-                    GlobalNetworkMonitor.NetworkStatus.Uninitialized -> {
+                    GlobalNetworkMonitorObj.NetworkStatus.Disconnected,
+                    GlobalNetworkMonitorObj.NetworkStatus.Uninitialized -> {
                         stopServer()
                     }
                 }
@@ -188,7 +183,7 @@ class GlobalDroidServer(
     override fun onLifeClose() {
         logd { "on life close." }
         stopServer()
-        MyDroidConst.receiverProgressData.setValueSafe(emptyMap())
+        receiverEventBus.clearProgress()
         Globals.mainHandler.removeCallbacks(aliveCheckRun)
     }
 

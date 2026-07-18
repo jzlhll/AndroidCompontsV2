@@ -8,8 +8,9 @@ import androidx.core.view.updatePadding
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.databinding.FragmentReceiveFromH5Binding
-import com.allan.mydroid.globals.GlobalNetworkMonitor
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
+import com.allan.mydroid.state.GlobalClientListFlowsObj
+import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_gson.toGsonString
@@ -18,13 +19,17 @@ import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchRepeatOnStarted
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utilsmedia.getExternalFreeSpace
 import org.koin.android.ext.android.get
+import org.koin.android.ext.android.inject
 
 class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
+    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
+    private val clientListState: GlobalClientListFlowsObj by inject()
 
     private val menuMgr by unsafeLazy {
         ToolbarMenuManager(
@@ -70,13 +75,13 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         val leftStr = getString(R.string.storage_remaining)
         binding.descTitle.text = String.format(fmt, leftStr + getExternalFreeSpace(requireActivity()))
 
-        launchRepeatOnStarted(get<GlobalNetworkMonitor>().networkInfoFlow) { netInfo->
+        launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { netInfo->
             if (netInfo == null) {
                 binding.title.setText(R.string.connect_wifi_or_hotspot)
             } else {
                 if (netInfo.httpPort == null) {
                     binding.title.text = netInfo.ip
-                } else if (MyDroidConst.serverIsOpen) {
+                } else if (serverRuntimeState.serverIsOpenFlow.value) {
                     binding.title.text = String.format(getString(R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
                 } else {
                     binding.title.text = netInfo.ip + ":" + netInfo.httpPort
@@ -84,7 +89,7 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
             }
         }
 
-        MyDroidConst.clientListLiveData.observe(this) { clientList->
+        launchRepeatOnStarted(clientListState.clientListFlow) { clientList->
             logdNoFile {
                 ">>client List:" + clientList.toGsonString()
             }
@@ -96,7 +101,7 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
     }
 
     override fun onStart() {
-        MyDroidConst.currentDroidMode = MyDroidMode.Receiver
+        serverRuntimeState.setMode(MyDroidMode.Receiver)
         super.onStart()
     }
 }

@@ -10,11 +10,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewbinding.ViewBinding
 import com.allan.mydroid.R
-import com.allan.mydroid.globals.GlobalNetworkMonitor
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
+import com.allan.mydroid.state.GlobalServerLifecycleFlowsObj
 import com.au.module_android.Globals
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -42,7 +43,8 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
 
     var waitDialog:ConfirmBottomSingleDialog? = null
 
-    private val networkMonitor : GlobalNetworkMonitor by inject()
+    private val networkMonitor : GlobalNetworkMonitorObj by inject()
+    private val serverLifecycleEventBus : GlobalServerLifecycleFlowsObj by inject()
 
     @CallSuper
     override fun onBindingCreated(savedInstanceState: Bundle?) {
@@ -54,9 +56,11 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
         }
 
         if (autoExistLongTimeInActive) {
-            MyDroidConst.aliveStoppedData.observeUnStick(this) {
-                requireActivity().finishAfterTransition()
-                showExitDialogLater()
+            launchRepeatOnStarted {
+                serverLifecycleEventBus.aliveStoppedFlow.collect {
+                    requireActivity().finishAfterTransition()
+                    showExitDialogLater()
+                }
             }
         }
 

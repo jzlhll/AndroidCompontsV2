@@ -15,7 +15,8 @@ import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendListSelectorBinding
-import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.repository.GlobalShareInRepoObj
+import com.allan.mydroid.repository.UriPermissionChecker
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
@@ -44,8 +45,11 @@ import com.bumptech.glide.request.target.Target
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding>() {
+    private val shareInRepository: GlobalShareInRepoObj by inject()
+    private val uriPermissionChecker: UriPermissionChecker by inject()
     companion object {
         const val KEY_AUTO_ENTER_SEND_VIEW = "key_auto_import"
         const val KEY_START_TYPE = "entry_start_type"
@@ -72,7 +76,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
     }
 
-    private val common = object : SendListSelectorCommon(false) {
+    private val common = object : SendListSelectorCommon(false, shareInRepository) {
         override fun rcv() = binding.rcv
 
         override fun empty() = binding.empty
@@ -92,7 +96,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     private fun deleteBean(bean: ShareInBean) {
-        ShareInUrisObj.deleteUris(listOf(bean.uriUuid))
+        shareInRepository.deleteUris(listOf(bean.uriUuid))
         lifecycleScope.launchOnThread {
             common.reload()
         }
@@ -194,12 +198,12 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     private fun onUrisBack(uris: List<Uri>, needCheckPermission: Boolean) {
         if (needCheckPermission) {
             for (uri in uris) {
-                ShareInUrisObj.takeHostPermission(uri)
+                uriPermissionChecker.takeHostPermission(uri)
             }
         }
 
         lifecycleScope.launchOnThread {
-            ShareInUrisObj.addShareInUris(uris, FROM_PICKER)
+            shareInRepository.addShareInUris(uris, FROM_PICKER)
             common.reload()
         }
     }

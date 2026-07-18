@@ -15,8 +15,10 @@ import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.databinding.FragmentTextChatRoomBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
-import com.allan.mydroid.globals.GlobalNetworkMonitor
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
+import com.allan.mydroid.state.GlobalClientListFlowsObj
+import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.clipboard.ClipBoardHelp
 import com.au.module_android.utils.ImeHelper
@@ -32,6 +34,7 @@ import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_androidui.ui.views.YourToolbarInfo
 import org.koin.android.ext.android.get
+import org.koin.android.ext.android.inject
 import kotlin.math.max
 import kotlin.math.min
 
@@ -39,6 +42,10 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     companion object {
         private const val SELF_ICON_COLOR = "#6A1B9A"
     }
+
+    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
+    private val clientListState: GlobalClientListFlowsObj by inject()
+    private val textChatStore: GlobalTextChatObj by inject()
 
     private val messageList = mutableListOf<TextChatMessageBean>()
     private val messageAdapter = TextChatMessageAdapter()
@@ -83,7 +90,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     }
 
     override fun onStart() {
-        MyDroidConst.currentDroidMode = MyDroidMode.TextChat
+        serverRuntimeState.setMode(MyDroidMode.TextChat)
         super.onStart()
     }
 
@@ -91,9 +98,9 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     private fun initRecyclerView() {
         binding.chatRcv.layoutManager = LinearLayoutManager(requireContext())
         binding.chatRcv.adapter = messageAdapter
-        MyDroidConst.loadTextChatHistory()
-        if (MyDroidConst.textChatHistory.isNotEmpty()) {
-            messageList.addAll(MyDroidConst.textChatHistory)
+        textChatStore.loadHistory()
+        if (textChatStore.historyFlow.value.isNotEmpty()) {
+            messageList.addAll(textChatStore.historyFlow.value)
             messageAdapter.submitList(messageList.toList(), false)
             scrollToBottom(false)
         }
@@ -116,7 +123,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
 
     // 同步当前房间自己的地址信息。
     private fun observeSelfAddress() {
-        launchRepeatOnStarted(get<GlobalNetworkMonitor>().networkInfoFlow) { networkInfo ->
+        launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { networkInfo ->
             selfIp = networkInfo?.ip.orEmpty()
             val portStr = networkInfo?.httpPort?.toString()
                 ?: networkInfo?.wsPort?.toString()
@@ -134,21 +141,23 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
 
     // 监听从 websocket 进入 app 的文本消息。
     private fun observeTextChatMessage() {
-        MyDroidConst.textChatIncomingData.observeUnStick(this) { bean ->
+        launchRepeatOnStarted {
+            textChatStore.incomingMessageFlow.collect { bean ->
             appendMessage(bean, false, true)
+            }
         }
     }
 
     // 顶部展示已接入的客户端。
     private fun observeClientList() {
-        MyDroidConst.clientListLiveData.observe(this) { clientList ->
+        launchRepeatOnStarted(clientListState.clientListFlow) { clientList ->
             for (clientBinding in sendClientBindings) {
                 clientBinding.root.gone()
             }
 
             if (clientList.isEmpty()) {
                 binding.clientsHost.gone()
-                return@observe
+                return@launchRepeatOnStarted
             }
 
             binding.clientsHost.visible()
@@ -207,7 +216,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     // 将消息写入本地会话并刷新界面。
     private fun appendMessage(bean: TextChatMessageBean, saveHistory: Boolean, scrollBottom: Boolean) {
         if (saveHistory) {
-            MyDroidConst.addTextChatMessage(bean)
+            textChatStore.addMessage(bean)
         }
         messageList.add(bean)
         messageAdapter.submitList(messageList.toList(), false)

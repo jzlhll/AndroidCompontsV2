@@ -10,8 +10,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidReceiveListBinding
-import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.state.GlobalReceiverFlowsObj
+import com.allan.mydroid.repository.GlobalFileListRepoObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.au.module_android.Globals
 import com.au.module_android.simpleflow.collectStatusState
@@ -22,6 +22,7 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnUi
+import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.useSimpleHtmlText
 import com.au.module_android.utils.visible
@@ -30,9 +31,12 @@ import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_nested.decoration.VertPaddingItemDecoration
 import com.au.module_nested.tab.AuTabLayout
 import com.google.android.material.tabs.TabLayout
+import org.koin.android.ext.android.inject
 import kotlinx.coroutines.launch
 
 class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveListBinding>() {
+    private val receiverEventBus: GlobalReceiverFlowsObj by inject()
+    private val fileListRepository: GlobalFileListRepoObj by inject()
     lateinit var receivedFileListTab: TabLayout.Tab
     lateinit var exportHistoryTab: TabLayout.Tab
 
@@ -111,13 +115,15 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
             }
         }
 
-        MyDroidConst.onFileMergedData.observeUnStick(this) { file->
+        launchRepeatOnStarted {
+            receiverEventBus.fileMergedFlow.collect { file->
             val strFmt = getString(R.string.file_received_success_fmt)
             ToastBuilder().setOnTop()
                 .setMessage(String.format(strFmt, file.name))
                 .setIcon("success").toast()
 
             refreshFileListCallback()
+            }
         }
 
         initTabs()
@@ -143,7 +149,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
         }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                ShareInUrisObj.fileListState.collectStatusState(
+                fileListRepository.fileListStateFlow.collectStatusState(
                     onSuccess = { fileList->
                         mAdapter.submitList(fileList, false)
                         updateTabsTitle(true)

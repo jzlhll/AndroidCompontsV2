@@ -5,7 +5,7 @@ import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.CHECK_NEED_ALL_MANAGER
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidAllBinding
-import com.allan.mydroid.globals.GlobalNetworkMonitor
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.views.chat.TextChatRoomFragment
 import com.allan.mydroid.views.receiver.ReceiveFromH5Fragment
 import com.allan.mydroid.views.send.SendListSelectorFragment
@@ -48,7 +48,7 @@ class MyDroidAllFragment : BindingFragment<FragmentMyDroidAllBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         launchRepeatOnStarted{
-            get<GlobalNetworkMonitor>().networkInfoFlow.collect {
+            get<GlobalNetworkMonitorObj>().networkInfoFlow.collect {
                 mIp = it?.ip
                 uploadMyIp()
             }

@@ -2,7 +2,8 @@ package com.allan.mydroid.views.receiver
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.repository.ExportHistoryRepository
+import com.allan.mydroid.repository.GlobalFileListRepoObj
 import com.au.module_android.simpleflow.ActionDispatcherImpl
 import com.au.module_android.simpleflow.IActionDispatcher
 import com.au.module_android.simpleflow.IStateAction
@@ -12,8 +13,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatcherImpl() {
+class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatcherImpl(), KoinComponent {
+    private val exportHistoryRepository: ExportHistoryRepository by inject()
+    private val fileListRepository: GlobalFileListRepoObj by inject()
     class LoadHistoryAction : IStateAction
     class WriteHistoryAction(val newHistoryItem: String) : IStateAction
     class LoadFileListAction : IStateAction
@@ -30,21 +35,21 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
             }
             reduce(WriteHistoryAction::class.java) { action->
                 viewModelScope.launchOnThread {
-                    ShareInUrisObj.writeNewExportHistory(action.newHistoryItem)
+                    exportHistoryRepository.writeNewExportHistory(action.newHistoryItem)
                     delay(100)
                     loadHistory()
                 }
             }
             reduce(LoadFileListAction::class.java) { action ->
                 viewModelScope.launchOnThread {
-                    ShareInUrisObj.reloadFileList()
+                    fileListRepository.reloadFileList()
                 }
             }
         }
     }
 
     private suspend fun loadHistory() {
-        val history = ShareInUrisObj.loadExportHistory()
+        val history = exportHistoryRepository.loadExportHistory()
         _historyState.value = StatusState.Success(history)
     }
 

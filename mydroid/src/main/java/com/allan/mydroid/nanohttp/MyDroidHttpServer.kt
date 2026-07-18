@@ -11,10 +11,12 @@ import com.allan.mydroid.beans.httpdata.IpPortResult
 import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.globals.CODE_SUC
-import com.allan.mydroid.globals.GlobalNetworkMonitor
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
-import com.allan.mydroid.globals.MyDroidConst
-import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.state.GlobalReceiverFlowsObj
+import com.allan.mydroid.repository.GlobalShareInRepoObj
+import com.allan.mydroid.repository.UriPermissionChecker
 import com.allan.mydroid.globals.nanoTempCacheMergedDir
 import com.allan.mydroid.globals.okJsonResponse
 import com.au.module_android.Globals
@@ -27,6 +29,7 @@ import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -42,9 +45,13 @@ interface IChunkMgr {
 
 class MyDroidHttpServer(httpPort: Int,
                         private val aliveTrigger: IDroidServerAliveTrigger,
-                        private val globalNetworkMonitor: GlobalNetworkMonitor,
+                        private val globalNetworkMonitor: GlobalNetworkMonitorObj,
     ) : NanoHTTPD(httpPort), KoinComponent {
-    private val chunksMgr: IChunkMgr = MyDroidHttpChunksMgr()
+    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
+    private val receiverEventBus: GlobalReceiverFlowsObj by inject()
+    private val shareInRepository: GlobalShareInRepoObj by inject()
+    private val uriPermissionChecker: UriPermissionChecker by inject()
+    private val chunksMgr: IChunkMgr = MyDroidHttpChunksMgr(receiverEventBus)
 
     init {
         tempFileManagerFactory = MyDroidTempFileMgrFactory()
@@ -91,7 +98,7 @@ class MyDroidHttpServer(httpPort: Int,
         when {
             // 主页面请求
             url == "/" -> {
-                when (MyDroidConst.currentDroidMode) {
+                when (serverRuntimeState.currentDroidModeFlow.value) {
                     MyDroidMode.Send -> {
                         return serveAssetFile("transfer/ReceiveFromPhone.html", mimeHtml)
                     }
@@ -118,7 +125,7 @@ class MyDroidHttpServer(httpPort: Int,
             }
             url.endsWith(".js") -> {
                 val jsName = url.substring(1)
-                return serveAssetFile("transfer/$jsName", mimeJson)
+                return serveAssetFile("transfer/$jsName", mimeJs)
             }
             else -> {
                 error = Globals.getString(R.string.server_not_support) + "(E01)"
@@ -131,7 +138,7 @@ class MyDroidHttpServer(httpPort: Int,
 
     fun fileDownload(uriUuid:String) : NanoHTTPD.Response {
         try {
-            val info = ShareInUrisObj.shareInAndReceiveBeans?.find { it.uriUuid == uriUuid }  ?: return fileNotFoundResponse()
+            val info = shareInRepository.shareInAndReceiveBeans?.find { it.uriUuid == uriUuid }  ?: return fileNotFoundResponse()
             val fileSize = info.fileSize ?: 0
             if (fileSize <= 0) {
                 return fileSizeIs0Response()
@@ -140,7 +147,7 @@ class MyDroidHttpServer(httpPort: Int,
             val filename = info.name ?: "file"
             logdNoFile { "file Download1 $uri size:$fileSize" }
 
-            if (!ShareInUrisObj.isHostThisUri(info)) {
+            if (!uriPermissionChecker.isHostThisUri(info)) {
                 logdNoFile { "file Download this uri is donot has permission." }
                 return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "No permission yet todo translate.")
             }
@@ -174,16 +181,13 @@ class MyDroidHttpServer(httpPort: Int,
             // 但对于强制下载，"application/octet-stream" 是通用选择
             return response
         } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-            logdNoFile { "file Download error1" }
+            logdNoFile { "file Download error1 ${e.message}" }
             return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 1.")
         } catch (e: IOException) {
-            e.printStackTrace()
-            logdNoFile { "file Download error2" }
+            logdNoFile { "file Download error2 ${e.message}" }
             return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 2.")
         } catch (e: Exception) {
-            e.printStackTrace()
-            logdNoFile { "file Download error3" }
+            logdNoFile { "file Download error3 ${e.message}" }
             return newFixedLengthResponse(Status.INTERNAL_ERROR, mimePlain, "Error reading file 3.")
         }
     }
@@ -227,7 +231,7 @@ class MyDroidHttpServer(httpPort: Int,
 
     private fun getFileList() : Response {
         return runBlocking {
-            val beans= ShareInUrisObj.loadShareInAndReceiveBeans()
+            val beans= shareInRepository.loadShareInAndReceiveBeans()
             val json = beans.toGsonString()
             if (json.isNotEmpty()) {
                 ResultBean(CODE_SUC, "Success!", json).okJsonResponse()
@@ -260,7 +264,7 @@ class MyDroidHttpServer(httpPort: Int,
 
     val mimePlain = "text/plain"
     val mimeHtml = "text/html"
-    val mimeJson = "application/javascript"
+    val mimeJs = "application/javascript"
     private fun serveAssetFile(assetFile: String,
                                mimeType:String,
                                replacementBlock:((String)->String) = { it }) : Response {

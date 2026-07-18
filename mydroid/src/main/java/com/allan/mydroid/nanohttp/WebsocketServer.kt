@@ -6,7 +6,9 @@ import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.beans.wsdata.TextChatWsData
 import com.allan.mydroid.beansinner.WebSocketClientInfo
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.state.GlobalClientListFlowsObj
+import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketNoneModeMessenger
 import com.allan.mydroid.nanohttp.wsmsger.WebsocketTextChatModeMessenger
 import android.util.Base64
@@ -17,13 +19,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
 
 class WebsocketServer(
         wsPort:Int,
         private val aliveTrigger: IDroidServerAliveTrigger
-    ) : NanoWSD(wsPort) {
+    ) : NanoWSD(wsPort), KoinComponent {
     companion object {
         /**
          * 心跳时间
@@ -43,6 +47,11 @@ class WebsocketServer(
      * 多个websocket客户端共享同一线程、scope
      */
     val scope = CoroutineScope(singleThreadDispatcher)
+
+    // P1 state: injected via KoinComponent
+    val serverRuntimeState: GlobalServerRuntimeObj by inject()
+    private val clientListState: GlobalClientListFlowsObj by inject()
+    val textChatStore: GlobalTextChatObj by inject()
 
     private val clients: MutableList<InServerWebsocketClient> = CopyOnWriteArrayList()
 
@@ -67,7 +76,7 @@ class WebsocketServer(
         }
         list.sortByDescending { it.enterTs }
         logdNoFile { "after change websocket client size ${list.size}" }
-        MyDroidConst.clientListLiveData.setValueSafe(list)
+        clientListState.set(list)
     }
 
     override fun openWebSocket(handshake: IHTTPSession): WebSocket {
@@ -76,7 +85,7 @@ class WebsocketServer(
         logdNoFile { "open web Socket handshake uri: $uri nextColor $nextColor" }
         //uri = uri.replaceFirst("/", "", true)
         val client = InServerWebsocketClient(handshake, this, nextColor)
-        val parser = when (MyDroidConst.currentDroidMode) {
+        val parser = when (serverRuntimeState.currentDroidModeFlow.value) {
             MyDroidMode.Receiver,
             MyDroidMode.Send,
             MyDroidMode.None -> WebsocketNoneModeMessenger(client)  //接受文件，都走http而非ws。所以给空实现即可。
@@ -96,7 +105,7 @@ class WebsocketServer(
         logdNoFile { "stopped and cancel heartbeat scope" }
         scope.cancel()
         executor.shutdown()
-        MyDroidConst.clientListLiveData.setValueSafe(emptyList())
+        clientListState.clear()
     }
 
     fun broadcastTextChatFromApp(bean: TextChatMessageBean) {
@@ -124,14 +133,14 @@ class WebsocketServer(
         "#ce626e",
         "#71a3ce",
     )
-    private var currentColorIconIndex = (Math.random() * colorIconList.size).toInt()
+    private val currentColorIconIndex = java.util.concurrent.atomic.AtomicInteger((Math.random() * colorIconList.size).toInt())
 
     private fun nextColor() : String{
-        return if(currentColorIconIndex >= colorIconList.size) {
-            currentColorIconIndex = 0
-            colorIconList[currentColorIconIndex]
+        return if(currentColorIconIndex.get() >= colorIconList.size) {
+            currentColorIconIndex.set(0)
+            colorIconList[currentColorIconIndex.get()]
         } else {
-            colorIconList[currentColorIconIndex++]
+            colorIconList[currentColorIconIndex.getAndIncrement()]
         }
     }
 }

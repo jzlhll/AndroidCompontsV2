@@ -8,7 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.databinding.ActivityImportBinding
-import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
 import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.MY_DROID_SHARE_IMPORT_URIS
@@ -23,8 +23,10 @@ import com.au.module_androidui.ui.bindings.BindingActivity
 import com.au.module_androidui.ui.findCustomFragmentGetActivity
 import com.au.module_androidui.ui.startActivityFix
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 
 class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
+    private val shareInRepository: GlobalShareInRepoObj by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,7 +79,7 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
         }
 
         Globals.mainScope.launchOnThread {
-            ShareInUrisObj.addShareInUris(uris, FROM_SHARE_IN)
+            shareInRepository.addShareInUris(uris, FROM_SHARE_IN)
 
             lifecycleScope.launch {
                 jumpNext()

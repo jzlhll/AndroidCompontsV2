@@ -11,7 +11,6 @@ import com.allan.mydroid.beans.WSResultBox
 import com.allan.mydroid.beans.wsdata.LeftSpaceData
 import com.allan.mydroid.beans.wsdata.MyDroidModeData
 import com.allan.mydroid.globals.CODE_SUC
-import com.allan.mydroid.globals.MyDroidConst
 import com.au.module_android.Globals
 import com.au.module_gson.toGsonString
 import com.au.module_android.utils.launchOnThread
@@ -140,7 +139,7 @@ class InServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
             .setIcon("success")
             .setOnTopLater(200).toast()
 
-        val mode = MyDroidConst.currentDroidMode.toName()
+        val mode = server.serverRuntimeState.currentDroidModeFlow.value.toName()
         val json = WSResultBox(
             CODE_SUC, null,
             API_WS_CLIENT_INIT_CALLBACK,
@@ -169,6 +168,8 @@ class InServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
     override fun onException(exception: IOException) {
         logdNoFile{"$clientName on Exception: " + exception.message}
         mFreeSpaceJob?.cancel()
+        scope?.cancel()
+        scope = null
         try {
             // 主动发送关闭帧并终止连接
             close(NanoWSD.WebSocketFrame.CloseCode.InternalServerError, Globals.getString(R.string.server_error_exception), false)

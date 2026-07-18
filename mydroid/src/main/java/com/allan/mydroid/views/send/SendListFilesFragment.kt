@@ -9,8 +9,10 @@ import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendFilesBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
-import com.allan.mydroid.globals.GlobalNetworkMonitor
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
+import com.allan.mydroid.state.GlobalClientListFlowsObj
+import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
@@ -31,10 +33,14 @@ import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidcolor.R
 import com.bumptech.glide.request.target.Target
 import org.koin.android.ext.android.get
+import org.koin.android.ext.android.inject
 
 class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
+    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
+    private val clientListState: GlobalClientListFlowsObj by inject()
+    private val shareInRepository: GlobalShareInRepoObj by inject()
     private val common by unsafeLazy {
-        object : SendListSelectorCommon(true) {
+        object : SendListSelectorCommon(true, shareInRepository) {
             override fun rcv() = binding.rcv
             override fun empty() = null
             override fun onItemClick(bean: ShareInBean?, mode: String) {
@@ -104,14 +110,14 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
         val fmt = getString(com.allan.mydroid.R.string.not_close_window)
         binding.descTitle.text = String.format(fmt, "")
 
-        launchRepeatOnStarted(get<GlobalNetworkMonitor>().networkInfoFlow) { netInfo->
+        launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { netInfo->
             if (netInfo == null) {
                 binding.descTitle.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
             } else {
                 val fmt = getString(com.allan.mydroid.R.string.not_close_window)
                 if (netInfo.httpPort == null) {
                     binding.descTitle.text = netInfo.ip
-                } else if (MyDroidConst.serverIsOpen) {
+                } else if (serverRuntimeState.serverIsOpenFlow.value) {
                     binding.descTitle.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
                 } else {
                     binding.descTitle.text = String.format(fmt, netInfo.ip + ":" + netInfo.httpPort)
@@ -122,7 +128,7 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     }
 
     private fun clientLiveDataInit() {
-        MyDroidConst.clientListLiveData.observe(this) { clientList ->
+        launchRepeatOnStarted(clientListState.clientListFlow) { clientList ->
             for (clientBinding in sendClientBindings) {
                 clientBinding.root.gone()
             }
@@ -144,7 +150,7 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     }
 
     override fun onStart() {
-        MyDroidConst.currentDroidMode = MyDroidMode.Send
+        serverRuntimeState.setMode(MyDroidMode.Send)
         super.onStart()
         lifecycleScope.launchOnThread {
             common.reload()

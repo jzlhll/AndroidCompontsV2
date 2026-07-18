@@ -13,7 +13,7 @@ import com.allan.mydroid.globals.CODE_FAIL_MD5_CHECK
 import com.allan.mydroid.globals.CODE_FAIL_MERGE_CHUNK
 import com.allan.mydroid.globals.CODE_FAIL_RECEIVER_CHUNK
 import com.allan.mydroid.globals.CODE_SUC
-import com.allan.mydroid.globals.MyDroidConst
+import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.globals.badRequestJsonResponse
 import com.allan.mydroid.globals.jsonResponse
 import com.allan.mydroid.globals.nanoTempCacheChunksDir
@@ -31,9 +31,7 @@ import fi.iki.elonen.NanoHTTPD.Response.Status
 import org.json.JSONObject
 import java.io.File
 
-class MyDroidHttpChunksMgr() : IChunkMgr{
-    private val parseBodyFileMap = HashMap<String, String>() // 存放临时文件路径
-
+class MyDroidHttpChunksMgr(private val receiverEventBus: GlobalReceiverFlowsObj) : IChunkMgr{
     /**
      * key是fileName-md5
      * value是chunkInfo组
@@ -69,7 +67,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
 
         try {
             // 1. 获取普通参数
-            parseBodyFileMap.clear()
+            val parseBodyFileMap = HashMap<String, String>()
             session.parseBody(parseBodyFileMap)
 
             val params = session.parameters
@@ -99,7 +97,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
             val chunkInfo = ChunkInfoResult(fileName, chunkIndex, totalChunks, md5, chunkTmpFile)
             addChunkInfo(chunkInfo)
 
-            MyDroidConst.receiverProgressData.setValueSafe(
+            receiverEventBus.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -116,7 +114,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
                 "$fileName Chunk $chunkIndex/$totalChunks received success.", chunkInfo).okJsonResponse()
         } catch (e: Exception) {
             logd { ALogJ.ex(e) }
-            MyDroidConst.receiverProgressData.setValueSafe(
+            receiverEventBus.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -150,7 +148,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         }
         logt { "handle Merge Chunk $fileName , $md5 , totalChunks:$totalChunks" }
 
-        MyDroidConst.receiverProgressData.setValueSafe(
+        receiverEventBus.emitProgress(
             mapOf(
                 "$fileName-$md5" to ReceivingFileInfo(
                     fileName,
@@ -166,7 +164,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         if (chunkInfoList == null) {
             val noChunkStr = Globals.getString(R.string.no_chunks)
 
-            MyDroidConst.receiverProgressData.setValueSafe(
+            receiverEventBus.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -184,7 +182,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         chunkInfoList.sortBy { it.chunkIndex }
         if (chunkInfoList.size != totalChunks) {
             val chunkNumNotMatchStr = Globals.getString(R.string.chunks_number_not_match)
-            MyDroidConst.receiverProgressData.setValueSafe(
+            receiverEventBus.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -210,20 +208,17 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
                 chunkInfo.chunkTmpFile.inputStream().use { input ->
                     input.copyTo(output)
                 }
-                Thread.sleep(20)
                 chunkInfo.chunkTmpFile.delete() // 删除已合并的分片
             }
         }
 
-        Thread.sleep(100)
         // MD5 校验（需自行实现校验逻辑）
         val fileMd5 = getFileMD5(outputFile.absolutePath)
         if (fileMd5 == md5) {
             outputFile.setLastModified(lastModified)
-            Thread.sleep(10)
-            MyDroidConst.onFileMergedData.setValueSafe(outputFile)
+            receiverEventBus.emitFileMerged(outputFile)
 
-            MyDroidConst.receiverProgressData.setValueSafe(
+            receiverEventBus.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -241,7 +236,7 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         } else {
             outputFile.delete()
             val md5FailStr = Globals.getString(R.string.md5_check_failed)
-            MyDroidConst.receiverProgressData.setValueSafe(
+            receiverEventBus.emitProgress(
                 mapOf(
                     "$fileName-$md5" to ReceivingFileInfo(
                         fileName,
@@ -269,7 +264,6 @@ class MyDroidHttpChunksMgr() : IChunkMgr{
         val md5 = params.optString("md5")
 
         removeChunkInfoList(fileName, md5)?.forEach { chunkInfo->
-            Thread.sleep(20)
             chunkInfo.chunkTmpFile.delete() // 删除已合并的分片
         }
         return ResultBean<String>(

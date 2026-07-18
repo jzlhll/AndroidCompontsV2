@@ -2,12 +2,21 @@ package com.allan.mydroid
 
 import android.util.Log
 import com.allan.mydroid.api.Api
-import com.allan.mydroid.globals.GlobalDroidServer
-import com.allan.mydroid.globals.GlobalNetworkMonitor
+import com.allan.mydroid.globals.GlobalDroidServerObj
+import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.globals.cacheImportCopyDir
 import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
+import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.state.GlobalReceiverFlowsObj
+import com.allan.mydroid.state.GlobalTextChatObj
+import com.allan.mydroid.state.GlobalClientListFlowsObj
+import com.allan.mydroid.state.GlobalServerLifecycleFlowsObj
+import com.allan.mydroid.repository.GlobalFileListRepoObj
+import com.allan.mydroid.repository.ExportHistoryRepository
+import com.allan.mydroid.repository.UriPermissionChecker
+import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.au.logsystem.DefaultActivitiesFollowCallback
 import com.au.module_android.Globals
 import com.au.module_androidui.InitApplication
@@ -26,6 +35,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.binds
 import org.koin.dsl.module
@@ -92,8 +102,21 @@ class App : InitApplication() {
             single { Globals.mainScope }        //两个单例的scope
             single { Globals.backgroundScope }  //两个单例的scope
 
-            singleOf(::GlobalNetworkMonitor)
-            singleOf(::GlobalDroidServer) binds arrayOf(IDroidServerAliveTrigger::class)
+            // P1 state classes
+            singleOf(::GlobalServerRuntimeObj)
+            singleOf(::GlobalReceiverFlowsObj)
+            singleOf(::GlobalTextChatObj)
+            singleOf(::GlobalClientListFlowsObj)
+            singleOf(::GlobalServerLifecycleFlowsObj)
+
+            // P2 repository classes
+            singleOf(::GlobalFileListRepoObj)
+            factoryOf(::ExportHistoryRepository)
+            factoryOf(::UriPermissionChecker)
+            singleOf(::GlobalShareInRepoObj)
+
+            singleOf(::GlobalNetworkMonitorObj)
+            singleOf(::GlobalDroidServerObj) binds arrayOf(IDroidServerAliveTrigger::class)
 
             factory { (httpPort:Int)->
                 MyDroidHttpServer(httpPort, get(), get())
@@ -108,7 +131,7 @@ class App : InitApplication() {
         }
 
         //初始化监听Activity变化，用于创建server
-        registerActivityLifecycleCallbacks(get<GlobalDroidServer>())
+        registerActivityLifecycleCallbacks(get<GlobalDroidServerObj>())
 
         //日志按钮显示监听
         registerActivityLifecycleCallbacks(DefaultActivitiesFollowCallback())

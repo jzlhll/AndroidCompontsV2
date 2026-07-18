@@ -11,10 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
-import com.allan.mydroid.globals.ShareInUrisObj
+import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.au.module_nested.recyclerview.IMultiViewTypeBean
 
-abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) {
+abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean, private val shareInRepository: GlobalShareInRepoObj) {
     private val mAdapter = SendListAdapter {it, mode->
         onItemClick(it, mode)
     }
@@ -33,7 +33,7 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) {
 
     @WorkerThread
     suspend fun reload() {
-        val scanList = ShareInUrisObj.loadShareInAndReceiveBeans()
+        val scanList = shareInRepository.loadShareInAndReceiveBeans()
         withContext(Dispatchers.Main) {
             updateList(scanList)
         }

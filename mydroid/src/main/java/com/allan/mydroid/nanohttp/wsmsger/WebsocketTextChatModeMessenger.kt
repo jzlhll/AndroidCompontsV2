@@ -5,7 +5,6 @@ import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_CALLBACK
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_SEND
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.beans.wsdata.TextChatWsData
-import com.allan.mydroid.globals.MyDroidConst
 import com.allan.mydroid.nanohttp.AbsWebSocketClientMessenger
 import com.allan.mydroid.nanohttp.InServerWebsocketClient
 import com.au.module_android.log.logdNoFile
@@ -15,7 +14,7 @@ class WebsocketTextChatModeMessenger(client: InServerWebsocketClient) : AbsWebSo
     private val GAP_MS = 5 * 60 * 1000L
 
     override fun onOpen() {
-        val history = MyDroidConst.textChatHistory
+        val history = client.server.textChatStore.historyFlow.value
         if (history.isEmpty()) return
         // 从最新倒查，相邻消息间隔>3min则断开，只推最近一段连续对话
         val end = history.lastIndex
@@ -67,7 +66,7 @@ class WebsocketTextChatModeMessenger(client: InServerWebsocketClient) : AbsWebSo
             timestamp = json.optLong("timestamp").takeIf { it > 0 } ?: System.currentTimeMillis(),
             iconColor = json.optString("iconColor").ifBlank { client.color },
         )
-        MyDroidConst.addTextChatMessage(bean)
-        MyDroidConst.textChatIncomingData.setValueSafe(bean)
+        client.server.textChatStore.addMessage(bean)
+        client.server.textChatStore.emitIncoming(bean)
     }
 }
