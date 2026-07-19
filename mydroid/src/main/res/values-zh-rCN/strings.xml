@@ -100,4 +100,8 @@
 
     <string name="tab_host">主机</string>
     <string name="tab_client">客户端</string>
+
+    <string name="btn_start_search">开始搜索</string>
+    <string name="cd_rescan">重新搜索</string>
+    <string name="ip_subnet_mismatch_warning">可能 IP 网段不一致，请确认你与主机是否连接到同一个 Wi-Fi。</string>
 </resources>

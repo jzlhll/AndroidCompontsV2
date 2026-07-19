@@ -106,4 +106,8 @@
 
     <string name="tab_host">Host</string>
     <string name="tab_client">Client</string>
+
+    <string name="btn_start_search">Start Search</string>
+    <string name="cd_rescan">Rescan</string>
+    <string name="ip_subnet_mismatch_warning">The IP subnet may differ. Please confirm that you and the host are connected to the same Wi-Fi.</string>
 </resources>

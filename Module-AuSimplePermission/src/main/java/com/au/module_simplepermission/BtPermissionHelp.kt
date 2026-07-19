@@ -31,7 +31,8 @@ class BtPermissionHelp private constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
             arrayOf(
                 Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT)
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_ADVERTISE)
         else
             arrayOf(
                 Manifest.permission.BLUETOOTH,

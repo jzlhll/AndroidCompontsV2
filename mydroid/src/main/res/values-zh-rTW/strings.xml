@@ -100,4 +100,8 @@
 
     <string name="tab_host">主機</string>
     <string name="tab_client">客戶端</string>
+
+    <string name="btn_start_search">開始搜尋</string>
+    <string name="cd_rescan">重新搜尋</string>
+    <string name="ip_subnet_mismatch_warning">可能 IP 網段不一致，請確認你與主機是否連線到同一個 Wi-Fi。</string>
 </resources>

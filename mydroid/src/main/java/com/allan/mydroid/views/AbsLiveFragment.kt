@@ -11,6 +11,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewbinding.ViewBinding
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
+import com.allan.mydroid.bt.BleIpAdvertiser
 import com.allan.mydroid.globals.GlobalDroidServerObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
@@ -43,6 +44,15 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
             }, 1500)
         }
     }
+
+    /**
+     * host 端 BLE IP 广播辅助类。BtPermissionHelp 必须在 Fragment 成员变量初始化阶段构造,
+     * 这里随 AbsLiveFragment 成员变量初始化一并完成。三个对等子页面共用。
+     */
+    protected val bleIpAdvertiser = BleIpAdvertiser(this)
+
+    /** 子类可关闭广播(默认开); 当前三个子类都是 host 端, 默认 true。 */
+    protected open val shouldAdvertiseIp: Boolean = true
 
     val whenIpNullShowExitDialog: Boolean = true
     val alwaysScreenOn: Boolean = true
@@ -101,5 +111,17 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
         }
 
         serverRuntimeState.setMode(getMode())
+
+        if (shouldAdvertiseIp) {
+            bleIpAdvertiser.start()
+        }
+    }
+
+    @CallSuper
+    override fun onDestroyView() {
+        super.onDestroyView()
+        if (shouldAdvertiseIp) {
+            bleIpAdvertiser.stop()
+        }
     }
 }

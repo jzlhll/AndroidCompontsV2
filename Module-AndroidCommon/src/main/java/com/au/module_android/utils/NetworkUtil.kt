@@ -25,6 +25,8 @@ enum class NetworkType {
  */
 fun getIpAddress(): Pair<String?, NetworkType> {
     try {
+        // IPv4 优先：先收集 IPv6 作为回退，遇到 IPv4 立即返回
+        var ipv6Fallback: Pair<String?, NetworkType>? = null
         val interfaces = NetworkInterface.getNetworkInterfaces()
         while (interfaces.hasMoreElements()) {
             val netInterface = interfaces.nextElement()
@@ -33,19 +35,26 @@ fun getIpAddress(): Pair<String?, NetworkType> {
 
             if (isWifi || isAp) {
                 for (addr in netInterface.inetAddresses) {
-                    val result = getIPAddress(addr)
-                    if (result != null) {
-                        val (ip, type) = result
-                        // 根据接口类型调整NetworkType
-                        val adjustedType = when (type) {
-                            NetworkType.WIFI_IPV4 -> if (isWifi) NetworkType.WIFI_IPV4 else NetworkType.AP_IPV4
-                            NetworkType.WIFI_IPV6 -> if (isWifi) NetworkType.WIFI_IPV6 else NetworkType.AP_IPV6
-                            else -> type
-                        }
+                    val result = getIPAddress(addr) ?: continue
+                    val (ip, type) = result
+                    // 根据接口类型调整NetworkType
+                    val adjustedType = when (type) {
+                        NetworkType.WIFI_IPV4 -> if (isWifi) NetworkType.WIFI_IPV4 else NetworkType.AP_IPV4
+                        NetworkType.WIFI_IPV6 -> if (isWifi) NetworkType.WIFI_IPV6 else NetworkType.AP_IPV6
+                        else -> type
+                    }
+                    if (type == NetworkType.WIFI_IPV4) {
                         return ip to adjustedType
+                    }
+                    if (ipv6Fallback == null) {
+                        ipv6Fallback = ip to adjustedType
                     }
                 }
             }
+        }
+        // 无 IPv4 时回退到 IPv6
+        if (ipv6Fallback != null) {
+            return ipv6Fallback
         }
     } catch (e: Exception) {
         e.printStackTrace()
