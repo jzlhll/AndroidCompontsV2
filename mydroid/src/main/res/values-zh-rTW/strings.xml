@@ -97,4 +97,7 @@
 
 
     <string name="more_actions">更多操作</string>
+
+    <string name="tab_host">主機</string>
+    <string name="tab_client">客戶端</string>
 </resources>

@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.material3)
 
     implementation(libs.nanohttpd)
@@ -90,6 +91,7 @@ dependencies {
     implementation(project(":Module-AndroidCommon"))
 
     implementation(project(":Module-AndroidUi"))
+    implementation(project(":Module-AndroidUiEx"))
     implementation(project(":Module-Nested"))
     implementation(project(":Module-ImageCompressed"))
     implementation(project(":Module-Okhttp"))

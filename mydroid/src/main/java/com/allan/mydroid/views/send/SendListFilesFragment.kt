@@ -92,6 +92,7 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
                 binding.toolbar.layoutParams = toolbarLP
             }
             binding.root.updatePadding(bottom = navBarHeight)
+            requireActivity().changeBarsColor(statusBarTextDark = false)
         }
     }
 
@@ -100,8 +101,6 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
 
         binding.adHost.setColor(Globals.getColor(R.color.color_normal_block0))
         binding.adHost.startAnimation()
-
-        requireActivity().changeBarsColor(statusBarTextDark = false)
 
         binding.toolbar.setNavigationOnClickListener {
             requireActivity().finishAfterTransition()

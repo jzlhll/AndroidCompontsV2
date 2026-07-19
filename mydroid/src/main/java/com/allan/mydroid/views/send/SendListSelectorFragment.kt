@@ -228,8 +228,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
         menuMgr.showMenu()
 
-        requireActivity().changeBarsColor(statusBarTextDark = false)
-
         common.onCreated()
         if (autoImport) autoImportAction()
     }
@@ -241,6 +239,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 binding.toolbar.layoutParams = toolbarLP
             }
             binding.root.updatePadding(bottom = navBarHeight)
+            requireActivity().changeBarsColor(statusBarTextDark = false)
         }
     }
 

@@ -97,4 +97,7 @@
 
 
     <string name="more_actions">更多操作</string>
+
+    <string name="tab_host">主机</string>
+    <string name="tab_client">客户端</string>
 </resources>

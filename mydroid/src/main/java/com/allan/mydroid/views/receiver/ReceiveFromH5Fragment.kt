@@ -53,12 +53,8 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
                 binding.toolbar.layoutParams = toolbarLP
             }
             binding.root.updatePadding(bottom = navBarHeight)
+            requireActivity().changeBarsColor(statusBarTextDark = false)
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        requireActivity().changeBarsColor(statusBarTextDark = false)
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {

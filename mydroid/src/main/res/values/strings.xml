@@ -103,4 +103,7 @@
 
 
     <string name="more_actions">More actions</string>
+
+    <string name="tab_host">Host</string>
+    <string name="tab_client">Client</string>
 </resources>

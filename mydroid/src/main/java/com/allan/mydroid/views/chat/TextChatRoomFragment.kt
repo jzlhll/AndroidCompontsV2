@@ -59,11 +59,6 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         return true
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        requireActivity().changeBarsColor(statusBarTextDark = false)
-    }
-
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
         messageAdapter.onMessageLongClick = {
@@ -300,6 +295,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
                 binding.toolbar.layoutParams = toolbarLP
             }
             binding.root.updatePadding(bottom = navBarHeight)
+            requireActivity().changeBarsColor(statusBarTextDark = false)
         }
     }
 
