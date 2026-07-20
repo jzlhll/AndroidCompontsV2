@@ -5,6 +5,7 @@ import com.au.module_cached.delegate.AppDataStoreLongCache
 import com.au.module_okhttp.creator.AbsOkhttpApi
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import java.util.concurrent.TimeUnit
 
@@ -36,12 +37,12 @@ object Api : AbsOkhttpApi() {
         //无
     }
 
-    // 创建并启动WebSocket连接
-    fun connectWSServer(ip:String, port:Int, listener:WebSocketListener) {
+    // 创建并启动WebSocket连接。对齐 host WebsocketServer.openWebSocket 的 /ws-test 端点。
+    fun connectWSServer(ip:String, port:Int, listener:WebSocketListener): WebSocket {
         val client = OkHttpClient.Builder()
             .pingInterval(WebsocketServer.HEARTBEAT_INTERVAL, TimeUnit.MILLISECONDS)
             .build()
-        val request: Request = Request.Builder().url("ws://$ip:$port").build()
-        client.newWebSocket(request, listener)
+        val request: Request = Request.Builder().url("ws://$ip:$port/ws-test").build()
+        return client.newWebSocket(request, listener)
     }
 }

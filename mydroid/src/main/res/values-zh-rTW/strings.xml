@@ -104,4 +104,19 @@
     <string name="btn_start_search">開始搜尋</string>
     <string name="cd_rescan">重新搜尋</string>
     <string name="ip_subnet_mismatch_warning">可能 IP 網段不一致，請確認你與主機是否連線到同一個 Wi-Fi。</string>
+    <string name="host_info_outdated_rescanning">主機資訊可能已過期，重新掃描中…</string>
+
+    <string name="connect_to_host_loading">連接中…</string>
+    <string name="connect_to_host_failed">連接失敗</string>
+    <string name="connect_to_host_mode_none">主機未就緒，請返回後重新選擇。</string>
+    <string name="connect_to_host_send_title">發送檔案給主機</string>
+    <string name="connect_to_host_receive_title">從主機接收檔案</string>
+    <string name="connect_to_host_chat_title">文字對話</string>
+    <string name="connect_to_host_start_upload">開始上傳</string>
+    <string name="connect_to_host_cancel_upload">取消</string>
+    <string name="connect_to_host_uploading">上傳中</string>
+    <string name="connect_to_host_upload_done">完成</string>
+    <string name="connect_to_host_disconnected">已斷開連接，請返回後重試。</string>
+    <string name="connect_to_host_pending">等待中</string>
+    <string name="connect_to_host_retry">重試</string>
 </resources>

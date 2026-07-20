@@ -1,7 +1,7 @@
 package com.au.module_okhttp.creator
 
 import com.au.module_android.utils.awaitOnIoThread
-import com.au.module_kson.fromKson
+import com.au.module_gson.fromGson
 import com.au.module_okhttp.OkhttpGlobal.okHttpClient
 import com.au.module_okhttp.beans.ParamsStrRequestBody
 import com.au.module_okhttp.exceptions.NoNetworkException
@@ -96,7 +96,7 @@ inline fun <reified T> Response.parseJson() : T {
             if (bodyStr.isNullOrBlank()) {
                 throw ResponseErrorException(this.code, this.message)
             } else {
-                bodyStr.fromKson<T>() as T
+                bodyStr.fromGson<T>() as T
             }
         }
     }

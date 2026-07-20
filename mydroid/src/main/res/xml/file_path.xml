@@ -17,6 +17,12 @@
         name="cache_path"
         path="./shared" />
 
+    <!-- client 下载文件落盘到 goodCacheDir/shared/nanoMerged，与 host 接收文件目录一致；
+         显式声明子目录避免对 cache-path 递归行为的依赖 -->
+    <cache-path
+        name="nano_merged"
+        path="./shared/nanoMerged" />
+
     <external-files-path
         name="external_file_path"
         path="./shared" />

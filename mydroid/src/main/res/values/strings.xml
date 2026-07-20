@@ -110,4 +110,19 @@
     <string name="btn_start_search">Start Search</string>
     <string name="cd_rescan">Rescan</string>
     <string name="ip_subnet_mismatch_warning">The IP subnet may differ. Please confirm that you and the host are connected to the same Wi-Fi.</string>
+    <string name="host_info_outdated_rescanning">Host info may be outdated, rescanning…</string>
+
+    <string name="connect_to_host_loading">Connecting…</string>
+    <string name="connect_to_host_failed">Connection failed</string>
+    <string name="connect_to_host_mode_none">Host is not ready. Please go back and choose again.</string>
+    <string name="connect_to_host_send_title">Send files to host</string>
+    <string name="connect_to_host_receive_title">Receive files from host</string>
+    <string name="connect_to_host_chat_title">Text chat</string>
+    <string name="connect_to_host_start_upload">Start upload</string>
+    <string name="connect_to_host_cancel_upload">Cancel</string>
+    <string name="connect_to_host_uploading">Uploading</string>
+    <string name="connect_to_host_upload_done">Done</string>
+    <string name="connect_to_host_disconnected">Disconnected. Please go back and retry.</string>
+    <string name="connect_to_host_pending">Pending</string>
+    <string name="connect_to_host_retry">Retry</string>
 </resources>

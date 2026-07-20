@@ -2,7 +2,6 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
-    alias(libs.plugins.jetbrains.kotlin.serialization)
 }
 
 android {
@@ -41,7 +40,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     ksp(libs.glideKsp)
     implementation(project(":Module-AndroidCommon"))
-    implementation(project(":Module-AuKson"))
     implementation(project(":Module-AuGsonMMKV"))
 
     // define a BOM and its version

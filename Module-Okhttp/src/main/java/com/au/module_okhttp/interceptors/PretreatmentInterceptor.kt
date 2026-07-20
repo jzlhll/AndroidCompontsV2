@@ -2,9 +2,7 @@ package com.au.module_okhttp.interceptors
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.ignoreError
-import com.au.module_kson.fromKson
 import com.au.module_okhttp.BuildConfig
-import com.au.module_okhttp.api.BaseDataStrBean
 import com.au.module_okhttp.exceptions.ApiErrorException
 import com.au.module_okhttp.exceptions.ResponseErrorException
 import com.au.module_okhttp.exceptions.TokenExpiredException
@@ -127,44 +125,37 @@ class PretreatmentInterceptor(
         if (result.isNullOrEmpty()) {
             return
         }
-        val dataBean = ignoreError { result.fromKson<BaseDataStrBean>() }  ?: return
-        logdNoFile("🌟kson") { "dataBean $dataBean" }
-        val code = dataBean.code
+        // 只取 code/msg 两字段，不反序列化 data（host 返回的 data 可能是对象/数组/字符串/stringify 后的 json 串，
+        // 用 BaseDataStrBean 反序列化会因 data: String? 类型不符抛 JsonSyntaxException）
+        val json = ignoreError { JSONObject(result) } ?: return
+        val code = json.optString("code")
+        if (code.isNullOrEmpty()) {
+            return
+        }
+        val msg = json.optString("msg", result)
+        logdNoFile("🌟gson") { "code=$code msg=$msg" }
         //由于刷新token判断比较复杂，所以交给业务实现。框架不做判断。做解耦。
         val isRefreshTokenError = checkIsRefreshTokenError?.invoke(url, responseCode, code) ?: false
         if (isRefreshTokenError) {
-            throw RefreshTokenExpiredException(dataBean.msg ?: result)
+            throw RefreshTokenExpiredException(msg)
         } else {
             when (code) {
                 CODE_OK -> {
                     return
                 }
                 CODE_TIMESTAMP_ERROR -> {
-                    val msg = dataBean.msg ?: result
-//                    if (dataBean.has("data")) {//处理时间戳的偏移
-//                        val data = dataBean.optJSONObject("data")
-//                        if (data != null && data.has("timestamp")) {
-//                            val timestamp = data.getLong("timestamp")
-//                            val timestampOffset = timestamp - System.currentTimeMillis()
-//                            throw TimestampErrorException(timestampOffset, true, msg)
-//                        } else {
-//                            throw TimestampErrorException(0, false, msg)
-//                        }
-//                    } else {
-//                        throw TimestampErrorException(0, false, msg)
-//                    }
                     val timestamp = System.currentTimeMillis() //todo
                     val timestampOffset = timestamp - System.currentTimeMillis()
                     throw TimestampErrorException(timestampOffset, false, msg)
                 }
                 CODE_TOKEN_REFRESH_EXPIRED -> {
-                    throw RefreshTokenExpiredException(dataBean.msg ?: result)
+                    throw RefreshTokenExpiredException(msg)
                 }
                 CODE_TOKEN_EXPIRED -> {
-                    throw TokenExpiredException(dataBean.msg ?: result)
+                    throw TokenExpiredException(msg)
                 }
                 else -> {
-                    throw ApiErrorException(code, dataBean.msg ?: result, "")
+                    throw ApiErrorException(code, msg, "")
                 }
             }
         }

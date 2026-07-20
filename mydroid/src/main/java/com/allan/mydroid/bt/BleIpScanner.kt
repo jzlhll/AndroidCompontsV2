@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.seconds
 
-/** client 端扫描发现的一个 host。 */
+/** client 端扫描发现的一个 host。port 为 host 的 httpPort。 */
 data class DiscoveredHost(val ip: String, val port: Int)
 
 /**

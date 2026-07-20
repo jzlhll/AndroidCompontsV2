@@ -132,21 +132,30 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
     companion object {
         val BLE_IP_UUID: UUID = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb")
 
-        /** 编码: IP UTF-8 字节 + 2 字节 port (BigEndian)。 */
+        /**
+         * 编码：IP(4字节二进制，每段1字节) + port(2字节 BigEndian) = 6 字节固定长度。
+         * 远低于 BLE legacy advertising service data 字节上限。
+         */
         fun encodeIpPort(ip: String, port: Int): ByteArray {
-            val ipBytes = ip.toByteArray(Charsets.UTF_8)
-            return ByteArray(ipBytes.size + 2).also { out ->
-                ipBytes.copyInto(out)
-                out[ipBytes.size] = (port shr 8).toByte()
-                out[ipBytes.size + 1] = port.toByte()
+            val segments = ip.split(".")
+            require(segments.size == 4) { "invalid ipv4: $ip" }
+            return ByteArray(6).also { out ->
+                segments.forEachIndexed { i, s ->
+                    val v = s.toInt(radix = 10)
+                    require(v in 0..255) { "invalid ipv4 segment: $s" }
+                    out[i] = v.toByte()
+                }
+                require(port in 0..65535) { "invalid port: $port" }
+                out[4] = (port shr 8).toByte()
+                out[5] = port.toByte()
             }
         }
 
-        /** 解码: 末 2 字节为 port, 其余为 IP 字符串。 */
+        /** 解码：固定 6 字节，返回 Pair<ip, port>；长度不匹配返回 null。 */
         fun decodeIpPort(bytes: ByteArray): Pair<String, Int>? {
-            if (bytes.size < 3) return null
-            val ip = bytes.copyOfRange(0, bytes.size - 2).toString(Charsets.UTF_8)
-            val port = ((bytes[bytes.size - 2].toInt() and 0xff) shl 8) or (bytes[bytes.size - 1].toInt() and 0xff)
+            if (bytes.size != 6) return null
+            val ip = "${bytes[0].toInt() and 0xff}.${bytes[1].toInt() and 0xff}.${bytes[2].toInt() and 0xff}.${bytes[3].toInt() and 0xff}"
+            val port = ((bytes[4].toInt() and 0xff) shl 8) or (bytes[5].toInt() and 0xff)
             return ip to port
         }
     }

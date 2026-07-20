@@ -30,6 +30,7 @@ import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
+import com.au.module_android.utilsmedia.getExternalFreeSpace
 import com.au.module_androidcolor.R
 import com.bumptech.glide.request.target.Target
 import org.koin.android.ext.android.get
@@ -109,19 +110,19 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
         clientLiveDataInit()
 
         val fmt = getString(com.allan.mydroid.R.string.not_close_window)
-        binding.descTitle.text = String.format(fmt, "")
+        val leftStr = getString(com.allan.mydroid.R.string.storage_remaining)
+        binding.descTitle.text = String.format(fmt, leftStr + getExternalFreeSpace(requireActivity()))
 
         launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { netInfo->
             if (netInfo == null) {
-                binding.descTitle.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
+                binding.title.setText(com.allan.mydroid.R.string.connect_wifi_or_hotspot)
             } else {
-                val fmt = getString(com.allan.mydroid.R.string.not_close_window)
                 if (netInfo.httpPort == null) {
-                    binding.descTitle.text = netInfo.ip
+                    binding.title.text = netInfo.ip
                 } else if (serverRuntimeState.serverIsOpenFlow.value) {
-                    binding.descTitle.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
+                    binding.title.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
                 } else {
-                    binding.descTitle.text = String.format(fmt, netInfo.ip + ":" + netInfo.httpPort)
+                    binding.title.text = netInfo.ip + ":" + netInfo.httpPort
                 }
             }
         }

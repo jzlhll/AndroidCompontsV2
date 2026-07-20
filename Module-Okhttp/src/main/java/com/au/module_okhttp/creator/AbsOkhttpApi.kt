@@ -3,7 +3,7 @@ package com.au.module_okhttp.creator
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_gson.fromGson
-import com.au.module_kson.toKsonStringLimited
+import com.au.module_gson.toGsonString
 import com.au.module_okhttp.OkhttpGlobal
 import com.au.module_okhttp.api.BaseBean
 import com.au.module_okhttp.api.ResultBean
@@ -106,7 +106,7 @@ abstract class AbsOkhttpApi(private val cacheMgr: AbsOkhttpCacheManager = NoOkht
 
         val magicCode = generateMagicCode()
         val builder = Request.Builder()
-        val paramsStr = params?.toKsonStringLimited() ?: "{}"
+        val paramsStr = params?.toGsonString() ?: "{}"
         logdNoFile(javaClass = this@AbsOkhttpApi.javaClass){"request [$magicCode]: $url method: $method paramsStr $paramsStr"}
 
         when (method) {

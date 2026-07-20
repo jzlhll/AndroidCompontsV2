@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utilsmedia.UriParsedInfo
-import com.au.module_kson.toKsonStringLimited
+import com.au.module_gson.toGsonString
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -32,7 +32,7 @@ abstract class AbsLanApi {
                     is String,
                     is Number,
                     is Boolean, -> value.toString()
-                    else -> value.toKsonStringLimited()
+                    else -> value.toGsonString()
                 }
 
                 this@setupHeader.addHeader(key, valueStr)

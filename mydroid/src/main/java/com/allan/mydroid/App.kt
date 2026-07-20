@@ -2,6 +2,7 @@ package com.allan.mydroid
 
 import android.util.Log
 import com.allan.mydroid.api.Api
+import com.allan.mydroid.client.ClientKoinModule
 import com.allan.mydroid.globals.GlobalDroidServerObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
@@ -124,7 +125,7 @@ class App : InitApplication() {
             }
         }
         startKoin {
-            modules(globalModule)
+            modules(globalModule, ClientKoinModule)
             androidContext(this@App)
         }
 

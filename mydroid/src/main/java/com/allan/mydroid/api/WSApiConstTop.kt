@@ -4,6 +4,7 @@ package com.allan.mydroid.api
 
 import sp.EncryptString
 
+const val GET_MODE = "/get-mode"
 val REQUEST_FILE_LIST = /*Encrypted: /request-file-list*/ sp.StringEncrypt.decrypt("Rj9JDQYJkxgTRPaYigYxQI+gtK7ns6OWGod2/S7FqZZ9hLVgKoDLhwJaHSp7Zg==")
 val MERGE_CHUNKS = /*Encrypted: /merge-chunks*/ sp.StringEncrypt.decrypt("lMtUdcSXNexgyMWyQW8EHNfJEQGqDDVoTarL1DTItqoabexAjqfFojU=")
 val UPLOAD_CHUNK = /*Encrypted: /upload-chunk*/ sp.StringEncrypt.decrypt("h7GsWaHCuJgKiXVS8wAHckV4F9/Io1zfF4G5iV3w3ovbdqCuqmQil7Q=")

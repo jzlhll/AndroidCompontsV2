@@ -16,6 +16,7 @@ import com.au.module_android.log.logdNoFile
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import fi.iki.elonen.NanoWSD
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -54,6 +55,37 @@ class WebsocketServer(
 
     private val clients: MutableList<ServerWebsocketClient> = CopyOnWriteArrayList()
 
+    /**
+     * 订阅 host 端 mode 变化：mode 切换时主动 close 所有已建 WS 客户端，避免 messenger 错配。
+     * 订阅放在 scope 上随 server.stop() 自动取消。仅记录 mode 变化时的 log，不阻塞 setMode() 调用方。
+     */
+    private val modeObserverLock = Any()
+    @Volatile
+    private var modeObserverJob: Job? = null
+
+    fun startObserveModeChange() {
+        synchronized(modeObserverLock) {
+            if (modeObserverJob != null) return
+            modeObserverJob = scope.launch {
+                var lastMode = serverRuntimeObj.currentDroidModeFlow.value
+                serverRuntimeObj.currentDroidModeFlow.collect { mode ->
+                    if (mode != lastMode) {
+                        logdNoFile { "host mode changed $lastMode -> $mode, close all ws clients" }
+                        lastMode = mode
+                        val snapshot = clients.toList()
+                        snapshot.forEach { client ->
+                            try {
+                                client.close(NanoWSD.WebSocketFrame.CloseCode.GoingAway, "host mode changed", false)
+                            } catch (e: Exception) {
+                                logdNoFile { "close client on mode change error ${e.message}" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun addIntoConnections(websocket: ServerWebsocketClient) {
         aliveTrigger.updateAliveTs("when new client add")
         clients.add(websocket)
@@ -86,6 +118,7 @@ class WebsocketServer(
     }
 
     override fun openWebSocket(handshake: IHTTPSession): WebSocket {
+        startObserveModeChange()
         val uri = handshake.uri
         val nextColor = nextColor()
         logdNoFile { "open web Socket handshake uri: $uri nextColor $nextColor" }
