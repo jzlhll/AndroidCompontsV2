@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="StyleAuDebugShadowHeader">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:lineSpacingExtra">-2sp</item>
+        <item name="android:textColor">#FF404040</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="StyleAuDebugShadowTitle">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:lineSpacingExtra">-2sp</item>
+        <item name="android:textColor">#FF404040</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="ShapeAuDebugShadowRound12">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="StyleAuDebugShadowWhiteBlock">
+        <item name="backgroundNormal">#CCFFFFFF</item>
+        <item name="strokeColor">#FFFFFFFF</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="shadowColor">#10000000</item>
+        <item name="shadowBlur">32dp</item>
+        <item name="shadowSpread">1dp</item>
+    </style>
+
+    <style name="StyleAuDebugCenteredBlurShadow">
+        <item name="backgroundNormal">#FFFFFFFF</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="shadowColor">#1A404040</item>
+        <item name="shadowBlur">32dp</item>
+        <item name="shadowSpread">0dp</item>
+    </style>
+
+    <style name="StyleAuDebugPhotoPreview">
+        <item name="backgroundNormal">#FFFFFFFF</item>
+        <item name="cornerRadius">18dp</item>
+    </style>
+
+    <style name="StyleAuDebugOffsetBlurLight">
+        <item name="backgroundNormal">#94FFFFFF</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="shadowColor">#1A404040</item>
+        <item name="shadowBlur">8dp</item>
+        <item name="shadowOffsetY">2dp</item>
+        <item name="shadowSpread">0dp</item>
+    </style>
+
+    <style name="StyleAuDebugOffsetBlurHeavy">
+        <item name="backgroundNormal">#BDFFFFFF</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="shadowColor">#1A404040</item>
+        <item name="shadowBlur">16dp</item>
+        <item name="shadowOffsetY">4dp</item>
+        <item name="shadowSpread">0dp</item>
+    </style>
+
+    <style name="StyleAuDebugOffsetBlurCard">
+        <item name="backgroundNormal">#FFFFFFFF</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="shadowColor">#1A404040</item>
+        <item name="shadowBlur">10dp</item>
+        <item name="shadowOffsetY">12dp</item>
+        <item name="shadowSpread">0dp</item>
+    </style>
+
+    <style name="StyleAuDebugBackdropPreview">
+        <item name="backgroundNormal">#FFFFFFFF</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+
+    <style name="StyleAuDebugBackdropBlock">
+        <item name="backgroundNormal">#CCFFFFFF</item>
+        <item name="strokeColor">#FFFFFFFF</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="shadowColor">#10000000</item>
+        <item name="shadowBlur">32dp</item>
+        <item name="shadowSpread">0dp</item>
+    </style>
+
+    <style name="StyleAuDebugCircleBlurHost">
+        <item name="backgroundNormal">#FFFFFFFF</item>
+        <item name="cornerRadius">44dp</item>
+    </style>
+</resources>
