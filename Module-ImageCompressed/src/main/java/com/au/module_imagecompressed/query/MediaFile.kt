@@ -13,6 +13,14 @@ import android.provider.MediaStore
  * @param duration 时长（视频：毫秒；图片：0）
  * @param modifyTime 修改时间戳（秒），用于排序
  * @param bucketId 所属相册ID
+ * @param width 媒体宽度（像素）
+ * @param height 媒体高度（像素）
+ * @param orientation 媒体旋转角度
+ * @param isCamera 是否来自系统相机目录
+ * @param isScreenshot 是否来自系统截图目录
+ *
+ * size、duration、modifyTime、width、height 无法解析时为 0，
+ * isCamera、isScreenshot 无法解析时为 false，其余可选字段无法解析时为 null。
  */
 data class MediaFile(
     val id: Long,
@@ -21,7 +29,12 @@ data class MediaFile(
     val size: Long,
     val duration: Long,
     val modifyTime: Long,
-    val bucketId: Long
+    val bucketId: Long?,
+    val width: Int = 0,
+    val height: Int = 0,
+    val orientation: Int? = null,
+    val isCamera: Boolean = false,
+    val isScreenshot: Boolean = false
 )
 
 val MediaFile.contentUri: Uri

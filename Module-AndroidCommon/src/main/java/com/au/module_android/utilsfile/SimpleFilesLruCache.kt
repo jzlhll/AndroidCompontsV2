@@ -49,7 +49,7 @@ class SimpleFilesLruCache(
 
     init {
         // 初始化时扫描目录，构建文件信息map
-        scanDirectory()
+        scanDirectory(shutdownWhenOver = false, removeDownloadTempFiles = true)
     }
 
     fun shutdown() {
@@ -63,9 +63,16 @@ class SimpleFilesLruCache(
      * @param currentDir 当前扫描的目录
      */
     fun scanDirectoryRecursive(currentDir: File) {
+        scanDirectoryRecursive(currentDir, null)
+    }
+
+    private fun scanDirectoryRecursive(currentDir: File, downloadTempFileCutoffMs: Long?) {
         val files = currentDir.listFiles() ?: return
         for (file in files) {
             if (file.isFile) {
+                if (downloadTempFileCutoffMs != null && file.name.contains(".tmp_") &&
+                    file.lastModified() < downloadTempFileCutoffMs && file.delete()
+                ) continue
                 val metadata = FileMetadata(
                     accessTime = file.lastModified(),
                     fileSize = file.length(),
@@ -73,7 +80,7 @@ class SimpleFilesLruCache(
                 fileMetadata[file.absolutePath] = metadata
             } else if (file.isDirectory) {
                 // 递归扫描子目录
-                scanDirectoryRecursive(file)
+                scanDirectoryRecursive(file, downloadTempFileCutoffMs)
             }
         }
     }
@@ -83,7 +90,11 @@ class SimpleFilesLruCache(
      * 递归扫描所有子目录
      * 也可以用来做清理作用
      */
-    fun scanDirectory(shutdownWhenOver: Boolean = false) {
+    fun scanDirectory(
+        shutdownWhenOver: Boolean = false,
+        removeDownloadTempFiles: Boolean = false,
+    ) {
+        val downloadTempFileCutoffMs = if (removeDownloadTempFiles) System.currentTimeMillis() else null
         getOrCreateScope().submit {
             fileMetadata.clear()
             if (!cacheDir.exists()) {
@@ -91,7 +102,7 @@ class SimpleFilesLruCache(
                 return@submit
             }
 
-            scanDirectoryRecursive(cacheDir)
+            scanDirectoryRecursive(cacheDir, downloadTempFileCutoffMs)
             // 检查是否需要清理旧文件
             val size = getTotalSize()
             if (size > maxSize) {

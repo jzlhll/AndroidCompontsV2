@@ -3,9 +3,10 @@ package com.au.module_imagecompressed.query
 import android.content.ContentUris
 import android.content.ContentResolver
 import android.content.Context
+import android.database.Cursor
 import android.os.Build
 import android.os.Bundle
-import android.database.Cursor
+import android.os.Environment
 import android.provider.MediaStore
 import android.provider.MediaStore.Files.FileColumns
 import kotlinx.coroutines.Dispatchers
@@ -16,9 +17,13 @@ import kotlinx.coroutines.withContext
  */
 class MediaQueryManager(private val context: Context) {
     private val contentResolver by lazy { context.contentResolver }
+    private val cameraRelativePath = "${Environment.DIRECTORY_DCIM}/Camera/"
+    private val screenshotRelativePath =
+        "${Environment.DIRECTORY_PICTURES}/${Environment.DIRECTORY_SCREENSHOTS}/"
+    private val screenshotDirectoryName = Environment.DIRECTORY_SCREENSHOTS
 
     // ==================== 1. 查询所有相册列表 ====================
-    suspend fun queryAllAlbums(): List<Album> = withContext(Dispatchers.IO) {
+    suspend fun queryAllAlbums(ignoreScreenshots: Boolean = false): List<Album> = withContext(Dispatchers.IO) {
         val albumMap = mutableMapOf<Long, Album>()
 
         val projection = arrayOf(
@@ -26,14 +31,16 @@ class MediaQueryManager(private val context: Context) {
             FileColumns.BUCKET_DISPLAY_NAME,
             FileColumns._ID,              // 用于生成封面 Uri
             FileColumns.MEDIA_TYPE,       // 用于区分 Uri 类型
-            FileColumns.DATE_MODIFIED
+            FileColumns.DATE_MODIFIED,
+            FileColumns.RELATIVE_PATH
         )
 
-        val selection = "${FileColumns.MEDIA_TYPE} IN (?, ?)"
-        val selectionArgs = arrayOf(
+        val selectionBuilder = StringBuilder("${FileColumns.MEDIA_TYPE} IN (?, ?)")
+        val selectionArgs = mutableListOf(
             FileColumns.MEDIA_TYPE_IMAGE.toString(),
             FileColumns.MEDIA_TYPE_VIDEO.toString()
         )
+        addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
 
         // 按时间逆序，这样 map 中记录的第一个就是该相册最新的图，适合做封面
         val sortOrder = "${FileColumns.DATE_MODIFIED} DESC"
@@ -41,19 +48,21 @@ class MediaQueryManager(private val context: Context) {
         contentResolver.query(
             MediaStore.Files.getContentUri("external"),
             projection,
-            selection,
-            selectionArgs,
+            selectionBuilder.toString(),
+            selectionArgs.toTypedArray(),
             sortOrder
         )?.use { c ->
             val idIdx = c.getColumnIndexOrThrow(FileColumns._ID)
             val typeIdx = c.getColumnIndexOrThrow(FileColumns.MEDIA_TYPE)
             val bucketIdIdx = c.getColumnIndexOrThrow(FileColumns.BUCKET_ID)
             val nameIdx = c.getColumnIndexOrThrow(FileColumns.BUCKET_DISPLAY_NAME)
+            val relativePathIdx = c.getColumnIndexOrThrow(FileColumns.RELATIVE_PATH)
 
             while (c.moveToNext()) {
                 val bucketId = c.getLong(bucketIdIdx)
                 val mediaId = c.getLong(idIdx)
                 val mediaType = c.getInt(typeIdx)
+                val relativePath = c.getString(relativePathIdx)
 
                 val album = albumMap[bucketId]
                 if (album == null) {
@@ -68,7 +77,7 @@ class MediaQueryManager(private val context: Context) {
                         name = name,
                         coverUri = ContentUris.withAppendedId(baseUri, mediaId),
                         count = 1,
-                        isCamera = "Camera".equals(name, ignoreCase = true)
+                        isCamera = isCameraRelativePath(relativePath)
                     )
                 } else {
                     album.count++ // 已经在 Map 里了，累加计数
@@ -79,7 +88,11 @@ class MediaQueryManager(private val context: Context) {
     }
 
     // ==================== 2. 查询所有图片+视频（支持指定相册，时间逆序）- 仍用Files通用Uri ====================
-    suspend fun queryAllImageAndVideo(album: Album? = null, limit: Int? = null): List<MediaFile> = withContext(Dispatchers.IO) {
+    suspend fun queryAllImageAndVideo(
+        album: Album? = null,
+        limit: Int? = null,
+        ignoreScreenshots: Boolean = false
+    ): List<MediaFile> = withContext(Dispatchers.IO) {
         val mediaList = mutableListOf<MediaFile>()
         // 图片/视频通用投影列
         val projection = arrayOf(
@@ -90,6 +103,10 @@ class MediaQueryManager(private val context: Context) {
             FileColumns.DATE_MODIFIED,
             FileColumns.BUCKET_ID,
             FileColumns.DURATION,
+            FileColumns.WIDTH,
+            FileColumns.HEIGHT,
+            FileColumns.ORIENTATION,
+            FileColumns.RELATIVE_PATH,
         )
         // 构建筛选条件：媒体类型 + 可选相册
         val selectionBuilder = StringBuilder()
@@ -101,11 +118,12 @@ class MediaQueryManager(private val context: Context) {
         mediaTypes.forEach { selectionArgs.add(it.toString()) }
         // 筛选指定相册
         addAlbumFilter(selectionBuilder, selectionArgs, album)
+        addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
 
         val baseSortOrder = "${FileColumns.DATE_MODIFIED} DESC"
         val sortOrder = if (limit != null && limit > 0) "$baseSortOrder LIMIT $limit" else baseSortOrder
 
-        val cursor: Cursor? = contentResolver.query(
+        val cursor = contentResolver.query(
             MediaStore.Files.getContentUri("external"),
             projection,
             selectionBuilder.toString(),
@@ -113,12 +131,16 @@ class MediaQueryManager(private val context: Context) {
             sortOrder
         )
         // 解析Cursor为MediaFile
-        cursor?.use { mediaList.addAll(parseMediaCursor(it, projection)) }
+        cursor?.use { mediaList.addAll(parseMediaCursor(it)) }
         return@withContext mediaList
     }
 
     // ==================== 3. 查询所有图片（支持指定相册，时间逆序）- 改用MediaStore.Images专属Uri ====================
-    suspend fun queryAllImages(album: Album? = null, limit: Int? = null): List<MediaFile> = withContext(Dispatchers.IO) {
+    suspend fun queryAllImages(
+        album: Album? = null,
+        limit: Int? = null,
+        ignoreScreenshots: Boolean = false
+    ): List<MediaFile> = withContext(Dispatchers.IO) {
         val contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
@@ -126,13 +148,18 @@ class MediaQueryManager(private val context: Context) {
             MediaStore.Images.Media.MIME_TYPE,
             MediaStore.Images.Media.SIZE,
             MediaStore.Images.Media.DATE_MODIFIED,
-            MediaStore.Images.Media.BUCKET_ID
+            MediaStore.Images.Media.BUCKET_ID,
+            MediaStore.Images.Media.WIDTH,
+            MediaStore.Images.Media.HEIGHT,
+            MediaStore.Images.Media.ORIENTATION,
+            MediaStore.Images.Media.RELATIVE_PATH
         )
         val selectionBuilder = StringBuilder()
         val selectionArgs = mutableListOf<String>()
 
         // 仅筛选指定相册，无需筛选媒体类型（专属Uri已限定）
         addAlbumFilter(selectionBuilder, selectionArgs, album)
+        addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
 
         val cursor: Cursor? = queryMediaWithLimit(
             contentUri = contentUri,
@@ -145,13 +172,17 @@ class MediaQueryManager(private val context: Context) {
         // 解析Cursor为MediaFile
         val mediaList = mutableListOf<MediaFile>()
         cursor?.use {
-            mediaList.addAll(parseMediaCursor(it, projection))
+            mediaList.addAll(parseMediaCursor(it))
         }
         return@withContext mediaList
     }
 
     // ==================== 4. 查询所有视频（支持指定相册，时间逆序）- 改用MediaStore.Video专属Uri ====================
-    suspend fun queryAllVideos(album: Album? = null, limit: Int? = null): List<MediaFile> = withContext(Dispatchers.IO) {
+    suspend fun queryAllVideos(
+        album: Album? = null,
+        limit: Int? = null,
+        ignoreScreenshots: Boolean = false
+    ): List<MediaFile> = withContext(Dispatchers.IO) {
         val contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
 
         val mediaList = mutableListOf<MediaFile>()
@@ -163,12 +194,17 @@ class MediaQueryManager(private val context: Context) {
             MediaStore.Video.Media.DATE_MODIFIED,
             MediaStore.Video.Media.BUCKET_ID,
             MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.WIDTH,
+            MediaStore.Video.Media.HEIGHT,
+            MediaStore.Video.Media.ORIENTATION,
+            MediaStore.Video.Media.RELATIVE_PATH,
         )
         val selectionBuilder = StringBuilder()
         val selectionArgs = mutableListOf<String>()
 
         // 仅筛选指定相册，无需筛选媒体类型（专属Uri已限定）
         addAlbumFilter(selectionBuilder, selectionArgs, album)
+        addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
 
         val cursor: Cursor? = queryMediaWithLimit(
             contentUri = contentUri,
@@ -180,7 +216,7 @@ class MediaQueryManager(private val context: Context) {
         )
         // 解析Cursor为MediaFile
         cursor?.use {
-            mediaList.addAll(parseMediaCursor(it, projection))
+            mediaList.addAll(parseMediaCursor(it))
         }
         return@withContext mediaList
     }
@@ -274,30 +310,68 @@ class MediaQueryManager(private val context: Context) {
         }
     }
 
+    private fun addScreenshotFilter(
+        builder: StringBuilder,
+        args: MutableList<String>,
+        ignoreScreenshots: Boolean
+    ) {
+        if (!ignoreScreenshots) return
+        if (builder.isNotEmpty()) builder.append(" AND ")
+
+        val relativePathColumn = MediaStore.MediaColumns.RELATIVE_PATH
+        builder.append(
+            "($relativePathColumn IS NULL OR " +
+                "($relativePathColumn NOT LIKE ? AND " +
+                "$relativePathColumn NOT LIKE ? AND " +
+                "$relativePathColumn NOT LIKE ?))"
+        )
+        args.add("$screenshotRelativePath%")
+        args.add("$screenshotDirectoryName/%")
+        args.add("%/$screenshotDirectoryName/%")
+    }
+
+    private fun isCameraRelativePath(relativePath: String?): Boolean {
+        return relativePath?.startsWith(cameraRelativePath, ignoreCase = true) == true
+    }
+
+    private fun isScreenshotRelativePath(relativePath: String?): Boolean {
+        if (relativePath.isNullOrEmpty()) return false
+        return relativePath.startsWith(screenshotRelativePath, ignoreCase = true) ||
+            relativePath.startsWith("$screenshotDirectoryName/", ignoreCase = true) ||
+            relativePath.contains("/$screenshotDirectoryName/", ignoreCase = true)
+    }
+
     /**
      * 公共方法：解析Cursor为MediaFile列表（全量安全取值，适配所有媒体查询）
      */
-    private fun parseMediaCursor(cursor: Cursor, projection: Array<String>): List<MediaFile> {
+    private fun parseMediaCursor(cursor: Cursor): List<MediaFile> {
         val mediaList = mutableListOf<MediaFile>()
         // 获取所有列索引（全量使用getColumnIndex）
-        val idIndex = cursor.getColumnIndex(projection[0])
-        val nameIndex = if (projection.size > 1) cursor.getColumnIndex(projection[1]) else -1
-        val mimeTypeIndex = if (projection.size > 2) cursor.getColumnIndex(projection[2]) else -1
-        val sizeIndex = if (projection.size > 3) cursor.getColumnIndex(projection[3]) else -1
-        val modifyTimeIndex = if (projection.size > 4) cursor.getColumnIndex(projection[4]) else -1
-        val bucketIdIndex = if (projection.size > 5) cursor.getColumnIndex(projection[5]) else -1
-        val durationIndex = if (projection.size > 6) cursor.getColumnIndex(projection[6]) else -1
+        val idIndex = cursor.getColumnIndex(MediaStore.MediaColumns._ID)
+        val nameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+        val mimeTypeIndex = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)
+        val sizeIndex = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE)
+        val modifyTimeIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATE_MODIFIED)
+        val bucketIdIndex = cursor.getColumnIndex(MediaStore.MediaColumns.BUCKET_ID)
+        val durationIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION)
+        val widthIndex = cursor.getColumnIndex(MediaStore.MediaColumns.WIDTH)
+        val heightIndex = cursor.getColumnIndex(MediaStore.MediaColumns.HEIGHT)
+        val orientationIndex = cursor.getColumnIndex(MediaStore.MediaColumns.ORIENTATION)
+        val relativePathIndex = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
 
         while (cursor.moveToNext()) {
-            // 索引≥0才取值，否则给默认值，彻底避免崩溃
-            val id = if (idIndex >= 0) cursor.getLong(idIndex) else 0L
-            val rawName = if (nameIndex >= 0) cursor.getString(nameIndex) else null
+            val id = cursor.getLongOrNull(idIndex) ?: continue
+            val rawName = cursor.getStringOrNull(nameIndex)
             val name = rawName?.substringBeforeLast(".")
-            val mimeType = if (mimeTypeIndex >= 0) cursor.getString(mimeTypeIndex) else null
-            val size = if (sizeIndex >= 0) cursor.getLong(sizeIndex) else 0L
-            val duration = if (durationIndex >= 0) cursor.getLong(durationIndex) else 0L
-            val modifyTime = if (modifyTimeIndex >= 0) cursor.getLong(modifyTimeIndex) else 0L
-            val bucketId = if (bucketIdIndex >= 0) cursor.getLong(bucketIdIndex) else -1
+            val mimeType = cursor.getStringOrNull(mimeTypeIndex)
+            val size = cursor.getLongOrNull(sizeIndex) ?: 0L
+            val duration = cursor.getLongOrNull(durationIndex) ?: 0L
+            val modifyTime = cursor.getLongOrNull(modifyTimeIndex) ?: 0L
+            val bucketId = cursor.getLongOrNull(bucketIdIndex)
+            val width = cursor.getIntOrNull(widthIndex) ?: 0
+            val height = cursor.getIntOrNull(heightIndex) ?: 0
+            val orientation = cursor.getIntOrNull(orientationIndex)
+            val relativePath = cursor.getStringOrNull(relativePathIndex)
 
             mediaList.add(
                 MediaFile(
@@ -307,7 +381,12 @@ class MediaQueryManager(private val context: Context) {
                     size = size,
                     duration = duration,
                     modifyTime = modifyTime,
-                    bucketId = bucketId
+                    bucketId = bucketId,
+                    width = width,
+                    height = height,
+                    orientation = orientation,
+                    isCamera = isCameraRelativePath(relativePath),
+                    isScreenshot = isScreenshotRelativePath(relativePath)
                 )
             )
         }
@@ -335,6 +414,33 @@ class MediaQueryManager(private val context: Context) {
             val sortOrder = if (normalizedLimit != null) "$sortColumn DESC LIMIT $normalizedLimit" else "$sortColumn DESC"
             contentResolver.query(contentUri, projection, selection, selectionArgs, sortOrder)
         }
+    }
+
+    private fun Cursor.getStringOrNull(columnIndex: Int): String? {
+        if (columnIndex < 0) return null
+        return try {
+            if (getType(columnIndex) == Cursor.FIELD_TYPE_STRING) getString(columnIndex) else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun Cursor.getLongOrNull(columnIndex: Int): Long? {
+        if (columnIndex < 0) return null
+        return try {
+            when (getType(columnIndex)) {
+                Cursor.FIELD_TYPE_INTEGER -> getLong(columnIndex)
+                Cursor.FIELD_TYPE_STRING -> getString(columnIndex)?.toLongOrNull()
+                else -> null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun Cursor.getIntOrNull(columnIndex: Int): Int? {
+        val value = getLongOrNull(columnIndex) ?: return null
+        return if (value in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()) value.toInt() else null
     }
 }
 /*

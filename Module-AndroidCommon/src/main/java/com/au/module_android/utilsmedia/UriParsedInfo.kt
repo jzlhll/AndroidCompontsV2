@@ -20,6 +20,12 @@ data class UriParsedInfo(
     val size: Size? = null, /* 图片像素尺寸 */) {
     fun isFullPath() : Boolean = fullPath != null
 
+    fun goodFileName(): String {
+        if (name.contains(".")) return name
+        val baseName = name.ifEmpty { System.currentTimeMillis().toString() }
+        return "$baseName.$extension"
+    }
+
     fun isUriVideo(): Boolean {
         return mimeType.startsWith("video/")
     }
