@@ -13,8 +13,12 @@ object ComposeColors {
     val TextPrimary @Composable @ReadOnlyComposable get() = colorResource(R.color.color_text_normal)
     val TextSecondary @Composable @ReadOnlyComposable get() = colorResource(R.color.color_second_btn_text)
     val TextDesc @Composable @ReadOnlyComposable get() = colorResource(R.color.color_text_desc)
+    val TextDesc50Percent @Composable @ReadOnlyComposable get() = TextDesc.copy(alpha = 0.5f)
 
     val ShadowDefault @Composable @ReadOnlyComposable get() = colorResource(R.color.color_shadow_default)
+    val WhiteBlockBackground @Composable @ReadOnlyComposable get() = colorResource(R.color.color_shadow_white_block_background)
+    val RoundedCardShadow = Color(0x0A404040)
+    val White80Percent = Color(0xCCFFFFFF)
     val Placeholder @Composable @ReadOnlyComposable get() = colorResource(R.color.color_switch_block_sel_dis_bg)
 
     /** 阴影白底块背景，对应 color_shadow_white_block_background（80% 白）。 */
