@@ -20,11 +20,12 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <View
+            <TextView
                 android:id="@+id/iconView"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                tools:background="#5CCE99" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                tools:text="🌟" />
 
             <com.au.module_androidui.widget.CustomFontText
                 android:id="@+id/ipHostTv"
@@ -32,7 +33,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                tools:text="192.168.1.2:8080" />
+                tools:text="192.168.1.2" />
+
+            <com.au.module_androidui.widget.CustomFontText
+                android:id="@+id/timeTv"
+                style="@style/StyleAuTextThinDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                tools:text="12:30" />
         </LinearLayout>
 
         <com.au.module_androidui.widget.CustomFontText

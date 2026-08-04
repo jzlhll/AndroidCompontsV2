@@ -149,7 +149,7 @@ class WebsocketServer(
 
     fun broadcastTextChatFromApp(bean: TextChatMessageBean) {
         val textBase64 = Base64.encodeToString(bean.text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
-        val data = TextChatWsData(textBase64, bean.ip, bean.host, bean.timestamp, bean.iconColor)
+        val data = TextChatWsData(textBase64, bean.ip, "", bean.timestamp, bean.iconColor)
         scope.launch {
             clients.forEach { client ->
                 try {

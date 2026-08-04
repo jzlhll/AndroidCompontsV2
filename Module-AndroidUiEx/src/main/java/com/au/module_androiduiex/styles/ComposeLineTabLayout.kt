@@ -128,7 +128,7 @@ private fun RowScope.ComposeLineTabItem(
     Box(
         modifier = baseModifier
             .height(style.height)
-            .noBackClickable(onClick)
+            .noBackClickable(onClick = onClick)
             .padding(horizontal = style.itemHorizontalPadding),
         contentAlignment = Alignment.Center,
     ) {

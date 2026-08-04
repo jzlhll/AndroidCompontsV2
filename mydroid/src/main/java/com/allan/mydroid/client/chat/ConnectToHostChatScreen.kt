@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardOptions
@@ -159,15 +158,24 @@ private fun MessageRow(msg: ChatMessage, onLongPress: () -> Unit) {
         horizontalAlignment = alignment,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (!msg.isMe && msg.iconColor.isNotEmpty()) {
-                val color = remember(msg.iconColor) { parseHexColor(msg.iconColor) }
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(color, CircleShape),
+            if (!msg.isMe) {
+                BasicText(
+                    text = "🌟",
+                    style = TextStyle(fontSize = 16.sp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
             }
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFFF0F0F0), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            ) {
+                BasicText(
+                    text = msg.ip,
+                    style = ComposeTypography.Font14DescC0,
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
             Box(
                 modifier = Modifier
                     .background(bubbleColor, RoundedCornerShape(10.dp))
@@ -187,16 +195,6 @@ private fun MessageRow(msg: ChatMessage, onLongPress: () -> Unit) {
             style = ComposeTypography.Font14DescC0,
             modifier = Modifier.padding(top = 2.dp, bottom = 2.dp),
         )
-    }
-}
-
-private fun parseHexColor(hex: String): Color {
-    val normalized = hex.removePrefix("#")
-    return try {
-        val rgb = normalized.toLong(16)
-        Color((0xFF000000L or rgb).toInt())
-    } catch (e: Exception) {
-        Color.Gray
     }
 }
 

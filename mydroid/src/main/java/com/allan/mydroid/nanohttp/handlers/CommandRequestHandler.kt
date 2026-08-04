@@ -40,11 +40,17 @@ class CommandRequestHandler(
             }
             NanoHTTPD.Method.POST -> {
                 // NanoHTTPD 不会自动消费 POST body；keep-alive 复用连接时残留 body 会污染下一个请求行
-                // (导致 "HTTP verb {}POST unhandled" 400)。这里统一 parseBody 消费掉。
-                runCatching { session.parseBody(HashMap()) }
+                // (导致 "HTTP verb {}POST unhandled" 400)。仅对本 handler 处理的 URI 消费 body，
+                // 不能对所有 POST 都 parseBody，否则会消费 upload-chunk/merge-chunks 的请求体。
                 when (uri) {
-                    READ_WEBSOCKET_IP_PORT -> return getWebsocketIpPort()
-                    REQUEST_FILE_LIST -> return getFileList()
+                    READ_WEBSOCKET_IP_PORT -> {
+                        runCatching { session.parseBody(HashMap()) }
+                        return getWebsocketIpPort()
+                    }
+                    REQUEST_FILE_LIST -> {
+                        runCatching { session.parseBody(HashMap()) }
+                        return getFileList()
+                    }
                 }
             }
             else -> {}

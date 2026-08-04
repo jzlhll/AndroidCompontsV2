@@ -11,7 +11,7 @@
         android:layout_height="0dp"
         android:background="@color/logic_middle"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/title" />
+        app:layout_constraintBottom_toBottomOf="@id/toolbar" />
 
     <com.au.module_androidui.widget.CustomToolbar
         android:id="@+id/toolbar"
@@ -24,39 +24,42 @@
         app:titleCentered="true"
         app:titleTextColor="#ffffff" />
 
-    <com.au.module_androidui.widget.CustomFontText
-        android:id="@+id/title"
-        style="@style/StyleAuTextThin"
-        android:layout_width="match_parent"
-        android:layout_height="26dp"
-        android:layout_marginTop="4dp"
-        android:gravity="center_horizontal"
-        android:textColor="#ffffff"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        tools:text="192.168.1.2:8080" />
+    <eightbitlab.com.blurview.BlurTarget
+        android:id="@+id/blurTarget"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/inputHost"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/chatRcv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingStart="12dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp"
+            tools:listitem="@layout/holder_text_chat_message" />
+    </eightbitlab.com.blurview.BlurTarget>
+
+    <eightbitlab.com.blurview.BlurView
+        android:id="@+id/clientsBlurView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@id/clientsHost"
+        app:layout_constraintEnd_toEndOf="@id/clientsHost"
+        app:layout_constraintStart_toStartOf="@id/clientsHost"
+        app:layout_constraintTop_toTopOf="@id/clientsHost" />
 
     <LinearLayout
         android:id="@+id/clientsHost"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/title" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/chatRcv"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingStart="12dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="12dp"
-        app:layout_constraintBottom_toTopOf="@id/inputHost"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/clientsHost"
-        tools:listitem="@layout/holder_text_chat_message" />
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
     <LinearLayout
         android:id="@+id/inputHost"

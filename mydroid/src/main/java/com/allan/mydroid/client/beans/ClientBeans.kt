@@ -22,7 +22,8 @@ data class ChatMessage(
     val text: String,
     val isMe: Boolean,
     val timestamp: Long,
-    val iconColor: String
+    val iconColor: String,
+    val ip: String = "",
 )
 
 /** 待上传文件项。 */

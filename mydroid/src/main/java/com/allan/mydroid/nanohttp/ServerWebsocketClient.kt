@@ -40,13 +40,13 @@ class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
     lateinit var messenger : AbsWebSocketClientMessenger
 
     /**
-     * 客户端名字；就像 192.168.0.6@abde1234
+     * 客户端名字；直接使用 ip，不再拼接随机码
      */
-    var clientName = "$remoteIpStr@--"
+    var clientName = remoteIpStr ?: ""
         private set
 
     val hostName: String
-        get() = clientName.substringAfter("@", "--")
+        get() = ""
 
     var platform = ""
 
@@ -106,9 +106,8 @@ class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
         server.updateAliveFromClient(api)
         when (api) {
             API_WS_INIT -> {
-                val targetName = json.optString("wsName")
                 platform = json.optString("platform")
-                clientName = "$remoteIpStr@$targetName"
+                clientName = remoteIpStr ?: ""
                 server.triggerConnectionsList()
 
                 clientInit()

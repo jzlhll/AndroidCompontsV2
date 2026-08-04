@@ -93,7 +93,6 @@ class ClientWsClient {
     private fun sendClientInit() {
         val json = JSONObject().apply {
             put("api", API_WS_INIT)
-            put("wsName", randomWsName())
             put("platform", "android")
         }.toString()
         webSocket?.send(json)
@@ -191,11 +190,6 @@ class ClientWsClient {
             }
             else -> WsFrame.Unknown(api, text)
         }
-    }
-
-    private fun randomWsName(): String {
-        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-        return (1..6).map { chars.random() }.joinToString("")
     }
 }
 

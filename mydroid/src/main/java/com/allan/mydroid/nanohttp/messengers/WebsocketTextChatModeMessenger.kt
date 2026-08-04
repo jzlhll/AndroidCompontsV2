@@ -5,6 +5,7 @@ import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_CALLBACK
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_SEND
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.beans.wsdata.TextChatWsData
+import com.allan.mydroid.beans.wsdata.getIconColorByIp
 import com.allan.mydroid.nanohttp.AbsWebSocketClientMessenger
 import com.allan.mydroid.nanohttp.ServerWebsocketClient
 import com.allan.mydroid.state.GlobalTextChatObj
@@ -35,7 +36,7 @@ class WebsocketTextChatModeMessenger(client: ServerWebsocketClient) : AbsWebSock
         for (i in start..end) {
             val bean = history[i]
             val textBase64 = Base64.encodeToString(bean.text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
-            val data = TextChatWsData(textBase64, bean.ip, bean.host, bean.timestamp, bean.iconColor)
+            val data = TextChatWsData(textBase64, bean.ip, "", bean.timestamp, bean.iconColor)
             client.sendApiResult(API_WS_TEXT_CHAT_CALLBACK, data)
         }
     }
@@ -68,9 +69,9 @@ class WebsocketTextChatModeMessenger(client: ServerWebsocketClient) : AbsWebSock
         val bean = TextChatMessageBean(
             text = text,
             ip = client.remoteIp,
-            host = client.hostName,
+            host = "",
             timestamp = json.optLong("timestamp").takeIf { it > 0 } ?: System.currentTimeMillis(),
-            iconColor = json.optString("iconColor").ifBlank { client.color },
+            iconColor = getIconColorByIp(client.remoteIp),
         )
         textChatObj.addMessage(bean)
         textChatObj.emitIncoming(bean)

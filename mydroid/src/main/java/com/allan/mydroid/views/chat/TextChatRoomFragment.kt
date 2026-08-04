@@ -1,5 +1,6 @@
 package com.allan.mydroid.views.chat
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
@@ -12,6 +13,7 @@ import com.allan.mydroid.AppGlobals
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
+import com.allan.mydroid.beans.wsdata.getIconColorByIp
 import com.allan.mydroid.databinding.FragmentTextChatRoomBinding
 import com.allan.mydroid.databinding.MydroidSendClientBinding
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
@@ -31,6 +33,7 @@ import com.au.module_android.utils.visible
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_androidui.ui.views.YourToolbarInfo
+import eightbitlab.com.blurview.BlurView3Util
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 import kotlin.math.max
@@ -50,7 +53,6 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     private val sendClientBindings = mutableListOf<MydroidSendClientBinding>()
 
     private var selfIp = ""
-    private var selfHost = "-"
     private var currentImeOffset = 0
     private val inputMinHeight by lazy { 40.dp }
     private val inputMaxHeight by lazy { 120.dp }
@@ -69,6 +71,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         initImeAssist()
         observeSelfAddress()
         observeClientList()
+        initClientsBlur()
         binding.toolbar.setNavigationOnClickListener {
             requireActivity().finishAfterTransition()
         }
@@ -114,16 +117,6 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     private fun observeSelfAddress() {
         launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { networkInfo ->
             selfIp = networkInfo?.ip.orEmpty()
-            val portStr = networkInfo?.httpPort?.toString()
-                ?: networkInfo?.wsPort?.toString()
-            selfHost = portStr ?: "-"
-            binding.title.text = if (selfIp.isEmpty()) {
-                getString(R.string.connect_wifi_or_hotspot)
-            } else if (portStr.isNullOrEmpty()) {
-                selfIp
-            } else {
-                "$selfIp:$portStr"
-            }
             messageAdapter.updateSelfIp(selfIp)
         }
     }
@@ -146,10 +139,13 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
 
             if (clientList.isEmpty()) {
                 binding.clientsHost.gone()
+                binding.clientsBlurView.gone()
+                updateRecyclerTopPadding()
                 return@launchRepeatOnStarted
             }
 
             binding.clientsHost.visible()
+            binding.clientsBlurView.visible()
             clientList.forEachIndexed { index, clientInfo ->
                 val item = clientItem(index)
                 item.title.text = clientInfo.clientName
@@ -159,7 +155,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
                     height = 18.dp
                 }
                 item.icon.background = ViewBackgroundBuilder()
-                    .setBackground(clientInfo.color.toColorInt())
+                    .setBackground(getIconColorByIp(clientInfo.clientName).toColorInt())
                     .setCornerRadius(32f.dp)
                     .build()
                 if (!item.root.isAttachedToWindow) {
@@ -167,7 +163,18 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
                 }
                 item.root.visible()
             }
+            updateRecyclerTopPadding()
         }
+    }
+
+    // 配置 clientsHost 背景的 backdrop blur。
+    private fun initClientsBlur() {
+        val density = resources.displayMetrics.density
+        BlurView3Util(binding.clientsBlurView, 16, 12f * density).setBlurWithOverlayNoNoise(
+            binding.blurTarget,
+            0xE6FFFFFF.toInt(),
+            Color.WHITE,
+        )
     }
 
     // 利用输入法监听同步底部输入区和列表滚动。
@@ -191,7 +198,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         val bean = TextChatMessageBean(
             text = text,
             ip = selfIp.ifEmpty { "0.0.0.0" },
-            host = selfHost.ifEmpty { "-" },
+            host = "",
             timestamp = System.currentTimeMillis(),
             iconColor = SELF_ICON_COLOR,
         )
@@ -271,6 +278,16 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         binding.chatRcv.updatePadding(
             bottom = binding.inputHost.height + binding.root.paddingBottom + currentImeOffset + 12.dp,
         )
+    }
+
+    // 给列表顶部预留接入客户端区域的高度，避免消息被遮挡。
+    private fun updateRecyclerTopPadding() {
+        val topExtra = if (binding.clientsHost.visibility == View.VISIBLE) {
+            binding.clientsHost.height + 4.dp
+        } else {
+            0
+        }
+        binding.chatRcv.updatePadding(top = 12.dp + topExtra)
     }
 
     // 将列表滚动到最后一条消息。

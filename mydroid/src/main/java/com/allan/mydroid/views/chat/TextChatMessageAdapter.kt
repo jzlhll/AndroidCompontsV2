@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import com.allan.mydroid.R
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
+import com.allan.mydroid.beans.wsdata.getIconColorByIp
 import com.allan.mydroid.databinding.HolderTextChatMessageBinding
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.dp
@@ -16,21 +17,8 @@ import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.random.Random
 
 class TextChatMessageAdapter : BindRcvAdapter<TextChatMessageBean, TextChatMessageHolder>() {
-    private val colorPalette = listOf(
-        "#3D7C42",
-        "#FF9E80",
-        "#6A3188",
-        "#895DF8",
-        "#CEBE55",
-        "#5CCE99",
-        "#CE626E",
-        "#71A3CE",
-    )
-    private val ipColorCache = linkedMapOf<String, Int>()
-
     private var selfIp = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextChatMessageHolder {
@@ -57,11 +45,9 @@ class TextChatMessageAdapter : BindRcvAdapter<TextChatMessageBean, TextChatMessa
         return selfIp.isNotEmpty() && bean.ip == selfIp
     }
 
-    // 获取并缓存指定ip的头像颜色。
+    // 根据 ip 哈希取头像颜色，与 HTML 端保持一致。
     private fun getIconColor(ip: String): Int {
-        return ipColorCache.getOrPut(ip) {
-            colorPalette[Random.nextInt(colorPalette.size)].toColorInt()
-        }
+        return getIconColorByIp(ip).toColorInt()
     }
 
     var onMessageLongClick: (String) -> Unit = {}
@@ -98,21 +84,39 @@ class TextChatMessageHolder(
         binding.contentHost.layoutParams = contentLp
         binding.contentHost.gravity = if (isSelf) Gravity.END else Gravity.START
 
-        val iconColor = if (bean.iconColor.isBlank()) {
-            colorProvider(bean.ip)
+        if (isSelf) {
+            // host 自己的消息：🌟
+            binding.iconView.background = null
+            binding.iconView.text = "🌟"
+            binding.iconView.layoutParams = binding.iconView.layoutParams.apply {
+                width = ViewGroup.LayoutParams.WRAP_CONTENT
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
         } else {
-            bean.iconColor.toColorInt()
+            // 客户端接入的消息：随机色圆圈
+            val iconColor = if (bean.iconColor.isBlank()) {
+                colorProvider(bean.ip)
+            } else {
+                bean.iconColor.toColorInt()
+            }
+            binding.iconView.text = ""
+            binding.iconView.background = ViewBackgroundBuilder()
+                .setBackground(iconColor)
+                .setCornerRadius(11f.dp)
+                .build()
+            binding.iconView.layoutParams = binding.iconView.layoutParams.apply {
+                width = 20.dp
+                height = 20.dp
+            }
         }
-        binding.iconView.background = ViewBackgroundBuilder()
-            .setBackground(iconColor)
-            .setCornerRadius(11f.dp)
-            .build()
         val timeText = timeFormat.format(Date(bean.timestamp))
-        binding.ipHostTv.text = if (bean.host.isBlank()) {
-            "${bean.ip}:-  $timeText"
-        } else {
-            "${bean.ip}:${bean.host}  $timeText"
-        }
+        binding.ipHostTv.text = bean.ip
+        binding.ipHostTv.background = ViewBackgroundBuilder()
+            .setBackground(0xFFF0F0F0.toInt())
+            .setCornerRadius(4f.dp)
+            .build()
+        binding.ipHostTv.setPadding(4.dp, 2.dp, 4.dp, 2.dp)
+        binding.timeTv.text = timeText
         binding.messageBubbleTv.text = bean.text
         binding.messageBubbleTv.setTextSize(
             TypedValue.COMPLEX_UNIT_SP,

@@ -8,6 +8,7 @@ import com.allan.mydroid.client.HostEndpoint
 import com.allan.mydroid.client.api.ClientWsClient
 import com.allan.mydroid.client.api.WsConnectionState
 import com.allan.mydroid.client.api.WsFrame
+import com.allan.mydroid.beans.wsdata.getIconColorByIp
 import com.allan.mydroid.client.beans.ChatMessage
 import com.au.module_android.Globals
 import com.au.module_android.log.loge
@@ -33,7 +34,7 @@ class ConnectToHostChatViewModel(
 
     private val wsClient: ClientWsClient by inject()
 
-    private val _uiState = MutableStateFlow(ConnectToHostChatUiState())
+    private val _uiState = MutableStateFlow(ConnectToHostChatUiState(selfColor = getIconColorByIp(endpoint.ip)))
     val uiState: StateFlow<ConnectToHostChatUiState> = _uiState.asStateFlow()
 
     private val pendingSelfMessages = mutableSetOf<Long>()
@@ -54,7 +55,7 @@ class ConnectToHostChatViewModel(
                 when (frame) {
                     is WsFrame.ClientInitBack -> {
                         _uiState.update {
-                            it.copy(selfColor = frame.color, selfName = frame.clientName)
+                            it.copy(selfName = frame.clientName, selfColor = getIconColorByIp(frame.clientName))
                         }
                     }
                     is WsFrame.TextChat -> {
@@ -70,7 +71,7 @@ class ConnectToHostChatViewModel(
                             return@collectLatest
                         }
                         _uiState.update { st ->
-                            st.copy(messages = st.messages + ChatMessage(text, isMe = false, frame.timestamp, frame.iconColor))
+                            st.copy(messages = st.messages + ChatMessage(text, isMe = false, frame.timestamp, frame.iconColor, frame.ip))
                         }
                     }
                     is WsFrame.LeftSpace -> { /* Chat 模式忽略 leftSpace */ }
@@ -86,7 +87,7 @@ class ConnectToHostChatViewModel(
         val color = _uiState.value.selfColor
         pendingSelfMessages.add(timestamp)
         _uiState.update { st ->
-            st.copy(messages = st.messages + ChatMessage(text, isMe = true, timestamp, color))
+            st.copy(messages = st.messages + ChatMessage(text, isMe = true, timestamp, color, endpoint.ip))
         }
         val base64 = Base64.encodeToString(text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
         try {

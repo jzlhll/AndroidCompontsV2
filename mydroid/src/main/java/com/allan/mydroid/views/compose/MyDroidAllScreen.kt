@@ -221,7 +221,7 @@ private fun LogicButton(
                 .fillMaxWidth()
                 .height(62.dp)
                 .background(backgroundColor, RoundedCornerShape(16.dp))
-                .noBackClickable(onClick),
+                .noBackClickable(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
@@ -313,7 +313,7 @@ private fun ClientPage(
                     .align(Alignment.TopEnd)
                     .padding(end = 16.dp, top = 8.dp)
                     .size(24.dp)
-                    .noBackClickable(onStartSearch),
+                    .noBackClickable(onClick = onStartSearch),
             )
         }
     }
@@ -377,7 +377,7 @@ private fun BoxScope.StartSearchButton(onClick: () -> Unit) {
             .wrapContentWidth()
             .wrapContentHeight()
             .background(RadarBaseStrokeColor, RoundedCornerShape(6.dp))
-            .noBackClickable(onClick)
+            .noBackClickable(onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {

@@ -16,10 +16,10 @@
     const messageList = [];
 
     let selfIp = "browser";
-    let selfHost = "web";
     let selfColor = "#7B4DFF";
 
     const subtitleView = document.getElementById("chatSubtitle");
+    const titleColorIcon = document.getElementById("titleColorIcon");
     const messageListView = document.getElementById("messageList");
     const messageInput = document.getElementById("messageInput");
     const sendButton = document.getElementById("sendButton");
@@ -55,16 +55,19 @@
 
     function renderMessages() {
         const html = messageList.map((item) => {
-            const host = item.host && item.host.length > 0 ? item.host : "-";
             const timeText = formatTimestamp(item.timestamp);
             const escapedText = escapeHtml(item.text);
             const iconColor = item.iconColor || getIconColor(item.ip);
+            const iconHtml = item.type === 'client'
+                ? `<span class="message-icon-star">🌟</span>`
+                : `<div class="message-icon" style="background:${iconColor};"></div>`;
             return `
                 <div class="message-item ${item.type}">
                     <div class="message-content">
                         <div class="message-top">
-                            <div class="message-icon" style="background:${iconColor};"></div>
-                            <div class="message-host">${escapeHtml(item.ip)}:${escapeHtml(host)}&nbsp;&nbsp;${timeText}</div>
+                            ${iconHtml}
+                            <div class="message-host">${escapeHtml(item.ip)}</div>
+                            <div class="message-time">${timeText}</div>
                         </div>
                         <div class="message-bubble">
                             <div class="message-text" data-copy-text="${escapeAttr(item.text)}">${escapedText}</div>
@@ -77,7 +80,7 @@
         scrollMessagesToBottom();
     }
 
-    function appendMessage(type, text, ip, host, timestamp = Date.now(), iconColor = "") {
+    function appendMessage(type, text, ip, timestamp = Date.now(), iconColor = "") {
         const trimText = (text || "").trim();
         if (!trimText) {
             return;
@@ -86,7 +89,6 @@
             type,
             text: trimText,
             ip: ip || "0.0.0.0",
-            host: host || "-",
             timestamp,
             iconColor,
         });
@@ -115,7 +117,7 @@
             timestamp,
             iconColor: selfColor,
         }));
-        appendMessage("self", text, selfIp, selfHost, timestamp, selfColor);
+        appendMessage("self", text, selfIp, timestamp, selfColor);
         messageInput.value = "";
         resizeInput();
         messageInput.focus();
@@ -226,18 +228,19 @@
         const api = jsonData.api;
 
         if (api === window.API_WS_CLIENT_INIT_CALLBACK) {
-            const clientName = data.clientName || "";
-            selfIp = clientName.includes("@") ? clientName.split("@")[0] : "browser";
-            selfHost = clientName.includes("@") ? clientName.split("@")[1] : "web";
-            selfColor = data.color || selfColor;
-            subtitleView.textContent = `${loc["text_chat_browser_subtitle"]} · ${data.clientName}`;
+            selfIp = data.clientName || "browser";
+            selfColor = getIconColor(selfIp);
+            if (titleColorIcon) {
+                titleColorIcon.style.background = selfColor;
+            }
+            subtitleView.textContent = `${loc["text_chat_browser_subtitle"]} · ${selfIp}`;
             return true;
         }
 
         if (api === window.API_WS_TEXT_CHAT_CALLBACK) {
             const text = decodeBase64(data.textBase64);
             if (text) {
-                appendPhoneMessage(text, data.ip, data.host, data.timestamp, data.iconColor);
+                appendPhoneMessage(text, data.ip, data.timestamp, data.iconColor);
             }
             return true;
         }
@@ -245,12 +248,12 @@
         return false;
     };
 
-    window.appendBrowserMessage = function(text, ip = "browser", host = "web", timestamp = Date.now(), iconColor = selfColor) {
-        appendMessage("self", text, ip, host, timestamp, iconColor);
+    window.appendBrowserMessage = function(text, ip = "browser", timestamp = Date.now(), iconColor = selfColor) {
+        appendMessage("self", text, ip, timestamp, iconColor);
     };
 
-    window.appendPhoneMessage = function(text, ip = "phone", host = "app", timestamp = Date.now(), iconColor = "") {
-        appendMessage("client", text, ip, host, timestamp, iconColor);
+    window.appendPhoneMessage = function(text, ip = "phone", timestamp = Date.now(), iconColor = "") {
+        appendMessage("client", text, ip, timestamp, iconColor);
     };
 
     function escapeHtml(text) {

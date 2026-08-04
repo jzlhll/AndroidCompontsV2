@@ -45,6 +45,19 @@
             margin: 0;
             color: #2c3e50;
             font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-color-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #7B4DFF;
+            margin-right: 10px;
+            flex: 0 0 18px;
         }
 
         .chat-subtitle {
@@ -103,11 +116,30 @@
             flex: 0 0 20px;
         }
 
+        .message-icon-star {
+            font-size: 16px;
+            line-height: 20px;
+            flex: 0 0 20px;
+            text-align: center;
+        }
+
         .message-host {
             color: #7a808a;
             font-size: 13px;
             line-height: 1.2;
             word-break: break-all;
+            background: #f0f0f0;
+            border-radius: 4px;
+            padding: 2px 4px 2px 4px;
+            display: inline-block;
+        }
+
+        .message-time {
+            color: #7a808a;
+            font-size: 13px;
+            line-height: 1.2;
+            margin-left: 6px;
+            display: inline-block;
         }
 
         .message-text {
@@ -305,7 +337,7 @@
 <div class="page">
     <div class="chat-shell">
         <div class="chat-header">
-            <h1>MyDroid</h1>
+            <h1><span id="titleColorIcon" class="title-color-icon"></span>MyDroid</h1>
             <div id="chatSubtitle" class="chat-subtitle"></div>
         </div>
 
