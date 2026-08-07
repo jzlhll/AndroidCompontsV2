@@ -236,7 +236,7 @@ private fun Modifier.composeWhiteBlockFrame(
 @Composable
 fun Modifier.composeBlurredCircleBackground(
     blurRadius: Dp = 4.dp,
-    overlayColor: Color = ComposeColors.TextDesc50Percent,
+    overlayColor: Color = ComposeColors.TextDesc.copy(alpha = 0.5f),
 ): Modifier {
     return clip(CircleShape)
         .drawWithContent {
