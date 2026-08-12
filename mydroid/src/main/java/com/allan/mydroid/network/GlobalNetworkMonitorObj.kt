@@ -20,10 +20,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
-import kotlin.time.Duration.Companion.seconds
 
 class GlobalNetworkMonitorObj(
     private val serverRuntimeState: GlobalServerRuntimeObj,
@@ -88,7 +87,6 @@ class GlobalNetworkMonitorObj(
     }
 
     val networkFlow: Flow<NetworkStatus> = networkEventFlow
-        .debounce(2.seconds)
         .map {
             val (ip, netType) = getIpAddress()
             if (ip == null) {
@@ -97,6 +95,7 @@ class GlobalNetworkMonitorObj(
                 NetworkStatus.Connected(ip, netType.toString())
             }
         }
+        .distinctUntilChanged()
         .stateIn(scope = Globals.mainScope, started = SharingStarted.Lazily, initialValue = NetworkStatus.Uninitialized)
 
     val networkInfoFlow = networkFlow.combine(serverRuntimeState.portsFlow) { networkStatus, statusState->
