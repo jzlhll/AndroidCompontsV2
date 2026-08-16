@@ -66,7 +66,7 @@ fun ConnectToHostReceiveScreen(
             ) {
                 BasicText(
                     text = stringResource(R.string.transfer_list_title),
-                    style = ComposeTypography.Font14Secondary,
+                    style = ComposeTypography.Font14Desc91,
                 )
                 if (uiState.refreshing) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -83,7 +83,7 @@ fun ConnectToHostReceiveScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     BasicText(
                         text = stringResource(R.string.no_received_files),
-                        style = ComposeTypography.Font14Secondary.copy(textAlign = TextAlign.Center),
+                        style = ComposeTypography.Font14Desc91.copy(textAlign = TextAlign.Center),
                     )
                 }
             } else {

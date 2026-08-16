@@ -27,4 +27,4 @@ val RegularFontFamily by lazy { FontFamily(Font(REGULAR_TTF, fontAssets)) }
 val MediumFontFamily by lazy { FontFamily(Font(MEDIUM_TTF, fontAssets)) }
 
 /** 从宿主 App assets/fonts 加载 Lufga SemiBold 字体。 */
-val BoldFontFamily by lazy { FontFamily(Font(BOLD_TTF, fontAssets)) }
+val SemiBoldFontFamily by lazy { FontFamily(Font(BOLD_TTF, fontAssets)) }

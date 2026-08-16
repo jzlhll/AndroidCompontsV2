@@ -96,6 +96,10 @@ fun mmkvSetAny(key:String, value:Any) {
     }
 }
 
+fun mmkvClearKey(key: String) {
+    mmkv.removeValueForKey(key)
+}
+
 /**
  * 通过mmkv获取，常规的数据类型。
  */

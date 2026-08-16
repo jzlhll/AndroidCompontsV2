@@ -78,7 +78,7 @@ fun ConnectToHostSendScreen(
             uiState.leftSpace?.let { space ->
                 BasicText(
                     text = stringResource(R.string.storage_remaining) + space,
-                    style = ComposeTypography.Font14Secondary,
+                    style = ComposeTypography.Font14Desc91,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                 )
             }
@@ -115,7 +115,7 @@ fun ConnectToHostSendScreen(
                 uiState.currentUploadingName?.let { name ->
                     BasicText(
                         text = stringResource(R.string.connect_to_host_uploading) + ": " + name,
-                        style = ComposeTypography.Font14Secondary,
+                        style = ComposeTypography.Font14Desc91,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                     )
                 }

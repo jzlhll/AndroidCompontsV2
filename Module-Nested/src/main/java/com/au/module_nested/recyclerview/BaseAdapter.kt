@@ -52,7 +52,6 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
         return datas.count()
     }
 
-    //todo 放开
     final override fun getItemViewType(position: Int): Int {
         val data = datas[position]
         if (data is IMultiViewTypeBean) {

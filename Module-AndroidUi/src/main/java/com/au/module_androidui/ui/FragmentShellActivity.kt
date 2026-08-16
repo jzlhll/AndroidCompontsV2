@@ -50,6 +50,7 @@ open class FragmentShellActivity : ViewActivity() {
          * @param optionsCompat 是startActivity的参数
          * @param enterAnim 与android标准不同的是，这里给出的anim都是限定即将打开的activity进入时候的动画
          * @param exitAnim  与android标准不同的是，这里给出的anim都是限定即将打开的activity退出时候的动画
+         * @param clearTask 是否在启动前清空目标Activity所属的任务栈
          */
         fun start(context: Context,
                   fragmentClass:Class<out Fragment>,
@@ -59,10 +60,14 @@ open class FragmentShellActivity : ViewActivity() {
                                exitAnim:Int? = null,
                                showActivityClass:Class<out Activity> = FragmentShellActivity::class.java,
                                activityResult:ActivityForResult?=null,
-                               activityResultCallback:ActivityResultCallback<ActivityResult>? = null) {
+                               activityResultCallback:ActivityResultCallback<ActivityResult>? = null,
+                               clearTask:Boolean = false) {
             val intent = Intent(context, showActivityClass)
             intent.putExtra(KEY_FRAGMENT_CLASS, fragmentClass)
             if (arguments != null) intent.putExtra(KEY_FRAGMENT_ARGUMENTS, arguments)
+            if (clearTask) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            }
 
             if (activityResult != null) {
                 activityResult.animStart(context, intent, enterAnim, exitAnim, optionsCompat, activityResultCallback)

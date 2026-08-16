@@ -1,5 +1,6 @@
 [versions]
 
+accompanist = "0.37.3"
 appcompat = "1.7.1"
 blurview = "3.2.1.2"
 cameraCamera2 = "1.6.1"
@@ -98,6 +99,7 @@ androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefre
 androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntimeKtx" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist" }
 blurview = { module = "io.github.jzlhll:blurview", version.ref = "blurview" }
 liquidglass = { module = "com.qmdeve.liquidglass:core", version.ref = "liquidglass" }
 flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }

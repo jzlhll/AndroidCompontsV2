@@ -33,6 +33,12 @@ androidx.recyclerview.widget.LinearLayoutManager mLayoutManager;
 
 
 # lifecycle
+# NoStickLiveData 反射读取父类 LiveData 的 mObservers 实现非粘性事件，
+# 字段名被混淆后 removeObserverUnStick 抛 NoSuchFieldException，
+# Activity 销毁时直接崩溃。
+-keep class androidx.lifecycle.LiveData {
+androidx.arch.core.internal.SafeIterableMap mObservers;
+}
 #-keep class androidx.lifecycle.** { *;}
 
 #-flattenpackagehierarchy

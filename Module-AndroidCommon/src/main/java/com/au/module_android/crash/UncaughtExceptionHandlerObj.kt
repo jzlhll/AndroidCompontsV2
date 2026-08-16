@@ -9,14 +9,16 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
+import android.text.Html
 import android.text.TextUtils
-import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
+import com.au.module_android.BuildConfig
 import com.au.module_android.Globals
+import com.au.module_android.log.FileLog
 import com.au.module_android.log.logd
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.log.logt
+import com.au.module_android.log.loge
 import com.au.module_android.utils.getAppIntent
 import com.au.module_android.utils.ignoreError
 import com.au.module_android.utils.startActivityFix
@@ -28,36 +30,36 @@ import java.util.Locale
 object UncaughtExceptionHandlerObj : Thread.UncaughtExceptionHandler {
     const val TAG = "UncaughtExpHandObj"
     private var isInit = false
-
-    private var enableEntryCreate = false
-
-    /**
-     * 外部可以设置的死在了Entry情况下，只能通过Toast给用户交互 runnable 类对象。
-     */
-    internal var entryCrashedRunnableClass:Class<out MaybeEntryCrashedRunnable>? = null
-    fun setMaybeEntryCrashedRunnableClass(clazz:Class<out MaybeEntryCrashedRunnable>) {
-        entryCrashedRunnableClass = clazz
-    }
-
-    private var manualLogUploader:((customLog:String, exception:Throwable)->Unit)? = null
+    private var downstreamHandler: Thread.UncaughtExceptionHandler? = null
 
     /**
-     * 设置手动上传日志的接口。
+     * 设置恢复异常的上报接口。
      */
-    fun setManualLogUploader(manualLogUploader:(customLog:String, exception:Throwable)->Unit) {
-        this.manualLogUploader = manualLogUploader
-    }
+    var recoveredExceptionReporter:((source:String, exception:Throwable)->Unit)? = null
 
     override fun uncaughtException(t: Thread, e: Throwable) {
-        manualUploadCrashLog("uncaughtException", e)
-        crashAction(t, e, isThrowableMainThreadAndInOnCreate(Thread.currentThread(), e))
+        if (t != Looper.getMainLooper().thread && e is Exception) {
+            recoveredExceptionReporter?.invoke("background_thread", e)
+            crashAction(t, e)
+            return
+        }
+
+        ignoreError { FileLog.write(crashLogText(Globals.app, t, e)) }
+        val handler = downstreamHandler
+        if (handler != null) {
+            handler.uncaughtException(t, e)
+        } else {
+            Process.killProcess(Process.myPid())
+            Runtime.getRuntime().exit(-1)
+        }
     }
 
-    fun init(enableEntryCreate:Boolean = false) {
+    fun init() {
         if (isInit) return
         isInit = true
 
-        UncaughtExceptionHandlerObj.enableEntryCreate = enableEntryCreate
+        Thread.getDefaultUncaughtExceptionHandler()
+            ?.let { if (it !== this) downstreamHandler = it }
         Thread.setDefaultUncaughtExceptionHandler(UncaughtExceptionHandlerObj)
 
         Handler(Looper.getMainLooper()).post {
@@ -66,16 +68,16 @@ object UncaughtExceptionHandlerObj : Thread.UncaughtExceptionHandler {
                 try {
                     Looper.loop()
                 } catch (e: Throwable) {
+                    if (e !is Exception) throw e
+
                     logdNoFile(TAG) { "Crashed=======>>>" }
-                    val isThrowableMainThreadAndInOnCreate = isThrowableMainThreadAndInOnCreate(Thread.currentThread(), e)
-                    logd(TAG) { "uncaughtException2 loop crash: " + e.message + ", isCreateMain: " + isThrowableMainThreadAndInOnCreate }
+                    logd(TAG) { "uncaughtException2 loop crash: " + e.message }
                     e.printStackTrace()
-                    manualUploadCrashLog("main loop", e)
+                    recoveredExceptionReporter?.invoke("main_loop", e)
 
                     if (!shouldIgnore(e)) {
-                        //主线程Activity，Fragment的create函数崩溃，导致界面无法显示。这种情况其实是很少的。
                         ignoreError {
-                            crashAction(Thread.currentThread(), e, isThrowableMainThreadAndInOnCreate)
+                            crashAction(Thread.currentThread(), e)
                         }
                         logdNoFile(TAG) { "<<<=======" }
                     }
@@ -107,56 +109,47 @@ object UncaughtExceptionHandlerObj : Thread.UncaughtExceptionHandler {
         return false
     }
 
-    private fun manualUploadCrashLog(customLog:String, ex:Throwable) {
-        //Firebase.crashlytics.log(customLog)
-        //Firebase.crashlytics.recordException(ex)
-        manualLogUploader?.invoke(customLog, ex)
-    }
-
-    private fun crashAction(t: Thread, e: Throwable, isThrowableMainThreadAndInOnCreate:Boolean) {
+    private fun crashAction(t: Thread, e: Throwable) {
         logd { "crash action $e" }
-        val isEntryCreateCrash = if (isThrowableMainThreadAndInOnCreate) {
-            val startActivityName = getAppIntent(Globals.app, Globals.app.packageName)?.component?.className
-            logt(TAG) { "crashed in an activity create: ${e.message}"}
-            if (startActivityName != null) {
-                e.message?.contains(startActivityName) == true
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-
-        if (isEntryCreateCrash) {
-            logt(TAG) { "crashed in entry activity."}
-            if(enableEntryCreate)
-                MaybeEntryCrashedRunnable.create()
-            else
-                Toast.makeText(Globals.app, "Error! You app crash in entry create step", Toast.LENGTH_LONG).show()
-            //对于启动activity的创建过程中crash，会出现白屏的可能性。
-        } else {
-            //非启动activity则没事，finish即可。 其中：create过程报错，不能finish之前的Activity。
-            Globals.activityList.forEach {
-                if(it is FragmentActivity && it.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                    it.finish()
-                }
+        Globals.activityList.forEach {
+            if(it is FragmentActivity && it.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                it.finish()
             }
         }
 
-        logt(TAG) { "startCrashActivity crash activity..." }
-        startCrashActivity(Globals.app, t, e)
+        if (BuildConfig.DEBUG) {
+            loge(TAG) { "startCrashActivity crash activity..." }
+            startCrashActivity(Globals.app, t, e)
+        } else {
+            // release 不把崩溃堆栈摆到用户面前。但落盘不能一起省掉：debug 下写文件
+            // 是 CrashActivity 顺带做的，这里不弹页面就得自己写，否则 Android 侧
+            // 一点崩溃线索都不剩（尚未接入崩溃上报）。
+            // 也不在这里重启进程，启动阶段崩溃会变成无限重启，比停在桌面更糟。
+            loge (TAG) { "release build: log crash to file without showing the stack" }
+            ignoreError { FileLog.write(crashLogText(Globals.app, t, e)) }
+        }
     }
 
     const val KEY_INFO = "errorInfo"
     const val KEY_VERSION = "version"
     const val KEY_THREAD_INFO = "threadInfo"
 
+    private fun threadInfo(t: Thread) =
+        "threadId=${t.id}" + ", name=${t.name}" + ", isMainThread:" + (t.id == Looper.getMainLooper().thread.id)
+
+    /** 与 CrashActivity 落盘的文本保持同一格式，两种构建下的崩溃日志才可比。 */
+    private fun crashLogText(context: Context, t: Thread, e: Throwable): String {
+        val version = Array(1) { "" }
+        val errorInfo = getErrorInfo(context, e, version)
+        return version[0] + "\n" + threadInfo(t) + "\n" + Html.fromHtml(errorInfo)
+    }
+
     private fun startCrashActivity(context: Context, t: Thread, e: Throwable) {
         context.startActivityFix(Intent(context, CrashActivity::class.java).also {
             val version = Array(1) {""}
             it.putExtra(KEY_INFO, getErrorInfo(context, e, version))
             it.putExtra(KEY_VERSION, version[0])
-            it.putExtra(KEY_THREAD_INFO, "threadId=${t.id}" + ", name=${t.name}" + ", isMainThread:" + (t.id == Looper.getMainLooper().thread.id))
+            it.putExtra(KEY_THREAD_INFO, threadInfo(t))
         })
     }
 
@@ -169,11 +162,8 @@ object UncaughtExceptionHandlerObj : Thread.UncaughtExceptionHandler {
         val versionName =
             if (TextUtils.isEmpty(info.versionName)) "未设置版本名称" else info.versionName
         version[0] = versionName ?: ""
-        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val versionCode =
             info.longVersionCode.toString() + ""
-        } else {
-            info.versionCode.toString() + ""
-        }
         mInfo["versionName"] = versionName ?: ""
         mInfo["versionCode"] = versionCode
         mInfo["brand"] = Build.BRAND
@@ -222,35 +212,6 @@ object UncaughtExceptionHandlerObj : Thread.UncaughtExceptionHandler {
             stringBuffer.append("<b>$keyName：</b>$value<br>")
         }
         return stringBuffer.toString()
-    }
-
-    private fun isThrowableMainThreadAndInOnCreate(t:Thread, e:Throwable) : Boolean{
-        if (t != Looper.getMainLooper().thread) {
-            return false
-        }
-
-        if (e.message?.contains("Unable to start activity") == true) {
-            return true
-        }
-
-        val stringWriter = StringWriter()
-        val writer = PrintWriter(stringWriter)
-        e.printStackTrace(writer)
-        var cause = e.cause
-        while (cause != null) {
-            cause.printStackTrace(writer)
-            val nextCause = e.cause
-            cause = if (nextCause != cause) {
-                nextCause
-            } else {
-                null
-            }
-        }
-        writer.close()
-        val string: String = stringWriter.toString()
-        return string.contains("Activity.performStart")
-                || string.contains("AppCompatActivity.onStart")
-                || string.contains("Fragment.performCreate")
     }
 
     fun killAndRestart(activity: Activity?) {

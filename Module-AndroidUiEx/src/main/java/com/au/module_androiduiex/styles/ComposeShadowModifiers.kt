@@ -19,11 +19,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.nativeCanvas
@@ -96,10 +101,12 @@ fun Modifier.composeOffsetBlurShadow(
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             style = android.graphics.Paint.Style.FILL
             color = shadowColor.toArgb()
-            maskFilter = android.graphics.BlurMaskFilter(
-                blurPx,
-                android.graphics.BlurMaskFilter.Blur.NORMAL,
-            )
+            if (blurPx > 0f) {
+                maskFilter = android.graphics.BlurMaskFilter(
+                    blurPx,
+                    android.graphics.BlurMaskFilter.Blur.NORMAL,
+                )
+            }
         }
 
         onDrawBehind {
@@ -116,6 +123,101 @@ fun Modifier.composeOffsetBlurShadow(
             }
         }
     }
+}
+
+/**
+ * 绘制调用方提供的内容，并在其上叠加渐变模糊层与颜色渐变层。
+ *
+ * [gradientStart] 与 [gradientEnd] 使用相对于组件宽高的比例坐标，模糊从 0dp 过渡到 [blurRadius]。
+ */
+@Composable
+fun ComposeProgressiveBlurLayer(
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(16.dp),
+    blurRadius: Dp = 8.dp,
+    gradientStart: Offset = Offset(0.5f, 0.72f),
+    gradientEnd: Offset = Offset(0.5f, 1f),
+    gradientStartColor: Color = ComposeColors.DarkOverlay.copy(alpha = 0f),
+    gradientEndColor: Color = ComposeColors.DarkOverlay.copy(alpha = 0.75f),
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val blurRadiusPx = with(LocalDensity.current) { blurRadius.toPx() }
+    val blurEffect = remember(blurRadiusPx) {
+        BlurEffect(blurRadiusPx, blurRadiusPx, TileMode.Clamp)
+    }
+    val sourceLayer = rememberGraphicsLayer()
+    val blurredLayer = rememberGraphicsLayer()
+
+    SideEffect {
+        blurredLayer.renderEffect = if (blurEffect.isSupported()) blurEffect else null
+    }
+
+    Box(
+        modifier = modifier.clip(shape),
+    ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawWithContent {
+                    sourceLayer.record {
+                        this@drawWithContent.drawContent()
+                    }
+                    blurredLayer.record(size = sourceLayer.size) {
+                        drawLayer(sourceLayer)
+                    }
+                    drawLayer(sourceLayer)
+                },
+            content = content,
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .composeProgressiveBlurOverlay(
+                    blurredLayer = blurredLayer,
+                    gradientStart = gradientStart,
+                    gradientEnd = gradientEnd,
+                    gradientStartColor = gradientStartColor,
+                    gradientEndColor = gradientEndColor,
+                ),
+        )
+    }
+}
+
+private fun Modifier.composeProgressiveBlurOverlay(
+    blurredLayer: GraphicsLayer,
+    gradientStart: Offset,
+    gradientEnd: Offset,
+    gradientStartColor: Color,
+    gradientEndColor: Color,
+): Modifier {
+    return graphicsLayer {
+        compositingStrategy = CompositingStrategy.Offscreen
+    }.drawWithCache {
+        val start = gradientStart.toPixelOffset(size.width, size.height)
+        val end = gradientEnd.toPixelOffset(size.width, size.height)
+        val blurAlphaMask = Brush.linearGradient(
+            colors = listOf(Color.Transparent, Color.White),
+            start = start,
+            end = end,
+        )
+        val overlay = Brush.linearGradient(
+            colors = listOf(gradientStartColor, gradientEndColor),
+            start = start,
+            end = end,
+        )
+        onDrawBehind {
+            if (blurredLayer.size.width > 0 && blurredLayer.size.height > 0) {
+                drawLayer(blurredLayer)
+            }
+            // DstIn 仅使用遮罩 Alpha，让固定半径的模糊副本从 0% 过渡到 100%。
+            drawRect(brush = blurAlphaMask, blendMode = BlendMode.DstIn)
+            drawRect(brush = overlay)
+        }
+    }
+}
+
+private fun Offset.toPixelOffset(width: Float, height: Float): Offset {
+    return Offset(x * width, y * height)
 }
 
 /** 保存 Compose 背景采样层与模糊渲染层。 */

@@ -91,7 +91,6 @@ fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewC
         }
     }
 
-    paint.isFakeBoldText = fontMode != FontMode.NORMAL
     setFontFromAsset(context, fontMode, isNumber, fontName)
     return TextViewCheckMode(fontMode, isNumber, fontName)
 }
