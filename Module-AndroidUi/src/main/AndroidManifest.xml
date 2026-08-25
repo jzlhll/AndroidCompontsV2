@@ -2,13 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity
-            android:name="com.au.module_androidui.ui.FragmentNavigationActivity"
-            android:configChanges="screenSize|keyboard|orientation|keyboardHidden|fontScale|locale|screenLayout|navigation|uiMode"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize|stateHidden"
-            android:screenOrientation="portrait" />
-
-        <activity
             android:name="com.au.module_androidui.ui.FragmentShellActivity"
             android:configChanges="screenSize|keyboard|orientation|keyboardHidden|fontScale|locale|screenLayout|navigation|uiMode"
             android:exported="false"

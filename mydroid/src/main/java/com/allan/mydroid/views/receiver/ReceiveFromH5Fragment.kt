@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updatePadding
+import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.databinding.FragmentReceiveFromH5Binding
@@ -13,7 +14,6 @@ import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.Globals
 import com.au.module_gson.toGsonString
-import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.asOrNull
@@ -37,9 +37,9 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         ) { menuItem ->
             when (menuItem.itemId) {
                 R.id.more -> {
-                    FragmentShellActivity.start(requireActivity(),
-                        ReceiveFromH5FileListFragment::class.java,
-                        Bundle().apply { putBoolean("isActivityMode", true) }
+                    findNavController().navigate(
+                        R.id.actionReceiveToFileList,
+                        Bundle().apply { putBoolean("isActivityMode", true) },
                     )
                 }
             }
@@ -90,7 +90,7 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         }
 
         binding.toolbar.setNavigationOnClickListener {
-            requireActivity().finishAfterTransition()
+            findNavController().navigateUp()
         }
     }
 

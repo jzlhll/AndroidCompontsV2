@@ -1,20 +1,17 @@
 package com.allan.mydroid.globals
 
-import android.app.Activity
 import android.os.SystemClock
 import androidx.annotation.MainThread
+import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
-import com.allan.mydroid.views.AbsLiveFragment
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.au.module_android.Globals
-import com.au.module_android.init.InterestActivityCallbacks
 import com.au.module_android.scopes.MainAppScope
 import com.au.module_android.simpleflow.createNoStickyFlow
-import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.log.logd
@@ -34,7 +31,7 @@ import java.io.IOException
 
 class GlobalDroidServerObj(
     private val mainScope : MainAppScope
-) : InterestActivityCallbacks(), KoinComponent, IDroidServerAliveTrigger {
+) : KoinComponent, IDroidServerAliveTrigger {
 
     private val networkMonitor: GlobalNetworkMonitorObj by inject()
     private val serverRuntimeState: GlobalServerRuntimeObj by inject()
@@ -54,6 +51,8 @@ class GlobalDroidServerObj(
     private var mLastHttpServerPort = 15555
     private var mLastWsServerPort = 16555
 
+    private val livePages = linkedMapOf<Any, MyDroidMode>()
+
     private val aliveDeadTime = 5 * 60 * 1000L
     private val aliveTsTooFastTime = 6 * 1000L
 
@@ -71,16 +70,20 @@ class GlobalDroidServerObj(
             logd { "Update alive Ts too fast ignore: $from" }
             return
         }
-        aliveTs = cur
+        resetAliveTimer(cur, from)
+    }
+
+    private fun resetAliveTimer(timestamp: Long, from: String) {
+        aliveTs = timestamp
         logd { "Update alive Ts: $from" }
         Globals.mainHandler.removeCallbacks(aliveCheckRun)
         Globals.mainHandler.postDelayed(aliveCheckRun, aliveDeadTime)
     }
 
     private fun startServerWrap() {
-        if (!serverRuntimeState.serverIsOpenFlow.value && hasLifeActivity()) {
+        if (!serverRuntimeState.serverIsOpenFlow.value && livePages.isNotEmpty()) {
             startServer { msg ->
-                scope.launch {
+                mainScope.launch {
                     ToastBuilder()
                         .setOnTop()
                         .setIcon("error")
@@ -191,30 +194,37 @@ class GlobalDroidServerObj(
         isObserverIpChanged = true
     }
 
-    override fun onLifeOpen() {
-        observerIpChanged()
-        updateAliveTs("when liveOpen")
-    }
+    /** 注册仍处于 Navigation 返回栈中的 live 页面。 */
+    @MainThread
+    fun enterLivePage(token: Any, mode: MyDroidMode) {
+        if (livePages.containsKey(token)) return
 
-    override fun onLifeOpenEach() {
-        logd { "on life open each" }
-        updateAliveTs("when liveOpenEach")
+        livePages[token] = mode
+        serverRuntimeState.setMode(mode)
+        observerIpChanged()
+        if (livePages.size == 1) {
+            resetAliveTimer(SystemClock.elapsedRealtime(), "when first live page enter")
+        } else {
+            updateAliveTs("when live page enter")
+        }
         startServerWrap()
     }
 
-    override fun onLifeClose() {
-        logd { "on life close." }
-        stopServer()
-        receiverFlowsObj.clearProgress()
-        Globals.mainHandler.removeCallbacks(aliveCheckRun)
-    }
+    /** 注销已从 Navigation 返回栈销毁的 live 页面。 */
+    @MainThread
+    fun leaveLivePage(token: Any) {
+        if (livePages.remove(token) == null) return
 
-    override fun isLifeActivity(activity: Activity): Boolean {
-        val isActivity = activity is FragmentShellActivity
-        if (!isActivity) {
-            return false
+        val lastMode = livePages.values.lastOrNull()
+        if (lastMode == null) {
+            serverRuntimeState.setMode(MyDroidMode.None)
+            stopServer()
+            receiverFlowsObj.clearProgress()
+            Globals.mainHandler.removeCallbacks(aliveCheckRun)
+        } else {
+            serverRuntimeState.setMode(lastMode)
+            updateAliveTs("when live page leave")
+            startServerWrap()
         }
-        val frgClass = activity.fragmentClass
-        return AbsLiveFragment::class.java.isAssignableFrom(frgClass)
     }
 }

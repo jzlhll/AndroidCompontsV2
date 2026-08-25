@@ -1,14 +1,13 @@
 package com.allan.mydroid.views.send
 
-import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updatePadding
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.PICKER_NEED_PERMISSION
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.FROM_PICKER
@@ -20,7 +19,6 @@ import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
 import com.au.module_android.log.logd
-import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.gone
@@ -30,15 +28,11 @@ import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.toast.ToastBuilder
-import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
-import com.au.module_androidui.ui.finishFragment
-import com.au.module_imagecompressed.isPhotoPickerAvailable
 import com.au.module_imagecompressed.multiPickForResult
 import com.au.module_simplepermission.PickerType
-import com.au.module_simplepermission.createPostNotificationPermissionResult
 import com.au.module_simplepermission.openMultipleDocsForResult
 import com.bumptech.glide.request.target.Target
 import kotlinx.coroutines.Job
@@ -47,32 +41,12 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding>() {
+    override var customBackActionEnable = false
+
     private val shareInRepository: GlobalShareInRepoObj by inject()
     private val uriPermissionChecker: UriPermissionChecker by inject()
     companion object {
         const val KEY_AUTO_ENTER_SEND_VIEW = "key_auto_import"
-        const val KEY_START_TYPE = "entry_start_type"
-        const val MY_DROID_SHARE_IMPORT_URIS = "myDroidShareReceiverUris"
-
-        fun start(context: Context, autoEnterSendView: Boolean) {
-            finishFragment(SendListSelectorFragment::class.java)
-            FragmentShellActivity.start(
-                context, SendListSelectorFragment::class.java,
-                Bundle().apply { putBoolean(KEY_AUTO_ENTER_SEND_VIEW, autoEnterSendView) }
-            )
-        }
-
-        fun parseShareImportIntent(fragment: Fragment) {
-            val isFromNewShareImportUris = fragment.arguments?.getString(KEY_START_TYPE)
-            fragment.arguments?.remove(KEY_START_TYPE)
-            logdNoFile { "parse ShareImport Intent $isFromNewShareImportUris" }
-            if (isFromNewShareImportUris == MY_DROID_SHARE_IMPORT_URIS) {
-                fragment.lifecycleScope.launch {
-                    delay(100)
-                    FragmentShellActivity.start(fragment.requireActivity(), SendListSelectorFragment::class.java)
-                }
-            }
-        }
     }
 
     private val common = object : SendListSelectorCommon(false) {
@@ -166,7 +140,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     private fun jumpIntoMyDroidSend() {
         mDelayCancelDialog?.dismissAllowingStateLoss()
         mDelayCancelDialog = null
-        FragmentShellActivity.start(requireActivity(), SendListFilesFragment::class.java)
+        findNavController().navigate(R.id.actionSendSelectorToFiles)
     }
 
     private fun initActionButtons() {
@@ -214,7 +188,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         binding.adHost.startAnimation()
 
         binding.toolbar.setNavigationOnClickListener {
-            requireActivity().finishAfterTransition()
+            findNavController().navigateUp()
         }
 
         binding.infoText.onClick {

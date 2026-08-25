@@ -5,6 +5,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendFilesBinding
@@ -104,7 +105,7 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
         binding.adHost.startAnimation()
 
         binding.toolbar.setNavigationOnClickListener {
-            requireActivity().finishAfterTransition()
+            findNavController().navigateUp()
         }
 
         clientLiveDataInit()

@@ -1,9 +1,7 @@
 package com.allan.mydroid.client
 
-import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.client.api.ClientApi
@@ -59,6 +58,8 @@ import kotlin.time.Duration.Companion.minutes
  * 入参: Bundle 中带 `ip`(String) / `port`(Int httpPort) / `mode`(Int ordinal)。
  */
 class ConnectToHostFragment : ComposeViewFragment() {
+    override var customBackActionEnable = false
+
 
     private val ip by lazy { arguments?.getString("ip") ?: "" }
     private val httpPort by lazy { arguments?.getInt("port") ?: 0 }
@@ -72,10 +73,6 @@ class ConnectToHostFragment : ComposeViewFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            requireActivity().setTurnScreenOn(true)
-        }
-        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         fetchEndpoint()
     }
 
@@ -119,7 +116,7 @@ class ConnectToHostFragment : ComposeViewFragment() {
         ) { d ->
             d.dismissAllowingStateLoss()
             exitDialog = null
-            requireActivity().finishAfterTransition()
+            findNavController().popBackStack()
         }.also { it.isCancelable = false }
     }
 
@@ -138,7 +135,7 @@ class ConnectToHostFragment : ComposeViewFragment() {
         ) {
             when {
                 err != null -> ErrorView(err.message ?: "") {
-                    requireActivity().finishAfterTransition()
+                    findNavController().popBackStack()
                 }
                 ep == null -> LoadingView()
                 else -> when (ep.mode) {
@@ -220,7 +217,6 @@ class ConnectToHostFragment : ComposeViewFragment() {
         inactivityJob = null
         exitDialog?.dismissAllowingStateLoss()
         exitDialog = null
-        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     companion object {

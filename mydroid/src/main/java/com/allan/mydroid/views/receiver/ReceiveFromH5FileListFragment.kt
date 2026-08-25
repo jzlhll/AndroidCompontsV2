@@ -7,6 +7,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavOptions
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidReceiveListBinding
@@ -35,6 +37,8 @@ import org.koin.android.ext.android.inject
 import kotlinx.coroutines.launch
 
 class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveListBinding>() {
+    override var customBackActionEnable = false
+
     private val receiverFlowsObj: GlobalReceiverFlowsObj by inject()
     private val fileListRepository: GlobalFileListRepoObj by inject()
     lateinit var receivedFileListTab: TabLayout.Tab
@@ -73,10 +77,21 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     }
 
     val importSendCallback:()->Unit = {
-        activity?.let { a->
-            a.finishAfterTransition()
-            SendListSelectorFragment.start(a, true)
-        }
+        val navController = findNavController()
+        navController.popBackStack(R.id.myDroidAllFragment, false)
+        navController.navigate(
+            R.id.sendListSelectorFragment,
+            Bundle().apply {
+                putBoolean(SendListSelectorFragment.KEY_AUTO_ENTER_SEND_VIEW, true)
+            },
+            NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setEnterAnim(com.au.module_androidui.R.anim.activity_open_enter)
+                .setExitAnim(com.au.module_androidui.R.anim.activity_open_exit)
+                .setPopEnterAnim(com.au.module_androidui.R.anim.activity_close_enter)
+                .setPopExitAnim(com.au.module_androidui.R.anim.activity_close_exit)
+                .build(),
+        )
     }
 
     val refreshFileListCallback = {
@@ -98,6 +113,10 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        toolbar?.normalBinding?.backIcon?.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         binding.tabLayout.apply {
             selectTabStyleBlock = {
                 AuTabLayout.TabStyle(

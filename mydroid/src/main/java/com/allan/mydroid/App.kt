@@ -32,7 +32,6 @@ import com.au.module_okhttp.interceptors.SimpleRetryInterceptor
 import com.modulenative.AppNative
 import okhttp3.ConnectionPool
 import okhttp3.logging.HttpLoggingInterceptor
-import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.factoryOf
@@ -128,9 +127,6 @@ class App : InitApplication() {
             modules(globalModule, ClientKoinModule)
             androidContext(this@App)
         }
-
-        //初始化监听Activity变化，用于创建server
-        registerActivityLifecycleCallbacks(get<GlobalDroidServerObj>())
 
         //日志按钮显示监听
         registerActivityLifecycleCallbacks(DefaultActivitiesFollowCallback())

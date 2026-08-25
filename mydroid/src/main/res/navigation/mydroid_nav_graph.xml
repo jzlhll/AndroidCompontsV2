@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mydroidNavGraph"
+    app:startDestination="@id/myDroidAllFragment">
+
+    <fragment
+        android:id="@+id/myDroidAllFragment"
+        android:name="com.allan.mydroid.views.MyDroidAllFragment">
+        <action
+            android:id="@+id/actionMyDroidAllToReceive"
+            app:destination="@id/receiveFromH5Fragment"
+            app:enterAnim="@anim/activity_open_enter"
+            app:exitAnim="@anim/activity_open_exit"
+            app:popEnterAnim="@anim/activity_close_enter"
+            app:popExitAnim="@anim/activity_close_exit" />
+        <action
+            android:id="@+id/actionMyDroidAllToSendSelector"
+            app:destination="@id/sendListSelectorFragment"
+            app:enterAnim="@anim/activity_open_enter"
+            app:exitAnim="@anim/activity_open_exit"
+            app:popEnterAnim="@anim/activity_close_enter"
+            app:popExitAnim="@anim/activity_close_exit" />
+        <action
+            android:id="@+id/actionMyDroidAllToTextChat"
+            app:destination="@id/textChatRoomFragment"
+            app:enterAnim="@anim/activity_open_enter"
+            app:exitAnim="@anim/activity_open_exit"
+            app:popEnterAnim="@anim/activity_close_enter"
+            app:popExitAnim="@anim/activity_close_exit" />
+        <action
+            android:id="@+id/actionMyDroidAllToConnectHost"
+            app:destination="@id/connectToHostFragment"
+            app:enterAnim="@anim/activity_open_enter"
+            app:exitAnim="@anim/activity_open_exit"
+            app:popEnterAnim="@anim/activity_close_enter"
+            app:popExitAnim="@anim/activity_close_exit" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/receiveFromH5Fragment"
+        android:name="com.allan.mydroid.views.receiver.ReceiveFromH5Fragment">
+        <action
+            android:id="@+id/actionReceiveToFileList"
+            app:destination="@id/receiveFromH5FileListFragment"
+            app:enterAnim="@anim/activity_open_enter"
+            app:exitAnim="@anim/activity_open_exit"
+            app:popEnterAnim="@anim/activity_close_enter"
+            app:popExitAnim="@anim/activity_close_exit" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/receiveFromH5FileListFragment"
+        android:name="com.allan.mydroid.views.receiver.ReceiveFromH5FileListFragment">
+        <argument
+            android:name="isActivityMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/sendListSelectorFragment"
+        android:name="com.allan.mydroid.views.send.SendListSelectorFragment">
+        <argument
+            android:name="key_auto_import"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <action
+            android:id="@+id/actionSendSelectorToFiles"
+            app:destination="@id/sendListFilesFragment"
+            app:enterAnim="@anim/activity_open_enter"
+            app:exitAnim="@anim/activity_open_exit"
+            app:popEnterAnim="@anim/activity_close_enter"
+            app:popExitAnim="@anim/activity_close_exit" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/sendListFilesFragment"
+        android:name="com.allan.mydroid.views.send.SendListFilesFragment" />
+
+    <fragment
+        android:id="@+id/textChatRoomFragment"
+        android:name="com.allan.mydroid.views.chat.TextChatRoomFragment" />
+
+    <fragment
+        android:id="@+id/connectToHostFragment"
+        android:name="com.allan.mydroid.client.ConnectToHostFragment">
+        <argument
+            android:name="ip"
+            app:argType="string" />
+        <argument
+            android:name="port"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="mode"
+            android:defaultValue="0"
+            app:argType="integer" />
+    </fragment>
+</navigation>

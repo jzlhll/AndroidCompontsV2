@@ -5,23 +5,18 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import com.allan.mydroid.MyDroidActivity
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.databinding.ActivityImportBinding
 import com.allan.mydroid.repository.GlobalShareInRepoObj
-import com.allan.mydroid.views.send.SendListSelectorFragment
-import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.KEY_START_TYPE
-import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.MY_DROID_SHARE_IMPORT_URIS
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utils.findMyLaunchActivity
 import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.parcelableArrayListExtraCompat
 import com.au.module_android.utils.parcelableExtraCompat
 import com.au.module_android.utilsmedia.isFromMyApp
 import com.au.module_androidui.ui.bindings.BindingActivity
-import com.au.module_androidui.ui.findCustomFragmentGetActivity
-import com.au.module_androidui.ui.startActivityFix
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -89,14 +84,11 @@ class ShareImportActivity : BindingActivity<ActivityImportBinding>() {
     }
 
     private fun jumpNext() {
-        val found = findCustomFragmentGetActivity(MyDroidAllFragment::class.java) != null
-        if (!found) { //说明app没有启动过。需要先启动下首页，借过一下。
-            val intent = findMyLaunchActivity(Globals.app).first
-            intent.putExtra(KEY_START_TYPE, MY_DROID_SHARE_IMPORT_URIS)
-            logdNoFile { "start entry activity " + intent.extras }
-            startActivityFix(intent)
-        } else { //app启动过了。有主界面，则直接跳入到ShareFragment
-            SendListSelectorFragment.start(this, true)
+        val intent = Intent(this, MyDroidActivity::class.java).apply {
+            action = MyDroidActivity.ACTION_OPEN_SEND_SELECTOR
+            putExtra(MyDroidActivity.EXTRA_AUTO_ENTER_SEND, true)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
+        startActivity(intent)
     }
 }

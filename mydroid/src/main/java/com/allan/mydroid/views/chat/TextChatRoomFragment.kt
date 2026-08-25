@@ -9,6 +9,7 @@ import androidx.core.graphics.toColorInt
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.AppGlobals
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
@@ -73,7 +74,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         observeClientList()
         initClientsBlur()
         binding.toolbar.setNavigationOnClickListener {
-            requireActivity().finishAfterTransition()
+            findNavController().navigateUp()
         }
         observeTextChatMessage()
 

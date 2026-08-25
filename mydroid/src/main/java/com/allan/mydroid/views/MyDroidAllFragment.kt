@@ -5,6 +5,7 @@ import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.CHECK_NEED_ALL_MANAGER
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
@@ -12,20 +13,14 @@ import com.allan.mydroid.bt.BleIpScanner
 import com.allan.mydroid.bt.DiscoveredHost
 import com.allan.mydroid.client.api.ClientApi
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
-import com.allan.mydroid.views.chat.TextChatRoomFragment
-import com.allan.mydroid.client.ConnectToHostFragment
 import com.allan.mydroid.views.compose.MyDroidAllScreen
 import com.allan.mydroid.views.compose.MyDroidAllUiState
-import com.allan.mydroid.views.receiver.ReceiveFromH5Fragment
-import com.allan.mydroid.views.send.SendListSelectorFragment
-import com.allan.mydroid.views.send.SendListSelectorFragment.Companion.parseShareImportIntent
 import com.au.module_android.log.loge
 import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_androiduiex.ui.ComposeViewFragment
-import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_simplepermission.gotoMgrAll
 import com.au.module_simplepermission.ifGotoMgrAll
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +28,8 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.get
 
 class MyDroidAllFragment : ComposeViewFragment() {
+    override var customBackActionEnable = false
+
     private var mIp: String? = null
     private val ipState = mutableStateOf<String?>(null)
     private val networkInitializedState = mutableStateOf(false)
@@ -89,7 +86,7 @@ class MyDroidAllFragment : ComposeViewFragment() {
             uiState = MyDroidAllUiState(ipState.value, networkInitializedState.value),
             onReceiveFile = {
                 runCheckIp {
-                    FragmentShellActivity.start(requireActivity(), ReceiveFromH5Fragment::class.java)
+                    findNavController().navigate(R.id.actionMyDroidAllToReceive)
                 }
             },
             onSendFile = {
@@ -107,18 +104,18 @@ class MyDroidAllFragment : ComposeViewFragment() {
                         }
                     ) {
                         runCheckIp {
-                            SendListSelectorFragment.start(requireActivity(), false)
+                            findNavController().navigate(R.id.actionMyDroidAllToSendSelector)
                         }
                     }
                 } else {
                     runCheckIp {
-                        SendListSelectorFragment.start(requireActivity(), false)
+                        findNavController().navigate(R.id.actionMyDroidAllToSendSelector)
                     }
                 }
             },
             onTextChat = {
                 runCheckIp {
-                    FragmentShellActivity.start(requireActivity(), TextChatRoomFragment::class.java)
+                    findNavController().navigate(R.id.actionMyDroidAllToTextChat)
                 }
             },
             discoveredHosts = discoveredHostsState.value,
@@ -184,12 +181,7 @@ class MyDroidAllFragment : ComposeViewFragment() {
             putInt("port", host.port)
             putInt("mode", mode.ordinal)
         }
-        FragmentShellActivity.start(requireActivity(), ConnectToHostFragment::class.java, args)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        parseShareImportIntent(this)
+        findNavController().navigate(R.id.actionMyDroidAllToConnectHost, args)
     }
 
     override fun onPause() {

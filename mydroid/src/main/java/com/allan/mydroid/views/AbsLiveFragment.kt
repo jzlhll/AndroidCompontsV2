@@ -1,20 +1,18 @@
 package com.allan.mydroid.views
 
-import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.viewbinding.ViewBinding
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.bt.BleIpAdvertiser
 import com.allan.mydroid.globals.GlobalDroidServerObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
-import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.au.module_android.Globals
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
@@ -24,10 +22,10 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
+    override var customBackActionEnable = false
 
-    /**
-     * 子类返回当前模式,用于在 onBindingCreated 末尾统一 setMode,避免在 onStart 中设置造成竞态。
-     */
+
+    /** 子类返回当前 live 服务模式。 */
     abstract fun getMode(): MyDroidMode
     companion object {
         fun showExitDialogLater() {
@@ -55,28 +53,25 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
     protected open val shouldAdvertiseIp: Boolean = true
 
     val whenIpNullShowExitDialog: Boolean = true
-    val alwaysScreenOn: Boolean = true
     val autoExistLongTimeInActive: Boolean = true
 
     var waitDialog:ConfirmBottomSingleDialog? = null
 
     private val networkMonitor : GlobalNetworkMonitorObj by inject()
     private val globalDroidServer : GlobalDroidServerObj by inject()
-    private val serverRuntimeState: GlobalServerRuntimeObj by inject()
+    private val livePageToken = Any()
+
+    final override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        globalDroidServer.enterLivePage(livePageToken, getMode())
+    }
 
     @CallSuper
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        if (alwaysScreenOn) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                requireActivity().setTurnScreenOn(true)
-            }
-            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
-
         if (autoExistLongTimeInActive) {
             launchRepeatOnStarted {
                 globalDroidServer.aliveStoppedFlow.collect {
-                    requireActivity().finishAfterTransition()
+                    findNavController().popBackStack()
                     showExitDialogLater()
                 }
             }
@@ -95,7 +90,7 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
                                     true) { d->
                                     waitDialog?.dismissAllowingStateLoss()
                                     waitDialog = null
-                                    requireActivity().finishAfterTransition()
+                                    findNavController().popBackStack()
                                 }.also { d->
                                     d.isCancelable = false
                                     waitDialog = d
@@ -110,8 +105,6 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
             }
         }
 
-        serverRuntimeState.setMode(getMode())
-
         if (shouldAdvertiseIp) {
             bleIpAdvertiser.start()
         }
@@ -123,5 +116,10 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
         if (shouldAdvertiseIp) {
             bleIpAdvertiser.stop()
         }
+    }
+
+    final override fun onDestroy() {
+        globalDroidServer.leaveLivePage(livePageToken)
+        super.onDestroy()
     }
 }
