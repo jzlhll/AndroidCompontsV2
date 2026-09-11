@@ -41,7 +41,7 @@ fun openWith(context: Context, file: File, buildConfigApplicationId:String, titl
         file)
     //    intent.putExtra(Intent.EXTRA_STREAM, uri) //No Need
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    intent.setData(uri)
+    intent.setDataAndType(uri, getMimeTypePath(file.absolutePath))
     val chooserIntent = Intent.createChooser(intent, title)
     context.startActivityFix(chooserIntent)
 }
