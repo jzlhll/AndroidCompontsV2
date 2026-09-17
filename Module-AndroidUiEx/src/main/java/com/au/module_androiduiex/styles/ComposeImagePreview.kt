@@ -188,6 +188,7 @@ fun ComposeImagePreviewContainer(
 
         val density = LocalDensity.current
         val containerWidthPx = with(density) { maxWidth.toPx() }
+        val containerHeightPx = with(density) { maxHeight.toPx() }
         val innerTopPx = with(density) { initialTopPadding.toPx() }
         val availableWidthPx = with(density) { availableWidth.toPx() }
         val availableHeightPx = with(density) { availableHeight.toPx() }
@@ -197,11 +198,16 @@ fun ComposeImagePreviewContainer(
             x = containerWidthPx / 2,
             y = innerTopPx + availableHeightPx / 2,
         )
+        val maximumImageScale = max(
+            MaxPreviewScale,
+            max(containerWidthPx / imageWidthPx, containerHeightPx / imageHeightPx),
+        )
         val currentImageWidthPx by rememberUpdatedState(imageWidthPx)
         val currentImageHeightPx by rememberUpdatedState(imageHeightPx)
         val currentAvailableWidthPx by rememberUpdatedState(availableWidthPx)
         val currentAvailableHeightPx by rememberUpdatedState(availableHeightPx)
         val currentImageCenter by rememberUpdatedState(imageCenter)
+        val currentMaximumImageScale by rememberUpdatedState(maximumImageScale)
 
         LaunchedEffect(
             imageWidthPx,
@@ -335,7 +341,7 @@ fun ComposeImagePreviewContainer(
                             val currentScale = currentPreviewState.imageScale
                             val nextScale = max(
                                 MinPreviewScale,
-                                min(MaxPreviewScale, currentScale * zoomChange),
+                                min(currentMaximumImageScale, currentScale * zoomChange),
                             )
                             if (nextScale == MinPreviewScale) {
                                 currentPreviewState.imageScale = MinPreviewScale

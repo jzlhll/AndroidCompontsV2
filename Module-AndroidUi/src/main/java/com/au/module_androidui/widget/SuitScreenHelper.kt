@@ -17,7 +17,7 @@ class SuitScreenHelper(private val view: View,
                        private val activity: android.app.Activity,
                        private val fetchImageSizeBlock:()->Size) {
     companion object {
-        private const val IS_DEBUG = true
+        private const val IS_DEBUG = false
         private const val TAG = "SuitScreenHelper"
     }
 

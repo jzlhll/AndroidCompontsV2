@@ -1,9 +1,9 @@
 package com.au.module_imagecompressed.compressor
 
 import android.graphics.*
-import android.util.Log
 import androidx.core.graphics.createBitmap
 import androidx.exifinterface.media.ExifInterface
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.ignoreError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -12,6 +12,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * 图片压缩类1.1版
@@ -108,7 +109,7 @@ class BestImageCompressor(
             ignoreError {
                 val outputFile = CompressCacheConstManager.createCompressOutputFile()
                 val decoded = api.decodeBitmap()
-                Log.d(TAG, "compress: $decoded")
+                logdNoFile(TAG) { "compress: $decoded" }
                 val bitmap = decoded.bitmap ?: return@withContext null
                 val targetW = decoded.targetW
                 val targetH = decoded.targetH
@@ -116,7 +117,7 @@ class BestImageCompressor(
                 // 查询文件大小 放到外面避免多次查询
                 mFileSize = provideFileSize()
                 val quality = chooseQuality(mFileSize, config.qualityType)
-                Log.d(TAG, "compress: quality $quality type: ${config.qualityType}")
+                logdNoFile(TAG) { "compress: quality $quality type: ${config.qualityType}" }
 
                 val targetSize = config.secondReduce?.targetSize
 
@@ -164,7 +165,7 @@ class BestImageCompressor(
             needScale = needScale && inputBitmap.width in (targetW * ratioDown).roundToInt()..(targetW * ratio).roundToInt()
                     && inputBitmap.height in (targetH * ratioDown).roundToInt()..(targetH * ratio).roundToInt()
         }
-        Log.d(TAG, "compressOnce: size $targetW $targetH, quality $quality step$qualityStep, target:$targetSize try:$qualityRunCount needScale:$needScale")
+        logdNoFile(TAG) { "compressOnce: size $targetW $targetH, quality $quality step$qualityStep, target:$targetSize try:$qualityRunCount needScale:$needScale" }
 
         val bitmap2 = if (needScale) {
             inputBitmap.scaleTo(targetW, targetH).also {
@@ -187,10 +188,12 @@ class BestImageCompressor(
         while (count-- > 0) {
             if (outputFile.exists()) {
                 outputFile.delete()
-                delay(100)
+                delay(100.milliseconds)
             }
-            FileOutputStream(outputFile).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, curQuality, out)
+            withContext(Dispatchers.IO) {
+                FileOutputStream(outputFile).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, curQuality, out)
+                }
             }
 
             if (targetSize != null && outputFile.length() <= targetSize) {
@@ -200,7 +203,7 @@ class BestImageCompressor(
             curQuality -= qualityStep
         }
         //经历过一次scale和一次rotate后的bitmap
-        Log.d(TAG, "compressOnce: after: size:${bitmap.width} ${bitmap.height}")
+        logdNoFile(TAG) { "compressOnce: after: size:${bitmap.width} ${bitmap.height}" }
         return bitmap
     }
 
@@ -238,7 +241,7 @@ class BestImageCompressor(
             softwareBitmap.recycle()
         }
 
-        Log.d(TAG, "Scaled to $wishWidth * $wishHeight (${scaled.width} * ${scaled.height})")
+        logdNoFile(TAG) { "Scaled to $wishWidth * $wishHeight (${scaled.width} * ${scaled.height})" }
         return scaled
     }
 
@@ -262,11 +265,11 @@ class BestImageCompressor(
                         else -> {}
                     }
                 }
-                Log.d(TAG, "rotate Exif: $orientation")
+                logdNoFile(TAG) { "rotate Exif: $orientation" }
                 return Bitmap.createBitmap(this, 0, 0, width, height, rotateMatrix, true)
             }
         } catch (_: Exception) {
-            Log.d(TAG, "rotate Exif: error")
+            logdNoFile(TAG) { "rotate Exif: error" }
         }
         return this
     }

@@ -42,6 +42,7 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
     private val textSelectColorDisable:Int
 
     private var isDisabled = false
+    private var useDisabledColors = true
 
     protected lateinit var root: ViewGroup
     protected lateinit var leftTv: TextView
@@ -102,7 +103,8 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
     }
 
     private fun changeTextColor() {
-        if (isDisabled) {
+        val showDisabledColors = isDisabled && useDisabledColors
+        if (showDisabledColors) {
             if(isLeft) {
                 leftTv.setTextColor(textSelectColorDisable)
                 rightTv.setTextColor(textColorDisable)
@@ -123,7 +125,7 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
         if (!isPost) {
             selectBgView.invisible()
             selectBgViewDisable.invisible()
-        } else if (isDisabled) {
+        } else if (showDisabledColors) {
             selectBgViewDisable.visible()
             selectBgView.invisible()
         } else {
@@ -161,9 +163,15 @@ open class SwitchLayoutButton2 @JvmOverloads constructor(context: Context, attrs
         selectBgViewDisable.translationX = targetX
     }
 
-    fun initValue(isLeft:Boolean, disable:Boolean, leftRightStrs:Pair<String, String>? = null) {
+    fun initValue(
+        isLeft: Boolean,
+        disable: Boolean,
+        leftRightStrs: Pair<String, String>? = null,
+        useDisabledColors: Boolean = true,
+    ) {
         this.isLeft = isLeft
         isDisabled = disable
+        this.useDisabledColors = useDisabledColors
         isInit = true
 
         if (leftRightStrs != null) {

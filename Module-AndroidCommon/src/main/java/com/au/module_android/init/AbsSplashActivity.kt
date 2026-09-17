@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.RelativeLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.au.module_android.log.logdNoFile
 
 private var lastLauncherApp = 0L
 
@@ -53,7 +54,7 @@ abstract class AbsSplashActivity : AppCompatActivity() {
             return
         }
 
-        android.util.Log.d("SplashActivity", "launch app")
+        logdNoFile("SplashActivity") { "launch app" }
         Globals.activityList.forEach {
             if (it != this) {
                 it.finish()

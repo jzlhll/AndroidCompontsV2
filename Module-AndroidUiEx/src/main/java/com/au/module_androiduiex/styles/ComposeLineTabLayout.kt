@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,11 +39,6 @@ data class ComposeLineTabLayoutStyle(
     val indicatorHeight: Dp = 1.5.dp,
     val selectedTextStyle: TextStyle,
     val unselectedTextStyle: TextStyle,
-    /**
-     * 是否让所有 tab 平分可用宽度。true 时每个 tab 占等宽一份，不再横向滚动；
-     * false 时按内容宽度排列，超出可横向滚动。
-     */
-    val distributeEvenly: Boolean = false,
 )
 
 /** 常规下划线 TabLayout 的默认样式。 */
@@ -86,8 +80,8 @@ fun ComposeLineTabLayout(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .let { if (style.distributeEvenly) it else it.horizontalScroll(rememberScrollState()) }
-                .let { if (style.distributeEvenly) it else it.padding(start = style.startPadding) },
+                .horizontalScroll(rememberScrollState())
+                .padding(start = style.startPadding),
         ) {
             tabs.forEachIndexed { index, title ->
                 ComposeLineTabItem(
@@ -106,7 +100,7 @@ fun ComposeLineTabLayout(
 }
 
 @Composable
-private fun RowScope.ComposeLineTabItem(
+private fun ComposeLineTabItem(
     title: String,
     selected: Boolean,
     style: ComposeLineTabLayoutStyle,
@@ -119,15 +113,10 @@ private fun RowScope.ComposeLineTabItem(
     // later: onTextLayout 内更新 state 会多一次重组；tab 场景风险较低，可接受。
     var textWidth by remember(title) { mutableStateOf(0.dp) }
 
-    val baseModifier = if (style.distributeEvenly) {
-        Modifier.weight(1f)
-    } else {
-        Modifier.widthIn(min = style.itemMinWidth)
-    }
-
     Box(
-        modifier = baseModifier
+        modifier = Modifier
             .height(style.height)
+            .widthIn(min = style.itemMinWidth)
             .noBackClickable(onClick = onClick)
             .padding(horizontal = style.itemHorizontalPadding),
         contentAlignment = Alignment.Center,

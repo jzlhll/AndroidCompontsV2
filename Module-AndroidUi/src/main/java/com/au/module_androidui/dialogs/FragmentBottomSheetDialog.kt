@@ -20,9 +20,8 @@ import kotlin.math.min
 
 /**
  * FragmentBottomSheetDialog
- * @param hasEditText 是否有输入框，有输入框，则会安排弹窗的方式有变。
  */
-class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(hasEditText) {
+class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
     companion object {
         /**
          * 监听 BottomSheet 内容 Fragment 返回的结果。
@@ -55,14 +54,13 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
             @ColorInt
             backgroundColor: Int? = null,
             paddingMode:Boolean = false,
-            hasEditText: Boolean = false,
             canCancel:Boolean = true,
             showHeadLine: Boolean = true,
         ): FragmentBottomSheetDialog {
             if (height < 0) {
                 throw IllegalArgumentException("height must be >= 0")
             }
-            val dialog = FragmentBottomSheetDialog(hasEditText)
+            val dialog = FragmentBottomSheetDialog()
             dialog.arguments = Bundle().also {
                 it.putSerializable("fgClass", T::class.java)
                 it.putBoolean("paddingMode", paddingMode)
@@ -96,14 +94,13 @@ class FragmentBottomSheetDialog(hasEditText:Boolean = false) : AbsBottomDialog(h
             @ColorInt
             backgroundColor: Int? = null,
             paddingMode:Boolean = false,
-            hasEditText: Boolean = false,
             canCancel:Boolean = true,
             showHeadLine: Boolean = true,
         ): FragmentBottomSheetDialog {
             if (maxHeightInset < 0) {
                 throw IllegalArgumentException("maxHeightInset must be >= 0")
             }
-            val dialog = FragmentBottomSheetDialog(hasEditText)
+            val dialog = FragmentBottomSheetDialog()
             dialog.arguments = Bundle().also {
                 it.putSerializable("fgClass", T::class.java)
                 it.putBoolean("paddingMode", paddingMode)

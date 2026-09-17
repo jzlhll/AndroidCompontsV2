@@ -2,10 +2,13 @@ package com.au.module_android.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.ext.SdkExtensions
+import com.au.module_android.Globals
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -17,6 +20,16 @@ enum class NetworkType {
     AP_IPV4,
     AP_IPV6,
     UNKNOWN
+}
+
+fun isWifiConnected(): Boolean {
+    val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities)
+    if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) return true
+
+    // 默认网络可能走蜂窝，保留原有 Wi-Fi 地址判断作为补充。
+    val netType = getIpAddress().second
+    return netType == NetworkType.WIFI_IPV4 || netType == NetworkType.WIFI_IPV6
 }
 
 /**

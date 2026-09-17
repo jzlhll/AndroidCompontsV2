@@ -19,6 +19,9 @@ import java.util.Locale
 
 internal class FileItem(val fileName:String, val log: String)
 object FileLog {
+    /** 日志按最后修改时间保留的天数。 */
+    const val RETENTION_DAYS = 7
+
     private val logFileCreateType = LogFileCreateType.OneFileEveryDay //必须放在前面
 
     enum class LogFileCreateType(val nameFmt:String) {
@@ -59,8 +62,7 @@ object FileLog {
         }
     }
 
-    private fun getRootPath() = Globals.goodFilesDir.absolutePath + File.separator + "Log"
-    val logDir by unsafeLazy { getRootPath() + File.separatorChar }
+    val logDir by unsafeLazy { File(Globals.goodFilesDir, "Log").absolutePath + File.separatorChar }
 
     private val memCachedFileItemsLock = Any()
     private const val CAPACITY_OF_FIXED_FILE_ITEMS = 1000
@@ -178,7 +180,7 @@ object FileLog {
     private fun clearLog() {
         var count = 0
         do {
-            val file = File(getRootPath())
+            val file = File(logDir)
             if (!file.exists()) {
                 break
             }
@@ -187,7 +189,7 @@ object FileLog {
                 if (f.exists()) {
                     try {
                         val time = f.lastModified()
-                        if (System.currentTimeMillis() - time > 15L * 3600 * 24 * 1000) { //N天前的日志删除。
+                        if (System.currentTimeMillis() - time > RETENTION_DAYS * 24L * 3600 * 1000) { //N天前的日志删除。
                             if (f.delete()) {
                                 count++
                             }

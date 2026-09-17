@@ -45,7 +45,7 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
         ToutiaoScreenAdapter.attach(this)
-        enableEdgeToEdgeFix()
+        enableEdgeToEdgeFix() 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             this.window.isNavigationBarContrastEnforced = false
         }

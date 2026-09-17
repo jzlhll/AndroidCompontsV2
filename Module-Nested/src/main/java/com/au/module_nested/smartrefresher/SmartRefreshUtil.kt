@@ -1,13 +1,23 @@
 package com.au.module_nested.smartrefresher
 
+import androidx.annotation.ColorInt
 import androidx.core.widget.NestedScrollView
 import com.scwang.smart.refresh.layout.SmartRefreshLayout
 
 /**
  * 设置简单的我的简易效果，加载头，默认高度为42dp。
  */
-fun SmartRefreshLayout.setSimpleLoadingHeader(headerHeight: Float = 42f) : SmartRefreshLayout {
-    setRefreshHeader(SimpleLoadingHeader(context))
+fun SmartRefreshLayout.setSimpleLoadingHeader(
+    headerHeight: Float = 42f,
+    @ColorInt indicatorColor: Int? = null,
+) : SmartRefreshLayout {
+    setRefreshHeader(SimpleLoadingHeader(context).apply {
+        if (indicatorColor != null) {
+            enableRandomColor = false
+            pullColor = indicatorColor
+            mIndicator.setIndicatorColor(indicatorColor)
+        }
+    })
     setHeaderHeight(headerHeight)
     return this
 }

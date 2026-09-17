@@ -239,6 +239,6 @@ class LayoutAndInputManager(val inputLayout: CustomTextInputLayout,
     }
 
     companion object {
-        const val DEBUG = true
+        const val DEBUG = false
     }
 }

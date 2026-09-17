@@ -120,51 +120,62 @@ class SimpleFilesLruCache(
      * 文件操作后的回调，记录文件信息
      * @param file 文件对象
      * @param operateType 操作类型
+     * @param onComplete 异步记账完成回调
      */
-    fun afterFileOperator(file: File, operateType: FileOperateType) {
+    fun afterFileOperator(
+        file: File,
+        operateType: FileOperateType,
+        onComplete: ((Boolean) -> Unit)? = null,
+    ) {
         getOrCreateScope().submit {
-            // 计算相对于cacheDir的路径
-            when (operateType) {
-                FileOperateType.SAVE -> {
-                    // SAVE操作需要文件存在，并记录文件大小
-                    if (file.exists()) {
-                        val fileTime = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).lastAccessTime().toMillis()
-                        fileMetadata[file.absolutePath] = FileMetadata(
-                            accessTime = fileTime,
-                            fileSize = file.length(),
-                        )
+            var success = false
+            try {
+                when (operateType) {
+                    FileOperateType.SAVE -> {
+                        if (file.exists()) {
+                            val fileTime = Files.readAttributes(
+                                file.toPath(),
+                                BasicFileAttributes::class.java,
+                            ).lastAccessTime().toMillis()
+                            fileMetadata[file.absolutePath] = FileMetadata(
+                                accessTime = fileTime,
+                                fileSize = file.length(),
+                            )
+                            val total = getTotalSize()
+                            if (total > maxSize) cleanupOldFiles(total)
+                            success = true
+                        }
+                    }
 
-                        // 检查是否需要清理旧文件
-                        val total = getTotalSize()
-                        if (total > maxSize) {
-                          //  logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} need $total / $maxSize" }
-                            cleanupOldFiles(total)
+                    FileOperateType.READ -> {
+                        if (file.exists()) {
+                            fileMetadata[file.absolutePath]?.let { metadata ->
+                                metadata.accessTime = System.currentTimeMillis()
+                            }
+                            val newAccessTime = FileTime.fromMillis(Date().time)
+                            Files.setAttribute(file.toPath(), "lastAccessTime", newAccessTime)
+                            success = true
                         } else {
-                          //  logdNoFile { "$operateType ${file.path} , time: $fileTime size:${file.length()} noNeed $total / $maxSize" }
+                            fileMetadata.remove(file.absolutePath)
                         }
                     }
-                }
 
-                FileOperateType.READ -> {
-                    // READ操作更新访问时间
-                    if (file.exists()) {
-                        fileMetadata[file.absolutePath]?.let { metadata ->
-                            metadata.accessTime = System.currentTimeMillis()
-                        }
-                        // 设置为当前时间
-                        val newAccessTime = FileTime.fromMillis(Date().time)
-                        Files.setAttribute(file.toPath(), "lastAccessTime", newAccessTime)
-                        logdNoFile { "$operateType ${file.path} , time:$newAccessTime" }
-                    } else {
-                        // 文件不存在，从记录中移除
+                    FileOperateType.DELETE -> {
                         fileMetadata.remove(file.absolutePath)
+                        success = true
                     }
                 }
-
-                FileOperateType.DELETE -> {
-                    // DELETE操作从记录中移除
-                    fileMetadata.remove(file.absolutePath)
+            } catch (e: Exception) {
+                logEx(throwable = e) {
+                    "LRU operation failed: cache=$dirName operation=$operateType " +
+                        "file=${file.name} error=${e::class.java.simpleName}"
                 }
+            } finally {
+                logdNoFile {
+                    "lru operation completed: cache=$dirName operation=$operateType " +
+                        "file=${file.name} status=${if (success) "SUCCESS" else "FAILURE"}"
+                }
+                onComplete?.invoke(success)
             }
         }
     }
@@ -192,7 +203,7 @@ class SimpleFilesLruCache(
             val file = File(entry.key)
             if (file.exists()) {
                 val deleted = file.delete()
-                logdNoFile { "deleted ${entry.key} , size: ${entry.value.fileSize}" }
+                logdNoFile { "deleted ${file.name} , size: ${entry.value.fileSize}" }
                 if (deleted) {
                     currentSize -= entry.value.fileSize
                     fileMetadata.remove(entry.key)

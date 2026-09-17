@@ -18,9 +18,13 @@ import com.au.module_android.utils.ignoreError
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.load.resource.bitmap.VideoDecoder
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -150,15 +154,46 @@ fun ImageView.glideLoadAsset(assetPath: String, errorDrawableId: Int? = null) {
 fun ImageView.glideLoadFile(localFile: File,
                             errorDrawableId:Int,
                             cacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
-                            optionsTransform: ((RequestOptions)-> RequestOptions)? = null) {
+                            transitionOptions: DrawableTransitionOptions? = null,
+                            optionsTransform: ((RequestOptions)-> RequestOptions)? = null,
+                            onResourceReady: ((Drawable) -> Unit)? = null,
+                            onLoadFailed: (() -> Unit)? = null) {
     val opt = RequestOptions.diskCacheStrategyOf(cacheStrategy)
         .skipMemoryCache(false)
         .error(errorDrawableId)
     val options = optionsTransform?.invoke(opt) ?: opt
-    Glide.with(context)
+    var request = Glide.with(context)
         .load(localFile)
         .apply(options)
-        .into(this)
+    if (onResourceReady != null || onLoadFailed != null) {
+        request = request.listener(object : RequestListener<Drawable> {
+            override fun onLoadFailed(
+                e: GlideException?,
+                model: Any?,
+                target: com.bumptech.glide.request.target.Target<Drawable>,
+                isFirstResource: Boolean,
+            ): Boolean {
+                onLoadFailed?.invoke()
+                return false
+            }
+
+            override fun onResourceReady(
+                resource: Drawable,
+                model: Any,
+                target: com.bumptech.glide.request.target.Target<Drawable>?,
+                dataSource: DataSource,
+                isFirstResource: Boolean,
+            ): Boolean {
+                onResourceReady?.invoke(resource)
+                return false
+            }
+        })
+    }
+    if (transitionOptions == null) {
+        request.into(this)
+    } else {
+        request.transition(transitionOptions).into(this)
+    }
 }
 
 /**
@@ -233,16 +268,42 @@ fun ImageView.glideLoadContentUri(
     signature: MediaStoreSignature,
     cacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
     optionsTransform: ((RequestOptions)-> RequestOptions)? = null,
+    onResourceReady: ((Drawable) -> Unit)? = null,
+    onLoadFailed: (() -> Unit)? = null,
 ) {
     val context = Globals.app
     val opt = RequestOptions.diskCacheStrategyOf(cacheStrategy)
         .signature(signature)
     val options = optionsTransform?.invoke(opt) ?: opt
     // 3. 加载Content URI并绑定签名
-    Glide.with(context)
+    var request = Glide.with(context)
         .load(contentUri) // 传入Content URI
         .apply(options)
-        .into(this)
+    if (onResourceReady != null || onLoadFailed != null) {
+        request = request.listener(object : RequestListener<Drawable> {
+            override fun onLoadFailed(
+                e: GlideException?,
+                model: Any?,
+                target: com.bumptech.glide.request.target.Target<Drawable>,
+                isFirstResource: Boolean,
+            ): Boolean {
+                onLoadFailed?.invoke()
+                return false
+            }
+
+            override fun onResourceReady(
+                resource: Drawable,
+                model: Any,
+                target: com.bumptech.glide.request.target.Target<Drawable>?,
+                dataSource: DataSource,
+                isFirstResource: Boolean,
+            ): Boolean {
+                onResourceReady?.invoke(resource)
+                return false
+            }
+        })
+    }
+    request.into(this)
 }
 
 // 封装：根据Content URI获取媒体库元数据，并加载图片，并带签名确保缓存更新

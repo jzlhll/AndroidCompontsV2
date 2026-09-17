@@ -37,7 +37,7 @@ fun ComposeHeaderLeftTitle(
         modifier = modifier.applyHeaderStatusBarsPadding(applyStatusBarsPadding)
             .fillMaxWidth()
             .padding(horizontal = ComposeDimens.PaddingEdge)
-            .padding(top = ComposeDimens.ToolbarMarginTop),
+            .padding(vertical = ComposeDimens.ToolbarMarginTop),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ComposeHeaderIcon(

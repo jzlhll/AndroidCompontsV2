@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
@@ -38,7 +39,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 /** 对应 XML StyleI8oShadowWhiteBlock 的 Compose 阴影白底块。 */
 @Composable
@@ -220,6 +223,67 @@ private fun Offset.toPixelOffset(width: Float, height: Float): Offset {
     return Offset(x * width, y * height)
 }
 
+/** 保存可供多个区域复用的静态背景绘制层。 */
+@Stable
+class ComposeStaticBackdropState internal constructor(
+    internal val sourceLayer: GraphicsLayer,
+)
+
+/** 创建静态背景绘制层状态。 */
+@Composable
+fun rememberComposeStaticBackdropState(): ComposeStaticBackdropState {
+    val sourceLayer = rememberGraphicsLayer()
+    return remember(sourceLayer) {
+        ComposeStaticBackdropState(sourceLayer)
+    }
+}
+
+/** 记录已经完成模糊等处理、可供其他区域直接采样的静态内容。 */
+fun Modifier.composeStaticBackdropSource(state: ComposeStaticBackdropState): Modifier {
+    return drawWithContent {
+        state.sourceLayer.record {
+            this@drawWithContent.drawContent()
+        }
+        drawLayer(state.sourceLayer)
+    }
+}
+
+/** 从静态背景层的指定对齐位置采样内容，不再施加额外模糊。 */
+fun Modifier.composeStaticBackdropSample(
+    state: ComposeStaticBackdropState,
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    offsetX: Dp = 0.dp,
+    offsetY: Dp = 0.dp,
+    overlayColor: Color = Color.Transparent,
+): Modifier {
+    return drawWithCache {
+        val offsetXPx = offsetX.toPx()
+        val offsetYPx = offsetY.toPx()
+        onDrawBehind {
+            val sourceSize = state.sourceLayer.size
+            if (sourceSize.width > 0 && sourceSize.height > 0) {
+                val relativeOffsetX = if (layoutDirection == LayoutDirection.Ltr) offsetXPx else -offsetXPx
+                val sampleX = horizontalAlignment.align(
+                    size.width.roundToInt(),
+                    sourceSize.width,
+                    layoutDirection,
+                ) + relativeOffsetX
+                val sampleY = verticalAlignment.align(
+                    size.height.roundToInt(),
+                    sourceSize.height,
+                ) + offsetYPx
+                withTransform({
+                    translate(-sampleX, -sampleY)
+                }) {
+                    drawLayer(state.sourceLayer)
+                }
+            }
+            drawRect(overlayColor)
+        }
+    }
+}
+
 /** 保存 Compose 背景采样层与模糊渲染层。 */
 @Stable
 class ComposeBackdropBlurState internal constructor(
@@ -338,7 +402,7 @@ private fun Modifier.composeWhiteBlockFrame(
 @Composable
 fun Modifier.composeBlurredCircleBackground(
     blurRadius: Dp = 4.dp,
-    overlayColor: Color = ComposeColors.TextDesc.copy(alpha = 0.5f),
+    overlayColor: Color = ComposeColors.TextDesc50Percent,
 ): Modifier {
     return clip(CircleShape)
         .drawWithContent {

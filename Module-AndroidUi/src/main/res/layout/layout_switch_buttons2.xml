@@ -10,8 +10,8 @@
         android:id="@+id/selectBgView"
         app:layout_constraintStart_toStartOf="@id/leftTv"
         app:layout_constraintEnd_toEndOf="@id/leftTv"
-        app:backgroundNormal="#ccffffff"
-        app:cornerRadius="32dp"
+        app:backgroundNormal="#ebebeb"
+        app:cornerRadius="20dp"
         android:layout_height="match_parent"
         android:layout_width="0dp"/>
 
@@ -29,6 +29,7 @@
         android:id="@+id/leftTv"
         android:paddingHorizontal="6dp"
         style="@style/StyleAuTextThin"
+        app:customFontMode="mid"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintHorizontal_chainStyle="spread"
@@ -42,6 +43,7 @@
     <com.au.module_androidui.widget.CustomFontText
         android:id="@+id/rightTv"
         style="@style/StyleAuTextThin"
+        app:customFontMode="mid"
         android:layout_width="0dp"
         android:paddingHorizontal="6dp"
         android:layout_height="wrap_content"

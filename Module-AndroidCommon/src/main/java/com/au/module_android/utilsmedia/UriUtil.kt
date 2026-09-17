@@ -62,7 +62,7 @@ fun Uri.length(cr: ContentResolver, schemeForce:String? = null) : Long {
                     ?: throw Exception("Content provider recently crashed")
                 resultLength = fileDescriptor.statSize
             } catch (e: Exception) {
-                Log.d("UrlUtil", e.message ?: e.javaClass.simpleName)
+                logdNoFile("UrlUtil") { e.message ?: e.javaClass.simpleName }
                 resultLength = -1L
             } finally {
                 fileDescriptor?.close()
@@ -89,7 +89,7 @@ fun Uri.length(cr: ContentResolver, schemeForce:String? = null) : Long {
                     resultLength = -1L
                 }
             } catch (e: Exception) {
-                Log.d("UrlUtil", e.message ?: e.javaClass.simpleName)
+                logdNoFile("UrlUtil") { e.message ?: e.javaClass.simpleName }
                 resultLength = -1L
             } finally {
                 cursor?.close()
@@ -113,7 +113,7 @@ fun Uri.length(cr: ContentResolver, schemeForce:String? = null) : Long {
                     ?: throw Exception("Content provider recently crashed")
                 resultLength = assetFileDescriptor.length
             } catch (e: Exception) {
-                Log.d("UrlUtil", e.message ?: e.javaClass.simpleName)
+                logdNoFile("UrlUtil") { e.message ?: e.javaClass.simpleName }
                 resultLength = -1L
             } finally {
                 assetFileDescriptor?.close()
@@ -190,11 +190,11 @@ fun Uri.isUriExists(context: Context = Globals.app): Int {
         return 0
     } catch (e: SecurityException) {
         // 权限不足，无法访问该URI
-        Log.e(TAG, "访问URI权限不足: $this", e)
+        logdNoFile(TAG) { "访问URI权限不足: $this, $e" }
         return -1
     } catch (e: java.lang.Exception) {
         // 其他异常（如URI格式错误、资源被占用等）
-        Log.e(TAG, "检查URI失败: $this", e)
+        logdNoFile(TAG) { "检查URI失败: $this, $e" }
         return -2
     } finally {
         // 关闭输入流，避免资源泄漏
@@ -202,7 +202,7 @@ fun Uri.isUriExists(context: Context = Globals.app): Int {
             try {
                 inputStream.close()
             } catch (e: IOException) {
-                Log.e(TAG, "关闭输入流失败", e)
+                logdNoFile(TAG) { "关闭输入流失败: $e" }
             }
         }
     }

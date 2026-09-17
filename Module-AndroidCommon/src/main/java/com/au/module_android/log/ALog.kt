@@ -1,71 +1,56 @@
 package com.au.module_android.log
 
 import android.util.Log
-import com.au.module_android.log.LogDebug.ALWAYS_FILE_LOG
 import com.au.module_android.log.LogDebug.ALWAYS_LOG_DEBUG
-import kotlin.math.min
 
 /**
  * 之所以定义这些，是综合考虑了反编译的字节码长度，避免inline过多膨胀
  */
-inline fun <THIS : Any> THIS.loge(tag:String = LogTag.TAG, javaClass: Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.loge(tag:String = LogTag.TAG, javaClass: Class<*> = this.javaClass, forceNoFile: Boolean = false, crossinline block: (THIS) -> String) {
     val str = block(this)
     val log = ALogJ.log("E", str, tag, javaClass)
     Log.e(tag, log)
 
-    if (ALWAYS_FILE_LOG) FileLog.write(log)
+    if (!forceNoFile) FileLog.write(log)
 }
 
-inline fun <THIS : Any> THIS.logw(tag:String = LogTag.TAG, javaClass: Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logw(tag:String = LogTag.TAG, javaClass: Class<*> = this.javaClass, forceNoFile: Boolean = false, crossinline block: (THIS) -> String) {
     val str = block(this)
     val log = ALogJ.log("W", str, tag, javaClass)
     Log.w(tag, log)
 
-    if (ALWAYS_FILE_LOG) FileLog.write(log)
+    if (!forceNoFile) FileLog.write(log)
 }
 
-inline fun <THIS : Any> THIS.logEx(tag:String = LogTag.TAG, javaClass: Class<*> = this.javaClass, throwable: Throwable, crossinline block: (THIS) -> String) {
+inline fun <THIS : Any> THIS.logEx(tag:String = LogTag.TAG, javaClass: Class<*> = this.javaClass, throwable: Throwable, forceNoFile: Boolean = false, crossinline block: (THIS) -> String) {
     val str = block(this)
     val log = ALogJ.log("E", str, tag, javaClass)
     val ex = ALogJ.ex(throwable)
 
     Log.e(tag, log)
     Log.e(tag, ex)
-    if (ALWAYS_FILE_LOG) FileLog.write(log + "\n" + ex)
+    if (!forceNoFile) FileLog.write(log + "\n" + ex)
 }
 
 inline fun <THIS : Any> THIS.logd(javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
-    if (ALWAYS_LOG_DEBUG || ALWAYS_FILE_LOG) {
-        val str = block(this)
-        val log = ALogJ.log("D", str, javaClass)
-        if(ALWAYS_LOG_DEBUG) Log.d(LogTag.TAG, log)
-
-        if (ALWAYS_FILE_LOG) FileLog.write(log)
-    }
+    logd(tag = LogTag.TAG, javaClass = javaClass, block = block)
 }
 
 inline fun <THIS : Any> THIS.logd(tag:String = LogTag.TAG, javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
-    if (ALWAYS_LOG_DEBUG || ALWAYS_FILE_LOG) {
-        val str = block(this)
-        val log = ALogJ.log("D", str, tag, javaClass)
-        if(ALWAYS_LOG_DEBUG) Log.d(tag, log)
-
-        if (ALWAYS_FILE_LOG) FileLog.write(log)
-    }
+    val log = ALogJ.log("D", block(this), tag, javaClass)
+    if (ALWAYS_LOG_DEBUG) Log.d(tag, log)
+    FileLog.write(log)
 }
 
-inline fun <THIS : Any> THIS.logdNoFile(javaClass:Class<*> = this.javaClass, crossinline block: (THIS) -> String) {
-    if (ALWAYS_LOG_DEBUG) {
-        val str = block(this)
-        val log = ALogJ.log("D", str, javaClass)
-        Log.d(LogTag.TAG, log)
-    }
+inline fun <THIS : Any> THIS.logdNoFile(javaClass:Class<*> = this.javaClass, forceNoFile: Boolean = false, crossinline block: (THIS) -> String) {
+    logdNoFile(tag = LogTag.TAG, javaClass = javaClass, forceNoFile = forceNoFile, block = block)
 }
 
-inline fun <THIS : Any> THIS.logdNoFile(tag:String, crossinline block: (THIS) -> String) {
-    if (ALWAYS_LOG_DEBUG) {
-        val str = block(this)
-        Log.d(tag, str)
+inline fun <THIS : Any> THIS.logdNoFile(tag:String, javaClass:Class<*> = this.javaClass, forceNoFile: Boolean = false, crossinline block: (THIS) -> String) {
+    if (!forceNoFile) {
+        logd(tag = tag, javaClass = javaClass, block = block)
+    } else if (ALWAYS_LOG_DEBUG) {
+        Log.d(tag, ALogJ.log("D", block(this), tag, javaClass))
     }
 }
 

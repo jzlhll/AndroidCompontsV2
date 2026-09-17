@@ -96,6 +96,8 @@ fun mmkvSetAny(key:String, value:Any) {
     }
 }
 
+fun mmkvAllKeys(): Array<String> = mmkv.allKeys() ?: emptyArray()
+
 fun mmkvClearKey(key: String) {
     mmkv.removeValueForKey(key)
 }

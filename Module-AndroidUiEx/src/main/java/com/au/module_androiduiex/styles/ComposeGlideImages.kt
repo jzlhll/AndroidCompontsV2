@@ -58,7 +58,9 @@ fun GlideRoundedImage(
     requestKey: Any? = null,
     requestWidth: Dp = width,
     requestHeight: Dp = height,
-    onResourceDisplayed: (() -> Unit)? = null,
+    onResourceReady: ((Drawable) -> Unit)? = null,
+    onResourceFailed: (() -> Unit)? = null,
+    onResourceCleared: ((Drawable?) -> Unit)? = null,
     requestBuilderTransform: ((RequestBuilder<Drawable>) -> RequestBuilder<Drawable>)? = null,
 ) {
     val context = LocalContext.current
@@ -67,14 +69,16 @@ fun GlideRoundedImage(
     val heightPx = with(LocalDensity.current) { requestHeight.roundToPx() }
     val state = remember(logicalImageKey) { GlideRoundedImageState() }
     val currentRequestBuilderTransform by rememberUpdatedState(requestBuilderTransform)
-    val currentOnResourceDisplayed by rememberUpdatedState(onResourceDisplayed)
+    val currentOnResourceReady by rememberUpdatedState(onResourceReady)
+    val currentOnResourceFailed by rememberUpdatedState(onResourceFailed)
+    val currentOnResourceCleared by rememberUpdatedState(onResourceCleared)
 
     val displayedResource = if (model == null) null else state.displayedResource
     val displayedTarget = displayedResource?.target
     LaunchedEffect(displayedTarget) {
         if (displayedTarget != null) {
             withFrameNanos { }
-            currentOnResourceDisplayed?.invoke()
+            currentOnResourceReady?.invoke(requireNotNull(displayedResource).drawable)
         }
     }
     DisposableEffect(displayedTarget, requestManager) {
@@ -115,15 +119,23 @@ fun GlideRoundedImage(
                     if (state.displayedResource == null) {
                         state.failed = true
                     }
+                    state.pendingTarget = null
+                    currentOnResourceFailed?.invoke()
                 }
 
                 override fun onLoadCleared(placeholder: Drawable?) {
+                    val clearedDrawable = if (state.displayedResource?.target === this) {
+                        state.displayedResource?.drawable
+                    } else {
+                        null
+                    }
                     if (state.pendingTarget === this) {
                         state.pendingTarget = null
                     }
                     if (state.displayedResource?.target === this) {
                         state.displayedResource = null
                     }
+                    currentOnResourceCleared?.invoke(clearedDrawable)
                 }
             }
             state.pendingTarget = target

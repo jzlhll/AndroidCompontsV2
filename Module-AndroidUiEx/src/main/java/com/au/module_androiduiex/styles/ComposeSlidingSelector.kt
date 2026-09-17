@@ -39,6 +39,7 @@ class ComposeSlidingSelectorState internal constructor(
     private val itemSelectedProvider: (Int) -> Boolean,
     private val itemSelectionChanged: (Int, Boolean) -> (() -> Unit)?,
     private val itemLongPressProvider: () -> ((Int) -> Unit)?,
+    private val selectionFinishedProvider: () -> (() -> Unit)?,
 ) {
     private val selectionRestores = mutableMapOf<Int, () -> Unit>()
     private var firstPosition = NoPosition
@@ -88,6 +89,7 @@ class ComposeSlidingSelectorState internal constructor(
     }
 
     internal fun endSelection() {
+        selectionFinishedProvider()?.invoke()
         resetSelectionRange()
     }
 
@@ -114,6 +116,7 @@ class ComposeSlidingSelectorState internal constructor(
  * 创建 Compose Lazy 列表滑选状态。
  * [onItemLongPress] 为空时不接管手势。
  * [onItemSelectionChanged] 成功时返回回缩该项目所需的撤销操作，变更失败时返回 null。
+ * [onSelectionFinished] 在一次滑选结束后调用。
  */
 @Composable
 fun rememberComposeSlidingSelectorState(
@@ -124,6 +127,7 @@ fun rememberComposeSlidingSelectorState(
     onItemSelectionChanged: (Int, Boolean) -> (() -> Unit)?,
     onItemLongPress: ((Int) -> Unit)?,
     enabled: Boolean = onItemLongPress != null,
+    onSelectionFinished: (() -> Unit)? = null,
 ): ComposeSlidingSelectorState {
     val currentEnabled = rememberUpdatedState(enabled)
     val currentItemPosition = rememberUpdatedState(itemPosition)
@@ -131,6 +135,7 @@ fun rememberComposeSlidingSelectorState(
     val currentItemSelected = rememberUpdatedState(isItemSelected)
     val currentItemSelectionChanged = rememberUpdatedState(onItemSelectionChanged)
     val currentItemLongPress = rememberUpdatedState(onItemLongPress)
+    val currentSelectionFinished = rememberUpdatedState(onSelectionFinished)
     return remember(dataKey) {
         ComposeSlidingSelectorState(
             enabledProvider = { currentEnabled.value },
@@ -141,6 +146,7 @@ fun rememberComposeSlidingSelectorState(
                 currentItemSelectionChanged.value(position, selected)
             },
             itemLongPressProvider = { currentItemLongPress.value },
+            selectionFinishedProvider = { currentSelectionFinished.value },
         )
     }
 }
