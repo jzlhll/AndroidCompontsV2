@@ -9,12 +9,17 @@ import kotlinx.coroutines.withContext
 private fun <DATA: IViewTypeBean> BaseAdapter<DATA, *>.diffUpdate(
     differ : DiffCallback<DATA>,
     newList: List<DATA>,
+    generation: Long,
     endCallback:()->Unit
 ) {
     Globals.mainScope.launchOnThread {
         val result = DiffUtil.calculateDiff(differ, true)
 
         withContext(Dispatchers.Main) {
+            if (!isLatestDataSubmission(generation)) {
+                endCallback()
+                return@withContext
+            }
             //完事后，再更改本地list
             datas.clear()
             datas.addAll(newList)
@@ -29,8 +34,9 @@ internal fun <DATA:IViewTypeBean> BaseAdapter<DATA, *>.initDatasCommon(
     differProvider : (oldDatas:List<DATA>, newDatas:List<DATA>)->DiffCallback<DATA>?,
     isTraditionalUpdate: Boolean,
     endInitDatasBlock:(oldDataSize: Int, newDataSize: Int)->Unit) {
-    val oldDatas = this.datas
-    val newList = newDatas ?: emptyList()
+    val generation = nextDataSubmissionGeneration()
+    val oldDatas = datas.toList()
+    val newList = newDatas?.toList() ?: emptyList()
 
     //必须在前面
     val oldDataSize = oldDatas.size
@@ -43,7 +49,7 @@ internal fun <DATA:IViewTypeBean> BaseAdapter<DATA, *>.initDatasCommon(
         submitTraditional(newList)
         endInitDatasBlock(oldDataSize, newDataSize)
     } else {
-        diffUpdate(differ, newList) {
+        diffUpdate(differ, newList, generation) {
             endInitDatasBlock(oldDataSize, newDataSize)
         }
     }

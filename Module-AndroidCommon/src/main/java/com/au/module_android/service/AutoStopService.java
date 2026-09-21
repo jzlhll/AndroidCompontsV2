@@ -46,7 +46,7 @@ public abstract class AutoStopService extends Service {
 
     protected abstract String getNotifyName();
 
-    static final boolean DEBUG = true;
+    static final boolean DEBUG = false;
 
     private static final long KEEP_ALIVE_MAX_TIME = 5 * 60 * 1000 + 30 * 1000L; //5分半
 

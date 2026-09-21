@@ -8,9 +8,9 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import android.text.TextUtils
-import android.util.Log
 import com.au.module_android.Globals
 import com.au.module_android.log.LogTag.TAG
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.utilsfile.FileIOUtils
 import java.io.File
 import java.io.FileNotFoundException

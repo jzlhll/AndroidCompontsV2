@@ -2,6 +2,7 @@ package com.au.module_android.log
 
 import android.util.Log
 import com.au.module_android.log.LogDebug.ALWAYS_LOG_DEBUG
+import kotlin.math.min
 
 /**
  * 之所以定义这些，是综合考虑了反编译的字节码长度，避免inline过多膨胀

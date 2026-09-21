@@ -41,7 +41,7 @@ open class CommonInitApplication : Application() {
     open fun config() : FirstInitialConfig? = null
 
     protected fun init(context: Application): Application {
-        UncaughtExceptionHandlerObj.init()
+        UncaughtExceptionHandlerObj.init()//
 
 //        DeviceIdentifier.register(context)
 

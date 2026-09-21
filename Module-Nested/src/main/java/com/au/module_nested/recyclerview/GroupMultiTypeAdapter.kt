@@ -190,6 +190,7 @@ abstract class GroupMultiTypeAdapter<HEADER : Any, CHILD : Any, VH : BindViewHol
             return true
         }
 
+        nextDataSubmissionGeneration()
         datas[headerPosition] = newGroup.toHeaderItem()
         notifyItemChanged(headerPosition)
 

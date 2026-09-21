@@ -29,6 +29,18 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
     var datas = mutableListOf<DATA>()
         internal set
 
+    // 数据发生新一轮提交或同步修改后，后台尚未完成的旧 diff 不再允许落地。
+    private var dataSubmissionGeneration = 0L
+
+    internal fun nextDataSubmissionGeneration(): Long {
+        dataSubmissionGeneration++
+        return dataSubmissionGeneration
+    }
+
+    internal fun isLatestDataSubmission(generation: Long): Boolean {
+        return generation == dataSubmissionGeneration
+    }
+
     private val onDataChangedList:ArrayList<IOnChangeListener> by unsafeLazy { ArrayList() }
 
     fun addDataChanged(listener: IOnChangeListener) {
@@ -69,6 +81,7 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
      * 移除item
      */
     fun removeItem(position: Int, onChange: Boolean = true) {
+        nextDataSubmissionGeneration()
         val oldDataSize = datas.size
         val newDataSize = if(oldDataSize > 0) oldDataSize - 1 else 0
         datas.removeAt(position)
@@ -88,6 +101,7 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
      * 移除item
      */
     fun removeItems(startPosition: Int, count: Int) {
+        nextDataSubmissionGeneration()
         val oldDataSize = datas.size
         val newDataSize = oldDataSize - count
         repeat(count) {
@@ -115,6 +129,7 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
      * 更新item
      */
     fun updateItem(index: Int, data: DATA, payload: Any? = null) {
+        nextDataSubmissionGeneration()
         datas[index] = data
         notifyItemChanged(index, payload)
         onDataChanged(DataUpdateExtraInfo(index))
@@ -131,6 +146,7 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
      * 添加item
      */
     fun addItem(data: DATA, index: Int? = null) {
+        nextDataSubmissionGeneration()
         val insertIndex = index ?: datas.count()
         val oldDataSize = datas.size
         val newDataSize = oldDataSize + 1
@@ -147,6 +163,7 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
             return
         }
 
+        nextDataSubmissionGeneration()
         val oldDataSize = datas.size
         val newDataSize = oldDataSize + data.size
 
@@ -167,6 +184,7 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
     }
 
     internal fun submitTraditional(newList: List<DATA>?) {
+        nextDataSubmissionGeneration()
         val oldDataSize = datas.size
         val newDataSize = newList?.size ?: 0
         datas = if (newList.isNullOrEmpty()) {
