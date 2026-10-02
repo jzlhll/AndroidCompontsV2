@@ -1,142 +1,175 @@
 package com.allan.mydroid.client.download
 
+import android.app.PendingIntent
 import android.content.Intent
+import android.util.AtomicFile
+import com.allan.mydroid.R
 import com.allan.mydroid.SplashActivity
+import com.allan.mydroid.repository.TransferFiles
 import com.au.module_android.Globals
-import com.au.module_android.log.logdNoFile
-import com.au.module_android.log.loge
-import kotlinx.coroutines.flow.Flow
+import com.au.module_android.log.logEx
+import com.au.module_gson.fromGsonList
+import com.au.module_gson.toGsonString
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import org.koin.core.component.KoinComponent
+import kotlinx.coroutines.launch
+import okhttp3.Call
+import java.io.File
+import java.util.UUID
 
-/**
- * 下载任务全局状态容器。Koin single。
- *
- * - 内部按 ip 维护任务列表，进入不同 host 的 client 页面只看到对应 ip 的进度，跨 host 不串号。
- * - 不持有 Android Context（Koin single 跨 Fragment 生命周期），通过 [Globals.app] 启动 service。
- * - 初始化时把上一次 Running 项标记为 Failed（app 重启后无法继续）。
- */
-class GlobalDownloadObj : KoinComponent {
-    private val _hostsFlow = MutableStateFlow<Map<String, HostDownloadList>>(emptyMap())
-    val hostsFlow: StateFlow<Map<String, HostDownloadList>> = _hostsFlow.asStateFlow()
-
+/** 应用级下载状态与请求所有者，跨页面保留任务并持久化最终结果。 */
+class GlobalDownloadObj {
     private val lock = Any()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val _tasksFlow = MutableStateFlow<List<DownloadTask>>(emptyList())
+    val tasksFlow = _tasksFlow.asStateFlow()
+    private val calls = mutableMapOf<String, Call>()
+    private val snapshots = Channel<List<DownloadTask>>(Channel.CONFLATED)
+    private val history = AtomicFile(File(Globals.app.filesDir, "client-downloads.json"))
+    private val restored = scope.async {
+        try {
+            val tasks = if (history.baseFile.exists()) history.openRead().bufferedReader().use {
+                it.readText().fromGsonList<DownloadTask>()
+            } else emptyList()
+            synchronized(lock) {
+                _tasksFlow.value = tasks.map {
+                    when {
+                        it.active -> it.copy(state = DownloadState.Failed, error = Globals.getString(R.string.transfer_interrupted))
+                        it.state == DownloadState.Completed && !it.destFile.isFile -> it.copy(state = DownloadState.Missing)
+                        else -> it
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logEx(throwable = e) { "Restore downloads failed" }
+        }
+    }
 
     init {
-        // 启动时把 Running 改 Failed
-        synchronized(lock) {
-            val cur = _hostsFlow.value.toMutableMap()
-            cur.forEach { (ip, list) ->
-                val newTasks = list.tasks.map { task ->
-                    if (task.state == DownloadState.Running || task.state == DownloadState.Pending) {
-                        task.copy(state = DownloadState.Failed, error = "App restart, download interrupted")
-                    } else task
+        scope.launch {
+            restored.await()
+            for (snapshot in snapshots) {
+                var output: java.io.FileOutputStream? = null
+                try {
+                    output = history.startWrite()
+                    output.write(snapshot.toGsonString().toByteArray(Charsets.UTF_8))
+                    history.finishWrite(output)
+                } catch (e: Exception) {
+                    history.failWrite(output)
+                    logEx(throwable = e) { "Persist downloads failed" }
                 }
-                cur[ip] = list.copy(tasks = newTasks)
             }
-            _hostsFlow.value = cur
         }
     }
 
-    /** 当前 ip 的任务列表 flow。页面订阅它即可，自动随 host 切换隔离。 */
-    fun tasksFlow(ip: String): Flow<List<DownloadTask>> {
-        return hostsFlow.map { it[ip]?.tasks ?: emptyList() }.distinctUntilChanged()
-    }
+    fun tasksFlow(ip: String, httpPort: Int) = tasksFlow.map { tasks ->
+        tasks.filter { it.ip == ip && it.httpPort == httpPort }
+    }.distinctUntilChanged()
 
-    /** 单任务进度 flow。 */
-    fun taskFlow(ip: String, uriUuid: String): Flow<DownloadTask?> {
-        return tasksFlow(ip).map { tasks -> tasks.find { it.uriUuid == uriUuid } }
-    }
-
-    /** 入队一个新任务，自动启动 DownloadService。 */
-    fun enqueue(task: DownloadTask) {
+    suspend fun enqueue(task: DownloadTask) {
+        restored.await()
         synchronized(lock) {
-            val cur = _hostsFlow.value.toMutableMap()
-            val hostList = cur[task.ip] ?: HostDownloadList(task.ip, emptyList())
-            val newTasks = hostList.tasks.filter { it.uriUuid != task.uriUuid } + task
-            cur[task.ip] = hostList.copy(tasks = newTasks)
-            _hostsFlow.value = cur
+            val existing = _tasksFlow.value.find { it.hostKey == task.hostKey && it.uriUuid == task.uriUuid }
+            if (existing != null && (existing.active || existing.state == DownloadState.Completed)) return
+            _tasksFlow.value = _tasksFlow.value.filterNot { it.hostKey == task.hostKey && it.uriUuid == task.uriUuid } + task
+            snapshots.trySend(_tasksFlow.value)
         }
-        startDownloadService(task.ip, task.uriUuid)
-    }
-
-    /** 取消任务。DownloadService 内部会停止 IO。 */
-    fun cancel(ip: String, uriUuid: String) {
-        updateTask(ip, uriUuid) { it.copy(state = DownloadState.Canceled) }
-    }
-
-    /** 重试：把 Failed/Canceled 任务重置为 Pending 再入队。 */
-    fun retry(ip: String, uriUuid: String) {
-        val task = synchronized(lock) {
-            _hostsFlow.value[ip]?.tasks?.find { it.uriUuid == uriUuid }
-        } ?: return
-        enqueue(task.copy(state = DownloadState.Pending, receivedBytes = 0, error = null))
-    }
-
-    /** 清理已完成的任务。 */
-    fun clearCompleted(ip: String) {
-        synchronized(lock) {
-            val cur = _hostsFlow.value.toMutableMap()
-            val hostList = cur[ip] ?: return
-            cur[ip] = hostList.copy(tasks = hostList.tasks.filter { it.state != DownloadState.Completed })
-            _hostsFlow.value = cur
-        }
-    }
-
-    /** 内部更新某 ip 下某任务，synchronized + emit。 */
-    fun updateTask(ip: String, uriUuid: String, updater: (DownloadTask) -> DownloadTask) {
-        synchronized(lock) {
-            val cur = _hostsFlow.value.toMutableMap()
-            val hostList = cur[ip] ?: return
-            val newTasks = hostList.tasks.map { if (it.uriUuid == uriUuid) updater(it) else it }
-            cur[ip] = hostList.copy(tasks = newTasks)
-            _hostsFlow.value = cur
-        }
-    }
-
-    /** 在 service 内查询任务详情。 */
-    fun findTask(ip: String, uriUuid: String): DownloadTask? {
-        return synchronized(lock) {
-            _hostsFlow.value[ip]?.tasks?.find { it.uriUuid == uriUuid }
-        }
-    }
-
-    private fun startDownloadService(ip: String, uriUuid: String) {
         try {
-            val intent = Intent(Globals.app, DownloadService::class.java).apply {
-                putExtra(EXTRA_IP, ip)
-                putExtra(EXTRA_URI_UUID, uriUuid)
-            }
-            // 启动 foreground service 需要前台 Activity 或在后台白名单。client 页面正在前台时触发没问题。
-            // 由于 Globals.app 是 Application Context，Android 8+ 限制下用 startForegroundService。
-            Globals.app.startForegroundService(intent)
+            Globals.app.startForegroundService(Intent(Globals.app, DownloadService::class.java).apply {
+                putExtra(EXTRA_ATTEMPT, task.attemptId)
+            })
         } catch (e: Exception) {
-            loge { "start DownloadService failed: ${e.message}" }
-            updateTask(ip, uriUuid) {
-                it.copy(state = DownloadState.Failed, error = "Cannot start download service: ${e.message}")
+            finish(task, e.message)
+        }
+    }
+
+    suspend fun findTask(attemptId: String): DownloadTask? {
+        restored.await()
+        return synchronized(lock) { _tasksFlow.value.find { it.attemptId == attemptId } }
+    }
+
+    fun cancel(task: DownloadTask) {
+        synchronized(lock) {
+            val current = _tasksFlow.value.find { it.attemptId == task.attemptId } ?: return
+            if (!current.active || current.state == DownloadState.Canceling) return
+            val call = calls[current.attemptId]
+            updateTask(current) { it.copy(state = if (call == null) DownloadState.Canceled else DownloadState.Canceling) }
+            call?.cancel()
+        }
+    }
+
+    suspend fun retry(task: DownloadTask) {
+        if (task.active || task.state == DownloadState.Completed) return
+        enqueue(task.copy(state = DownloadState.Pending, receivedBytes = 0, bytesPerSecond = 0, error = null,
+            destFilePath = "", attemptId = UUID.randomUUID().toString()))
+    }
+
+    fun register(task: DownloadTask, call: Call): Boolean = synchronized(lock) {
+        val current = _tasksFlow.value.find { it.attemptId == task.attemptId } ?: return@synchronized false
+        if (current.state != DownloadState.Pending || calls.containsKey(task.attemptId)) return@synchronized false
+        calls[task.attemptId] = call
+        updateTask(task) { it.copy(state = DownloadState.Running) }
+        true
+    }
+
+    fun updateTask(task: DownloadTask, updater: (DownloadTask) -> DownloadTask) {
+        synchronized(lock) {
+            var changedState = false
+            _tasksFlow.value = _tasksFlow.value.map {
+                if (it.attemptId == task.attemptId) updater(it).also { next -> changedState = next.state != it.state }
+                else it
             }
+            if (changedState) snapshots.trySend(_tasksFlow.value)
+        }
+    }
+
+    fun complete(task: DownloadTask, temp: File) {
+        synchronized(lock) {
+            val current = _tasksFlow.value.find { it.attemptId == task.attemptId } ?: return
+            if (current.state != DownloadState.Running) return
+            val result = TransferFiles.publish(temp, task.name)
+            updateTask(task) { it.copy(state = DownloadState.Completed, destFilePath = result.absolutePath,
+                receivedBytes = result.length(), error = null) }
+        }
+    }
+
+    fun finish(task: DownloadTask, error: String?) {
+        synchronized(lock) {
+            calls.remove(task.attemptId)
+            updateTask(task) {
+                when (it.state) {
+                    DownloadState.Canceling -> it.copy(state = DownloadState.Canceled)
+                    DownloadState.Running, DownloadState.Pending -> it.copy(state = DownloadState.Failed,
+                        error = error ?: Globals.getString(R.string.transfer_interrupted))
+                    else -> it
+                }
+            }
+        }
+    }
+
+    fun removeRecord(task: DownloadTask) {
+        synchronized(lock) {
+            if (_tasksFlow.value.any { it.attemptId == task.attemptId && it.active }) return
+            _tasksFlow.value = _tasksFlow.value.filterNot { it.attemptId == task.attemptId }
+            snapshots.trySend(_tasksFlow.value)
         }
     }
 
     companion object {
-        const val EXTRA_IP = "extra_ip"
-        const val EXTRA_URI_UUID = "extra_uri_uuid"
-
-        /** 通知点击跳回 app 首页（SplashActivity → 雷达页），用户重新点 host 即可恢复下载页进度。 */
-        fun buildHomePendingIntent(): android.app.PendingIntent {
+        const val EXTRA_ATTEMPT = "download_attempt"
+        fun buildHomePendingIntent(): PendingIntent {
             val intent = Intent(Globals.app, SplashActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
-            return android.app.PendingIntent.getActivity(
-                Globals.app,
-                0,
-                intent,
-                android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
-            )
+            return PendingIntent.getActivity(Globals.app, 0, intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         }
     }
 }

@@ -2,18 +2,12 @@ package com.allan.mydroid.client.download
 
 import androidx.annotation.Keep
 import java.io.File
-import kotlin.math.min
+import java.util.UUID
 
-/** 下载状态。 */
-enum class DownloadState { Pending, Running, Completed, Failed, Canceled }
+@Keep
+enum class DownloadState { Pending, Running, Canceling, Completed, Failed, Canceled, Missing }
 
-/**
- * 下载任务信息。字段参考 HTML ReceiveFromPhone.html:297-301 (name, fileSizeStr, uriUuid) 并扩展。
- * ip 字段用于 GlobalDownloadObj KV 隔离，避免跨 host 串号。
- * httpPort 字段缓存 host HTTP 端口，给通知点击跳回 ConnectToHostFragment 用。
- * destFilePath 为 [Globals.goodCacheDir]/shared/nanoMerged/ 下的绝对路径，
- * 与 host 端接收文件目录一致，便于下载完后作为主机直接再发送。
- */
+/** 每次下载尝试独立标识，按主机地址及 HTTP 端口隔离；完成前不占用正式文件。 */
 @Keep
 data class DownloadTask(
     val ip: String,
@@ -24,19 +18,19 @@ data class DownloadTask(
     val fileSize: Long,
     val mimeType: String,
     val url: String,
-    val destFilePath: String,
+    val destFilePath: String = "",
     val state: DownloadState = DownloadState.Pending,
     val receivedBytes: Long = 0,
-    val error: String? = null
+    val error: String? = null,
+    val attemptId: String = UUID.randomUUID().toString(),
+    @Transient val bytesPerSecond: Long = 0
 ) {
-    val destFile: File get() = File(destFilePath)
-
-    val progress: Float
-        get() = if (fileSize > 0) min(1f, receivedBytes.toFloat() / fileSize) else 0f
+    val hostKey get() = "$ip:$httpPort"
+    val destFile get() = File(destFilePath)
+    val active get() = state == DownloadState.Pending || state == DownloadState.Running || state == DownloadState.Canceling
+    val progress: Float get() {
+        if (fileSize <= 0) return 0f
+        val fraction = receivedBytes.toFloat() / fileSize
+        return if (fraction > 1f) 1f else fraction
+    }
 }
-
-/** 单个 host 的下载任务列表，作为 GlobalDownloadObj KV 的 value。 */
-data class HostDownloadList(
-    val ip: String,
-    val tasks: List<DownloadTask>
-)

@@ -97,4 +97,7 @@
             android:defaultValue="0"
             app:argType="integer" />
     </fragment>
+    <fragment
+        android:id="@+id/localTransferRecordsFragment"
+        android:name="com.allan.mydroid.client.receive.LocalTransferRecordsFragment" />
 </navigation>

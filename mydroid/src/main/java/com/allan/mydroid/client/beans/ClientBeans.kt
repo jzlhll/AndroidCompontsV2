@@ -30,5 +30,13 @@ data class ChatMessage(
 data class SelectedFile(
     val uri: Uri,
     val name: String,
-    val size: Long
+    val size: Long,
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val state: UploadState = UploadState.Pending,
+    val progress: Float = 0f,
+    val error: String? = null,
+    val savedName: String? = null,
+    val bytesPerSecond: Long = 0
 )
+
+enum class UploadState { Pending, Preparing, Uploading, Merging, Completed, Failed, Canceled }

@@ -5,148 +5,116 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.PowerManager
-import com.au.module_android.log.logdNoFile
-import com.au.module_android.log.loge
+import com.allan.mydroid.R
+import com.allan.mydroid.repository.GlobalFileListRepoObj
+import com.allan.mydroid.repository.TransferFiles
 import com.au.module_android.log.logEx
 import com.au.module_android.service.AutoStopService
-import com.au.module_android.utils.launchOnIOThread
+import com.allan.mydroid.client.api.ClientHttp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import com.au.module_okhttp.OkhttpGlobal
-import com.au.module_okhttp.creator.downloadFile
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import okhttp3.Call
 import okhttp3.Request
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
+import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 
-/**
- * 下载 ForegroundService。
- *
- * - 每个 uriUuid 对应一次 onStartCommand，独立 startId 与协程；任务结束后 [stopWrap]。
- * - 每任务独立 [PowerManager.PARTIAL_WAKE_LOCK]，tag 加 uriUuid 后缀，try/finally release。
- * - 复用 [downloadFile] 扩展（useTempFile=true，原子重命名），进度回调更新 GlobalDownloadObj。
- * - 取消靠 [GlobalDownloadObj.cancel] 设置 Canceled 状态，progressListener 检测到后抛 [CancellationException]
- *   终止下载并清理临时文件（downloadFile 内部 invokeOnCancellation 会 call.cancel + 删 tmp）。
- */
+/** 前台下载服务持有请求至落盘结束，取消直接中断网络读取，每次尝试仅清理自己的临时文件。 */
 class DownloadService : AutoStopService(), KoinComponent {
-    private val supervisor = SupervisorJob()
-    private val scope = CoroutineScope(supervisor)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val globalDownloadObj: GlobalDownloadObj by inject()
+    private val fileListRepo: GlobalFileListRepoObj by inject()
+    private val activeCalls = ConcurrentHashMap<String, Call>()
 
-    override fun getNotifyName(): String = "MyDroid 文件下载"
-
+    override fun getNotifyName(): String = getString(R.string.connect_to_host_receive_title)
     override fun foregroundType(): Int = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-
     override fun getPendingIntent(): PendingIntent = GlobalDownloadObj.buildHomePendingIntent()
 
     override fun onHandleWork(intent: Intent, startIdStr: String) {
-        val ip = intent.getStringExtra(EXTRA_IP) ?: run {
-            loge { "DownloadService missing EXTRA_IP, stop #$startIdStr" }
+        val attempt = intent.getStringExtra(GlobalDownloadObj.EXTRA_ATTEMPT)
+        if (attempt == null) {
             stopWrap(startIdStr)
             return
         }
-        val uriUuid = intent.getStringExtra(EXTRA_URI_UUID) ?: run {
-            loge { "DownloadService missing EXTRA_URI_UUID, stop #$startIdStr" }
-            stopWrap(startIdStr)
-            return
-        }
-
-        val task = globalDownloadObj.findTask(ip, uriUuid)
-        if (task == null) {
-            logdNoFile { "DownloadService task not found ip=$ip uuid=$uriUuid, stop #$startIdStr" }
-            stopWrap(startIdStr)
-            return
-        }
-
-        scope.launchOnIOThread {
-            val tag = "MyDroid::DownloadWakeLock::$uriUuid"
-            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, tag)
-            wakeLock.setReferenceCounted(false)
+        scope.launch {
+            var task: DownloadTask? = null
+            var temp: File? = null
+            var wakeLock: PowerManager.WakeLock? = null
+            var registered = false
+            var error: String? = null
             try {
-                wakeLock.acquire()
-                doDownload(task)
-            } catch (e: CancellationException) {
-                logdNoFile { "Download canceled ip=${task.ip} uuid=${task.uriUuid}" }
-                globalDownloadObj.updateTask(task.ip, task.uriUuid) {
-                    it.copy(state = DownloadState.Canceled)
+                val current = globalDownloadObj.findTask(attempt) ?: return@launch
+                task = current
+                val call = ClientHttp.client.newCall(Request.Builder().url(current.url).build())
+                if (!globalDownloadObj.register(current, call)) return@launch
+                registered = true
+                activeCalls[attempt] = call
+                ensureActive()
+                val manager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                wakeLock = manager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyDroid:Download:$attempt").apply {
+                    setReferenceCounted(false)
+                    acquire()
                 }
-                deletePartialFile(task.destFile)
+                val staging = TransferFiles.temporaryFile()
+                temp = staging
+                val startedAt = android.os.SystemClock.elapsedRealtime()
+                call.execute().use { response ->
+                    if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+                    val body = response.body ?: throw IOException("Empty response")
+                    var received = 0L
+                    var lastReported = 0L
+                    body.byteStream().use { input ->
+                        staging.outputStream().use { output ->
+                            val buffer = ByteArray(64 * 1024)
+                            while (true) {
+                                ensureActive()
+                                val count = input.read(buffer)
+                                if (count == -1) break
+                                output.write(buffer, 0, count)
+                                received += count
+                                val now = android.os.SystemClock.elapsedRealtime()
+                                if (now - lastReported >= 100) {
+                                    val elapsed = now - startedAt
+                                    val speed = if (elapsed > 0) (received * 1000.0 / elapsed).toLong() else 0L
+                                    globalDownloadObj.updateTask(current) { it.copy(receivedBytes = received, bytesPerSecond = speed) }
+                                    lastReported = now
+                                }
+                            }
+                        }
+                    }
+                    if ((current.fileSize > 0 && received != current.fileSize) ||
+                        (body.contentLength() >= 0 && received != body.contentLength())) {
+                        throw IOException("Download size mismatch: $received")
+                    }
+                }
+                ensureActive()
+                globalDownloadObj.complete(current, staging)
+                fileListRepo.reloadFileList()
+            } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logEx(throwable = e) { "Download failed ip=${task.ip} uuid=${task.uriUuid}" }
-                globalDownloadObj.updateTask(task.ip, task.uriUuid) {
-                    it.copy(state = DownloadState.Failed, error = e.message ?: "Download failed")
-                }
-                deletePartialFile(task.destFile)
+                error = e.message
+                logEx(throwable = e) { "Download failed: $attempt" }
             } finally {
-                if (wakeLock.isHeld) {
-                    wakeLock.release()
-                }
+                if (registered) activeCalls.remove(attempt)?.cancel()
+                temp?.delete()
+                if (registered) task?.let { globalDownloadObj.finish(it, error) }
+                wakeLock?.let { if (it.isHeld) it.release() }
                 stopWrap(startIdStr)
             }
         }
     }
 
-    private suspend fun doDownload(task: DownloadTask) {
-        globalDownloadObj.updateTask(task.ip, task.uriUuid) {
-            it.copy(state = DownloadState.Running, receivedBytes = 0, error = null)
-        }
-
-        val dirPath = File(task.destFilePath).parent ?: throw IllegalStateException("invalid dest path: ${task.destFilePath}")
-        val fileName = File(task.destFilePath).name
-        val request = Request.Builder().url(task.url).get().build()
-        val client = OkhttpGlobal.okHttpClient()
-
-        val resultFile = client.downloadFile(
-            request = request,
-            dirPath = dirPath,
-            fileName = fileName,
-            useTempFile = true,
-            deleteFileIfNoSuccess = true,
-            progressListener = { downloadLen, totalLen, _ ->
-                // 取消检查：用户调用 globalDownloadObj.cancel 后状态变化，立即中断
-                val cur = globalDownloadObj.findTask(task.ip, task.uriUuid)
-                if (cur != null && cur.state == DownloadState.Canceled) {
-                    throw CancellationException("user canceled")
-                }
-                globalDownloadObj.updateTask(task.ip, task.uriUuid) {
-                    it.copy(receivedBytes = downloadLen)
-                }
-            }
-        ) ?: throw RuntimeException("download returned null file")
-
-        // 以实际落盘大小校验
-        val received = resultFile.length()
-        if (task.fileSize > 0 && received < task.fileSize) {
-            throw RuntimeException("Incomplete download: $received / ${task.fileSize}")
-        }
-        globalDownloadObj.updateTask(task.ip, task.uriUuid) {
-            it.copy(state = DownloadState.Completed, receivedBytes = received)
-        }
-        logdNoFile { "Download completed ip=${task.ip} uuid=${task.uriUuid} received=$received" }
-    }
-
-    private fun deletePartialFile(file: File) {
-        try {
-            if (file.exists()) {
-                file.delete()
-            }
-        } catch (e: Exception) {
-            loge { "deletePartialFile failed: ${e.message}" }
-        }
-    }
-
     override fun onDestroy() {
-        super.onDestroy()
         scope.cancel()
-        supervisor.cancel()
-    }
-
-    companion object {
-        const val EXTRA_IP = GlobalDownloadObj.EXTRA_IP
-        const val EXTRA_URI_UUID = GlobalDownloadObj.EXTRA_URI_UUID
+        activeCalls.values.forEach { it.cancel() }
+        super.onDestroy()
     }
 }

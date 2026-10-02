@@ -21,7 +21,6 @@ import com.allan.mydroid.nanohttp.jsonResponse
 import com.allan.mydroid.nanohttp.okJsonResponse
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.globals.nanoTempCacheChunksDir
-import com.allan.mydroid.globals.nanoTempCacheMergedDir
 import com.au.module_android.Globals
 import com.au.module_okhttp.api.ResultBean
 import com.au.module_android.log.ALogJ
@@ -34,6 +33,8 @@ import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.Response.Status
 import org.json.JSONObject
 import java.io.File
+import com.allan.mydroid.repository.TransferFiles
+import com.au.module_android.log.logEx
 
 class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) : AbsHttpRequestHandler() {
 
@@ -47,7 +48,7 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
         }
     }
     /**
-     * key是fileName-md5
+     * key 按来源地址、文件名与 MD5 隔离
      * value是chunkInfo组
      */
     private val fileChunkInfosMap = HashMap<String, ArrayList<ChunkInfoResult>>()
@@ -56,20 +57,26 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
      */
     private val cLock = Any()
 
-    private fun addChunkInfo(chunkInfo: ChunkInfoResult) {
+    private fun addChunkInfo(source: String, chunkInfo: ChunkInfoResult) {
         synchronized(cLock) {
             val fileName = chunkInfo.fileName
             val md5 = chunkInfo.md5
-            val chunkInfoList = fileChunkInfosMap.getOrPut("$fileName-$md5") {
+            val chunkInfoList = fileChunkInfosMap.getOrPut("$source:$fileName-$md5") {
                 ArrayList()
+            }
+            chunkInfoList.removeAll {
+                if (it.chunkIndex == chunkInfo.chunkIndex) {
+                    it.chunkTmpFile.delete()
+                    true
+                } else false
             }
             chunkInfoList.add(chunkInfo)
         }
     }
 
-    private fun removeChunkInfoList(fileName: String, md5:String) : ArrayList<ChunkInfoResult>? {
+    private fun removeChunkInfoList(source: String, fileName: String, md5:String) : ArrayList<ChunkInfoResult>? {
         synchronized(cLock) {
-            return fileChunkInfosMap.remove("$fileName-$md5")
+            return fileChunkInfosMap.remove("$source:$fileName-$md5")
         }
     }
 
@@ -90,6 +97,8 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
             totalChunks = params["totalChunks"]?.first()?.toInt() ?: 0
             md5 = params["md5"]?.first() ?: ""
 
+            require(fileName.isNotBlank() && totalChunks > 0 && chunkIndex in 1..totalChunks)
+            require(md5.matches(Regex("[a-fA-F0-9]{32}")))
             // 2. 获取文件块内容（核心）
             val tmpFileStr = parseBodyFileMap["chunk"]
             if (tmpFileStr.isNullOrEmpty()) {
@@ -106,10 +115,10 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
             if (chunkTmpFile.exists()) {
                 chunkTmpFile.delete()
             }
-            tmpFile.renameTo( chunkTmpFile)
+            check(tmpFile.renameTo(chunkTmpFile)) { "Cannot retain chunk" }
 
             val chunkInfo = ChunkInfoResult(fileName, chunkIndex, totalChunks, md5, chunkTmpFile)
-            addChunkInfo(chunkInfo)
+            addChunkInfo(session.remoteIpAddress, chunkInfo)
 
             receiverFlowsObj.emitProgress(
                 mapOf(
@@ -154,8 +163,8 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
         val md5 = params.optString("md5")
         val fileName = params.optString("fileName")
         val totalChunks = params.optInt("totalChunks")
-        var lastModified = params.optLong("lastModified", System.currentTimeMillis())
-        if (md5.isNullOrEmpty() || fileName.isNullOrEmpty()) {
+        val lastModified = params.optLong("lastModified", System.currentTimeMillis())
+        if (md5.isNullOrEmpty() || fileName.isNullOrEmpty() || totalChunks <= 0) {
             return ResultBean<ChunkInfoResult>(
                 CODE_FAIL,
                 Globals.getString(R.string.error_merge_chunk_params), null).badRequestJsonResponse()
@@ -174,7 +183,7 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
             )
         )
 
-        val chunkInfoList = removeChunkInfoList(fileName, md5)
+        val chunkInfoList = removeChunkInfoList(session.remoteIpAddress, fileName, md5)
         if (chunkInfoList == null) {
             val noChunkStr = Globals.getString(R.string.no_chunks)
 
@@ -195,6 +204,7 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
         }
         chunkInfoList.sortBy { it.chunkIndex }
         if (chunkInfoList.size != totalChunks) {
+            chunkInfoList.forEach { it.chunkTmpFile.delete() }
             val chunkNumNotMatchStr = Globals.getString(R.string.chunks_number_not_match)
             receiverFlowsObj.emitProgress(
                 mapOf(
@@ -210,62 +220,42 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
             )
             return ResultBean<ChunkInfoResult>(CODE_FAIL_MERGE_CHUNK, chunkNumNotMatchStr, null).jsonResponse(Status.OK)
         }
-        val outputFileStr = nanoTempCacheMergedDir() + File.separatorChar + fileName
-        val outputFile = File(outputFileStr)
-        if (outputFile.exists()) {
-            outputFile.delete()
-        }
-
-        // 按顺序合并分片
-        outputFile.outputStream().use { output ->
-            chunkInfoList.forEach { chunkInfo->
-                chunkInfo.chunkTmpFile.inputStream().use { input ->
-                    input.copyTo(output, 8 * 1024)
-                }
-                chunkInfo.chunkTmpFile.delete() // 删除已合并的分片
+        var temp: File? = null
+        var errorCode = CODE_FAIL_MERGE_CHUNK
+        try {
+            if (chunkInfoList.withIndex().any { (index, chunk) ->
+                    chunk.chunkIndex != index + 1 || chunk.totalChunks != totalChunks
+                }) {
+                throw IllegalStateException(Globals.getString(R.string.chunks_number_not_match))
             }
-        }
-
-        // MD5 校验（需自行实现校验逻辑）
-        val fileMd5 = getFileMD5(outputFile.absolutePath)
-        if (fileMd5 == md5) {
-            outputFile.setLastModified(lastModified)
+            val stagingFile = TransferFiles.temporaryFile()
+            temp = stagingFile
+            stagingFile.outputStream().use { output ->
+                chunkInfoList.forEach { chunk ->
+                    chunk.chunkTmpFile.inputStream().use { it.copyTo(output) }
+                }
+            }
+            if (!getFileMD5(stagingFile.absolutePath).equals(md5, ignoreCase = true)) {
+                errorCode = CODE_FAIL_MD5_CHECK
+                throw IllegalStateException(Globals.getString(R.string.md5_check_failed))
+            }
+            stagingFile.setLastModified(lastModified)
+            val outputFile = TransferFiles.publish(stagingFile, fileName)
             receiverFlowsObj.emitFileMerged(outputFile)
-
-            receiverFlowsObj.emitProgress(
-                mapOf(
-                    "$fileName-$md5" to ReceivingFileInfo(
-                        fileName,
-                        md5,
-                        totalChunks,
-                        totalChunks,
-                        PROCESS_COMPLETED
-                    )
-                )
-            )
-            return ResultBean<ChunkInfoResult>(
-                CODE_SUC,
-                Globals.getString(R.string.file_merge_success)
-                , null).okJsonResponse()
-        } else {
-            outputFile.delete()
-            val md5FailStr = Globals.getString(R.string.md5_check_failed)
-            receiverFlowsObj.emitProgress(
-                mapOf(
-                    "$fileName-$md5" to ReceivingFileInfo(
-                        fileName,
-                        md5,
-                        totalChunks,
-                        totalChunks,
-                        PROCESS_MERGE_ERROR,
-                        md5FailStr
-                    )
-                )
-            )
-
-            return ResultBean<ChunkInfoResult>(
-                CODE_FAIL_MD5_CHECK,
-                md5FailStr, null).okJsonResponse()
+            receiverFlowsObj.emitProgress(mapOf("$fileName-$md5" to ReceivingFileInfo(
+                fileName, md5, totalChunks, totalChunks, PROCESS_COMPLETED
+            )))
+            return ResultBean(CODE_SUC, Globals.getString(R.string.file_merge_success),
+                mapOf("fileName" to outputFile.name)).okJsonResponse()
+        } catch (e: Exception) {
+            logEx(throwable = e) { "Merge chunks failed" }
+            receiverFlowsObj.emitProgress(mapOf("$fileName-$md5" to ReceivingFileInfo(
+                fileName, md5, totalChunks, totalChunks, PROCESS_MERGE_ERROR, e.message
+            )))
+            return ResultBean<String>(errorCode, e.message, null).okJsonResponse()
+        } finally {
+            temp?.delete()
+            chunkInfoList.forEach { it.chunkTmpFile.delete() }
         }
     }
 
@@ -277,7 +267,7 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
         val fileName = params.optString("fileName")
         val md5 = params.optString("md5")
 
-        removeChunkInfoList(fileName, md5)?.forEach { chunkInfo->
+        removeChunkInfoList(session.remoteIpAddress, fileName, md5)?.forEach { chunkInfo->
             chunkInfo.chunkTmpFile.delete() // 删除已合并的分片
         }
         return ResultBean<String>(
@@ -287,9 +277,8 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
 
     // 辅助方法：将请求体转为字符串
     private fun parseRequestBody(session: IHTTPSession): String {
-        val contentLength = session.headers["content-length"]?.toInt() ?: 0
-        val buffer = ByteArray(contentLength)
-        session.inputStream.read(buffer)
-        return String(buffer, Charsets.UTF_8)
+        val files = HashMap<String, String>()
+        session.parseBody(files)
+        return files["postData"] ?: "{}"
     }
 }

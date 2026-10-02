@@ -14,32 +14,47 @@ class UriChunkRequestBody(
     private val resolver: ContentResolver,
     private val uri: Uri,
     private val offset: Long,
-    private val length: Long
+    private val length: Long,
+    private val checkActive: () -> Unit = {}
 ) : RequestBody() {
     override fun contentType(): MediaType? = null
 
     override fun contentLength(): Long = length
 
     override fun writeTo(sink: BufferedSink) {
-        resolver.openInputStream(uri).use { input ->
-            if (input == null) {
-                throw IllegalStateException("openInputStream null: $uri")
+        try {
+            checkActive()
+            resolver.openInputStream(uri).use { input ->
+                if (input == null) {
+                    throw java.io.IOException("Cannot open selected file")
+                }
+                var skipped = 0L
+                while (skipped < offset) {
+                    checkActive()
+                    val s = input.skip(offset - skipped)
+                    if (s > 0) {
+                        skipped += s
+                    } else {
+                        if (input.read() == -1) throw java.io.EOFException("Cannot seek to $offset")
+                        skipped++
+                    }
+                }
+                var remaining = length
+                val buf = ByteArray(8 * 1024)
+                while (remaining > 0) {
+                    checkActive()
+                    val toRead = if (remaining < buf.size) remaining.toInt() else buf.size
+                    val read = input.read(buf, 0, toRead)
+                    if (read == -1) throw java.io.EOFException("Missing $remaining bytes")
+                    if (read == 0) continue
+                    sink.write(buf, 0, read)
+                    remaining -= read
+                }
             }
-            var skipped = 0L
-            while (skipped < offset) {
-                val s = input.skip(offset - skipped)
-                if (s <= 0) break
-                skipped += s
-            }
-            var remaining = length
-            val buf = ByteArray(8 * 1024)
-            while (remaining > 0) {
-                val toRead = if (remaining < buf.size) remaining.toInt() else buf.size
-                val read = input.read(buf, 0, toRead)
-                if (read <= 0) break
-                sink.write(buf, 0, read)
-                remaining -= read
-            }
+        } catch (e: java.io.IOException) {
+            throw e
+        } catch (e: Exception) {
+            throw java.io.IOException("Cannot read upload chunk", e)
         }
     }
 }

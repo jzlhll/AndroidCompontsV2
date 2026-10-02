@@ -2,6 +2,8 @@ package com.allan.mydroid.client.api
 
 import android.net.Uri
 import com.au.module_android.Globals
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import java.io.InputStream
 import java.security.MessageDigest
 
@@ -12,10 +14,11 @@ import java.security.MessageDigest
 object ClientMd5 {
     private const val BUFFER_SIZE = 8 * 1024
 
-    fun streamMd5(inputStream: InputStream): String {
+    suspend fun streamMd5(inputStream: InputStream): String {
         val digest = MessageDigest.getInstance("MD5")
         val buffer = ByteArray(BUFFER_SIZE)
         while (true) {
+            currentCoroutineContext().ensureActive()
             val read = inputStream.read(buffer)
             if (read <= 0) break
             digest.update(buffer, 0, read)
@@ -23,7 +26,7 @@ object ClientMd5 {
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
-    fun streamMd5(uri: Uri): String {
+    suspend fun streamMd5(uri: Uri): String {
         return Globals.app.contentResolver.openInputStream(uri).use { stream ->
             streamMd5(stream ?: throw IllegalStateException("openInputStream null: $uri"))
         }

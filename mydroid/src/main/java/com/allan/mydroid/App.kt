@@ -3,6 +3,7 @@ package com.allan.mydroid
 import android.util.Log
 import com.allan.mydroid.api.Api
 import com.allan.mydroid.client.ClientKoinModule
+import com.allan.mydroid.repository.TransferFiles
 import com.allan.mydroid.globals.GlobalDroidServerObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
@@ -133,6 +134,11 @@ class App : InitApplication() {
 
         //一上来直接强制移除所有临时import的文件。
         Globals.mainScope.launchOnIOThread {
+            try {
+                TransferFiles.clearAbandonedFiles()
+            } catch (e: Exception) {
+                com.au.module_android.log.logEx(throwable = e) { "Prepare transfer directory failed" }
+            }
             AppNative.strEk(this@App)
             clearDirOldFiles(cacheImportCopyDir(), 0)
             //AppNative.astf(this@App, "device_test.zip", Globals.goodCacheDir.absolutePath + "/cached.zip")

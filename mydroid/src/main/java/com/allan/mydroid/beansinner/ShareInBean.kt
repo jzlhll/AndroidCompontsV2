@@ -16,6 +16,7 @@ import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import com.google.gson.annotations.JsonAdapter
 import kotlinx.coroutines.delay
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 const val FROM_LOCAL = "local"
 const val FROM_SHARE_IN = "share_in"
@@ -41,10 +42,13 @@ data class ShareInBean(val uriUuid:String,
 
     companion object {
         suspend fun convert(info: MergedFileInfo, from:String) : ShareInBean {
-            delay(0)
+            delay(0.milliseconds)
             val fileSize = info.file.length()
             val fileLen = formatBytes(fileSize)
-            val uriUuid = info.md5
+            // 文件身份包含名称与内容，保留同内容的不同文件，并使内容变化后的下载可重新入队。
+            val uriUuid = UUID.nameUUIDFromBytes(
+                "local:${info.file.name}:${info.md5}".toByteArray(Charsets.UTF_8)
+            ).toString().replace("-", "")
 
             val mimeType = ExtensionMimeUtil.getMimeTypePath(info.file.absolutePath)
             val videoDuration = VideoDurationHelper().getDurationNormally(info.file.absolutePath, mimeType)
@@ -59,13 +63,13 @@ data class ShareInBean(val uriUuid:String,
         }
 
         suspend fun convert(uri: Uri, from:String) : ShareInBean {
-            delay(0)
+            delay(0.milliseconds)
             val parsedInfo = uri.myParseSuspend(Globals.app.contentResolver)
             return copyFrom(parsedInfo, from)
         }
 
         private suspend fun copyFrom(info: UriParsedInfo, from:String) : ShareInBean {
-            delay(0)
+            delay(0.milliseconds)
             val uriUuid = UUID.randomUUID().toString().replace("-", "")
             val fileSize = info.fileLength
             val fileSizeStr = if(fileSize > 0) formatBytes(fileSize) else Globals.getString(R.string.unknown_size)

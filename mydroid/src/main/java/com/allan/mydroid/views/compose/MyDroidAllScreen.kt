@@ -7,23 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -79,6 +63,7 @@ fun MyDroidAllScreen(
     localIp: String?,
     onStartSearch: () -> Unit,
     onIpClick: (DiscoveredHost) -> Unit,
+    onTransferRecords: () -> Unit,
 ) {
     val pagerState = rememberPagerState { 2 }
     val scope = rememberCoroutineScope()
@@ -97,6 +82,12 @@ fun MyDroidAllScreen(
     ) {
         MyDroidAllHeader()
         IpText(ip = uiState.ip, initialized = uiState.initialized)
+        androidx.compose.material3.TextButton(
+            onClick = onTransferRecords,
+            modifier = Modifier.align(Alignment.End).padding(horizontal = 16.dp)
+        ) {
+            androidx.compose.material3.Text(stringResource(R.string.transfer_records), style = ComposeTypography.Font14sp)
+        }
         ComposeLineTabLayout(
             tabs = listOf(stringResource(R.string.tab_host), stringResource(R.string.tab_client)),
             selectedIndex = pagerState.currentPage,
@@ -336,7 +327,7 @@ private fun BoxScope.RadarBasePlate(scanning: Boolean) {
         val canvasWidth = size.width
         val canvasHeight = size.height
         val center = Offset(canvasWidth / 2f, canvasHeight / 2f)
-        val maxRadius = minOf(canvasWidth, canvasHeight) / 2f
+        val maxRadius = (if (canvasWidth < canvasHeight) canvasWidth else canvasHeight) / 2f
         val strokePx = 2.dp.toPx()
 
         // 雷达底盘径向渐变：中心深、边缘淡
@@ -466,5 +457,14 @@ private fun ipDisplayTextAndColor(localIp: String?, hostIp: String): Pair<String
     } else {
         // 从 firstDiff 段起不一致: 从该段显示到末尾
         remote.drop(firstDiff).joinToString(".") to IpTextDiffSubnet
+    }
+}
+
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun MyDroidAllPreview() {
+    com.au.module_androiduiex.preview.AppPreview {
+        MyDroidAllScreen(MyDroidAllUiState(null, true), {}, {}, {}, emptyList(), false, null, {}, {}, {})
     }
 }

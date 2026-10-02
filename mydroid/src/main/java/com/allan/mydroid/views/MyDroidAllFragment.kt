@@ -16,21 +16,23 @@ import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.views.compose.MyDroidAllScreen
 import com.allan.mydroid.views.compose.MyDroidAllUiState
 import com.au.module_android.log.loge
-import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.toast.ToastBuilder
 import com.au.module_androiduiex.ui.ComposeViewFragment
 import com.au.module_simplepermission.gotoMgrAll
 import com.au.module_simplepermission.ifGotoMgrAll
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import androidx.lifecycle.Lifecycle
 import org.koin.android.ext.android.get
 
 class MyDroidAllFragment : ComposeViewFragment() {
     override var customBackActionEnable = false
 
     private var mIp: String? = null
+    private var connectJob: Job? = null
     private val ipState = mutableStateOf<String?>(null)
     private val networkInitializedState = mutableStateOf(false)
 
@@ -122,6 +124,7 @@ class MyDroidAllFragment : ComposeViewFragment() {
             scanning = scanningState.value,
             localIp = mIp,
             onStartSearch = { bleIpScanner.startScan() },
+            onTransferRecords = { findNavController().navigate(R.id.localTransferRecordsFragment) },
             onIpClick = { host ->
                 if (isSameSubnet(mIp, host.ip)) {
                     fetchModeAndNavigate(host)
@@ -148,22 +151,20 @@ class MyDroidAllFragment : ComposeViewFragment() {
         return local[0] == remote[0] && local[1] == remote[1] && local[2] == remote[2]
     }
 
-    /**
-     * 点击 host 后先 GET /get-mode 拿到 host 当前模式，再进入 ConnectToHostFragment。
-     * 请求失败时触发一次重扫 + toastOnTop 提示信息可能过期。
-     * 异步回来后判断 isAdded，避免 Fragment 已 detach 后调用 requireActivity() 崩溃。
-     */
+    /** 点击主机时重新核对模式；页面离开或重复点击不会产生迟到的导航。 */
     private fun fetchModeAndNavigate(host: DiscoveredHost) {
-        viewLifecycleOwner.lifecycleScope.launchOnIOThread {
-            val baseUrl = "http://${host.ip}:${host.port}"
-            val mode = try {
-                ClientApi.fetchMode(baseUrl)
+        if (connectJob?.isActive == true) return
+        val owner = viewLifecycleOwner
+        connectJob = owner.lifecycleScope.launch {
+            try {
+                val mode = ClientApi.fetchMode("http://${host.ip}:${host.port}")
+                if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) navigateToConnect(host, mode)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                loge { "fetchMode failed: ${e.message}" }
-                withContext(Dispatchers.Main) { if (isAdded) showToastAndRescan() }
-                return@launchOnIOThread
+                loge { "fetch mode failed: ${e.message}" }
+                if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) showToastAndRescan()
             }
-            withContext(Dispatchers.Main) { if (isAdded) navigateToConnect(host, mode) }
         }
     }
 
@@ -185,6 +186,7 @@ class MyDroidAllFragment : ComposeViewFragment() {
     }
 
     override fun onPause() {
+        connectJob?.cancel()
         super.onPause()
         bleIpScanner.stopScan()
     }

@@ -11,19 +11,15 @@ import com.allan.mydroid.beans.wsdata.LeftSpaceData
 import com.allan.mydroid.beans.wsdata.MyDroidModeData
 import com.allan.mydroid.beans.wsdata.TextChatWsData
 import com.allan.mydroid.client.HostEndpoint
-import com.au.module_android.log.logdNoFile
 import com.au.module_android.log.loge
 import com.au.module_gson.fromGson
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
@@ -31,130 +27,174 @@ import kotlinx.coroutines.launch
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withTimeoutOrNull
+import com.allan.mydroid.api.MyDroidMode
 
-/**
- * client 端 WebSocket 客户端。Koin factory——每次注入新建实例，随 ViewModel onCleared 自然释放。
- * 内部用 [Api.connectWSServer] 复用 OkHttp；包含 12s 应用层 c_ping 心跳与指数退避重连（1/2/4/8s 最多 4 次）。
- */
+/** 页面独占的连接会话：HTTP 校验模式和端口，登记成功后可操作，退出后不再重连。 */
 class ClientWsClient {
     private val scope: CoroutineScope = MainScope()
-
-    @Volatile
     private var webSocket: WebSocket? = null
     private var endpoint: HostEndpoint? = null
-
     private var heartbeatJob: Job? = null
     private var reconnectJob: Job? = null
+    private var initJob: Job? = null
     private var reconnectAttempt = 0
+    private var generation = 0L
+    private var closed = false
 
     private val _connectionStateFlow = MutableStateFlow<WsConnectionState>(WsConnectionState.Disconnected)
-    val connectionStateFlow: StateFlow<WsConnectionState> = _connectionStateFlow.asStateFlow()
-
-    private val _incomingFrameFlow = MutableSharedFlow<WsFrame>(extraBufferCapacity = 16)
-    val incomingFrameFlow: SharedFlow<WsFrame> = _incomingFrameFlow.asSharedFlow()
+    val connectionStateFlow = _connectionStateFlow.asStateFlow()
+    private val _identityFlow = MutableStateFlow<WsFrame.ClientInitBack?>(null)
+    val identityFlow = _identityFlow.asStateFlow()
+    private val _incomingFrameFlow = MutableSharedFlow<WsFrame>(extraBufferCapacity = 64)
+    val incomingFrameFlow = _incomingFrameFlow.asSharedFlow()
 
     fun connect(endpoint: HostEndpoint) {
+        if (closed) return
         this.endpoint = endpoint
         reconnectAttempt = 0
-        doConnect(endpoint)
+        reconnectJob?.cancel()
+        invalidateSocket()
+        doConnect()
     }
 
-    private fun doConnect(endpoint: HostEndpoint) {
-        _connectionStateFlow.value = WsConnectionState.Connecting
-        webSocket?.close(1000, "reconnect")
-        val listener = object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-                logdNoFile { "client ws onOpen" }
-                reconnectAttempt = 0
-                _connectionStateFlow.value = WsConnectionState.Connected
-                sendClientInit()
-                startHeartbeat()
-            }
+    fun reconnect() {
+        if (_connectionStateFlow.value == WsConnectionState.ModeChanged) return
+        endpoint?.let { connect(it) }
+    }
 
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                logdNoFile { "client ws onMessage: $text" }
-                parseFrame(text)?.let { _incomingFrameFlow.tryEmit(it) }
-            }
+    private fun invalidateSocket() {
+        generation++
+        initJob?.cancel()
+        heartbeatJob?.cancel()
+        webSocket?.cancel()
+        webSocket = null
+    }
 
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                logdNoFile { "client ws onClosed: $code $reason" }
-                handleDisconnect("onClosed $code $reason")
-            }
+    private fun doConnect() {
+        val ep = endpoint ?: return
+        val token = generation
+        _connectionStateFlow.value = if (reconnectAttempt == 0) WsConnectionState.Connecting else WsConnectionState.Reconnecting
+        reconnectJob = scope.launch {
+            try {
+                val baseUrl = "http://${ep.ip}:${ep.httpPort}"
+                val mode = ClientApi.fetchMode(baseUrl)
+                if (mode != ep.mode || mode == MyDroidMode.None) {
+                    _connectionStateFlow.value = WsConnectionState.ModeChanged
+                    return@launch
+                }
+                val info = withTimeoutOrNull(5000.milliseconds) { ClientApi.fetchWsIpPort(baseUrl) }
+                    ?: throw java.io.IOException("Fetch websocket port timed out")
+                if (closed || token != generation) return@launch
+                val listener = object : WebSocketListener() {
+                    override fun onOpen(socket: WebSocket, response: okhttp3.Response) {
+                        scope.launch {
+                            if (closed || token != generation) return@launch
+                            val json = JSONObject().put("api", API_WS_INIT).put("platform", "android").toString()
+                            if (!socket.send(json)) handleDisconnect(token)
+                        }
+                    }
 
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
-                loge { "client ws onFailure: ${t.message}" }
-                handleDisconnect("onFailure ${t.message}")
+                    override fun onMessage(socket: WebSocket, text: String) {
+                        scope.launch {
+                            if (closed || token != generation) return@launch
+                            try {
+                                val frame = parseFrame(text) ?: return@launch
+                                if (frame is WsFrame.ClientInitBack && frame.clientName.isNotBlank()) {
+                                    initJob?.cancel()
+                                    _identityFlow.value = frame
+                                    reconnectAttempt = 0
+                                    _connectionStateFlow.value = WsConnectionState.Connected
+                                    startHeartbeat(token)
+                                }
+                                _incomingFrameFlow.emit(frame)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                loge { "Client frame parse failed: ${e.message}" }
+                            }
+                        }
+                    }
+
+                    override fun onClosing(socket: WebSocket, code: Int, reason: String) {
+                        socket.close(code, reason)
+                        scope.launch { handleDisconnect(token) }
+                    }
+
+                    override fun onClosed(socket: WebSocket, code: Int, reason: String) {
+                        scope.launch { handleDisconnect(token) }
+                    }
+
+                    override fun onFailure(socket: WebSocket, t: Throwable, response: okhttp3.Response?) {
+                        loge { "Client ws failed: ${t.message}" }
+                        scope.launch { handleDisconnect(token) }
+                    }
+                }
+                webSocket = Api.connectWSServer(ep.ip, info.port, listener)
+                initJob = scope.launch {
+                    delay(5000.milliseconds)
+                    handleDisconnect(token)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                loge { "Client connection failed: ${e.message}" }
+                handleDisconnect(token)
             }
         }
-        webSocket = Api.connectWSServer(endpoint.ip, endpoint.wsPort, listener)
     }
 
-    private fun sendClientInit() {
-        val json = JSONObject().apply {
-            put("api", API_WS_INIT)
-            put("platform", "android")
-        }.toString()
-        webSocket?.send(json)
-    }
-
-    private fun startHeartbeat() {
+    private fun startHeartbeat(token: Long) {
         heartbeatJob?.cancel()
-        heartbeatJob = scope.launch(Dispatchers.IO) {
+        heartbeatJob = scope.launch {
             while (isActive) {
-                delay(12.seconds)
+                delay(12000.milliseconds)
                 sendPing()
+                if (token != generation) return@launch
             }
         }
     }
 
     fun sendPing() {
-        val json = JSONObject().apply { put("api", API_WS_PING) }.toString()
-        webSocket?.send(json)
+        if (webSocket?.send(JSONObject().put("api", API_WS_PING).toString()) != true) {
+            handleDisconnect(generation)
+        }
     }
 
-    fun sendTextChat(textBase64: String, timestamp: Long, iconColor: String) {
-        val json = JSONObject().apply {
+    fun sendTextChat(textBase64: String, timestamp: Long, iconColor: String): Boolean {
+        if (_connectionStateFlow.value != WsConnectionState.Connected) return false
+        val sent = webSocket?.send(JSONObject().apply {
             put("api", API_WS_TEXT_CHAT_SEND)
             put("textBase64", textBase64)
             put("timestamp", timestamp)
             put("iconColor", iconColor)
-        }.toString()
-        webSocket?.send(json)
+        }.toString()) == true
+        if (!sent) handleDisconnect(generation)
+        return sent
     }
 
-    private fun handleDisconnect(reason: String) {
-        heartbeatJob?.cancel()
-        _connectionStateFlow.value = WsConnectionState.Connecting
-        scheduleReconnect(reason)
-    }
-
-    private fun scheduleReconnect(reason: String) {
-        val ep = endpoint ?: return
+    private fun handleDisconnect(token: Long) {
+        if (closed || token != generation || _connectionStateFlow.value == WsConnectionState.ModeChanged) return
+        invalidateSocket()
         if (reconnectAttempt >= 4) {
-            loge { "client ws reconnect failed after 4 attempts: $reason" }
             _connectionStateFlow.value = WsConnectionState.Failed
             return
         }
-        val delaySec = 1L shl reconnectAttempt // 1, 2, 4, 8
-        reconnectJob?.cancel()
-        reconnectJob = scope.launch(Dispatchers.IO) {
-            delay(delaySec.seconds)
-            reconnectAttempt++
-            logdNoFile { "client ws reconnect #$reconnectAttempt after ${delaySec}s ($reason)" }
-            doConnect(ep)
+        _connectionStateFlow.value = WsConnectionState.Reconnecting
+        val waitMs = 1000L shl reconnectAttempt
+        reconnectAttempt++
+        reconnectJob = scope.launch {
+            delay(waitMs.milliseconds)
+            doConnect()
         }
     }
 
     fun close() {
+        closed = true
         reconnectJob?.cancel()
-        heartbeatJob?.cancel()
-        try {
-            webSocket?.close(1000, "user close")
-        } catch (e: Exception) {
-            loge { "ws close error: ${e.message}" }
-        }
-        webSocket = null
+        invalidateSocket()
         _connectionStateFlow.value = WsConnectionState.Disconnected
         scope.cancel()
     }
@@ -201,7 +241,7 @@ sealed class WsFrame {
     /** host 主动推送剩余空间。所有模式都会收到，Chat 模式应忽略。 */
     data class LeftSpace(val leftSpaceStr: String) : WsFrame()
 
-    /** host 广播聊天消息（含自己发的回环）。 */
+    /** 主机推送聊天消息或连接时的历史。 */
     data class TextChat(
         val textBase64: String,
         val ip: String,
@@ -219,4 +259,6 @@ sealed class WsConnectionState {
     object Connecting : WsConnectionState()
     object Connected : WsConnectionState()
     object Failed : WsConnectionState()
+    object Reconnecting : WsConnectionState()
+    object ModeChanged : WsConnectionState()
 }

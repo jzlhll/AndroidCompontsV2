@@ -1,225 +1,128 @@
 package com.allan.mydroid.client
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.View
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
-import com.allan.mydroid.client.api.ClientApi
 import com.allan.mydroid.client.chat.ConnectToHostChatScreen
 import com.allan.mydroid.client.chat.ConnectToHostChatViewModel
 import com.allan.mydroid.client.receive.ConnectToHostReceiveScreen
 import com.allan.mydroid.client.receive.ConnectToHostReceiveViewModel
 import com.allan.mydroid.client.send.ConnectToHostSendScreen
 import com.allan.mydroid.client.send.ConnectToHostSendViewModel
-import com.au.module_android.log.loge
-import com.au.module_android.utils.launchOnIOThread
-import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androiduiex.ui.ComposeViewFragment
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
+import kotlin.time.Duration.Companion.milliseconds
 
-/**
- * client 端点击已发现 host 后进入的页面。按 Bundle 中 mode 路由到三模式 Compose Screen：
- * - mode Receiver → ConnectToHostSendScreen（client 发文件到 host）
- * - mode Send → ConnectToHostReceiveScreen（client 从 host 下载文件）
- * - mode TextChat → ConnectToHostChatScreen（client 与 host 聊天）
- *
- * 异步获取 wsPort 后构造 HostEndpoint；KEEP_SCREEN_ON；3 分钟无操作自动退出。
- *
- * 入参: Bundle 中带 `ip`(String) / `port`(Int httpPort) / `mode`(Int ordinal)。
- */
+/** 发现后的会话入口，视图重建复用 ViewModel，活动传输期间暂停空闲提示。 */
 class ConnectToHostFragment : ComposeViewFragment() {
-    override var customBackActionEnable = false
+    private val endpoint by lazy {
+        HostEndpoint(arguments?.getString("ip") ?: "", arguments?.getInt("port") ?: 0, 0,
+            MyDroidMode.entries.getOrElse(arguments?.getInt("mode") ?: 0) { MyDroidMode.None })
+    }
+    private val sendModel: ConnectToHostSendViewModel by viewModel { parametersOf(endpoint) }
+    private val receiveModel: ConnectToHostReceiveViewModel by viewModel { parametersOf(endpoint) }
+    private val chatModel: ConnectToHostChatViewModel by viewModel { parametersOf(endpoint) }
+    private var showIdle by mutableStateOf(false)
+    private var showExit by mutableStateOf(false)
+    private var leaving by mutableStateOf(false)
+    private var lastActivity = SystemClock.elapsedRealtime()
 
+    override val customBackAction: () -> Boolean = {
+        if (!leaving) {
+            if (hasTransfer()) showExit = true else findNavController().popBackStack()
+        }
+        false
+    }
 
-    private val ip by lazy { arguments?.getString("ip") ?: "" }
-    private val httpPort by lazy { arguments?.getInt("port") ?: 0 }
-    private val modeOrdinal by lazy { arguments?.getInt("mode") ?: 0 }
-
-    private var endpointState by mutableStateOf<HostEndpoint?>(null)
-    private var errorState by mutableStateOf<Throwable?>(null)
-
-    private var inactivityJob: Job? = null
-    private var exitDialog: ConfirmBottomSingleDialog? = null
+    private fun hasTransfer(): Boolean = when (endpoint.mode) {
+        MyDroidMode.Receiver -> sendModel.uiState.value.busy
+        MyDroidMode.Send -> receiveModel.uiState.value.downloadTasks.any { it.active }
+        else -> false
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        fetchEndpoint()
-    }
-
-    private fun fetchEndpoint() {
-        viewLifecycleOwner.lifecycleScope.launchOnIOThread {
-            try {
-                val baseUrl = "http://$ip:$httpPort"
-                val result = ClientApi.fetchWsIpPort(baseUrl)
-                val mode = MyDroidMode.entries.getOrElse(modeOrdinal) { MyDroidMode.None }
-                endpointState = HostEndpoint(ip, httpPort, result.port, mode)
-                startInactivityTimer()
-            } catch (e: Exception) {
-                loge { "fetchWsIpPort failed: ${e.message}" }
-                errorState = e
+        view.keepScreenOn = true
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                lastActivity = SystemClock.elapsedRealtime()
+                if (endpoint.mode == MyDroidMode.Send) receiveModel.refreshLocalFiles()
+                var messageCount = if (endpoint.mode == MyDroidMode.TextChat) chatModel.uiState.value.messages.size else 0
+                while (true) {
+                    delay(1000.milliseconds)
+                    val count = if (endpoint.mode == MyDroidMode.TextChat) chatModel.uiState.value.messages.size else 0
+                    if (hasTransfer() || count != messageCount) {
+                        lastActivity = SystemClock.elapsedRealtime()
+                        showIdle = false
+                    } else if (!showExit && SystemClock.elapsedRealtime() - lastActivity >= 180000) {
+                        showIdle = true
+                    }
+                    messageCount = count
+                }
             }
         }
-    }
-
-    private fun startInactivityTimer() {
-        inactivityJob?.cancel()
-        inactivityJob = viewLifecycleOwner.lifecycleScope.launch {
-            delay(INACTIVITY_TIMEOUT)
-            showInactivityDialog()
-        }
-    }
-
-    private fun resetInactivityTimer() {
-        if (endpointState != null) {
-            startInactivityTimer()
-        }
-    }
-
-    private fun showInactivityDialog() {
-        if (exitDialog != null) return
-        exitDialog = ConfirmBottomSingleDialog.show(
-            childFragmentManager,
-            getString(R.string.tips),
-            getString(R.string.inactivity_message),
-            getString(R.string.action_confirm),
-            true
-        ) { d ->
-            d.dismissAllowingStateLoss()
-            exitDialog = null
-            findNavController().popBackStack()
-        }.also { it.isCancelable = false }
     }
 
     @Composable
     override fun ScreenContent() {
-        val ep = endpointState
-        val err = errorState
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .pointerInteropFilter {
-                    resetInactivityTimer()
-                    false
-                },
-        ) {
-            when {
-                err != null -> ErrorView(err.message ?: "") {
+        Box(Modifier.fillMaxSize().background(Color.White).pointerInteropFilter {
+            lastActivity = SystemClock.elapsedRealtime()
+            false
+        }) {
+            when (endpoint.mode) {
+                MyDroidMode.Receiver -> ConnectToHostSendScreen(sendModel, endpoint, stringResource(R.string.connect_to_host_send_title))
+                MyDroidMode.Send -> ConnectToHostReceiveScreen(receiveModel, endpoint, stringResource(R.string.connect_to_host_receive_title))
+                MyDroidMode.TextChat -> ConnectToHostChatScreen(chatModel, endpoint, stringResource(R.string.connect_to_host_chat_title))
+                MyDroidMode.None -> TransferMessageDialog(stringResource(R.string.connect_to_host_mode_none)) {
                     findNavController().popBackStack()
                 }
-                ep == null -> LoadingView()
-                else -> when (ep.mode) {
-                    MyDroidMode.Receiver -> {
-                        val vm = viewModel<ConnectToHostSendViewModel>(
-                            factory = viewModelFactory { initializer { ConnectToHostSendViewModel(ep) } }
-                        )
-                        ConnectToHostSendScreen(vm, ep, getString(R.string.connect_to_host_send_title))
-                    }
-                    MyDroidMode.Send -> {
-                        val vm = viewModel<ConnectToHostReceiveViewModel>(
-                            factory = viewModelFactory { initializer { ConnectToHostReceiveViewModel(ep) } }
-                        )
-                        ConnectToHostReceiveScreen(vm, ep, getString(R.string.connect_to_host_receive_title))
-                    }
-                    MyDroidMode.TextChat -> {
-                        val vm = viewModel<ConnectToHostChatViewModel>(
-                            factory = viewModelFactory { initializer { ConnectToHostChatViewModel(ep) } }
-                        )
-                        ConnectToHostChatScreen(vm, ep, getString(R.string.connect_to_host_chat_title))
-                    }
-                    MyDroidMode.None -> NoneView()
-                }
             }
         }
-    }
-
-    @Composable
-    private fun LoadingView() {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            CircularProgressIndicator()
-            BasicText(
-                text = stringResource(R.string.connect_to_host_loading),
-                style = ComposeTypography.Font14sp.copy(textAlign = TextAlign.Center),
-                modifier = Modifier.padding(top = 12.dp),
-            )
-        }
-    }
-
-    @Composable
-    private fun ErrorView(message: String, onBack: () -> Unit) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            BasicText(
-                text = stringResource(R.string.connect_to_host_failed),
-                style = ComposeTypography.Font20M.copy(textAlign = TextAlign.Center),
-            )
-            BasicText(
-                text = message,
-                style = ComposeTypography.Font14sp.copy(textAlign = TextAlign.Center),
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
-                Text(text = stringResource(R.string.action_confirm))
+        if (showIdle || showExit) {
+            val upload = showExit && endpoint.mode == MyDroidMode.Receiver
+            val message = when {
+                leaving -> R.string.transfer_stopping
+                upload -> R.string.transfer_exit_upload
+                showExit -> R.string.transfer_exit_download
+                else -> R.string.transfer_idle
             }
-        }
-    }
-
-    @Composable
-    private fun NoneView() {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            BasicText(
-                text = stringResource(R.string.connect_to_host_mode_none),
-                style = ComposeTypography.Font16.copy(textAlign = TextAlign.Center),
+            AlertDialog(
+                onDismissRequest = { if (!leaving) { showIdle = false; showExit = false; lastActivity = SystemClock.elapsedRealtime() } },
+                text = { Text(stringResource(message), style = ComposeTypography.Font14sp) },
+                confirmButton = { TextButton(enabled = !leaving, onClick = {
+                    leaving = true
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        if (upload) sendModel.stopAndAwait()
+                        findNavController().popBackStack()
+                    }
+                }) { Text(stringResource(R.string.transfer_back), style = ComposeTypography.Font14sp) } },
+                dismissButton = { TextButton(enabled = !leaving, onClick = {
+                    showIdle = false
+                    showExit = false
+                    lastActivity = SystemClock.elapsedRealtime()
+                }) { Text(stringResource(R.string.transfer_continue), style = ComposeTypography.Font14sp) } }
             )
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        inactivityJob?.cancel()
-        inactivityJob = null
-        exitDialog?.dismissAllowingStateLoss()
-        exitDialog = null
-    }
-
-    companion object {
-        private val INACTIVITY_TIMEOUT = 3.minutes
     }
 }

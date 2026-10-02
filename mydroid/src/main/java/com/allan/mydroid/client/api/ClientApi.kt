@@ -11,9 +11,16 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.withIOThread
 import com.au.module_gson.fromGson
 import com.au.module_gson.fromGsonList
-import com.au.module_okhttp.OkhttpGlobal
 import com.au.module_okhttp.api.ResultBean
-import com.au.module_okhttp.creator.awaitHttpResultStr
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import okhttp3.MediaType.Companion.toMediaType
@@ -37,9 +44,9 @@ object ClientApi {
     /** GET /get-mode 总超时 1.5s。 */
     private val MODE_FETCH_TIMEOUT = 1500.milliseconds
 
-    private class ClientApiException(val code: String, msg: String) : Exception(msg)
+    class ClientApiException(val code: String, msg: String) : Exception(msg)
 
-    private val httpClient get() = OkhttpGlobal.okHttpClient()
+    private val httpClient get() = ClientHttp.client
 
     /** POST /read-websocket-ip-port，返回 host 的 ws/http 端口信息。 */
     suspend fun fetchWsIpPort(baseUrl: String): IpPortResult = withIOThread {
@@ -59,7 +66,7 @@ object ClientApi {
         val request = Request.Builder().url("$baseUrl$GET_MODE").get().build()
         val resp = try {
             withTimeout(MODE_FETCH_TIMEOUT) {
-                request.awaitHttpResultStr(httpClient) ?: "{}"
+                executeText(request)
             }
         } catch (e: TimeoutCancellationException) {
             throw IllegalStateException("fetch mode timeout", e)
@@ -106,12 +113,15 @@ object ClientApi {
             .addFormDataPart("totalChunks", totalChunks.toString())
             .addFormDataPart("md5", md5)
 
-        val chunkBody = UriChunkRequestBody(Globals.app.contentResolver, uri, offset, length)
+        val context = currentCoroutineContext()
+        val chunkBody = UriChunkRequestBody(Globals.app.contentResolver, uri, offset, length) {
+            if (!context.isActive) throw IOException("Upload canceled")
+        }
         multipartBuilder.addFormDataPart("chunk", fileName, chunkBody)
 
         val request = Request.Builder().url(url).post(multipartBuilder.build()).build()
-        val resp = request.awaitHttpResultStr(httpClient) ?: "{}"
-        logdNoFile { "uploadChunk resp: $resp" }
+        val resp = executeText(request)
+        logdNoFile { "upload chunk resp: $resp" }
         val bean = resp.fromGson<ResultBean<Unit>>() ?: throw IllegalStateException("parse uploadChunk resp failed: $resp")
         ensureSuc(bean.code, bean.msg)
         resp
@@ -132,9 +142,9 @@ object ClientApi {
             put("lastModified", lastModified)
         }.toString()
         val resp = postJson("$baseUrl/merge-chunks", json)
-        val bean = resp.fromGson<ResultBean<Unit>>() ?: throw IllegalStateException("parse mergeChunks resp failed: $resp")
+        val bean = resp.fromGson<ResultBean<Map<String, String>>>() ?: throw IllegalStateException("parse mergeChunks resp failed: $resp")
         ensureSuc(bean.code, bean.msg)
-        resp
+        bean.data?.get("fileName") ?: fileName
     }
 
     /** POST /abort-upload-chunks JSON。 */
@@ -159,7 +169,29 @@ object ClientApi {
             .url(url)
             .post(json.toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        request.awaitHttpResultStr(httpClient) ?: "{}"
+        executeText(request)
+    }
+
+    private suspend fun executeText(request: Request): String = suspendCancellableCoroutine { continuation ->
+        val call = httpClient.newCall(request)
+        continuation.invokeOnCancellation { call.cancel() }
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                continuation.resumeWithException(e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val text = response.use {
+                        if (!it.isSuccessful) throw IOException("HTTP ${it.code}")
+                        it.body?.string() ?: throw IOException("Empty response")
+                    }
+                    continuation.resume(text)
+                } catch (e: Exception) {
+                    continuation.resumeWithException(e)
+                }
+            }
+        })
     }
 
     private fun ensureSuc(code: String?, msg: String?) {
