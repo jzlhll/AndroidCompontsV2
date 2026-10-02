@@ -1,0 +1,8 @@
+{
+  "name": "child-monitor-copy",
+  "private": true,
+  "scripts": {
+    "mobile-copy:generate": "node tools/generate-copy.mjs",
+    "mobile-copy:check": "node tools/generate-copy.mjs --check"
+  }
+}

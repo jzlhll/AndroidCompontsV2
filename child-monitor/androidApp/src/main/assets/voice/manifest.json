@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "clips": {
+    "reminder_head_down": "抬抬头，坐直一点哦",
+    "reminder_head_tilt": "把小脑袋摆正一点哦",
+    "reminder_body_lean": "身体坐正一点哦",
+    "reminder_posture": "抬抬头，把身体和小脑袋摆正一点哦",
+    "reminder_away": "离开座位有一会儿啦，记得回来哦",
+    "reminder_unclear": "我看不清啦，请帮忙调整一下摄像头",
+    "reminder_rest": "坐了有一会儿啦，可以起来活动一下",
+    "reminder_interruption_locked": "本次监控已停止，请保持屏幕常亮后再开始",
+    "reminder_interruption_generic": "本次监控已停止",
+    "reminder_save_failed": "本次录像保存失败，请查看本次结果"
+  },
+  "source": "macOS say / Tingting，预先生成固定普通话语音；运行时不使用 TTS",
+  "encoding": "AAC / M4A / 64 kbps",
+  "sha256": {
+    "reminder_away.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_body_lean.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_head_down.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_head_tilt.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_interruption_generic.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_interruption_locked.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_posture.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_rest.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_save_failed.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96",
+    "reminder_unclear.m4a": "be0849580b128f4bc9fbb8a50e7e95efa008cfa86d2136aafb1654c5ce8e4d96"
+  }
+}
