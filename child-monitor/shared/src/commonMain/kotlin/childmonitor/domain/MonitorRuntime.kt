@@ -83,7 +83,7 @@ class MonitorRuntime(
                             lastStorageCheckUs = elapsed
                             if (files.availableBytes() < DefaultMonitorConfig.lowWaterBytes) timeout = EndReason.StorageLow
                         }
-                        if (config.targetDurationMs > 0 && elapsed >= config.targetDurationMs * 1_000 && !state.targetReached) {
+                        if (timeout == null && config.targetDurationMs > 0 && elapsed >= config.targetDurationMs * 1_000 && !state.targetReached) {
                             publish { it.copy(targetReached = true, darkened = false) }
                             lastInteractionUs = clock.monotonicUs()
                             if (config.targetAutoStop) timeout = EndReason.TargetReached
@@ -278,11 +278,16 @@ class MonitorRuntime(
     }
 
     private suspend fun finalizeStoppedRecord(id: String) {
+        if (dao.evaluation(id) != null) return
+        val stored = dao.session(id)
         val session = current?.takeIf { it.id == id }
         val facts = engine?.facts()
         if (session != null && facts != null) {
             check(session.state == RunState.Stopped.name)
-            val finalized = session.copy(lastCheckpointUs = session.durationUs)
+            val finalized = session.copy(lastCheckpointUs = session.durationUs,
+                title = stored?.title ?: session.title, note = stored?.note ?: session.note,
+                interruptionAcknowledged = stored?.interruptionAcknowledged ?: session.interruptionAcknowledged,
+                celebrationShown = stored?.celebrationShown ?: session.celebrationShown)
             dao.checkpoint(finalized, facts.events, facts.coverage, facts.rest)
             current = finalized
             records.evaluateOnce(id)
@@ -329,6 +334,7 @@ class MonitorRuntime(
         publish { it.copy(emptySeatReady = false) }
     }
     suspend fun reposition(requestId: String) = command(requestId) {
+        records.requireAccess()
         check(snapshotFlow.value.runState in listOf(RunState.Preparing, RunState.Monitoring))
         preparingSinceUs = elapsed()
         engine?.reposition(preparingSinceUs)
@@ -341,6 +347,7 @@ class MonitorRuntime(
         publish { it.copy(darkened = false) }
     }
     suspend fun updateSettings(value: MonitorSettings, expectedRevision: Long, requestId: String) = command(requestId) {
+        records.requireAccess()
         value.validate()
         check(snapshotFlow.value.runState !in listOf(RunState.Starting, RunState.Stopping))
         val old = checkNotNull(snapshotFlow.value.settings)
@@ -359,21 +366,36 @@ class MonitorRuntime(
         publish { it.copy(settings = old.copy(monitorRevision = expectedRevision + 1, monitorSettings = value)) }
     }
     suspend fun updatePreferences(patch: UserPreferencesPatch, expectedRevision: Long, requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         val saved = settings.preferences.update(patch, expectedRevision)
         publish { it.copy(settings = checkNotNull(it.settings).copy(preferences = saved)) }
     }
+    suspend fun annotateEvent(eventId: String, label: String?, note: String, requestId: String) = command(requestId) {
+        records.requireAccess()
+        checkIdle()
+        val event = checkNotNull(dao.event(eventId))
+        check(dao.session(event.sessionId)?.state == RunState.Stopped.name)
+        require(label == null || label in listOf("false_positive", "uncertain"))
+        require(note.length <= 500)
+        if (label == null) dao.deleteAnnotation(eventId)
+        else dao.putAnnotation(EventAnnotationEntity(eventId, event.sessionId, label, note.trim(), clock.wallUs()))
+        records.invalidateRecords()
+    }
     suspend fun updateNote(id: String, title: String, note: String, requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         require(title.length <= 80 && note.length <= 1_000)
         check(dao.updateNote(id, title.trim(), note.trim()) == 1)
         records.invalidateRecords()
     }
     suspend fun storageOverview(requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         StorageOverview(files.usedBytes(), files.availableBytes(), dao.pendingMediaCount())
     }
     suspend fun purgeVideos(ids: List<String>, protectedId: String?, requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         val failed = mutableListOf<String>()
         for (id in ids.distinct()) {
@@ -400,11 +422,13 @@ class MonitorRuntime(
         return failures
     }
     suspend fun previewReminder(clip: String, requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         require(clip in listOf("reminder_head_down", "reminder_away", "reminder_rest"))
         launchTerminalAudio(clip, reminderJob)
     }
     suspend fun retrySave(id: String, requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         publish { it.copy(operationBusy = true) }
         try { withTimeout(DefaultMonitorConfig.stopSaveTimeoutMs.milliseconds) {
@@ -414,6 +438,7 @@ class MonitorRuntime(
         finally { records.invalidateRecords(); publish { it.copy(operationBusy = false) } }
     }
     suspend fun keepStatistics(id: String, requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         val media = checkNotNull(dao.media(id))
         check(media.saveState == SaveState.Unrecoverable.name)
@@ -421,6 +446,7 @@ class MonitorRuntime(
         records.invalidateRecords()
     }
     suspend fun deleteSessions(ids: List<String>, protectedId: String?, requestId: String) = command(requestId) {
+        records.requireAccess()
         checkIdle()
         val failed = mutableListOf<String>()
         for (id in ids.distinct()) {

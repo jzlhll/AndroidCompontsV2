@@ -1840,7 +1840,7 @@
     {
       "id": "common.childMonitor.filter_from",
       "values": {
-        "zh-Hans": "起始日期（YYYY-MM-DD）"
+        "zh-Hans": "起始日期"
       },
       "platforms": {
         "android": "filter_from"
@@ -1849,7 +1849,7 @@
     {
       "id": "common.childMonitor.filter_to",
       "values": {
-        "zh-Hans": "结束日期（YYYY-MM-DD）"
+        "zh-Hans": "结束日期"
       },
       "platforms": {
         "android": "filter_to"
@@ -1892,30 +1892,12 @@
       }
     },
     {
-      "id": "common.childMonitor.filter_invalid",
-      "values": {
-        "zh-Hans": "请填写有效日期范围，起始日期不能晚于结束日期。"
-      },
-      "platforms": {
-        "android": "filter_invalid"
-      }
-    },
-    {
       "id": "common.childMonitor.filter_clear",
       "values": {
         "zh-Hans": "清除筛选"
       },
       "platforms": {
         "android": "filter_clear"
-      }
-    },
-    {
-      "id": "common.childMonitor.filter_calendar",
-      "values": {
-        "zh-Hans": "选择日期范围"
-      },
-      "platforms": {
-        "android": "filter_calendar"
       }
     },
     {
@@ -2105,6 +2087,213 @@
       },
       "platforms": {
         "android": "report_share"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_title",
+      "values": {
+        "zh-Hans": "家长操作验证"
+      },
+      "platforms": {
+        "android": "parent_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_pin",
+      "values": {
+        "zh-Hans": "6 位家长 PIN"
+      },
+      "platforms": {
+        "android": "parent_pin"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_pin_confirm",
+      "values": {
+        "zh-Hans": "再次输入 PIN"
+      },
+      "platforms": {
+        "android": "parent_pin_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_unlock",
+      "values": {
+        "zh-Hans": "解锁"
+      },
+      "platforms": {
+        "android": "parent_unlock"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_failed",
+      "values": {
+        "zh-Hans": "验证失败或操作未完成；连续输错 5 次需等待 1 分钟。"
+      },
+      "platforms": {
+        "android": "parent_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_set",
+      "values": {
+        "zh-Hans": "设置或修改家长 PIN"
+      },
+      "platforms": {
+        "android": "parent_set"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_disable",
+      "values": {
+        "zh-Hans": "关闭家长保护"
+      },
+      "platforms": {
+        "android": "parent_disable"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_description",
+      "values": {
+        "zh-Hans": "保护设置、历史记录、删除和导出。当前前台会话内无需重复验证，离开应用后重新验证。停止监控不需要 PIN。"
+      },
+      "platforms": {
+        "android": "parent_description"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_device",
+      "values": {
+        "zh-Hans": "使用设备密码验证"
+      },
+      "platforms": {
+        "android": "parent_device"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_device_prompt",
+      "values": {
+        "zh-Hans": "验证设备密码后可管理儿童监控"
+      },
+      "platforms": {
+        "android": "parent_device_prompt"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_invalid",
+      "values": {
+        "zh-Hans": "请填写两次相同的 6 位数字 PIN。"
+      },
+      "platforms": {
+        "android": "parent_invalid"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_recovery",
+      "values": {
+        "zh-Hans": "忘记 PIN 时可使用本机锁屏密码验证后重新设置；建议先为设备设置锁屏密码。"
+      },
+      "platforms": {
+        "android": "parent_recovery"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_remove_confirm",
+      "values": {
+        "zh-Hans": "关闭家长操作保护？"
+      },
+      "platforms": {
+        "android": "parent_remove_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.stop_confirm",
+      "values": {
+        "zh-Hans": "结束本次监控并保存录像与统计？"
+      },
+      "platforms": {
+        "android": "stop_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_add",
+      "values": {
+        "zh-Hans": "标记此事件"
+      },
+      "platforms": {
+        "android": "annotation_add"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_false",
+      "values": {
+        "zh-Hans": "家长标记：误报"
+      },
+      "platforms": {
+        "android": "annotation_false"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_uncertain",
+      "values": {
+        "zh-Hans": "家长标记：无法判断"
+      },
+      "platforms": {
+        "android": "annotation_uncertain"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_note",
+      "values": {
+        "zh-Hans": "原因或备注（最多 500 字）"
+      },
+      "platforms": {
+        "android": "annotation_note"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_explain",
+      "values": {
+        "zh-Hans": "标记用于回看和排查，不修改原始检测事实、统计或历史评价。"
+      },
+      "platforms": {
+        "android": "annotation_explain"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_remove",
+      "values": {
+        "zh-Hans": "移除标记"
+      },
+      "platforms": {
+        "android": "annotation_remove"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_cleanup_failed",
+      "values": {
+        "zh-Hans": "导出未完成，目标文件无法自动清理，请手动删除后重试。"
+      },
+      "platforms": {
+        "android": "export_cleanup_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_no_date",
+      "values": {
+        "zh-Hans": "不限日期"
+      },
+      "platforms": {
+        "android": "filter_no_date"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_clear_date",
+      "values": {
+        "zh-Hans": "清除日期"
+      },
+      "platforms": {
+        "android": "filter_clear_date"
       }
     }
   ]

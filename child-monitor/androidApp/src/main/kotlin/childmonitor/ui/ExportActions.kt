@@ -6,8 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,50 +22,22 @@ import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** 仅在用户操作后向指定文档或临时只读分享 URI 导出，不暴露应用私有录像目录。 */
 @Composable
-fun ExportActions(result: MonitorRepository.Result, modifier: Modifier = Modifier) {
+fun ExportActions(result: MonitorRepository.Result, exporting: Boolean, onExport: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val app = context.applicationContext as MonitorApplication
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf<Int?>(null) }
-    val latest by rememberUpdatedState(result)
-    val document = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("video/mp4")) { uri ->
-        if (uri != null) scope.launch {
-            busy = true; status = null
-            try {
-                val media = checkNotNull(latest.media)
-                check(media.saveState == SaveState.Saved.name)
-                withContext(Dispatchers.IO) {
-                    checkNotNull(context.contentResolver.openOutputStream(uri, "w")).use { output ->
-                        app.persistence.files.resolve(media.relativePath).inputStream().use { input ->
-                            val buffer = ByteArray(256 * 1024)
-                            while (true) {
-                                ensureActive()
-                                val size = input.read(buffer)
-                                if (size < 0) break
-                                output.write(buffer, 0, size)
-                            }
-                        }
-                    }
-                }
-                status = R.string.export_success
-            } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { status = R.string.export_failed }
-            finally { busy = false }
-        }
-    }
     Column(modifier) {
         Text(stringResource(R.string.export_notice), style = ComposeTypography.bodySmall)
-        if (result.media?.saveState == SaveState.Saved.name) TextButton({
-            try { document.launch("monitor-${result.session.localDate}-${result.session.id.take(8)}.mp4") }
-            catch (_: Exception) { status = R.string.export_failed }
-        }, enabled = !busy) { Text(stringResource(R.string.export_video), style = ComposeTypography.labelLarge) }
+        if (result.media?.saveState == SaveState.Saved.name) TextButton(onExport, enabled = !busy && !exporting) {
+            Text(stringResource(R.string.export_video), style = ComposeTypography.labelLarge)
+        }
         TextButton({ scope.launch {
             busy = true; status = null
             try {

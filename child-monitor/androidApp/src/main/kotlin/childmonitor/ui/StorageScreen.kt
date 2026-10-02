@@ -8,6 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import childmonitor.model.StorageOverview
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,7 +39,7 @@ fun StorageScreen(viewModel: RecordViewModel, onManage: () -> Unit, onBack: () -
     }
     Column(modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.storage_title), style = ComposeTypography.headlineSmall)
-        state.storage?.let { Text(stringResource(R.string.storage_overview, formatBytes(it.usedBytes), formatBytes(it.availableBytes), it.pendingCount), style = ComposeTypography.bodyLarge) }
+        state.storage?.let { StorageSummary(it) }
         if (state.failed || snapshot.error != null) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
         TextButton({ viewModel.loadStorage() }, enabled = !state.busy) { Text(stringResource(R.string.refresh), style = ComposeTypography.labelLarge) }
         Text(stringResource(R.string.storage_retention), style = ComposeTypography.titleMedium)
@@ -62,3 +64,12 @@ fun PurgeConfirmation(onCancel: () -> Unit, onConfirm: () -> Unit) {
 }
 
 fun formatBytes(bytes: Long): String = if (bytes >= 1_073_741_824) "%.1f GB".format(bytes / 1_073_741_824.0) else "%.1f MB".format(bytes / 1_048_576.0)
+
+@Composable
+private fun StorageSummary(value: StorageOverview) {
+    Text(stringResource(R.string.storage_overview, formatBytes(value.usedBytes), formatBytes(value.availableBytes), value.pendingCount), style = ComposeTypography.bodyLarge)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun StoragePreview() { AppPreview { StorageSummary(StorageOverview(512_000_000, 8_000_000_000, 1)) } }

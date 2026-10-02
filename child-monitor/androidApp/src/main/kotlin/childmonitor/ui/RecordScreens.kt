@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onPlayback: () -> Unit,
-    onCleanup: () -> Unit, onDeleted: (Set<String>) -> Unit, modifier: Modifier = Modifier, celebrate: Boolean = false) {
+    onCleanup: () -> Unit, onDeleted: (Set<String>) -> Unit, exporting: Boolean, onExport: (childmonitor.data.repository.MonitorRepository.Result) -> Unit, modifier: Modifier = Modifier, celebrate: Boolean = false) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val owner = LocalLifecycleOwner.current
     LaunchedEffect(owner, id, celebrate) {
@@ -62,7 +62,7 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
             if (result.session.title.isNotBlank()) Text(result.session.title, style = ComposeTypography.titleLarge)
             if (result.session.note.isNotBlank()) Text(result.session.note, style = ComposeTypography.bodyMedium)
             TextButton({ editing = true }, enabled = !state.busy) { Text(stringResource(R.string.record_edit), style = ComposeTypography.labelLarge) }
-            ExportActions(result)
+            ExportActions(result, exporting, { onExport(result) })
             Text(if (state.busy) stringResource(R.string.media_saving) else saveStateText(media?.saveState), style = ComposeTypography.titleMedium)
             result.session.endReason?.takeIf { it != "UserStop" }?.let {
                 Text(stringResource(endReasonText(it)), style = ComposeTypography.bodyMedium)
@@ -102,6 +102,7 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
                 Text(stringResource(R.string.result_away_count, evaluation.awayCount, evaluation.timeoutAwayCount), style = ComposeTypography.bodyMedium)
             }
             if (media?.saveState == SaveState.Saved.name) Button(onPlayback) { Text(stringResource(R.string.view_video), style = ComposeTypography.labelLarge) }
+            if (media?.saveState != SaveState.Saved.name) TextButton(onPlayback) { Text(stringResource(R.string.timeline_title), style = ComposeTypography.labelLarge) }
             if (media?.saveState in listOf(SaveState.Finalizing.name, SaveState.RetryableFailure.name)) {
                 Button({ viewModel.retry(id) }, enabled = !state.busy) { Text(stringResource(R.string.retry_save), style = ComposeTypography.labelLarge) }
                 TextButton(onCleanup, enabled = !state.busy) { Text(stringResource(R.string.cleanup), style = ComposeTypography.labelLarge) }

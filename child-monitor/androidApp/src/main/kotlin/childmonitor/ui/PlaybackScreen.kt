@@ -50,6 +50,7 @@ fun PlaybackScreen(id: String, viewModel: RecordViewModel, app: MonitorApplicati
     var duration by remember { mutableLongStateOf(0) }
     var playing by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
+    var annotationEvent by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf<String?>(null) }
     val owner = LocalLifecycleOwner.current
     LaunchedEffect(owner, id) {
@@ -140,10 +141,21 @@ fun PlaybackScreen(id: String, viewModel: RecordViewModel, app: MonitorApplicati
             val seekable = current != null && offsetUs >= 0 && offsetUs / 1_000 <= duration && !failed
             Text(stringResource(R.string.event_row, eventTitle(event.kind), formatDuration(event.startUs)),
                 style = ComposeTypography.bodyLarge, modifier = Modifier.fillMaxWidth().clickable(enabled = seekable) { current?.seekTo(offsetUs / 1_000) }.padding(vertical = 8.dp))
+            if (result?.events?.any { it.id == event.id } == true) {
+                val annotation = result.annotations.firstOrNull { it.eventId == event.id }
+                TextButton({ annotationEvent = event.id }, enabled = !state.busy) {
+                    Text(stringResource(when (annotation?.label) { "false_positive" -> R.string.annotation_false; "uncertain" -> R.string.annotation_uncertain; else -> R.string.annotation_add }), style = ComposeTypography.labelLarge)
+                }
+            }
             if (!seekable && duration > 0) Text(stringResource(R.string.timeline_outside), style = ComposeTypography.labelSmall)
         }
         TextButton({ deleting = true }, enabled = !state.busy) { Text(stringResource(R.string.delete), style = ComposeTypography.labelLarge) }
         TextButton(onBack) { Text(stringResource(R.string.back), style = ComposeTypography.labelLarge) }
+    }
+    annotationEvent?.let { eventId ->
+        val annotation = result?.annotations?.firstOrNull { it.eventId == eventId }
+        EventAnnotationDialog(annotation, state.busy, state.operationFailed, { annotationEvent = null },
+            { label, note -> viewModel.annotate(eventId, label, note) { annotationEvent = null } })
     }
     if (deleting) DeleteConfirmation(onCancel = { deleting = false }, onConfirm = {
         deleting = false

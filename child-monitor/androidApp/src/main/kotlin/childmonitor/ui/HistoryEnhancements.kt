@@ -35,6 +35,8 @@ fun RecordNoteDialog(initialTitle: String, initialNote: String, busy: Boolean, f
         dismissButton = { TextButton(onCancel, enabled = !busy) { Text(stringResource(R.string.cancel), style = ComposeTypography.labelLarge) } })
 }
 
+private enum class DateBoundary { Start, End }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordFilterDialog(filter: RecordFilter, onCancel: () -> Unit, onApply: (RecordFilter) -> Unit) {
@@ -42,36 +44,62 @@ fun RecordFilterDialog(filter: RecordFilter, onCancel: () -> Unit, onApply: (Rec
     var to by rememberSaveable { mutableStateOf(filter.toDate.orEmpty()) }
     var query by rememberSaveable { mutableStateOf(filter.query) }
     var status by rememberSaveable { mutableStateOf(filter.status) }
-    var invalid by remember { mutableStateOf(false) }
-    var calendar by remember { mutableStateOf(false) }
+    var calendar by remember { mutableStateOf<DateBoundary?>(null) }
     AlertDialog(onDismissRequest = onCancel, title = { Text(stringResource(R.string.record_filter), style = ComposeTypography.titleMedium) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             OutlinedTextField(query, { if (it.length <= 100) query = it }, label = { Text(stringResource(R.string.filter_query), style = ComposeTypography.labelMedium) })
-            OutlinedTextField(from, { from = it; invalid = false }, singleLine = true, label = { Text(stringResource(R.string.filter_from), style = ComposeTypography.labelMedium) })
-            OutlinedTextField(to, { to = it; invalid = false }, singleLine = true, label = { Text(stringResource(R.string.filter_to), style = ComposeTypography.labelMedium) })
-            TextButton({ calendar = true }) { Text(stringResource(R.string.filter_calendar), style = ComposeTypography.labelLarge) }
+            OutlinedButton({ calendar = DateBoundary.Start }) {
+                Column {
+                    Text(stringResource(R.string.filter_from), style = ComposeTypography.labelMedium)
+                    Text(from.ifEmpty { stringResource(R.string.filter_no_date) }, style = ComposeTypography.bodyMedium)
+                }
+            }
+            OutlinedButton({ calendar = DateBoundary.End }) {
+                Column {
+                    Text(stringResource(R.string.filter_to), style = ComposeTypography.labelMedium)
+                    Text(to.ifEmpty { stringResource(R.string.filter_no_date) }, style = ComposeTypography.bodyMedium)
+                }
+            }
             listOf("all" to R.string.all_events, "normal" to R.string.filter_normal, "interrupted" to R.string.filter_interrupted,
                 "pending" to R.string.filter_pending, "metadata" to R.string.statistics_only).forEach { (id, label) ->
                 FilterChip(status == id, { status = id }, label = { Text(stringResource(label), style = ComposeTypography.labelMedium) })
             }
-            if (invalid) Text(stringResource(R.string.filter_invalid), style = ComposeTypography.bodySmall)
             TextButton({ onApply(RecordFilter()) }) { Text(stringResource(R.string.filter_clear), style = ComposeTypography.labelLarge) }
         }
     }, confirmButton = { TextButton({
-        val value = RecordFilter(from.trim().ifEmpty { null }, to.trim().ifEmpty { null }, status, query.trim())
-        try { value.validate(); onApply(value) } catch (_: IllegalArgumentException) { invalid = true }
+        onApply(RecordFilter(from.ifEmpty { null }, to.ifEmpty { null }, status, query.trim()))
     }) { Text(stringResource(R.string.save), style = ComposeTypography.labelLarge) } },
         dismissButton = { TextButton(onCancel) { Text(stringResource(R.string.cancel), style = ComposeTypography.labelLarge) } })
-    if (calendar) {
-        val dates = rememberDateRangePickerState()
-        DatePickerDialog(onDismissRequest = { calendar = false }, confirmButton = {
+    calendar?.let { boundary ->
+        val initial = if (boundary == DateBoundary.Start) from else to
+        val dates = rememberDatePickerState(
+            initialSelectedDateMillis = initial.takeIf { it.isNotEmpty() }?.let { LocalDate.parse(it).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() },
+            selectableDates = remember(from, to, boundary) {
+                object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                        val date = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate().toString()
+                        return if (boundary == DateBoundary.Start) to.isEmpty() || date <= to else from.isEmpty() || date >= from
+                    }
+                }
+            })
+        DatePickerDialog(onDismissRequest = { calendar = null }, confirmButton = {
             TextButton({
-                dates.selectedStartDateMillis?.let { from = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString() }
-                dates.selectedEndDateMillis?.let { to = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString() }
-                calendar = false
-            }, enabled = dates.selectedStartDateMillis != null && dates.selectedEndDateMillis != null) { Text(stringResource(R.string.save), style = ComposeTypography.labelLarge) }
-        }, dismissButton = { TextButton({ calendar = false }) { Text(stringResource(R.string.cancel), style = ComposeTypography.labelLarge) } }) {
-            DateRangePicker(state = dates, modifier = Modifier.height(480.dp), showModeToggle = false)
+                dates.selectedDateMillis?.let {
+                    val date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()
+                    if (boundary == DateBoundary.Start) from = date else to = date
+                }
+                calendar = null
+            }, enabled = dates.selectedDateMillis != null) { Text(stringResource(R.string.save), style = ComposeTypography.labelLarge) }
+        }, dismissButton = {
+            Row {
+                TextButton({
+                    if (boundary == DateBoundary.Start) from = "" else to = ""
+                    calendar = null
+                }) { Text(stringResource(R.string.filter_clear_date), style = ComposeTypography.labelLarge) }
+                TextButton({ calendar = null }) { Text(stringResource(R.string.cancel), style = ComposeTypography.labelLarge) }
+            }
+        }) {
+            DatePicker(state = dates, showModeToggle = false)
         }
     }
 }

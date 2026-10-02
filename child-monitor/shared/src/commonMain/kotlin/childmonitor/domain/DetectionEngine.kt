@@ -96,6 +96,7 @@ class DetectionEngine(private val sessionId: String, private val newId: () -> St
         if (guardian || !observation.sceneClear || modelAmbiguous) return unknown(time, revisionId)
         val clearEmptySeat = roi?.let { seatVisibility.observe(observation, it) } == true
         if (calibration == null) {
+            if (roi != null && !seatVisibility.ready) placementIssue = seatVisibility.issue
             updateCoverage(setOf("prepare"), time, revisionId)
             if (!seatVisibility.ready || roi == null || feature == null || observation.people.size != 1 || !roi.contains(feature.center) ||
                 feature.headAngle == null || feature.headHeight == null || abs(feature.headAngle) > .3f || feature.headHeight < .15f ||

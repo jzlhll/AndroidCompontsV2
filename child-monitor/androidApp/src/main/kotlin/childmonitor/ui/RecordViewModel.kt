@@ -36,7 +36,7 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
     private var celebrationClaimedId: String? = null
     fun loadResult(id: String, celebrate: Boolean = false) {
         if (stateFlow.value.busy) { pendingReload = { loadResult(id, celebrate) }; return }
-        task {
+        task(clearOperationFailure = false) {
             val result = runtime.records.readResult(id)
             var celebration = stateFlow.value.celebration && stateFlow.value.result?.session?.id == id
             if (celebrate && result != null && celebrationClaimedId != id) {
@@ -52,7 +52,7 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
     }
     fun loadStorage() {
         if (stateFlow.value.busy) { pendingReload = { loadStorage() }; return }
-        task {
+        task(clearOperationFailure = false) {
         val result = runtime.storageOverview(UUID.randomUUID().toString())
         if (result is CommandResult.Success) mutableStateFlow.value = stateFlow.value.copy(storage = result.data)
         else mutableStateFlow.value = stateFlow.value.copy(failed = true)
@@ -60,7 +60,7 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
     }
     fun purge(ids: Set<String>, protectedId: String?) = task {
         val result = runtime.purgeVideos(ids.toList(), protectedId, UUID.randomUUID().toString())
-        val failed = (result as? CommandResult.Success<List<String>>)?.data?.toSet() ?: ids
+        val failed = if (result is CommandResult.Success) result.data.toSet() else ids
         mutableStateFlow.value = stateFlow.value.copy(selected = failed, operationFailed = failed.isNotEmpty())
     }
     fun dismissCelebration() { mutableStateFlow.value = stateFlow.value.copy(celebration = false) }
@@ -70,14 +70,14 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
         else mutableStateFlow.value = stateFlow.value.copy(failed = true)
     }
     fun clearSelection() { mutableStateFlow.value = stateFlow.value.copy(selected = emptySet()) }
-    fun loadAlbum(reset: Boolean = false) = task {
+    fun loadAlbum(reset: Boolean = false) = task(clearOperationFailure = false) {
         val page = runtime.records.querySessions(if (reset) null else stateFlow.value.cursor, filter = stateFlow.value.filter)
         mutableStateFlow.value = stateFlow.value.copy(items = if (reset) page.items else (stateFlow.value.items + page.items).distinctBy { it.session.id },
             cursor = page.nextCursor, loaded = true)
     }
     fun refreshAlbum(protectedId: String?) {
         if (stateFlow.value.busy) { pendingReload = { refreshAlbum(protectedId) }; return }
-        task {
+        task(clearOperationFailure = false) {
             // 重读已加载范围，保持分页深度与稳定条目身份，避免返回时掉回第一页。
             val targetCount = if (stateFlow.value.items.size > 30) stateFlow.value.items.size else 30
             val items = mutableListOf<MonitorRepository.Summary>()
@@ -88,7 +88,7 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
                 cursor = page.nextCursor
             } while (cursor != null && items.size < targetCount)
             val selected = stateFlow.value.selected
-            val validSelection = if (selected.isEmpty()) selected else selected.intersect(matchingIds(protectedId))
+            val validSelection = if (selected.isEmpty()) selected else runtime.records.queryDeletableIds(protectedId, stateFlow.value.filter, selected)
             mutableStateFlow.value = stateFlow.value.copy(items = items, cursor = cursor, selected = validSelection, loaded = true)
         }
     }
@@ -100,7 +100,11 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
     }
     fun loadStatistics(from: String, to: String) {
         if (stateFlow.value.busy) { pendingReload = { loadStatistics(from, to) }; return }
-        task { mutableStateFlow.value = stateFlow.value.copy(statistics = runtime.records.dailyStatistics(from, to)) }
+        task(clearOperationFailure = false) { mutableStateFlow.value = stateFlow.value.copy(statistics = runtime.records.dailyStatistics(from, to)) }
+    }
+    fun annotate(eventId: String, label: String?, note: String, onSaved: () -> Unit) = task {
+        val result = runtime.annotateEvent(eventId, label, note, UUID.randomUUID().toString())
+        if (result is CommandResult.Success) onSaved() else mutableStateFlow.value = stateFlow.value.copy(operationFailed = true)
     }
     fun saveNote(id: String, title: String, note: String, onSaved: () -> Unit) = task {
         val result = runtime.updateNote(id, title, note, UUID.randomUUID().toString())
@@ -111,22 +115,11 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
             if (id in stateFlow.value.selected) stateFlow.value.selected - id else stateFlow.value.selected + id)
     }
     fun selectAll(protectedId: String?) = task {
-        mutableStateFlow.value = stateFlow.value.copy(selected = matchingIds(protectedId))
-    }
-    private suspend fun matchingIds(protectedId: String?): Set<String> {
-        val allowed = runtime.records.queryDeletableIds(protectedId).toSet()
-        val selected = mutableSetOf<String>()
-        var cursor: SessionCursor? = null
-        do {
-            val page = runtime.records.querySessions(cursor, 100, stateFlow.value.filter)
-            selected += page.items.map { it.session.id }.filter { it in allowed }
-            cursor = page.nextCursor
-        } while (cursor != null)
-        return selected
+        mutableStateFlow.value = stateFlow.value.copy(selected = runtime.records.queryDeletableIds(protectedId, stateFlow.value.filter))
     }
     fun delete(ids: Set<String>, protectedId: String?, onDeleted: (Set<String>) -> Unit) = task {
         val result = runtime.deleteSessions(ids.toList(), protectedId, UUID.randomUUID().toString())
-        val failed = (result as? CommandResult.Success<List<String>>)?.data?.toSet() ?: ids
+        val failed = if (result is CommandResult.Success) result.data.toSet() else ids
         val deleted = ids - failed
         mutableStateFlow.value = stateFlow.value.copy(items = stateFlow.value.items.filter { it.session.id !in deleted }, selected = failed, failed = failed.isNotEmpty())
         onDeleted(deleted)
@@ -135,9 +128,9 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
         val result = runtime.retrySave(id, UUID.randomUUID().toString())
         mutableStateFlow.value = stateFlow.value.copy(result = runtime.records.readResult(id), failed = result is CommandResult.Failure)
     }
-    private fun task(block: suspend () -> Unit) {
+    private fun task(clearOperationFailure: Boolean = true, block: suspend () -> Unit) {
         if (stateFlow.value.busy) return
-        mutableStateFlow.value = stateFlow.value.copy(busy = true, failed = false)
+        mutableStateFlow.value = stateFlow.value.copy(busy = true, failed = false, operationFailed = if (clearOperationFailure) false else stateFlow.value.operationFailed)
         viewModelScope.launch {
             try { block() }
             catch (e: CancellationException) { throw e }

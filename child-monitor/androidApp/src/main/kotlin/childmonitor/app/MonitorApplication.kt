@@ -19,6 +19,8 @@ import kotlinx.coroutines.sync.Semaphore
 /** 持有唯一持久化容器和 Runtime，相机平台绑定在首页可撤销地注册。 */
 class MonitorApplication : Application() {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val parentAccess by lazy { childmonitor.platform.ParentAccess(this, applicationScope) }
+    val videoExporter by lazy { childmonitor.platform.VideoExporter(this, persistence.files, applicationScope) }
     val playbackRegistry = childmonitor.platform.AndroidPlaybackRegistry()
     val probePermit = Semaphore(1)
     val persistence by lazy { AndroidPersistence(this, applicationScope) }
@@ -29,7 +31,7 @@ class MonitorApplication : Application() {
             override fun wallUs() = System.currentTimeMillis() * 1_000
             override fun timezoneId() = TimeZone.getDefault().id
             override fun newId() = UUID.randomUUID().toString()
-        }, persistence.settings, MonitorRepository(persistence.dao), capture,
+        }, persistence.settings, MonitorRepository(persistence.dao, parentAccess::isAuthorized), capture,
             AndroidReminderPlayer(this), playbackRegistry, Dispatchers.Default)
     }
     override fun onTerminate() {

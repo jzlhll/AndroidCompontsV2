@@ -9,6 +9,8 @@ class SeatVisibilityTracker {
     private var candidateSinceUs: Long? = null
     private var lastUs: Long? = null
     private var reference: List<SceneCell>? = null
+    var issue: String = "empty"
+        private set
     val ready: Boolean get() = reference != null
     val progress: Float get() = if (ready) 1f else candidateSinceUs?.let { start ->
         ((lastUs ?: start) - start).toFloat() / (DefaultMonitorConfig.calibrationStableMs * 1_000)
@@ -36,6 +38,7 @@ class SeatVisibilityTracker {
             mean in 25.0..235.0 && detail > 100 && cells.all { cell ->
                 listOf(cell.luminance, cell.redChroma, cell.blueChroma, cell.texture).all { it.isFinite() }
             }
+        issue = when { !visible -> "lighting"; occupied -> "occupied"; else -> "empty" }
         val consecutive = lastUs?.let { observation.frameTimeUs - it in 1..DefaultMonitorConfig.evidenceMaxGapMs * 1_000 } == true
         lastUs = observation.frameTimeUs
         val saved = reference

@@ -74,6 +74,7 @@ fun SettingsScreen(viewModel: MonitorViewModel, onAvatar: () -> Unit, onBack: ()
             }
         }
         TextButton(onStorage) { Text(stringResource(R.string.storage_title), style = ComposeTypography.labelLarge) }
+        ParentSettings()
         SettingsEnhancements(viewModel, snapshot)
         if (snapshot.error != null) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
         TextButton(onBack) { Text(stringResource(R.string.back), style = ComposeTypography.labelLarge) }

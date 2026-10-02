@@ -9,8 +9,19 @@ import androidx.room.Upsert
 import childmonitor.data.database.entity.*
 import kotlinx.coroutines.flow.Flow
 
+private const val RECORD_FILTER = """
+        (:fromDate IS NULL OR local_date >= :fromDate) AND (:toDate IS NULL OR local_date <= :toDate)
+        AND (:status = 'all' OR (:status = 'normal' AND end_reason IN ('UserStop','TargetReached'))
+          OR (:status = 'interrupted' AND end_reason NOT IN ('UserStop','TargetReached'))
+          OR (:status = 'pending' AND save_state IN ('Finalizing','RetryableFailure')) OR (:status = 'metadata' AND save_state = 'MetadataOnly'))
+        AND (:text = '' OR instr(title, :text) > 0 OR instr(note, :text) > 0)"""
+
 @Dao
 interface MonitorDao {
+    @Upsert suspend fun putAnnotation(value: EventAnnotationEntity)
+    @Query("SELECT * FROM event_annotations WHERE session_id = :id") suspend fun annotations(id: String): List<EventAnnotationEntity>
+    @Query("DELETE FROM event_annotations WHERE event_id = :eventId") suspend fun deleteAnnotation(eventId: String)
+    @Query("SELECT * FROM events WHERE id = :id") suspend fun event(id: String): EventEntity?
     @Insert suspend fun insertSession(value: SessionEntity)
     @Insert suspend fun insertMedia(value: MediaEntity)
     @Insert suspend fun insertRevision(value: ConfigRevisionEntity)
@@ -44,19 +55,21 @@ interface MonitorDao {
     suspend fun interruption(): SessionEntity?
     @Query("""SELECT sessions.* FROM sessions LEFT JOIN media ON sessions.id = media.session_id
         WHERE (:beforeTime IS NULL OR started_wall_us < :beforeTime OR (started_wall_us = :beforeTime AND sessions.id < :beforeId))
-        AND (:fromDate IS NULL OR local_date >= :fromDate) AND (:toDate IS NULL OR local_date <= :toDate)
-        AND (:status = 'all' OR (:status = 'normal' AND end_reason IN ('UserStop','TargetReached'))
-          OR (:status = 'interrupted' AND end_reason NOT IN ('UserStop','TargetReached'))
-          OR (:status = 'pending' AND save_state IN ('Finalizing','RetryableFailure')) OR (:status = 'metadata' AND save_state = 'MetadataOnly'))
-        AND (:text = '' OR instr(title, :text) > 0 OR instr(note, :text) > 0)
+        AND """ + RECORD_FILTER + """
         ORDER BY started_wall_us DESC, sessions.id DESC LIMIT :limit""")
     suspend fun sessions(beforeTime: Long?, beforeId: String?, limit: Int, fromDate: String?, toDate: String?, status: String, text: String): List<SessionEntity>
     @Query("SELECT * FROM sessions WHERE state = 'Stopped' AND local_date BETWEEN :fromDate AND :toDate ORDER BY local_date, started_wall_us")
     suspend fun statisticsSessions(fromDate: String, toDate: String): List<SessionEntity>
     @Query("UPDATE sessions SET title = :title, note = :note WHERE id = :id AND state = 'Stopped'")
     suspend fun updateNote(id: String, title: String, note: String): Int
-    @Query("SELECT id FROM sessions WHERE state = 'Stopped' AND (:protectedId IS NULL OR id != :protectedId)")
-    suspend fun deletableIds(protectedId: String?): List<String>
+    @Query("""SELECT sessions.id FROM sessions LEFT JOIN media ON sessions.id = media.session_id
+        WHERE sessions.state = 'Stopped' AND (:protectedId IS NULL OR sessions.id != :protectedId)
+        AND """ + RECORD_FILTER)
+    suspend fun deletableIds(protectedId: String?, fromDate: String?, toDate: String?, status: String, text: String): List<String>
+    @Query("""SELECT sessions.id FROM sessions LEFT JOIN media ON sessions.id = media.session_id
+        WHERE sessions.id IN (:ids) AND sessions.state = 'Stopped' AND (:protectedId IS NULL OR sessions.id != :protectedId)
+        AND """ + RECORD_FILTER)
+    suspend fun deletableSelection(ids: List<String>, protectedId: String?, fromDate: String?, toDate: String?, status: String, text: String): List<String>
     @Query("DELETE FROM sessions WHERE id = :id") suspend fun deleteSession(id: String)
     @Query("DELETE FROM operation_intents WHERE id = :id") suspend fun deleteIntent(id: String)
     @Query("UPDATE monitor_settings SET monitor_revision = monitor_revision + 1, settings_json = :json WHERE id = 1 AND monitor_revision = :expected")

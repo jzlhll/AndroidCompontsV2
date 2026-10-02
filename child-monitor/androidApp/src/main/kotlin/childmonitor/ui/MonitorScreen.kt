@@ -56,6 +56,7 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
     var panel by rememberSaveable { mutableStateOf(false) }
     var denied by rememberSaveable { mutableStateOf(false) }
     var gate by remember { mutableStateOf(false) }
+    var confirmStop by remember { mutableStateOf(false) }
     var placementFailed by remember { mutableStateOf(false) }
     var roi by remember { mutableStateOf(RectF()) }
     val active = snapshot.runState in listOf(RunState.Starting, RunState.Preparing, RunState.Monitoring, RunState.Stopping)
@@ -98,7 +99,7 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
     }
     LaunchedEffect(snapshot.darkened, snapshot.needsGuardian) { if (snapshot.darkened || snapshot.needsGuardian) panel = false }
     BackHandler(panel || active) {
-        if (panel) panel = false else viewModel.command { runtime.stop(it) }
+        if (panel) panel = false else if (snapshot.runState == RunState.Starting) viewModel.command { runtime.stop(it) } else confirmStop = true
     }
     fun guarded(action: () -> Unit) {
         if (active || !snapshot.captureReleased) gate = true else action()
@@ -160,14 +161,14 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
                 }, enabled = !roi.isEmpty) {
                     Text(stringResource(R.string.placement_confirm), style = ComposeTypography.labelLarge)
                 }
-                else if (!snapshot.needsGuardian) TextButton({ viewModel.command { runtime.reposition(it) } }) {
+                else if (!snapshot.needsGuardian) TextButton({ panel = true }) {
                     Text(stringResource(R.string.reposition), style = ComposeTypography.labelLarge)
                 }
             }
             if (placementFailed) Text(stringResource(R.string.placement_invalid), style = ComposeTypography.bodyMedium)
             if (snapshot.needsGuardian) {
                 Text(stringResource(R.string.placement_required), style = ComposeTypography.bodyMedium)
-                TextButton({ viewModel.command { runtime.reposition(it) } }) { Text(stringResource(R.string.reposition), style = ComposeTypography.labelLarge) }
+                TextButton({ panel = true }) { Text(stringResource(R.string.reposition), style = ComposeTypography.labelLarge) }
             }
             snapshot.interruptionId?.let { id -> Row {
                 TextButton({ onResult(id, false) }) { Text(stringResource(R.string.interruption_result), style = ComposeTypography.labelLarge) }
@@ -190,7 +191,7 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
             if (targetMs > 0) Text(stringResource(if (snapshot.targetReached) R.string.target_reached else R.string.target_progress,
                 formatDuration(if (targetMs * 1_000 > snapshot.durationUs) targetMs * 1_000 - snapshot.durationUs else 0)), style = ComposeTypography.bodyMedium)
             Button(onClick = {
-                if (active) viewModel.command { runtime.stop(it) }
+                if (active) { if (snapshot.runState == RunState.Starting) viewModel.command { runtime.stop(it) } else confirmStop = true }
                 else if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) viewModel.command { runtime.start(it) }
                 else permission.launch(Manifest.permission.CAMERA)
             }, enabled = snapshot.ready && !snapshot.operationBusy && snapshot.runState != RunState.Stopping && (active || snapshot.captureReleased), modifier = Modifier.fillMaxWidth().height(52.dp)) {
@@ -201,9 +202,11 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
         if (panel) {
             Box(Modifier.fillMaxSize().padding(bottom = 120.dp).background(Color.Black.copy(alpha = .2f)).clickable { panel = false })
             Surface(Modifier.align(Alignment.TopEnd).safeDrawingPadding().padding(16.dp).width(300.dp).heightIn(max = 540.dp), shadowElevation = 8.dp) {
+                ParentProtected(app, protected = true, onCancel = { panel = false }) {
                 SettingsPanel(snapshot, onChange = { value -> snapshot.settings?.let { config -> viewModel.command { runtime.updateSettings(value, config.monitorRevision, it) } } },
                     onMore = { guarded { onSettings() } }, onClose = { panel = false },
                     onReposition = { panel = false; viewModel.command { runtime.reposition(it) } })
+                }
             }
         }
         if (snapshot.darkened) Box(Modifier.fillMaxSize().background(Color.Black).clickable {
@@ -212,6 +215,10 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
         }, contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.monitor_dark), color = Color.DarkGray, style = ComposeTypography.bodyMedium)
         }
+        if (confirmStop) AlertDialog(onDismissRequest = { confirmStop = false },
+            text = { Text(stringResource(R.string.stop_confirm), style = ComposeTypography.bodyMedium) },
+            confirmButton = { TextButton({ confirmStop = false; viewModel.command { runtime.stop(it) } }) { Text(stringResource(R.string.monitor_stop), style = ComposeTypography.labelLarge) } },
+            dismissButton = { TextButton({ confirmStop = false }) { Text(stringResource(R.string.cancel), style = ComposeTypography.labelLarge) } })
         if (gate) AlertDialog(onDismissRequest = { gate = false }, text = { Text(stringResource(R.string.navigation_guard), style = ComposeTypography.bodyMedium) },
             confirmButton = { TextButton({ gate = false }) { Text(stringResource(R.string.understood), style = ComposeTypography.labelLarge) } })
     }
