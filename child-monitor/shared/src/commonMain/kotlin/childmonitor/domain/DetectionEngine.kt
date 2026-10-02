@@ -16,6 +16,10 @@ class DetectionEngine(private val sessionId: String, private val newId: () -> St
     private var region: SeatRegion? = null
     private val seatVisibility = SeatVisibilityTracker()
     val emptySeatReady: Boolean get() = seatVisibility.ready
+    var placementIssue = "region"
+        private set
+    val placementProgress: Float get() = if (!emptySeatReady) seatVisibility.progress else
+        baseline.firstOrNull()?.let { (baseline.last().first - it.first).toFloat() / (DefaultMonitorConfig.calibrationStableMs * 1_000) } ?: 0f
     private val baseline = mutableListOf<Pair<Long, Feature>>()
     private val candidates = mutableMapOf<EventKind, Candidate>()
     private val events = linkedMapOf<String, EventEntity>()
@@ -41,6 +45,7 @@ class DetectionEngine(private val sessionId: String, private val newId: () -> St
     fun confirmRegion(value: SeatRegion) {
         value.validate()
         region = value
+        placementIssue = "empty"
         seatVisibility.reset()
         baseline.clear()
         guardian = false
@@ -49,6 +54,7 @@ class DetectionEngine(private val sessionId: String, private val newId: () -> St
         close(atUs, "unknown")
         calibration = null
         region = null
+        placementIssue = "region"
         seatVisibility.reset()
         awayId = null
         activeAway = null
@@ -74,6 +80,18 @@ class DetectionEngine(private val sessionId: String, private val newId: () -> St
         val feature = features(observation)
         val roi = region
         val modelAmbiguous = observation.people.size > 1
+        placementIssue = when {
+            roi == null -> "region"
+            observation.deviceMoved || guardian -> "moved"
+            modelAmbiguous -> "multiple"
+            !observation.sceneClear -> "lighting"
+            !emptySeatReady -> if (observation.people.any { it.left < roi.right && it.right > roi.left && it.top < roi.bottom && it.bottom > roi.top }) "occupied" else "empty"
+            feature == null -> "shoulders"
+            !roi.contains(feature.center) -> "outside"
+            feature.headAngle == null || feature.headHeight == null -> "head"
+            abs(feature.headAngle) > .3f || feature.headHeight < .15f || feature.bodyAngle?.let { abs(it) > .4f } == true -> "upright"
+            else -> "stable"
+        }
         if (modelAmbiguous || observation.deviceMoved || calibration?.transformVersion?.let { it != observation.transformVersion } == true) guardian = true
         if (guardian || !observation.sceneClear || modelAmbiguous) return unknown(time, revisionId)
         val clearEmptySeat = roi?.let { seatVisibility.observe(observation, it) } == true

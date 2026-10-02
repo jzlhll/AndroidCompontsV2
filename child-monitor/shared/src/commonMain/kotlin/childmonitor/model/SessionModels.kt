@@ -7,7 +7,7 @@ enum class RunState { Idle, Starting, Preparing, Monitoring, Stopping, Stopped }
 @Serializable
 enum class SaveState { Finalizing, Saved, RetryableFailure, Unrecoverable, MetadataOnly }
 @Serializable
-enum class EndReason { UserStop, SystemLocked, Background, CameraInterrupted, CaptureFailed, IneffectiveTimeout, StorageLow, PrepareTimeout }
+enum class EndReason { UserStop, TargetReached, SystemLocked, Background, CameraInterrupted, CaptureFailed, IneffectiveTimeout, StorageLow, PrepareTimeout }
 @Serializable
 enum class EventKind { HeadDown, LeanForward, HeadTilt, BodyLean, Away, Return, Uncertain, Interruption }
 

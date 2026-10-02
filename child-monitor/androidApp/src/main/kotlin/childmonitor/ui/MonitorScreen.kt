@@ -151,6 +151,7 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
                 RunState.Stopped -> R.string.monitor_stopped
             }), style = ComposeTypography.titleMedium)
             if (snapshot.runState == RunState.Preparing) {
+                PlacementGuide(snapshot)
                 Text(stringResource(if (snapshot.emptySeatReady) R.string.placement_sit_down else R.string.placement_help), style = ComposeTypography.bodySmall)
                 if (!snapshot.emptySeatReady) Button({
                     val region = app.capture.mapPlacement(roi)
@@ -185,6 +186,9 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
                 Text(stringResource(R.string.permission_settings), style = ComposeTypography.labelLarge)
             }
             Text(stringResource(R.string.monitor_duration, formatDuration(snapshot.durationUs)), style = ComposeTypography.titleMedium)
+            val targetMs = snapshot.settings?.monitorSettings?.targetDurationMs ?: 0L
+            if (targetMs > 0) Text(stringResource(if (snapshot.targetReached) R.string.target_reached else R.string.target_progress,
+                formatDuration(if (targetMs * 1_000 > snapshot.durationUs) targetMs * 1_000 - snapshot.durationUs else 0)), style = ComposeTypography.bodyMedium)
             Button(onClick = {
                 if (active) viewModel.command { runtime.stop(it) }
                 else if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) viewModel.command { runtime.start(it) }

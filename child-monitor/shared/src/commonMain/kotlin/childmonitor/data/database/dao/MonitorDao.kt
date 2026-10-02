@@ -36,7 +36,7 @@ interface MonitorDao {
     @Query("SELECT * FROM operation_intents ORDER BY id") suspend fun intents(): List<OperationIntentEntity>
     @Query("SELECT * FROM sessions WHERE state != 'Stopped' OR id IN (SELECT session_id FROM media WHERE save_state IN ('Finalizing','RetryableFailure')) OR id NOT IN (SELECT session_id FROM evaluations)")
     suspend fun unfinished(): List<SessionEntity>
-    @Query("SELECT * FROM sessions WHERE end_reason IS NOT NULL AND end_reason != 'UserStop' AND interruption_acknowledged = 0 ORDER BY started_wall_us DESC LIMIT 1")
+    @Query("SELECT * FROM sessions WHERE end_reason IS NOT NULL AND end_reason NOT IN ('UserStop', 'TargetReached') AND interruption_acknowledged = 0 ORDER BY started_wall_us DESC LIMIT 1")
     suspend fun interruption(): SessionEntity?
     @Query("SELECT * FROM sessions WHERE (:beforeTime IS NULL OR started_wall_us < :beforeTime OR (started_wall_us = :beforeTime AND id < :beforeId)) ORDER BY started_wall_us DESC, id DESC LIMIT :limit")
     suspend fun sessions(beforeTime: Long?, beforeId: String?, limit: Int): List<SessionEntity>

@@ -221,6 +221,7 @@ fun eventTitle(kind: String) = stringResource(when (kind) {
     else -> R.string.event_interruption
 })
 fun endReasonText(reason: String) = when (reason) {
+    "TargetReached" -> R.string.target_reached
     "SystemLocked" -> R.string.end_locked
     "Background" -> R.string.end_background
     "IneffectiveTimeout" -> R.string.end_unclear

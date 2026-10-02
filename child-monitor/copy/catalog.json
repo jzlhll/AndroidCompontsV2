@@ -1458,6 +1458,240 @@
       "platforms": {
         "android": "placement_sit_down"
       }
+    },
+    {
+      "id": "common.childMonitor.placement_steps",
+      "values": {
+        "zh-Hans": "① 固定设备并框选座位　② 空座位采集　③ 入座校准"
+      },
+      "platforms": {
+        "android": "placement_steps"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_region",
+      "values": {
+        "zh-Hans": "框选孩子坐下后头部和双肩所在的区域。"
+      },
+      "platforms": {
+        "android": "placement_region"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_moved",
+      "values": {
+        "zh-Hans": "设备位置变化，请重新定位。"
+      },
+      "platforms": {
+        "android": "placement_moved"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_multiple",
+      "values": {
+        "zh-Hans": "检测到多人，请让其他人离开画面。"
+      },
+      "platforms": {
+        "android": "placement_multiple"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_lighting",
+      "values": {
+        "zh-Hans": "画面过暗、过亮或纹理不足，请调整光线和角度。"
+      },
+      "platforms": {
+        "android": "placement_lighting"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_occupied",
+      "values": {
+        "zh-Hans": "请先让座位空置，采集无遮挡的空座位。"
+      },
+      "platforms": {
+        "android": "placement_occupied"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_empty",
+      "values": {
+        "zh-Hans": "保持空座位无遮挡，正在采集基准。"
+      },
+      "platforms": {
+        "android": "placement_empty"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_shoulders",
+      "values": {
+        "zh-Hans": "请孩子入座，让双肩完整出现在画面中。"
+      },
+      "platforms": {
+        "android": "placement_shoulders"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_outside",
+      "values": {
+        "zh-Hans": "请坐在已框选的座位区域内。"
+      },
+      "platforms": {
+        "android": "placement_outside"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_head",
+      "values": {
+        "zh-Hans": "请让头部和双肩完整入镜。"
+      },
+      "platforms": {
+        "android": "placement_head"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_upright",
+      "values": {
+        "zh-Hans": "请保持正常坐姿，避免明显歪斜或趴下。"
+      },
+      "platforms": {
+        "android": "placement_upright"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_stable",
+      "values": {
+        "zh-Hans": "姿态可用，请保持不动直到校准完成。"
+      },
+      "platforms": {
+        "android": "placement_stable"
+      }
+    },
+    {
+      "id": "common.childMonitor.sound_volume",
+      "values": {
+        "zh-Hans": "提醒音量：%1$d%%"
+      },
+      "platforms": {
+        "android": "sound_volume"
+      }
+    },
+    {
+      "id": "common.childMonitor.sound_preview",
+      "values": {
+        "zh-Hans": "试听提醒"
+      },
+      "platforms": {
+        "android": "sound_preview"
+      }
+    },
+    {
+      "id": "common.childMonitor.sound_system_low",
+      "values": {
+        "zh-Hans": "系统媒体音量较低，请使用音量键调整。"
+      },
+      "platforms": {
+        "android": "sound_system_low"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_duration",
+      "values": {
+        "zh-Hans": "本次目标时长（分钟，0 表示不限）"
+      },
+      "platforms": {
+        "android": "target_duration"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_auto_stop",
+      "values": {
+        "zh-Hans": "到点自动结束并保存"
+      },
+      "platforms": {
+        "android": "target_auto_stop"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_reached",
+      "values": {
+        "zh-Hans": "已达到本次目标时长"
+      },
+      "platforms": {
+        "android": "target_reached"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_progress",
+      "values": {
+        "zh-Hans": "距离本次目标还有 %1$s"
+      },
+      "platforms": {
+        "android": "target_progress"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_invalid",
+      "values": {
+        "zh-Hans": "请输入 0，或 1～480 的整数分钟。"
+      },
+      "platforms": {
+        "android": "target_invalid"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_restore",
+      "values": {
+        "zh-Hans": "恢复默认监控参数"
+      },
+      "platforms": {
+        "android": "settings_restore"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_restore_confirm",
+      "values": {
+        "zh-Hans": "恢复检测、声音、提醒和目标时长的默认值？头像、历史记录及其他偏好保留。"
+      },
+      "platforms": {
+        "android": "settings_restore_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.help_title",
+      "values": {
+        "zh-Hans": "使用帮助与版本"
+      },
+      "platforms": {
+        "android": "help_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.help_body",
+      "values": {
+        "zh-Hans": "固定设备并保证头部、双肩入镜；先采集空座位，再入座校准。\n识别不确定时请检查光线、遮挡和多人干扰，必要时重新定位。\n应用内暗屏仍在工作，系统锁屏或切到后台会结束本次监控。\n内容保存在本机，卸载可能丢失记录；需要保留时先导出。"
+      },
+      "platforms": {
+        "android": "help_body"
+      }
+    },
+    {
+      "id": "common.childMonitor.app_version",
+      "values": {
+        "zh-Hans": "版本 %1$s"
+      },
+      "platforms": {
+        "android": "app_version"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_save",
+      "values": {
+        "zh-Hans": "保存目标时长"
+      },
+      "platforms": {
+        "android": "target_save"
+      }
     }
   ]
 }

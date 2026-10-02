@@ -73,6 +73,7 @@ fun SettingsScreen(viewModel: MonitorViewModel, onAvatar: () -> Unit, onBack: ()
                 viewModel.command { viewModel.runtime.updateSettings(settings.monitorSettings.copy(restRemindMs = value), settings.monitorRevision, it) }
             }
         }
+        SettingsEnhancements(viewModel, snapshot)
         if (snapshot.error != null) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
         TextButton(onBack) { Text(stringResource(R.string.back), style = ComposeTypography.labelLarge) }
     }

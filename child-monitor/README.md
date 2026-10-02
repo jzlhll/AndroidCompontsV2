@@ -2,6 +2,8 @@
 
 独立 Android/KMP 工程。Android Studio 打开本目录，不需要把模块加入外层组件仓库。环境为 JDK 17、Android SDK 36、最低 API 26，Wrapper 固定 Gradle 8.14.3。
 
+功能扩展分批交付状态见 [功能扩展](docs/功能扩展.md)。
+
 ## 实现范围
 
 `shared` 承载默认配置、Room/DataStore 持久化、应用级 MonitorRuntime、观测判定、提醒调度、统计评价及文件操作协调器。`androidApp` 承载单 Activity、Nav3 页面、CameraX/模型/编码/语音/播放适配器。

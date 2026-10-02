@@ -10,6 +10,9 @@ class SeatVisibilityTracker {
     private var lastUs: Long? = null
     private var reference: List<SceneCell>? = null
     val ready: Boolean get() = reference != null
+    val progress: Float get() = if (ready) 1f else candidateSinceUs?.let { start ->
+        ((lastUs ?: start) - start).toFloat() / (DefaultMonitorConfig.calibrationStableMs * 1_000)
+    } ?: 0f
 
     fun reset() {
         candidate = null

@@ -25,6 +25,9 @@ data class MonitorSettings(
     val awayConfirmMs: Long = 3_000,
     val maxAwayMs: Long = 120_000,
     val soundEnabled: Boolean = true,
+    val soundVolume: Float = .8f,
+    val targetDurationMs: Long = 0,
+    val targetAutoStop: Boolean = false,
     val repeatReminderMs: Long = 60_000,
     val reminderGapMs: Long = 10_000,
     val restRemindEnabled: Boolean = true,
@@ -32,6 +35,8 @@ data class MonitorSettings(
 ) {
     fun validate() {
         require(formatVersion == 1)
+        require(soundVolume.isFinite() && soundVolume in 0f..1f)
+        require(targetDurationMs == 0L || targetDurationMs in 60_000..28_800_000)
         require(listOf(headDownConfirmMs, headTiltConfirmMs, bodyLeanConfirmMs, awayConfirmMs,
             maxAwayMs, repeatReminderMs, reminderGapMs, restRemindMs).all { it in 1..86_400_000 })
         require(maxAwayMs > awayConfirmMs && maxAwayMs <= DefaultMonitorConfig.reasonableAwayMs)

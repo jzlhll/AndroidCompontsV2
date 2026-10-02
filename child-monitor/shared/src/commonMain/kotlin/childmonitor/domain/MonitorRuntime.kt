@@ -83,7 +83,13 @@ class MonitorRuntime(
                             lastStorageCheckUs = elapsed
                             if (files.availableBytes() < DefaultMonitorConfig.lowWaterBytes) timeout = EndReason.StorageLow
                         }
-                        scheduleReminder(elapsed, config)
+                        if (config.targetDurationMs > 0 && elapsed >= config.targetDurationMs * 1_000 && !state.targetReached) {
+                            publish { it.copy(targetReached = true, darkened = false) }
+                            lastInteractionUs = clock.monotonicUs()
+                            if (config.targetAutoStop) timeout = EndReason.TargetReached
+                            else if (config.soundEnabled) launchTerminalAudio("reminder_target", reminderJob)
+                        }
+                        if (timeout == null && terminalAudioJob?.isActive != true) scheduleReminder(elapsed, config)
                     }
                 } catch (e: CancellationException) { throw e }
                 catch (_: Exception) { timeout = EndReason.CaptureFailed }
@@ -130,7 +136,7 @@ class MonitorRuntime(
         lastInteractionUs = clock.monotonicUs()
         reminders.clear()
         publish { it.copy(runState = RunState.Starting, captureReleased = false, sessionId = id,
-            resultId = null, interruptionId = null, error = null, reminderId = null, emptySeatReady = false, needsGuardian = false, darkened = false) }
+            resultId = null, interruptionId = null, error = null, reminderId = null, emptySeatReady = false, targetReached = false, placementIssue = "region", placementProgress = 0f, needsGuardian = false, darkened = false) }
         startJob = scope.launch {
             try {
                 val path = mutex.withLock {
@@ -181,10 +187,10 @@ class MonitorRuntime(
         val speaker = reminderJob
         publish { it.copy(runState = RunState.Stopping, durationUs = end, darkened = false) }
         reminderJob?.cancel(); reminders.clear()
-        if (reason != EndReason.UserStop) engine?.interrupt(end, revisionId)
-        engine?.close(end, if (reason == EndReason.UserStop) "session_end" else "interrupted")
+        if (reason !in listOf(EndReason.UserStop, EndReason.TargetReached)) engine?.interrupt(end, revisionId)
+        engine?.close(end, if (reason in listOf(EndReason.UserStop, EndReason.TargetReached)) "session_end" else "interrupted")
         current = current?.copy(durationUs = end, endReason = reason.name, state = RunState.Stopping.name)
-        if (reason != EndReason.UserStop && state.settings?.monitorSettings?.soundEnabled == true) {
+        if (reason !in listOf(EndReason.UserStop, EndReason.TargetReached) && state.settings?.monitorSettings?.soundEnabled == true) {
             launchTerminalAudio(if (reason == EndReason.SystemLocked) "reminder_interruption_locked" else "reminder_interruption_generic", speaker)
         }
         scope.launch {
@@ -217,13 +223,13 @@ class MonitorRuntime(
                             else dao.updateMedia(media.copy(saveState = SaveState.RetryableFailure.name, recoverable = false, errorCode = "capture_not_finalized"))
                         }
                     }
-                    if (reason == EndReason.UserStop && state.settings?.monitorSettings?.soundEnabled == true &&
+                    if (reason in listOf(EndReason.UserStop, EndReason.TargetReached) && state.settings?.monitorSettings?.soundEnabled == true &&
                         session?.let { dao.media(it.id)?.saveState != SaveState.Saved.name } == true) launchTerminalAudio("reminder_save_failed", speaker)
                     records.invalidateRecords()
                     publish { it.copy(runState = RunState.Stopped, captureReleased = finish.released,
-                        resultId = if (reason == EndReason.UserStop) session?.id else null,
-                        interruptionId = if (reason != EndReason.UserStop) session?.id else null,
-                        error = if (!finish.released || session == null && reason != EndReason.UserStop) ErrorCode.CaptureFailed else null) }
+                        resultId = if (reason in listOf(EndReason.UserStop, EndReason.TargetReached)) session?.id else null,
+                        interruptionId = if (reason !in listOf(EndReason.UserStop, EndReason.TargetReached)) session?.id else null,
+                        error = if (!finish.released || session == null && reason !in listOf(EndReason.UserStop, EndReason.TargetReached)) ErrorCode.CaptureFailed else null) }
                 }
               }
             } catch (e: CancellationException) {
@@ -241,7 +247,7 @@ class MonitorRuntime(
         terminalAudioJob = scope.launch {
             try {
                 previous?.cancelAndJoin()
-                withTimeout(30_000.milliseconds) { audio.play(clip) {} }
+                withTimeout(30_000.milliseconds) { audio.play(clip, {}, snapshotFlow.value.settings?.monitorSettings?.soundVolume ?: .8f) }
             } catch (e: CancellationException) { if (e !is TimeoutCancellationException) throw e }
             catch (_: Exception) { /* 系统提醒与停止保存独立，播放失败不影响收尾。 */ }
         }
@@ -251,8 +257,8 @@ class MonitorRuntime(
         if (generation != token) return@withLock
         current = current?.copy(state = RunState.Stopped.name)
         publish { it.copy(runState = RunState.Stopped, captureReleased = released,
-            resultId = if (reason == EndReason.UserStop) current?.id else null,
-            interruptionId = if (reason != EndReason.UserStop) current?.id else null,
+            resultId = if (reason in listOf(EndReason.UserStop, EndReason.TargetReached)) current?.id else null,
+            interruptionId = if (reason !in listOf(EndReason.UserStop, EndReason.TargetReached)) current?.id else null,
             error = ErrorCode.OperationFailed, darkened = false) }
         try {
             withTimeout(2_000.milliseconds) {
@@ -309,7 +315,8 @@ class MonitorRuntime(
         }
         reminders.playing?.let { if (!reminders.stillValid(it, feedback)) reminderJob?.cancel() }
         publish { it.copy(runState = if (feedback.calibration != null) RunState.Monitoring else RunState.Preparing,
-            seated = feedback.seated, emptySeatReady = engine.emptySeatReady, away = feedback.away, unclear = feedback.unclear, needsGuardian = feedback.needsGuardian) }
+            seated = feedback.seated, emptySeatReady = engine.emptySeatReady,
+            placementIssue = engine.placementIssue, placementProgress = engine.placementProgress, away = feedback.away, unclear = feedback.unclear, needsGuardian = feedback.needsGuardian) }
         val nextFacts = engine.facts()
         if (nextFacts.events.size != previousFacts.events.size || nextFacts.coverage.size != previousFacts.coverage.size ||
             previousFeedback.activeKinds != feedback.activeKinds || feedback.calibration != previousCalibration) checkpoint(time)
@@ -355,6 +362,11 @@ class MonitorRuntime(
         val saved = settings.preferences.update(patch, expectedRevision)
         publish { it.copy(settings = checkNotNull(it.settings).copy(preferences = saved)) }
     }
+    suspend fun previewReminder(clip: String, requestId: String) = command(requestId) {
+        checkIdle()
+        require(clip in listOf("reminder_head_down", "reminder_away", "reminder_rest"))
+        launchTerminalAudio(clip, reminderJob)
+    }
     suspend fun retrySave(id: String, requestId: String) = command(requestId) {
         checkIdle()
         publish { it.copy(operationBusy = true) }
@@ -391,7 +403,7 @@ class MonitorRuntime(
     suspend fun claimCelebration(id: String, requestId: String) = command(requestId) {
         val session = dao.session(id)
         val result = records.readResult(id)
-        session?.endReason == EndReason.UserStop.name && session.durationUs > DefaultMonitorConfig.evaluationMinUs &&
+        session != null && session.endReason in listOf(EndReason.UserStop.name, EndReason.TargetReached.name) && session.durationUs > DefaultMonitorConfig.evaluationMinUs &&
             result?.media?.saveState == SaveState.Saved.name && dao.markCelebrated(id) == 1
     }
     suspend fun consumeResult(requestId: String) = command(requestId) { publish { it.copy(resultId = null) } }
@@ -441,7 +453,7 @@ class MonitorRuntime(
                     if (started) delay(3_000.milliseconds)
                     started
                 } else withTimeout(30_000.milliseconds) {
-                    audio.play(kind) {
+                    audio.play(kind, {
                         val startedUs = clock.monotonicUs()
                         scope.launch {
                             mutex.withLock {
@@ -458,7 +470,7 @@ class MonitorRuntime(
                                 }
                             }
                         }
-                    }
+                    }, config.soundVolume)
                 }
                 mutex.withLock {
                     completed = true
