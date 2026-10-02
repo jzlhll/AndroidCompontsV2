@@ -1791,6 +1791,321 @@
       "platforms": {
         "android": "storage_retention_save"
       }
+    },
+    {
+      "id": "common.childMonitor.record_edit",
+      "values": {
+        "zh-Hans": "名称与备注"
+      },
+      "platforms": {
+        "android": "record_edit"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_name",
+      "values": {
+        "zh-Hans": "记录名称（最多 80 字）"
+      },
+      "platforms": {
+        "android": "record_name"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_note",
+      "values": {
+        "zh-Hans": "备注（最多 1000 字）"
+      },
+      "platforms": {
+        "android": "record_note"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_filter",
+      "values": {
+        "zh-Hans": "筛选记录"
+      },
+      "platforms": {
+        "android": "record_filter"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_active",
+      "values": {
+        "zh-Hans": "正在按所选条件筛选"
+      },
+      "platforms": {
+        "android": "filter_active"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_from",
+      "values": {
+        "zh-Hans": "起始日期（YYYY-MM-DD）"
+      },
+      "platforms": {
+        "android": "filter_from"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_to",
+      "values": {
+        "zh-Hans": "结束日期（YYYY-MM-DD）"
+      },
+      "platforms": {
+        "android": "filter_to"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_query",
+      "values": {
+        "zh-Hans": "搜索名称或备注"
+      },
+      "platforms": {
+        "android": "filter_query"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_normal",
+      "values": {
+        "zh-Hans": "正常结束"
+      },
+      "platforms": {
+        "android": "filter_normal"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_interrupted",
+      "values": {
+        "zh-Hans": "中断记录"
+      },
+      "platforms": {
+        "android": "filter_interrupted"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_pending",
+      "values": {
+        "zh-Hans": "待保存"
+      },
+      "platforms": {
+        "android": "filter_pending"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_invalid",
+      "values": {
+        "zh-Hans": "请填写有效日期范围，起始日期不能晚于结束日期。"
+      },
+      "platforms": {
+        "android": "filter_invalid"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_clear",
+      "values": {
+        "zh-Hans": "清除筛选"
+      },
+      "platforms": {
+        "android": "filter_clear"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_calendar",
+      "values": {
+        "zh-Hans": "选择日期范围"
+      },
+      "platforms": {
+        "android": "filter_calendar"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_title",
+      "values": {
+        "zh-Hans": "每日汇总与趋势"
+      },
+      "platforms": {
+        "android": "statistics_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_range",
+      "values": {
+        "zh-Hans": "最近 %1$d 天"
+      },
+      "platforms": {
+        "android": "statistics_range"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_day",
+      "values": {
+        "zh-Hans": "%1$s · %2$d 次 · %3$s"
+      },
+      "platforms": {
+        "android": "statistics_day"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_coverage",
+      "values": {
+        "zh-Hans": "有效识别 %1$d%% · 在座 %2$s · 离座 %3$d 次"
+      },
+      "platforms": {
+        "android": "statistics_coverage"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_item",
+      "values": {
+        "zh-Hans": "%1$s：异常占比 %2$d%%（有效 %3$s）"
+      },
+      "platforms": {
+        "android": "statistics_item"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_insufficient",
+      "values": {
+        "zh-Hans": "样本不足，仅展示时长，不作趋势比较"
+      },
+      "platforms": {
+        "android": "statistics_insufficient"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_no_data",
+      "values": {
+        "zh-Hans": "这段时间还没有监控记录"
+      },
+      "platforms": {
+        "android": "statistics_no_data"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_explain",
+      "values": {
+        "zh-Hans": "按每次记录开始时的本地日期分组。姿态占比以对应项目的有效识别时长为分母；单日有效时长不足 10 分钟时不展示比例。缺失数据不算正常，家长标记不改变原始评价。"
+      },
+      "platforms": {
+        "android": "statistics_explain"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_video",
+      "values": {
+        "zh-Hans": "导出录像"
+      },
+      "platforms": {
+        "android": "export_video"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_card",
+      "values": {
+        "zh-Hans": "分享统计卡片"
+      },
+      "platforms": {
+        "android": "export_card"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_success",
+      "values": {
+        "zh-Hans": "录像已导出"
+      },
+      "platforms": {
+        "android": "export_success"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_failed",
+      "values": {
+        "zh-Hans": "导出未完成，请重试"
+      },
+      "platforms": {
+        "android": "export_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_notice",
+      "values": {
+        "zh-Hans": "导出的录像含有孩子影像，请自行选择保存位置；统计卡片不包含录像。"
+      },
+      "platforms": {
+        "android": "export_notice"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_title",
+      "values": {
+        "zh-Hans": "本次监控统计"
+      },
+      "platforms": {
+        "android": "report_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_date",
+      "values": {
+        "zh-Hans": "日期：%1$s"
+      },
+      "platforms": {
+        "android": "report_date"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_duration",
+      "values": {
+        "zh-Hans": "监控时长：%1$s"
+      },
+      "platforms": {
+        "android": "report_duration"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_seated",
+      "values": {
+        "zh-Hans": "在座时长：%1$s"
+      },
+      "platforms": {
+        "android": "report_seated"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_away",
+      "values": {
+        "zh-Hans": "离座：%1$d 次"
+      },
+      "platforms": {
+        "android": "report_away"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_partial",
+      "values": {
+        "zh-Hans": "部分数据不可评价"
+      },
+      "platforms": {
+        "android": "report_partial"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_local",
+      "values": {
+        "zh-Hans": "本机生成 · 不含录像"
+      },
+      "platforms": {
+        "android": "report_local"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_share",
+      "values": {
+        "zh-Hans": "分享统计卡片"
+      },
+      "platforms": {
+        "android": "report_share"
+      }
     }
   ]
 }

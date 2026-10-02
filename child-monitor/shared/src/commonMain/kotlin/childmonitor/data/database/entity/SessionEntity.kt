@@ -18,5 +18,7 @@ data class SessionEntity(
     @ColumnInfo(name = "interruption_acknowledged") val interruptionAcknowledged: Boolean = false,
     @ColumnInfo(name = "celebration_shown") val celebrationShown: Boolean = false,
     @ColumnInfo(name = "initial_config_id") val initialConfigId: String,
+    @ColumnInfo(name = "title", defaultValue = "''") val title: String = "",
+    @ColumnInfo(name = "note", defaultValue = "''") val note: String = "",
     @ColumnInfo(name = "last_checkpoint_us") val lastCheckpointUs: Long = 0,
 )

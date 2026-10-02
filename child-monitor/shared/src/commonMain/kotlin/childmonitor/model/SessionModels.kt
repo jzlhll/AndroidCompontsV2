@@ -61,6 +61,18 @@ data class SessionManifest(
 data class StorageOverview(val usedBytes: Long, val availableBytes: Long, val pendingCount: Int)
 
 data class MediaInfo(val durationUs: Long, val width: Int, val height: Int)
+data class RecordFilter(val fromDate: String? = null, val toDate: String? = null, val status: String = "all", val query: String = "") {
+    fun validate() {
+        fromDate?.let { kotlinx.datetime.LocalDate.parse(it) }
+        toDate?.let { kotlinx.datetime.LocalDate.parse(it) }
+        require(fromDate == null || toDate == null || fromDate <= toDate)
+        require(status in listOf("all", "normal", "interrupted", "pending", "metadata"))
+        require(query.length <= 100)
+    }
+}
+data class DailyStatistics(val date: String, val sessions: Int, val durationUs: Long, val observedUs: Long,
+    val seatedUs: Long, val awayCount: Int, val items: List<ItemStatistics>)
+
 data class SessionCursor(val startedWallUs: Long, val id: String)
 data class SessionPage<T>(val items: List<T>, val nextCursor: SessionCursor?)
 

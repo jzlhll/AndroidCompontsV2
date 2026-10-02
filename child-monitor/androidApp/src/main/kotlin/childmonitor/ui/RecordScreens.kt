@@ -48,6 +48,7 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
     }
     DisposableEffect(viewModel, id) { onDispose { viewModel.dismissCelebration() } }
     LaunchedEffect(state.loaded, state.result) { if (state.loaded && state.result == null && !state.failed) onDeleted(setOf(id)) }
+    var editing by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
     var purging by remember { mutableStateOf(false) }
     Column(modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -58,6 +59,10 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
         if (state.loaded && result == null) Text(stringResource(R.string.record_missing), style = ComposeTypography.bodyMedium)
         if (result != null) {
             val media = result.media
+            if (result.session.title.isNotBlank()) Text(result.session.title, style = ComposeTypography.titleLarge)
+            if (result.session.note.isNotBlank()) Text(result.session.note, style = ComposeTypography.bodyMedium)
+            TextButton({ editing = true }, enabled = !state.busy) { Text(stringResource(R.string.record_edit), style = ComposeTypography.labelLarge) }
+            ExportActions(result)
             Text(if (state.busy) stringResource(R.string.media_saving) else saveStateText(media?.saveState), style = ComposeTypography.titleMedium)
             result.session.endReason?.takeIf { it != "UserStop" }?.let {
                 Text(stringResource(endReasonText(it)), style = ComposeTypography.bodyMedium)
@@ -110,6 +115,8 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
         if (state.failed) TextButton({ viewModel.loadResult(id) }, enabled = !state.busy) { Text(stringResource(R.string.retry), style = ComposeTypography.labelLarge) }
         Button(onDone) { Text(stringResource(R.string.done), style = ComposeTypography.labelLarge) }
     }
+    if (editing) state.result?.let { result -> RecordNoteDialog(result.session.title, result.session.note, state.busy, state.operationFailed,
+        { editing = false }, { title, note -> viewModel.saveNote(id, title, note) { editing = false } }) }
     if (purging) PurgeConfirmation({ purging = false }, { purging = false; viewModel.purge(setOf(id), null) })
     if (deleting) DeleteConfirmation(onCancel = { deleting = false }, onConfirm = {
         deleting = false
@@ -119,10 +126,11 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
 
 @Composable
 fun AlbumScreen(viewModel: RecordViewModel, app: MonitorApplication, cleanup: Boolean, protectedId: String?,
-    onOpen: (String, Boolean) -> Unit, onDone: () -> Unit, onDeleted: (Set<String>) -> Unit,
+    onOpen: (String, Boolean) -> Unit, onDone: () -> Unit, onStatistics: () -> Unit, onDeleted: (Set<String>) -> Unit,
     modifier: Modifier = Modifier) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     var purging by remember { mutableStateOf(false) }
+    var filtering by remember { mutableStateOf(false) }
     var management by rememberSaveable { mutableStateOf(cleanup) }
     var deleting by remember { mutableStateOf(false) }
     val grid = rememberLazyGridState()
@@ -134,6 +142,9 @@ fun AlbumScreen(viewModel: RecordViewModel, app: MonitorApplication, cleanup: Bo
     }
     Column(modifier.fillMaxSize().safeDrawingPadding().padding(16.dp)) {
         Text(stringResource(if (cleanup) R.string.cleanup else R.string.album_title), style = ComposeTypography.headlineSmall)
+        Row { TextButton({ filtering = true }, enabled = !state.busy) { Text(stringResource(R.string.record_filter), style = ComposeTypography.labelLarge) }
+            TextButton(onStatistics) { Text(stringResource(R.string.statistics_title), style = ComposeTypography.labelLarge) } }
+        if (state.filter != childmonitor.model.RecordFilter()) Text(stringResource(R.string.filter_active), style = ComposeTypography.labelSmall)
         Row {
             TextButton({ management = !management; if (!management) viewModel.clearSelection() }) { Text(stringResource(if (management) R.string.cancel else R.string.manage), style = ComposeTypography.labelLarge) }
             if (management) TextButton({ viewModel.selectAll(protectedId) }, enabled = !state.busy) { Text(stringResource(R.string.select_all), style = ComposeTypography.labelLarge) }
@@ -152,6 +163,7 @@ fun AlbumScreen(viewModel: RecordViewModel, app: MonitorApplication, cleanup: Bo
                         onClick = { if (management) { if (!protected) viewModel.select(id) } else onOpen(id, entry.media?.saveState == SaveState.Saved.name) },
                         onLongClick = { management = true; if (!protected) viewModel.select(id) })) {
                         Thumbnail(app, entry.media?.relativePath, id, entry.media?.saveState == SaveState.Saved.name)
+                        if (entry.session.title.isNotBlank()) Text(entry.session.title, style = ComposeTypography.labelMedium, maxLines = 1)
                         Text(formatDuration(entry.session.durationUs), style = ComposeTypography.labelMedium, modifier = Modifier.padding(6.dp))
                         Text(if (protected) stringResource(R.string.protected_record) else saveStateText(entry.media?.saveState), style = ComposeTypography.labelSmall, modifier = Modifier.padding(horizontal = 6.dp))
                         if (management) Checkbox(id in state.selected, { if (!protected) viewModel.select(id) }, enabled = !protected && !state.busy)
@@ -168,6 +180,7 @@ fun AlbumScreen(viewModel: RecordViewModel, app: MonitorApplication, cleanup: Bo
         }
         TextButton(onDone) { Text(stringResource(if (cleanup) R.string.cleanup_done else R.string.back_home), style = ComposeTypography.labelLarge) }
     }
+    if (filtering) RecordFilterDialog(state.filter, { filtering = false }, { viewModel.applyFilter(it); filtering = false })
     if (purging) PurgeConfirmation({ purging = false }, { purging = false; viewModel.purge(state.selected, protectedId) })
     if (deleting) DeleteConfirmation(onCancel = { deleting = false }, onConfirm = {
         deleting = false

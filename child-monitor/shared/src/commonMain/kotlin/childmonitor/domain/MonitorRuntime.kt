@@ -363,6 +363,12 @@ class MonitorRuntime(
         val saved = settings.preferences.update(patch, expectedRevision)
         publish { it.copy(settings = checkNotNull(it.settings).copy(preferences = saved)) }
     }
+    suspend fun updateNote(id: String, title: String, note: String, requestId: String) = command(requestId) {
+        checkIdle()
+        require(title.length <= 80 && note.length <= 1_000)
+        check(dao.updateNote(id, title.trim(), note.trim()) == 1)
+        records.invalidateRecords()
+    }
     suspend fun storageOverview(requestId: String) = command(requestId) {
         checkIdle()
         StorageOverview(files.usedBytes(), files.availableBytes(), dao.pendingMediaCount())

@@ -42,8 +42,19 @@ interface MonitorDao {
     suspend fun unfinished(): List<SessionEntity>
     @Query("SELECT * FROM sessions WHERE end_reason IS NOT NULL AND end_reason NOT IN ('UserStop', 'TargetReached') AND interruption_acknowledged = 0 ORDER BY started_wall_us DESC LIMIT 1")
     suspend fun interruption(): SessionEntity?
-    @Query("SELECT * FROM sessions WHERE (:beforeTime IS NULL OR started_wall_us < :beforeTime OR (started_wall_us = :beforeTime AND id < :beforeId)) ORDER BY started_wall_us DESC, id DESC LIMIT :limit")
-    suspend fun sessions(beforeTime: Long?, beforeId: String?, limit: Int): List<SessionEntity>
+    @Query("""SELECT sessions.* FROM sessions LEFT JOIN media ON sessions.id = media.session_id
+        WHERE (:beforeTime IS NULL OR started_wall_us < :beforeTime OR (started_wall_us = :beforeTime AND sessions.id < :beforeId))
+        AND (:fromDate IS NULL OR local_date >= :fromDate) AND (:toDate IS NULL OR local_date <= :toDate)
+        AND (:status = 'all' OR (:status = 'normal' AND end_reason IN ('UserStop','TargetReached'))
+          OR (:status = 'interrupted' AND end_reason NOT IN ('UserStop','TargetReached'))
+          OR (:status = 'pending' AND save_state IN ('Finalizing','RetryableFailure')) OR (:status = 'metadata' AND save_state = 'MetadataOnly'))
+        AND (:text = '' OR instr(title, :text) > 0 OR instr(note, :text) > 0)
+        ORDER BY started_wall_us DESC, sessions.id DESC LIMIT :limit""")
+    suspend fun sessions(beforeTime: Long?, beforeId: String?, limit: Int, fromDate: String?, toDate: String?, status: String, text: String): List<SessionEntity>
+    @Query("SELECT * FROM sessions WHERE state = 'Stopped' AND local_date BETWEEN :fromDate AND :toDate ORDER BY local_date, started_wall_us")
+    suspend fun statisticsSessions(fromDate: String, toDate: String): List<SessionEntity>
+    @Query("UPDATE sessions SET title = :title, note = :note WHERE id = :id AND state = 'Stopped'")
+    suspend fun updateNote(id: String, title: String, note: String): Int
     @Query("SELECT id FROM sessions WHERE state = 'Stopped' AND (:protectedId IS NULL OR id != :protectedId)")
     suspend fun deletableIds(protectedId: String?): List<String>
     @Query("DELETE FROM sessions WHERE id = :id") suspend fun deleteSession(id: String)

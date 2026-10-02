@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 
 @Serializable data object HomeKey : NavKey
 @Serializable data object CapabilityProbeKey : NavKey
+@Serializable data object StatisticsKey : NavKey
 @Serializable data object StorageKey : NavKey
 @Serializable data object SettingsKey : NavKey
 @Serializable data class AvatarKey(val fromSettings: Boolean) : NavKey
@@ -81,6 +82,10 @@ private fun MonitorNavigation(app: MonitorApplication) {
                 val model = viewModel { MonitorViewModel(app.runtime) }
                 SettingsScreen(model, { go(AvatarKey(true)) }, { back() }, { go(StorageKey) })
             }
+            entry<StatisticsKey> {
+                val model = viewModel { RecordViewModel(app.runtime) }
+                StatisticsScreen(model, { back() })
+            }
             entry<StorageKey> {
                 val model = viewModel { RecordViewModel(app.runtime) }
                 StorageScreen(model, { go(AlbumKey(cleanup = true)) }, { back() })
@@ -94,7 +99,7 @@ private fun MonitorNavigation(app: MonitorApplication) {
                 AlbumScreen(model, app, key.cleanup, key.protectedId,
                     onOpen = { id, saved -> go(if (saved) PlaybackKey(id) else ResultKey(id)) },
                     onDone = { back(); model.runtime.let { runtime -> scope.launch { runtime.refreshStorage(java.util.UUID.randomUUID().toString()) } } },
-                    onDeleted = ::deleted)
+                    onStatistics = { go(StatisticsKey) }, onDeleted = ::deleted)
             }
             entry<ResultKey> { key ->
                 val model = viewModel { RecordViewModel(app.runtime) }
