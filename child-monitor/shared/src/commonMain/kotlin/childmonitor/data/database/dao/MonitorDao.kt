@@ -24,6 +24,10 @@ interface MonitorDao {
     @Upsert suspend fun putReminder(value: ReminderEntity)
     @Upsert suspend fun putIntent(value: OperationIntentEntity)
 
+    @Query("SELECT sessions.* FROM sessions JOIN media ON sessions.id = media.session_id WHERE sessions.state = 'Stopped' AND media.save_state = 'Saved' AND sessions.started_wall_us < :beforeUs ORDER BY sessions.started_wall_us, sessions.id")
+    suspend fun expiredVideos(beforeUs: Long): List<SessionEntity>
+    @Query("SELECT COUNT(*) FROM media WHERE save_state IN ('Finalizing', 'RetryableFailure')")
+    suspend fun pendingMediaCount(): Int
     @Query("SELECT * FROM sessions WHERE id = :id") suspend fun session(id: String): SessionEntity?
     @Query("SELECT * FROM media WHERE session_id = :id") suspend fun media(id: String): MediaEntity?
     @Query("SELECT * FROM evaluations WHERE session_id = :id") suspend fun evaluation(id: String): EvaluationEntity?

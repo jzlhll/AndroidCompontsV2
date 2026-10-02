@@ -33,6 +33,7 @@ class UserPreferencesRepository(private val store: DataStore<Preferences>) {
                 preferencesRevision = old.preferencesRevision + 1,
                 avatarId = patch.avatarId ?: old.avatarId,
                 darkenAfterMs = patch.darkenAfterMs ?: old.darkenAfterMs,
+                retentionDays = patch.retentionDays ?: old.retentionDays,
             ).also(UserPreferences::validate)
             values[key] = Json.encodeToString(updated)
             saved = updated

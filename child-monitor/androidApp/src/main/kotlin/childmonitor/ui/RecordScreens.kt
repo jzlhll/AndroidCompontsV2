@@ -49,11 +49,12 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
     DisposableEffect(viewModel, id) { onDispose { viewModel.dismissCelebration() } }
     LaunchedEffect(state.loaded, state.result) { if (state.loaded && state.result == null && !state.failed) onDeleted(setOf(id)) }
     var deleting by remember { mutableStateOf(false) }
+    var purging by remember { mutableStateOf(false) }
     Column(modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(stringResource(R.string.result_title), style = ComposeTypography.headlineSmall)
         if (state.celebration) Celebration(Modifier.fillMaxWidth().height(80.dp))
         val result = state.result
-        if (state.failed) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
+        if (state.failed || state.operationFailed) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
         if (state.loaded && result == null) Text(stringResource(R.string.record_missing), style = ComposeTypography.bodyMedium)
         if (result != null) {
             val media = result.media
@@ -103,11 +104,13 @@ fun ResultScreen(id: String, viewModel: RecordViewModel, onDone: () -> Unit, onP
             if (media?.saveState == SaveState.Unrecoverable.name) Button({ viewModel.keep(id, onDone) }, enabled = !state.busy) {
                 Text(stringResource(R.string.keep_statistics), style = ComposeTypography.labelLarge)
             }
+            if (media?.saveState == SaveState.Saved.name) TextButton({ purging = true }, enabled = !state.busy) { Text(stringResource(R.string.purge_video), style = ComposeTypography.labelLarge) }
             TextButton({ deleting = true }, enabled = !state.busy) { Text(stringResource(R.string.discard_record), style = ComposeTypography.labelLarge) }
         }
         if (state.failed) TextButton({ viewModel.loadResult(id) }, enabled = !state.busy) { Text(stringResource(R.string.retry), style = ComposeTypography.labelLarge) }
         Button(onDone) { Text(stringResource(R.string.done), style = ComposeTypography.labelLarge) }
     }
+    if (purging) PurgeConfirmation({ purging = false }, { purging = false; viewModel.purge(setOf(id), null) })
     if (deleting) DeleteConfirmation(onCancel = { deleting = false }, onConfirm = {
         deleting = false
         viewModel.delete(setOf(id), null, onDeleted)
@@ -119,6 +122,7 @@ fun AlbumScreen(viewModel: RecordViewModel, app: MonitorApplication, cleanup: Bo
     onOpen: (String, Boolean) -> Unit, onDone: () -> Unit, onDeleted: (Set<String>) -> Unit,
     modifier: Modifier = Modifier) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+    var purging by remember { mutableStateOf(false) }
     var management by rememberSaveable { mutableStateOf(cleanup) }
     var deleting by remember { mutableStateOf(false) }
     val grid = rememberLazyGridState()
@@ -135,7 +139,7 @@ fun AlbumScreen(viewModel: RecordViewModel, app: MonitorApplication, cleanup: Bo
             if (management) TextButton({ viewModel.selectAll(protectedId) }, enabled = !state.busy) { Text(stringResource(R.string.select_all), style = ComposeTypography.labelLarge) }
             TextButton({ viewModel.refreshAlbum(protectedId) }, enabled = !state.busy) { Text(stringResource(R.string.refresh), style = ComposeTypography.labelLarge) }
         }
-        if (state.failed) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
+        if (state.failed || state.operationFailed) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
         if (state.loaded && state.items.isEmpty()) Text(stringResource(R.string.album_empty), style = ComposeTypography.bodyLarge)
         LazyVerticalGrid(GridCells.Fixed(3), Modifier.weight(1f), state = grid,
             horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -158,11 +162,13 @@ fun AlbumScreen(viewModel: RecordViewModel, app: MonitorApplication, cleanup: Bo
                 TextButton({ viewModel.loadAlbum() }, enabled = !state.busy) { Text(stringResource(R.string.load_more), style = ComposeTypography.labelLarge) }
             }
         }
+        if (management) TextButton({ purging = true }, enabled = state.selected.isNotEmpty() && !state.busy) { Text(stringResource(R.string.purge_video), style = ComposeTypography.labelLarge) }
         if (management) Button({ deleting = true }, enabled = state.selected.isNotEmpty() && !state.busy) {
             Text(stringResource(R.string.delete_count, state.selected.size), style = ComposeTypography.labelLarge)
         }
         TextButton(onDone) { Text(stringResource(if (cleanup) R.string.cleanup_done else R.string.back_home), style = ComposeTypography.labelLarge) }
     }
+    if (purging) PurgeConfirmation({ purging = false }, { purging = false; viewModel.purge(state.selected, protectedId) })
     if (deleting) DeleteConfirmation(onCancel = { deleting = false }, onConfirm = {
         deleting = false
         viewModel.delete(state.selected, protectedId, onDeleted)
@@ -206,6 +212,7 @@ fun DeleteConfirmation(onCancel: () -> Unit, onConfirm: () -> Unit) {
 fun saveStateText(state: String?) = stringResource(when (state) {
     "Saved" -> R.string.media_saved
     "Finalizing", "RetryableFailure" -> R.string.media_pending
+    "MetadataOnly" -> R.string.statistics_only
     else -> R.string.media_unavailable
 })
 

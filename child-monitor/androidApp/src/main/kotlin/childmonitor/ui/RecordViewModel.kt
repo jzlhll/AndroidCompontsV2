@@ -20,8 +20,10 @@ data class RecordUiState(
     val loaded: Boolean = false,
     val busy: Boolean = false,
     val failed: Boolean = false,
+    val operationFailed: Boolean = false,
     val selected: Set<String> = emptySet(),
     val celebration: Boolean = false,
+    val storage: childmonitor.model.StorageOverview? = null,
 )
 
 /** 独立管理记录查询与选择状态，失败时保留已显示的数据。 */
@@ -45,6 +47,19 @@ class RecordViewModel(val runtime: MonitorRuntime) : ViewModel() {
             mutableStateFlow.value = stateFlow.value.copy(result = result, loaded = true,
                 celebration = result != null && celebration)
         }
+    }
+    fun loadStorage() {
+        if (stateFlow.value.busy) { pendingReload = { loadStorage() }; return }
+        task {
+        val result = runtime.storageOverview(UUID.randomUUID().toString())
+        if (result is CommandResult.Success) mutableStateFlow.value = stateFlow.value.copy(storage = result.data)
+        else mutableStateFlow.value = stateFlow.value.copy(failed = true)
+    }
+    }
+    fun purge(ids: Set<String>, protectedId: String?) = task {
+        val result = runtime.purgeVideos(ids.toList(), protectedId, UUID.randomUUID().toString())
+        val failed = (result as? CommandResult.Success<List<String>>)?.data?.toSet() ?: ids
+        mutableStateFlow.value = stateFlow.value.copy(selected = failed, operationFailed = failed.isNotEmpty())
     }
     fun dismissCelebration() { mutableStateFlow.value = stateFlow.value.copy(celebration = false) }
     fun keep(id: String, onDone: () -> Unit) = task {

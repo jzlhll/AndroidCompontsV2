@@ -58,6 +58,8 @@ data class SessionManifest(
     val writtenAtUs: Long,
 )
 
+data class StorageOverview(val usedBytes: Long, val availableBytes: Long, val pendingCount: Int)
+
 data class MediaInfo(val durationUs: Long, val width: Int, val height: Int)
 data class SessionCursor(val startedWallUs: Long, val id: String)
 data class SessionPage<T>(val items: List<T>, val nextCursor: SessionCursor?)

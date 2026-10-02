@@ -27,6 +27,15 @@ class AndroidFileStorage(context: Context) : FileStorage {
         require(file.path.startsWith(root.canonicalPath + File.separator))
         return file
     }
+    override suspend fun usedBytes(): Long = withContext(Dispatchers.IO) {
+        root.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    }
+    override suspend fun deleteVideo(relativePath: String, stagingPath: String, sessionId: String) = withContext(Dispatchers.IO) {
+        require(relativePath.endsWith("/$sessionId/video.mp4") && stagingPath.endsWith("/$sessionId/recording.pending.mp4"))
+        listOf(resolve(relativePath), resolve(stagingPath), File(thumbnails, "$sessionId.jpg")).forEach {
+            check(!it.exists() || it.delete()) { "Video deletion failed" }
+        }
+    }
     override suspend fun availableBytes(): Long = withContext(Dispatchers.IO) {
         StatFs(root.parentFile!!.absolutePath).availableBytes
     }

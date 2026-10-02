@@ -101,7 +101,7 @@ class MonitorRuntime(
     suspend fun initialize(requestId: String) = command(requestId) {
         check(snapshotFlow.value.runState in listOf(RunState.Idle, RunState.Stopped))
         val config = settings.read()
-        val recoveryFailures = coordinator.recover()
+        val recoveryFailures = coordinator.recover() + applyRetention(config.preferences.retentionDays)
         records.invalidateRecords()
         val interruptionId = dao.interruption()?.id
         publish { it.copy(ready = true, settings = config, interruptionId = interruptionId, error = if (recoveryFailures == 0) null else ErrorCode.OperationFailed) }
@@ -119,6 +119,7 @@ class MonitorRuntime(
     suspend fun start(requestId: String) = command(requestId) {
         val state = snapshotFlow.value
         check(state.ready && state.captureReleased && !state.operationBusy && state.runState in listOf(RunState.Idle, RunState.Stopped))
+        applyRetention(checkNotNull(state.settings).preferences.retentionDays)
         if (files.availableBytes() < DefaultMonitorConfig.estimatedSessionBytes) {
             publish { it.copy(error = ErrorCode.StorageLow) }
             throw CommandFailure(ErrorCode.StorageLow)
@@ -361,6 +362,36 @@ class MonitorRuntime(
         checkIdle()
         val saved = settings.preferences.update(patch, expectedRevision)
         publish { it.copy(settings = checkNotNull(it.settings).copy(preferences = saved)) }
+    }
+    suspend fun storageOverview(requestId: String) = command(requestId) {
+        checkIdle()
+        StorageOverview(files.usedBytes(), files.availableBytes(), dao.pendingMediaCount())
+    }
+    suspend fun purgeVideos(ids: List<String>, protectedId: String?, requestId: String) = command(requestId) {
+        checkIdle()
+        val failed = mutableListOf<String>()
+        for (id in ids.distinct()) {
+            try {
+                require(id != protectedId)
+                playback.releaseSession(id)
+                coordinator.purgeVideo(id, requestId)
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { failed += id }
+        }
+        records.invalidateRecords()
+        failed
+    }
+    private suspend fun applyRetention(days: Int): Int {
+        if (days == 0) return 0
+        var failures = 0
+        val cutoff = clock.wallUs() - days * 86_400_000_000L
+        for (session in dao.expiredVideos(cutoff)) {
+            try { playback.releaseSession(session.id); coordinator.purgeVideo(session.id, clock.newId()) }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { failures++ }
+        }
+        records.invalidateRecords()
+        return failures
     }
     suspend fun previewReminder(clip: String, requestId: String) = command(requestId) {
         checkIdle()

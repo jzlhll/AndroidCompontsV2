@@ -1692,6 +1692,105 @@
       "platforms": {
         "android": "target_save"
       }
+    },
+    {
+      "id": "common.childMonitor.storage_title",
+      "values": {
+        "zh-Hans": "存储管理"
+      },
+      "platforms": {
+        "android": "storage_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_overview",
+      "values": {
+        "zh-Hans": "本地数据占用 %1$s，设备可用 %2$s；待恢复录像 %3$d 条"
+      },
+      "platforms": {
+        "android": "storage_overview"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_retention",
+      "values": {
+        "zh-Hans": "录像保留期限"
+      },
+      "platforms": {
+        "android": "storage_retention"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_forever",
+      "values": {
+        "zh-Hans": "不自动清理"
+      },
+      "platforms": {
+        "android": "retention_forever"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_days",
+      "values": {
+        "zh-Hans": "%1$d 天"
+      },
+      "platforms": {
+        "android": "retention_days"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_explain",
+      "values": {
+        "zh-Hans": "默认不自动清理。启用后，在下次打开应用或开始监控前清理超期且已保存的录像，统计保留；待保存和待恢复记录跳过。"
+      },
+      "platforms": {
+        "android": "retention_explain"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_confirm",
+      "values": {
+        "zh-Hans": "启用后，超期录像将按所选期限自动删除且无法恢复，统计保留。是否启用？"
+      },
+      "platforms": {
+        "android": "retention_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.purge_video",
+      "values": {
+        "zh-Hans": "只删除录像，保留统计"
+      },
+      "platforms": {
+        "android": "purge_video"
+      }
+    },
+    {
+      "id": "common.childMonitor.purge_confirm",
+      "values": {
+        "zh-Hans": "删除所选记录的已保存录像？事件、评价和备注保留，录像无法恢复。待保存或待恢复项不会删除。"
+      },
+      "platforms": {
+        "android": "purge_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_only",
+      "values": {
+        "zh-Hans": "仅统计记录"
+      },
+      "platforms": {
+        "android": "statistics_only"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_retention_save",
+      "values": {
+        "zh-Hans": "确认保留期限"
+      },
+      "platforms": {
+        "android": "storage_retention_save"
+      }
     }
   ]
 }

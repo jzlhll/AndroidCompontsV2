@@ -189,4 +189,15 @@
     <string name="help_body">固定设备并保证头部、双肩入镜；先采集空座位，再入座校准。\n识别不确定时请检查光线、遮挡和多人干扰，必要时重新定位。\n应用内暗屏仍在工作，系统锁屏或切到后台会结束本次监控。\n内容保存在本机，卸载可能丢失记录；需要保留时先导出。</string>
     <string name="app_version">版本 %1$s</string>
     <string name="target_save">保存目标时长</string>
+    <string name="storage_title">存储管理</string>
+    <string name="storage_overview">本地数据占用 %1$s，设备可用 %2$s；待恢复录像 %3$d 条</string>
+    <string name="storage_retention">录像保留期限</string>
+    <string name="retention_forever">不自动清理</string>
+    <string name="retention_days">%1$d 天</string>
+    <string name="retention_explain">默认不自动清理。启用后，在下次打开应用或开始监控前清理超期且已保存的录像，统计保留；待保存和待恢复记录跳过。</string>
+    <string name="retention_confirm">启用后，超期录像将按所选期限自动删除且无法恢复，统计保留。是否启用？</string>
+    <string name="purge_video">只删除录像，保留统计</string>
+    <string name="purge_confirm">删除所选记录的已保存录像？事件、评价和备注保留，录像无法恢复。待保存或待恢复项不会删除。</string>
+    <string name="statistics_only">仅统计记录</string>
+    <string name="storage_retention_save">确认保留期限</string>
 </resources>

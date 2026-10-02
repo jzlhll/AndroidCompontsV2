@@ -48,6 +48,19 @@ class RecordCoordinator(private val dao: MonitorDao, private val files: FileStor
         }
     }
 
+    suspend fun purgeVideo(id: String, requestId: String) = mutex.withLock {
+        val session = checkNotNull(dao.session(id))
+        val media = checkNotNull(dao.media(id))
+        check(session.state == RunState.Stopped.name && media.saveState in listOf(SaveState.Saved.name, SaveState.MetadataOnly.name))
+        check(dao.intents().none { it.sessionId == id && it.kind == "delete" })
+        val intent = OperationIntentEntity("purge:$id", id, "purge_video", "files", 0, requestId)
+        dao.putIntent(intent)
+        files.deleteVideo(media.relativePath, media.stagingPath, id)
+        val updated = media.copy(saveState = SaveState.MetadataOnly.name, recoverable = false, errorCode = null, thumbnailPath = null)
+        files.writeManifest(manifest(session, updated, "metadata_only"))
+        dao.finishSave(updated, intent.id)
+    }
+
     suspend fun delete(id: String, protectedId: String?, requestId: String) = mutex.withLock {
         require(id != protectedId)
         val session = dao.session(id) ?: return@withLock
@@ -69,7 +82,12 @@ class RecordCoordinator(private val dao: MonitorDao, private val files: FileStor
             catch (e: CancellationException) { throw e }
             catch (_: Exception) { failures++ }
         }
-        val pendingDeletes = dao.intents().filter { it.kind == "delete" }.map { it.sessionId }.toSet()
+        for (intent in dao.intents().filter { it.kind == "purge_video" }) {
+            try { purgeVideo(intent.sessionId, intent.requestId) }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { failures++ }
+        }
+        val pendingDeletes = dao.intents().filter { it.kind in listOf("delete", "purge_video") }.map { it.sessionId }.toSet()
         for (session in dao.unfinished().filter { it.id !in pendingDeletes }) {
             try {
                 val media = dao.media(session.id) ?: continue

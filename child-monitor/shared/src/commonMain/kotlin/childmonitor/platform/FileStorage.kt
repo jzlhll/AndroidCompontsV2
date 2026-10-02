@@ -4,6 +4,8 @@ import childmonitor.model.MediaInfo
 import childmonitor.model.SessionManifest
 
 interface FileStorage : StorageCapacity {
+    suspend fun usedBytes(): Long
+    suspend fun deleteVideo(relativePath: String, stagingPath: String, sessionId: String)
     suspend fun create(manifest: SessionManifest)
     suspend fun writeManifest(manifest: SessionManifest)
     suspend fun manifests(): List<SessionManifest>

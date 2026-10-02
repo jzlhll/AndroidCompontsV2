@@ -49,10 +49,12 @@ data class UserPreferences(
     val preferencesRevision: Long = 0,
     val avatarId: String = AvatarCatalog.defaultId,
     val darkenAfterMs: Long = 60_000,
+    val retentionDays: Int = 0,
 ) {
     fun validate() {
         require(formatVersion == 1 && preferencesRevision >= 0)
         require(darkenAfterMs in 5_000..600_000)
+        require(retentionDays in listOf(0, 7, 30, 90))
     }
 }
 
@@ -62,7 +64,7 @@ data class SettingsSnapshot(
     val preferences: UserPreferences,
 ) { val preferencesRevision: Long get() = preferences.preferencesRevision }
 
-data class UserPreferencesPatch(val avatarId: String? = null, val darkenAfterMs: Long? = null)
+data class UserPreferencesPatch(val avatarId: String? = null, val darkenAfterMs: Long? = null, val retentionDays: Int? = null)
 
 /** 所有默认时限使用毫秒配置；业务记录与运算的边界统一转换为微秒。 */
 object DefaultMonitorConfig {

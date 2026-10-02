@@ -54,7 +54,7 @@ fun SettingsPanel(snapshot: UiSnapshot, onChange: (MonitorSettings) -> Unit, onM
 }
 
 @Composable
-fun SettingsScreen(viewModel: MonitorViewModel, onAvatar: () -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(viewModel: MonitorViewModel, onAvatar: () -> Unit, onBack: () -> Unit, onStorage: () -> Unit, modifier: Modifier = Modifier) {
     val snapshot by viewModel.snapshotFlow.collectAsStateWithLifecycle()
     val settings = snapshot.settings
     Column(modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -73,6 +73,7 @@ fun SettingsScreen(viewModel: MonitorViewModel, onAvatar: () -> Unit, onBack: ()
                 viewModel.command { viewModel.runtime.updateSettings(settings.monitorSettings.copy(restRemindMs = value), settings.monitorRevision, it) }
             }
         }
+        TextButton(onStorage) { Text(stringResource(R.string.storage_title), style = ComposeTypography.labelLarge) }
         SettingsEnhancements(viewModel, snapshot)
         if (snapshot.error != null) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
         TextButton(onBack) { Text(stringResource(R.string.back), style = ComposeTypography.labelLarge) }

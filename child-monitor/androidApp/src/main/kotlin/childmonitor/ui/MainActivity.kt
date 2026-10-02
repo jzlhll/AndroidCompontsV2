@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 
 @Serializable data object HomeKey : NavKey
 @Serializable data object CapabilityProbeKey : NavKey
+@Serializable data object StorageKey : NavKey
 @Serializable data object SettingsKey : NavKey
 @Serializable data class AvatarKey(val fromSettings: Boolean) : NavKey
 @Serializable data class AlbumKey(val cleanup: Boolean = false, val sourceResult: String? = null, val protectedId: String? = null) : NavKey
@@ -78,7 +79,11 @@ private fun MonitorNavigation(app: MonitorApplication) {
             }
             entry<SettingsKey> {
                 val model = viewModel { MonitorViewModel(app.runtime) }
-                SettingsScreen(model, { go(AvatarKey(true)) }, { back() })
+                SettingsScreen(model, { go(AvatarKey(true)) }, { back() }, { go(StorageKey) })
+            }
+            entry<StorageKey> {
+                val model = viewModel { RecordViewModel(app.runtime) }
+                StorageScreen(model, { go(AlbumKey(cleanup = true)) }, { back() })
             }
             entry<AvatarKey> {
                 val model = viewModel { MonitorViewModel(app.runtime) }
