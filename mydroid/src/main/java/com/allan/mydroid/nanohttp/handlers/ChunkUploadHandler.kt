@@ -35,16 +35,30 @@ import org.json.JSONObject
 import java.io.File
 import com.allan.mydroid.repository.TransferFiles
 import com.au.module_android.log.logEx
+import com.allan.mydroid.globals.IDroidServerAliveTrigger
+import com.allan.mydroid.repository.GlobalFileListRepoObj
+import kotlinx.coroutines.runBlocking
+import org.koin.core.component.inject
 
-class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) : AbsHttpRequestHandler() {
+/** 接收、校验并发布分片文件，传输期间阻止主机空闲退出。 */
+class ChunkUploadHandler(
+    private val receiverFlowsObj: GlobalReceiverFlowsObj,
+    private val aliveTrigger: IDroidServerAliveTrigger
+) : AbsHttpRequestHandler() {
+    private val fileListRepository: GlobalFileListRepoObj by inject()
 
     override fun tryHandle(method: NanoHTTPD.Method, uri: String, session: IHTTPSession): Response? {
-        if (method != NanoHTTPD.Method.POST) return null
-        return when (uri) {
-            UPLOAD_CHUNK -> handleUploadChunk(session)
-            MERGE_CHUNKS -> handleMergeChunk(session)
-            ABORT_UPLOAD_CHUNKS -> handleAbortChunk(session)
-            else -> null
+        if (method != NanoHTTPD.Method.POST ||
+            (uri != UPLOAD_CHUNK && uri != MERGE_CHUNKS && uri != ABORT_UPLOAD_CHUNKS)) return null
+        aliveTrigger.transferStarted()
+        return try {
+            when (uri) {
+                UPLOAD_CHUNK -> handleUploadChunk(session)
+                MERGE_CHUNKS -> handleMergeChunk(session)
+                else -> handleAbortChunk(session)
+            }
+        } finally {
+            aliveTrigger.transferFinished()
         }
     }
     /**
@@ -241,6 +255,7 @@ class ChunkUploadHandler(private val receiverFlowsObj: GlobalReceiverFlowsObj) :
             }
             stagingFile.setLastModified(lastModified)
             val outputFile = TransferFiles.publish(stagingFile, fileName)
+            runBlocking { fileListRepository.addReceivedFile(outputFile, md5.lowercase()) }
             receiverFlowsObj.emitFileMerged(outputFile)
             receiverFlowsObj.emitProgress(mapOf("$fileName-$md5" to ReceivingFileInfo(
                 fileName, md5, totalChunks, totalChunks, PROCESS_COMPLETED

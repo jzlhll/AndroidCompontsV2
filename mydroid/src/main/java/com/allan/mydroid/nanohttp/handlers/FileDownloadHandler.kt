@@ -3,6 +3,7 @@ package com.allan.mydroid.nanohttp.handlers
 import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.globals.nanoTempCacheMergedDir
+import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.allan.mydroid.repository.UriPermissionChecker
 import com.au.module_android.Globals
@@ -16,12 +17,14 @@ import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
+import java.io.FilterInputStream
 import java.net.URLEncoder
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 处理 GET /file_download_uuid/{uuid} 文件下载请求。
  */
-class FileDownloadHandler : AbsHttpRequestHandler() {
+class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : AbsHttpRequestHandler() {
 
     private val shareInRepository: GlobalShareInRepoObj by inject()
     private val uriPermissionChecker: UriPermissionChecker by inject()
@@ -34,6 +37,7 @@ class FileDownloadHandler : AbsHttpRequestHandler() {
     }
 
     private fun fileDownload(uriUuid: String): Response {
+        var transferStream: InputStream? = null
         try {
             val info = shareInRepository.shareInAndReceiveBeans?.find { it.uriUuid == uriUuid }
                 ?: return fileNotFoundResponse()
@@ -50,11 +54,24 @@ class FileDownloadHandler : AbsHttpRequestHandler() {
                 return newInternalErrorResponse("No permission yet todo translate.")
             }
             val inputStream = openDownloadInputStream(info)
-            logdNoFile { "file Download2 ${info.from} $filename ${inputStream.available()}" }
+            aliveTrigger.transferStarted()
+            // 响应交给 NanoHTTPD 后，由框架关闭流并释放传输计数，包括客户端中途断开。
+            val trackedStream = object : FilterInputStream(inputStream) {
+                private val closed = AtomicBoolean(false)
+                override fun close() {
+                    if (!closed.compareAndSet(false, true)) return
+                    try {
+                        super.close()
+                    } finally {
+                        aliveTrigger.transferFinished()
+                    }
+                }
+            }
+            transferStream = trackedStream
             // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
             val response = NanoHTTPD.newFixedLengthResponse(
                 Response.Status.OK,
-                "application/octet-stream", inputStream, fileSize)
+                "application/octet-stream", trackedStream, fileSize)
             logdNoFile { "file response1111" }
             // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
             val encodedFileName = URLEncoder.encode(filename, "UTF-8")
@@ -74,6 +91,7 @@ class FileDownloadHandler : AbsHttpRequestHandler() {
             // 3. （可选但推荐）设置 Content-Length 头
             response.addHeader("Content-Length", "" + fileSize)
             // 4. （可选）设置 Content-Type，如果你确切知道文件类型，可以设置更具体的 MIME 类型
+            transferStream = null
             return response
         } catch (e: FileNotFoundException) {
             logdNoFile { "file Download error1 ${e.message}" }
@@ -84,6 +102,8 @@ class FileDownloadHandler : AbsHttpRequestHandler() {
         } catch (e: Exception) {
             logdNoFile { "file Download error3 ${e.message}" }
             return newInternalErrorResponse("Error reading file 3.")
+        } finally {
+            transferStream?.close()
         }
     }
 
