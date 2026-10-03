@@ -17,8 +17,8 @@ class AndroidPersistence(context: Context, scope: CoroutineScope) {
     val files = AndroidFileStorage(context)
     private val databaseDir = File(files.root, "database").apply { check(isDirectory || mkdirs()) }
     private val preferencesDir = File(files.root, "preferences").apply { check(isDirectory || mkdirs()) }
-    val database = Room.databaseBuilder<MonitorDatabase>(
-        context.applicationContext, File(databaseDir, "monitor.db").absolutePath,
+    val database = Room.databaseBuilder(
+        context.applicationContext, MonitorDatabase::class.java, File(databaseDir, "monitor.db").absolutePath,
     ).setDriver(BundledSQLiteDriver()).setQueryCoroutineContext(Dispatchers.IO).build()
     val dao = database.monitorDao()
     val preferences = UserPreferencesRepository(PreferenceDataStoreFactory.createWithPath(

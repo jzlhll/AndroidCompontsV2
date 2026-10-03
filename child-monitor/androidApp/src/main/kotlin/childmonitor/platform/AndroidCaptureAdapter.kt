@@ -1,5 +1,8 @@
 package childmonitor.platform
 
+import childmonitor.TAG
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.log.loge
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
@@ -52,6 +55,7 @@ class AndroidCaptureAdapter(
     @Volatile private var frameWidth = 0
     @Volatile private var frameHeight = 0
     private var ownsPermit = false
+    private var diagnosticSessionId: String? = null
     private val executor = Executors.newSingleThreadExecutor()
 
     @SuppressLint("UnsafeOptInUsageError")
@@ -74,6 +78,8 @@ class AndroidCaptureAdapter(
     @SuppressLint("MissingPermission", "UnsafeOptInUsageError")
     override suspend fun start(sessionId: String, generation: Long, stagingPath: String,
         onObservation: (Observation) -> Unit, onInterrupted: (EndReason) -> Unit): Long = withContext(Dispatchers.Main.immediate) {
+        diagnosticSessionId = sessionId
+        logdNoFile(tag = TAG) { "capture start sessionId=$sessionId generation=$generation" }
         check(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
         check(!ownsPermit && permit.tryAcquire()) { "Camera busy" }
         ownsPermit = true
@@ -94,7 +100,8 @@ class AndroidCaptureAdapter(
         check(size != null && ProbeMediaInspector.isSupportedSize(size.width, size.height))
         val rotation = view.display?.rotation ?: Surface.ROTATION_0
         val specification = Recorder.Builder().setQualitySelector(QualitySelector.from(Quality.SD)).build()
-        val encoder = TimestampedVideoOutput(specification, files.resolve(stagingPath), scope, main)
+        logdNoFile(tag = TAG) { "capture capability sessionId=$sessionId generation=$generation sdWidth=${size.width} sdHeight=${size.height} rotation=$rotation timestampSource=realtime" }
+        val encoder = TimestampedVideoOutput(specification, files.resolve(stagingPath), scope, main, sessionId)
         output = encoder
         preview = Preview.Builder().setTargetRotation(rotation).build().also { it.setSurfaceProvider(view.surfaceProvider) }
         var created: PosePersonAnalyzer? = null
@@ -122,6 +129,7 @@ class AndroidCaptureAdapter(
             checkNotNull(preview), checkNotNull(video), checkNotNull(analysis))
         var opened = false
         stateObserver = Observer<CameraState> { state ->
+            logdNoFile(tag = TAG) { "camera state sessionId=$sessionId generation=$generation state=${state.type} errorCode=${state.error?.code}" }
             if (state.type == CameraState.Type.OPEN) opened = true
             if (state.error != null || opened && state.type in listOf(CameraState.Type.CLOSING, CameraState.Type.CLOSED)) {
                 val locked = (context.getSystemService(Context.KEYGUARD_SERVICE) as android.app.KeyguardManager).isKeyguardLocked
@@ -141,6 +149,7 @@ class AndroidCaptureAdapter(
     }
 
     override suspend fun stop(): CaptureFinish = withContext(Dispatchers.Main.immediate) {
+        logdNoFile(tag = TAG) { "capture stop sessionId=$diagnosticSessionId ownsPermit=$ownsPermit" }
         if (!ownsPermit) return@withContext CaptureFinish(true, false)
         analysis?.clearAnalyzer()
         analyzer?.close()
@@ -174,6 +183,7 @@ class AndroidCaptureAdapter(
                 if (!modelReleased) released = false
             }
         } finally {
+            logdNoFile(tag = TAG) { "capture release components sessionId=$diagnosticSessionId released=$released finalized=$finalized encoderReleased=${output?.resourcesReleased?.isCompleted} surfaceReleased=${output?.surfaceReleased?.isCompleted} modelReleased=${analyzer?.released?.isCompleted}" }
             current?.cameraInfo?.cameraState?.removeObserver(observer)
             preview?.setSurfaceProvider(null)
             if (released) {
@@ -181,6 +191,8 @@ class AndroidCaptureAdapter(
                 camera = null; analysis = null; video = null; output = null; preview = null; analyzer = null
             }
         }
+        logdNoFile(tag = TAG) { "capture released sessionId=$diagnosticSessionId released=$released finalized=$finalized ownsPermit=$ownsPermit" }
+        if (!released) loge(tag = TAG) { "capture release pending sessionId=$diagnosticSessionId" }
         CaptureFinish(released, finalized)
     }
 }

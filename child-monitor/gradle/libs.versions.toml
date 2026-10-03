@@ -7,7 +7,6 @@ datastore = "1.2.1"
 sqlite = "2.6.2"
 coroutines = "1.10.2"
 serialization = "1.9.0"
-datetime = "0.7.1"
 composeBom = "2026.03.00"
 activity = "1.13.0"
 lifecycle = "2.10.0"
@@ -18,10 +17,8 @@ mediapipe = "0.10.21"
 media3 = "1.9.3"
 
 [libraries]
-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
@@ -53,9 +50,8 @@ media3-compose = { module = "androidx.media3:media3-ui-compose", version.ref = "
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-android-kmp = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

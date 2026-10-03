@@ -7,6 +7,7 @@ plugins {
 
 //    id 'com.au.plugins.plugin-string-encrypt' version '1.0.0' apply false
 
+    alias(childMonitorLibs.plugins.room) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.jetbrains.kotlin.jvm) apply false
 

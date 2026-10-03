@@ -1,5 +1,7 @@
 package childmonitor.domain
 
+import childmonitor.TAG
+import com.au.module_android.log.logdNoFile
 import childmonitor.data.database.entity.*
 import childmonitor.model.*
 
@@ -91,6 +93,7 @@ object EvaluationEngine {
                     else -> 2
                 }
             }
+            logdNoFile(tag = TAG) { "evaluation item sessionId=${session.id} kind=$kind count=$count abnormalUs=$abnormalUs validUs=$validUs normalized=${validUs >= 600_000_000L}" }
             ItemStatistics(kind, count, abnormalUs, validUs, needsSuggestion)
         }
         if (denominator >= 300_000_000L && awaySeatedUs > 0) {
@@ -109,6 +112,7 @@ object EvaluationEngine {
             else if (fraction < .5 && rank < 1) rank = 1
         }
         val grade = if (!eligible) null else when (rank) { 0 -> "Great"; 1 -> "Good"; 2 -> "NotBad"; else -> null }
+        logdNoFile(tag = TAG) { "evaluation calculated sessionId=${session.id} durationUs=${session.durationUs} eligible=$eligible seatedUs=$seatedUs awaySeatedUs=$awaySeatedUs ordinaryAwayUs=${length(ordinaryAway)} gradedAwayUs=$awayUs denominatorUs=$denominator observedUs=$totalObservedUs coverageFraction=$fraction timeoutCount=$timeouts grade=$grade" }
         return EvaluationSnapshot(durationUs = session.durationUs, grade = grade,
             completionOnly = grade == null, partialData = fraction < .5 || items.any { it.validUs == 0L },
             seatedUs = seatedUs, awayUs = length(ordinaryAway), restUs = length(restSpans),

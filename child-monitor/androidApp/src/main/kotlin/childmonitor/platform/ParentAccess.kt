@@ -1,5 +1,7 @@
 package childmonitor.platform
 
+import childmonitor.TAG
+import com.au.module_android.log.logdNoFile
 import android.content.Context
 import android.util.Base64
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -47,10 +49,14 @@ class ParentAccess(context: Context, private val scope: CoroutineScope) {
     } }
     fun lock() = synchronized(authorizationLock) {
         generation++
+        logdNoFile(tag = TAG) { "parent access locked generation=$generation" }
         mutableStateFlow.value = stateFlow.value.copy(unlocked = false)
     }
     fun unlockWithDeviceCredential() = synchronized(authorizationLock) {
-        if (stateFlow.value.ready) mutableStateFlow.value = stateFlow.value.copy(unlocked = true, failed = false)
+        if (stateFlow.value.ready) {
+            mutableStateFlow.value = stateFlow.value.copy(unlocked = true, failed = false)
+            logdNoFile(tag = TAG) { "parent device credential authorized generation=$generation" }
+        }
     }
     suspend fun verify(pin: String): Boolean {
         val token = synchronized(authorizationLock) { generation }
@@ -60,7 +66,10 @@ class ParentAccess(context: Context, private val scope: CoroutineScope) {
             val now = System.currentTimeMillis()
             val blockedUntil = values[blockedKey] ?: 0
             // 系统时间回拨时最多继续锁定一分钟，避免永久锁死。
-            if (now < blockedUntil && blockedUntil - now <= 60_000) return@withLock false
+            if (now < blockedUntil && blockedUntil - now <= 60_000) {
+                logdNoFile(tag = TAG) { "parent verify blocked generation=$token remainingMs=${blockedUntil - now}" }
+                return@withLock false
+            }
             val expected = values[hashKey] ?: return@withLock false
             val salt = checkNotNull(values[saltKey])
             val actual = withContext(Dispatchers.Default) { digest(pin, Base64.decode(salt, Base64.NO_WRAP)) }
@@ -71,6 +80,7 @@ class ParentAccess(context: Context, private val scope: CoroutineScope) {
                 record[blockedKey] = if (attempts >= 5) now + 60_000 else 0
             }
             synchronized(authorizationLock) {
+                logdNoFile(tag = TAG) { "parent verify result generation=$generation requestGeneration=$token correct=$correct cooldownStarted=${!correct && (values[attemptsKey] ?: 0) + 1 >= 5} authorized=${correct && token == generation}" }
                 if (!correct || token != generation) false
                 else {
                     mutableStateFlow.value = stateFlow.value.copy(unlocked = true, failed = false)
@@ -95,6 +105,7 @@ class ParentAccess(context: Context, private val scope: CoroutineScope) {
             }
             synchronized(authorizationLock) {
                 mutableStateFlow.value = ParentAccessState(ready = true, enabled = pin != null, unlocked = token == generation)
+                logdNoFile(tag = TAG) { "parent configure committed generation=$generation enabled=${pin != null} authorized=${token == generation}" }
             }
         }
     }

@@ -1,5 +1,8 @@
 package childmonitor.platform
 
+import childmonitor.TAG
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.log.loge
 import android.annotation.SuppressLint
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
@@ -33,6 +36,7 @@ class TimestampedVideoOutput(
     private val output: File,
     private val scope: CoroutineScope,
     private val executor: Executor,
+    private val sessionId: String,
 ) : VideoOutput by specification {
     val firstSampleUs = CompletableDeferred<Long>()
     val finalized = CompletableDeferred<Unit>()
@@ -76,6 +80,8 @@ class TimestampedVideoOutput(
             var muxerStarted = false
             var track = -1
             var originPts: Long? = null
+            var sampleCount = 0L
+            var lastPtsUs = 0L
             var failure: Throwable? = null
             try {
                 val size = request.resolution
@@ -91,7 +97,9 @@ class TimestampedVideoOutput(
                 encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
                 input = encoder.createInputSurface()
                 muxer = MediaMuxer(output.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-                muxer.setOrientationHint(withTimeout(3_000.milliseconds) { rotation.await() })
+                val rotationDegrees = withTimeout(3_000.milliseconds) { rotation.await() }
+                muxer.setOrientationHint(rotationDegrees)
+                logdNoFile(tag = TAG) { "encoder configured sessionId=$sessionId width=${size.width} height=${size.height} rotationDegrees=$rotationDegrees timebase=$timebase glProcessing=$hasGlProcessing bitRate=${DefaultMonitorConfig.videoBitRate} audioTracks=0" }
                 encoder.start()
                 codec = encoder
                 request.provideSurface(input, executor) { surfaceReleased.complete(Unit) }
@@ -119,11 +127,16 @@ class TimestampedVideoOutput(
                                 info.presentationTimeUs = 0
                                 muxer.writeSampleData(track, buffer, info)
                                 firstSampleUs.complete(absolutePts + offset)
+                                logdNoFile(tag = TAG) { "encoder first sample sessionId=$sessionId sourcePtsUs=$absolutePts clockOffsetUs=$offset originUs=${absolutePts + offset} mediaPtsUs=0" }
                             } else {
                                 info.presentationTimeUs = absolutePts - checkNotNull(originPts)
                                 check(info.presentationTimeUs >= 0)
                                 muxer.writeSampleData(track, buffer, info)
                             }
+                        }
+                        if (info.size > 0 && info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0) {
+                            sampleCount++
+                            lastPtsUs = info.presentationTimeUs
                         }
                         val done = info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
                         encoder.releaseOutputBuffer(index, false)
@@ -144,6 +157,8 @@ class TimestampedVideoOutput(
                     try { encoder?.release() } catch (e: Exception) { failure = failure ?: e }
                     try { input?.release() } catch (e: Exception) { failure = failure ?: e }
                     resourcesReleased.complete(Unit)
+                    logdNoFile(tag = TAG) { "encoder finished sessionId=$sessionId success=${failure == null} samples=$sampleCount lastMediaPtsUs=$lastPtsUs surfaceReleased=${surfaceReleased.isCompleted}" }
+                    failure?.let { error -> loge(tag = TAG) { "encoder failed sessionId=$sessionId samples=$sampleCount errorType=${error.javaClass.simpleName}" } }
                     if (failure == null) finalized.complete(Unit) else finalized.completeExceptionally(checkNotNull(failure))
                 }
             }

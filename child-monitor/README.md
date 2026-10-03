@@ -1,12 +1,20 @@
 # 儿童监控
 
-独立 Android/KMP 工程。Android Studio 打开本目录，不需要把模块加入外层组件仓库。环境为 JDK 17、Android SDK 36、最低 API 26，Wrapper 固定 Gradle 8.14.3。
+纯 Android 应用，已接入 AndroidComponts 根工程。Android Studio 打开仓库根目录，同步 Gradle 后选择 `child-monitor` 应用模块运行；根 `settings.gradle` 将 `:child-monitor` 映射到 `child-monitor/androidApp`。环境为 JDK 17、Android SDK 36、最低 Android 10（API 29），根入口沿用仓库 Wrapper。
+
+也可以单独打开本目录，以 `androidApp` 模块运行，独立 Wrapper 为 Gradle 8.14.3。两种入口共用 `childMonitorLibs` 依赖目录；应用模块只按插件 ID 应用插件，由所打开工程的根构建提供版本。仓库入口复用全局 Android/Kotlin/Compose/Serialization/KSP 插件并注册 Room 插件，独立入口使用本目录声明的插件版本。
+
+日志直接复用 `Module-AndroidCommon`。独立入口同样引用仓库内的该模块和根依赖目录，因此需保留完整仓库目录结构。
 
 功能扩展分批交付状态见 [功能扩展](docs/功能扩展.md)。
 
+诊断日志的采集、字段含义、场景对应和证据包要求见[验收证据](docs/验收证据.md)。
+
 ## 实现范围
 
-`shared` 承载默认配置、Room/DataStore 持久化、应用级 MonitorRuntime、观测判定、提醒调度、统计评价及文件操作协调器。`androidApp` 承载单 Activity、Nav3 页面、CameraX/模型/编码/语音/播放适配器。
+应用源码模块目录为 `androidApp`（仓库入口的 Gradle 路径为 `:child-monitor`），全部 Kotlin 源码位于 `androidApp/src/main/kotlin/childmonitor/`。`model`、`domain`、`data` 保留配置、运行时、检测规则和持久化分层；`storage`、`platform` 承载文件、CameraX、模型、编码、语音与播放适配，`app`、`ui` 承载依赖装配和单 Activity / Nav3 页面。
+
+技术选型保持 Kotlin、协程/Flow、Compose、Nav3、Room + KSP + BundledSQLiteDriver、DataStore Preferences、kotlinx.serialization、CameraX、ML Kit、MediaPipe 与 Media3。工程使用 Android application 和 Kotlin Android 插件，Room 通过 Android builder 初始化，日期使用 `java.time`，最低支持 API 29。应用 ID、数据库及偏好文件位置、序列化包名和媒体目录保持一致，数据库 version = 1。
 
 已接通以下代码路径：
 
@@ -58,14 +66,14 @@ sessions/YYYY-MM-DD/<sessionId>/
 
 模型固定为 ML Kit Pose `18.0.0-beta5` 与打包的 EfficientDet-Lite0 INT8。模型来源、尺寸和 SHA-256 位于 `assets/models/manifest.json`。姿态和场景质量阈值属于当前规则配置，尚无真机准确率结论。
 
-语音为预生成的普通话 AAC 文件，文本、来源和哈希位于 `assets/voice/manifest.json`，运行时直接播放。图像为内置矢量头像。应用仅申请 CAMERA，不申请麦克风权限；不主动上传视频或观测数据；导出仅由用户发起，保存位置由系统选择器指定。
+语音为预生成的普通话 AAC 文件，文本、来源和哈希位于 `assets/voice/manifest.json`，运行时直接播放。图像为内置矢量头像。应用运行时仅申请 CAMERA，不申请麦克风权限；公共框架声明 ACCESS_NETWORK_STATE 普通权限；不主动上传视频或观测数据；导出仅由用户发起，保存位置由系统选择器指定。
 
 ## 验收状态
 
 第 1–11 阶段的主体实现已落在工程中，第 12 阶段的故障保护已接入。不能据此宣称完整 Android 闭环已通过验收：
 
-- 共享业务（不含 KSP 生成的数据库实现）完成过 Kotlin 类型核对；全部 Kotlin 文件完成语法核对。Android 依赖和应用整体编译尚未验证。
-- Room `exportSchema = true` 与 KSP 已配置，但 `shared/schemas/` 目前没有生成的 v1 JSON。首次工程构建后需审阅并纳入版本管理，不能把空目录算作 Schema 交付。
+- 源码已统一到 Android source set；Android 依赖、应用整体编译及 Room 代码生成仍待验证。
+- Room `exportSchema = true` 与 KSP 已配置，但 `androidApp/schemas/` 目前没有生成的 v1 JSON。首次工程构建后需审阅并纳入版本管理，不能把空目录算作 Schema 交付。
 - 真机三用例并发、编码时间映射、坐姿/离座误判、遮挡/多人/移动设备、长时资源占用、锁屏与进程恢复均待验收。
 - 默认编码目标 2 Mbps，以 30 分钟 × 1.2 估算启动空间和滚动低水位；实际码率、机型能力及长时资源参数需依据设备测量调整。
 
@@ -77,4 +85,4 @@ sessions/YYYY-MM-DD/<sessionId>/
 
 ## 依赖依据
 
-[Android KMP](https://developer.android.com/kotlin/multiplatform/plugin)、[AGP 8.13](https://developer.android.com/build/releases/agp-8-13-0-release-notes)、[Room](https://developer.android.com/jetpack/androidx/releases/room)、[Nav3](https://developer.android.com/jetpack/androidx/releases/navigation3)、[ML Kit Pose](https://developers.google.com/ml-kit/vision/pose-detection/android)、[MediaPipe Object Detector](https://ai.google.dev/edge/mediapipe/solutions/vision/object_detector/android)。
+[AGP 8.13](https://developer.android.com/build/releases/agp-8-13-0-release-notes)、[Room](https://developer.android.com/jetpack/androidx/releases/room)、[Nav3](https://developer.android.com/jetpack/androidx/releases/navigation3)、[ML Kit Pose](https://developers.google.com/ml-kit/vision/pose-detection/android)、[MediaPipe Object Detector](https://ai.google.dev/edge/mediapipe/solutions/vision/object_detector/android)。

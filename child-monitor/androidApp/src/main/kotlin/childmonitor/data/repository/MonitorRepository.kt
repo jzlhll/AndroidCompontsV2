@@ -1,5 +1,7 @@
 package childmonitor.data.repository
 
+import childmonitor.TAG
+import com.au.module_android.log.logdNoFile
 import childmonitor.data.database.dao.MonitorDao
 import childmonitor.data.database.entity.*
 import childmonitor.domain.EvaluationEngine
@@ -12,7 +14,11 @@ import kotlinx.serialization.json.Json
 
 /** 页面读取记录的唯一入口，历史结果来自已保存评价快照。 */
 class MonitorRepository(val dao: MonitorDao, private val access: () -> Boolean = { true }) {
-    fun requireAccess() { check(access()) { "Parent authorization required" } }
+    fun requireAccess() {
+        val authorized = access()
+        if (!authorized) logdNoFile(tag = TAG) { "record access denied" }
+        check(authorized) { "Parent authorization required" }
+    }
     private val mutableRevisionFlow = MutableStateFlow(0L)
     val revisionFlow = mutableRevisionFlow.asStateFlow()
     fun invalidateRecords() { mutableRevisionFlow.update { it + 1 } }
@@ -56,9 +62,13 @@ class MonitorRepository(val dao: MonitorDao, private val access: () -> Boolean =
         }.toSet()
     }
     suspend fun evaluateOnce(id: String) {
-        if (dao.evaluation(id) != null) return
+        if (dao.evaluation(id) != null) {
+            logdNoFile(tag = TAG) { "evaluate once reused sessionId=$id" }
+            return
+        }
         val session = checkNotNull(dao.session(id))
         val result = EvaluationEngine.evaluate(session, dao.events(id), dao.coverage(id), dao.rest(id), dao.revisions(id))
         dao.insertEvaluation(EvaluationEntity(id, result.version, Json.encodeToString(result)))
+        logdNoFile(tag = TAG) { "evaluation committed sessionId=$id version=${result.version} grade=${result.grade} completionOnly=${result.completionOnly} partialData=${result.partialData} durationUs=${result.durationUs} seatedUs=${result.seatedUs} awayUs=${result.awayUs} restUs=${result.restUs} prepareUs=${result.prepareUs} unknownUs=${result.unknownUs} awayCount=${result.awayCount} timeoutAwayCount=${result.timeoutAwayCount}" }
     }
 }

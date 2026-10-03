@@ -1,5 +1,8 @@
 package childmonitor.platform
 
+import childmonitor.TAG
+import com.au.module_android.log.logdNoFile
+import com.au.module_android.log.loge
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -47,6 +50,7 @@ class PosePersonAnalyzer(
     private val modelsClosed = AtomicBoolean(false)
     @Volatile private var closed = false
     private var lastNs = 0L
+    private var diagnosticFormat: String? = null
     private var previousBorder: List<Float>? = null
 
     override fun analyze(image: ImageProxy) {
@@ -62,12 +66,18 @@ class PosePersonAnalyzer(
             val shortEdge = if (image.width < image.height) image.width else image.height
             val longEdge = if (image.width > image.height) image.width else image.height
             check(shortEdge >= 480 && longEdge >= 640) { "Analysis resolution unsupported" }
+            val format = "${image.width}x${image.height}:$rotation"
+            if (diagnosticFormat != format) {
+                logdNoFile(tag = TAG) { "analysis format sessionId=$sessionId generation=$generation width=${image.width} height=${image.height} rotationDegrees=$rotation sampleIntervalMs=200" }
+                diagnosticFormat = format
+            }
             val transform = ImageProxyTransformFactory().apply { isUsingRotationDegrees = true; isUsingCropRect = true }.getOutputTransform(image)
             onTransform(transform, if (rotation % 180 == 0) image.width else image.height, if (rotation % 180 == 0) image.height else image.width)
             val raw = image.toBitmap()
             bitmap = if (rotation == 0) raw else Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height,
                 Matrix().apply { postRotate(rotation.toFloat()) }, true).also { if (it !== raw) raw.recycle() }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            loge(tag = TAG) { "analysis input failed sessionId=$sessionId generation=$generation errorType=${e.javaClass.simpleName}" }
             busy.set(false)
             onFailure()
             return

@@ -1,6 +1,9 @@
 package childmonitor.app
 
 import android.app.Application
+import childmonitor.TAG
+import com.au.module_android.log.logDebugEnabled
+import com.au.module_android.log.logdNoFile
 import android.os.SystemClock
 import childmonitor.data.repository.MonitorRepository
 import childmonitor.domain.MonitorRuntime
@@ -18,6 +21,15 @@ import kotlinx.coroutines.sync.Semaphore
 
 /** 持有唯一持久化容器和 Runtime，相机平台绑定在首页可撤销地注册。 */
 class MonitorApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        com.au.module_android.Globals.internalApp = this
+        logDebugEnabled = childmonitor.android.BuildConfig.DEBUG
+        logdNoFile(tag = TAG) {
+            "application started version=${childmonitor.android.BuildConfig.VERSION_NAME} versionCode=${childmonitor.android.BuildConfig.VERSION_CODE} sdk=${android.os.Build.VERSION.SDK_INT}"
+        }
+    }
+
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val parentAccess by lazy { childmonitor.platform.ParentAccess(this, applicationScope) }
     val videoExporter by lazy { childmonitor.platform.VideoExporter(this, persistence.files, applicationScope) }

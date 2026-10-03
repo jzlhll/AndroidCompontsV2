@@ -1,10 +1,12 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp")
+    id("androidx.room")
 }
 
 android {
@@ -12,7 +14,7 @@ android {
     compileSdk = 36
     defaultConfig {
         applicationId = "com.allan.childmonitor"
-        minSdk = 26
+        minSdk = 29
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
@@ -29,29 +31,35 @@ android {
 kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
 
 dependencies {
-    implementation(project(":shared"))
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.ui)
-    implementation(libs.compose.foundation)
-    implementation(libs.compose.material3)
-    implementation(libs.compose.preview)
-    debugImplementation(libs.compose.tooling)
-    implementation(libs.activity.compose)
-    implementation(libs.lifecycle.runtime.compose)
-    implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.lifecycle.viewmodel.navigation3)
-    implementation(libs.navigation3.runtime)
-    implementation(libs.navigation3.ui)
-    implementation(libs.serialization.json)
-    implementation(libs.coroutines.android)
-    implementation(libs.camera.camera2)
-    implementation(libs.camera.lifecycle)
-    implementation(libs.camera.video)
-    implementation(libs.camera.view)
-    implementation(libs.camera.mlkit)
-    implementation(libs.mlkit.pose)
-    implementation(libs.mediapipe.vision)
-    implementation(libs.media3.exoplayer)
-    implementation(libs.media3.ui)
-    implementation(libs.media3.compose)
+    implementation(project(":Module-AndroidCommon"))
+    implementation(childMonitorLibs.room.runtime)
+    implementation(childMonitorLibs.sqlite.bundled)
+    implementation(childMonitorLibs.datastore.preferences)
+    ksp(childMonitorLibs.room.compiler)
+    implementation(platform(childMonitorLibs.compose.bom))
+    implementation(childMonitorLibs.compose.ui)
+    implementation(childMonitorLibs.compose.foundation)
+    implementation(childMonitorLibs.compose.material3)
+    implementation(childMonitorLibs.compose.preview)
+    debugImplementation(childMonitorLibs.compose.tooling)
+    implementation(childMonitorLibs.activity.compose)
+    implementation(childMonitorLibs.lifecycle.runtime.compose)
+    implementation(childMonitorLibs.lifecycle.viewmodel.compose)
+    implementation(childMonitorLibs.lifecycle.viewmodel.navigation3)
+    implementation(childMonitorLibs.navigation3.runtime)
+    implementation(childMonitorLibs.navigation3.ui)
+    implementation(childMonitorLibs.serialization.json)
+    implementation(childMonitorLibs.coroutines.android)
+    implementation(childMonitorLibs.camera.camera2)
+    implementation(childMonitorLibs.camera.lifecycle)
+    implementation(childMonitorLibs.camera.video)
+    implementation(childMonitorLibs.camera.view)
+    implementation(childMonitorLibs.camera.mlkit)
+    implementation(childMonitorLibs.mlkit.pose)
+    implementation(childMonitorLibs.mediapipe.vision)
+    implementation(childMonitorLibs.media3.exoplayer)
+    implementation(childMonitorLibs.media3.ui)
+    implementation(childMonitorLibs.media3.compose)
 }
+
+room { schemaDirectory("$projectDir/schemas") }
