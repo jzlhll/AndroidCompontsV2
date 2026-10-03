@@ -11,7 +11,6 @@ import com.au.module_android.init.GlobalActivityCallback
 import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.init.optimizeSpTask
 import com.au.module_android.log.LogTag
-import com.au.module_android.logdebug.LogDebugInit
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.glide.preInitGlide
 
@@ -24,14 +23,6 @@ open class CommonInitApplication : Application() {
     data class FirstInitialConfig(
         val isInitSharedPrefHook:Boolean = false,
         val isEnableToutiaoScreenAdapter:Boolean = false,
-        /**
-         * 是否是debug模式，会打印日志。让logdNoFile等能够打印。
-         */
-        val isDebug: Boolean = false,
-        /**
-         * 是否有文件日志打印
-         */
-        val hasFileDebug: Boolean = false,
         /**
          * 日志tag
          */
@@ -49,7 +40,6 @@ open class CommonInitApplication : Application() {
         if(initConfig.isEnableToutiaoScreenAdapter) { ToutiaoScreenAdapter.init(context) }
         if(initConfig.isInitSharedPrefHook) { optimizeSpTask() }
         if(initConfig.tag != null) LogTag.TAG = initConfig.tag
-        if(initConfig.isDebug) LogDebugInit().initAsDebug(true, initConfig.hasFileDebug)
 
         context.registerActivityLifecycleCallbacks(GlobalActivityCallback())
         ProcessLifecycleOwner.get().lifecycle.addObserver(GlobalBackgroundCallback)

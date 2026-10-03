@@ -8,11 +8,11 @@ public final class Logger {
     }
 
     public void debug(String message, Object... args) {
-        if (LogDebug.ALWAYS_LOG_DEBUG) android.util.Log.d(tag, formatMessage(message, args));
+        if (ALogKt.getLogDebugEnabled()) android.util.Log.d(tag, formatMessage(message, args));
     }
 
     public void d(String message, Object... args) {
-        if (LogDebug.ALWAYS_LOG_DEBUG) android.util.Log.d(tag, formatMessage(message, args));
+        if (ALogKt.getLogDebugEnabled()) android.util.Log.d(tag, formatMessage(message, args));
     }
 
     public void warn(String message, Object... args) {
@@ -48,19 +48,19 @@ public final class Logger {
     }
 
     public void info(String message, Object... args) {
-        android.util.Log.i(tag, formatMessage(message, args));
+        if (ALogKt.getLogDebugEnabled()) android.util.Log.i(tag, formatMessage(message, args));
     }
 
     public void trace(String message, Object... args) {
-        if (LogDebug.ALWAYS_LOG_DEBUG) android.util.Log.d(tag, formatMessage(message, args));
+        if (ALogKt.getLogDebugEnabled()) android.util.Log.d(tag, formatMessage(message, args));
     }
 
     public boolean isTraceEnabled() {
-        return LogDebug.ALWAYS_LOG_DEBUG;
+        return ALogKt.getLogDebugEnabled();
     }
 
     public boolean isDebugEnabled() {
-        return LogDebug.ALWAYS_LOG_DEBUG;
+        return ALogKt.getLogDebugEnabled();
     }
 
     /**
