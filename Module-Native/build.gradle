@@ -48,6 +48,7 @@ def ENCRYPT_ASSETS_KEY = cipher.encrypt(findProperty("encrypt.assets.key"))
 android {
     namespace='com.example.module_native'
     compileSdk=gradle.ext.compileSdk
+    ndkVersion = '27.1.12297006'
 
     defaultConfig {
         minSdk=gradle.ext.minSdk
@@ -66,7 +67,6 @@ android {
                 abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
             }
         }
-        ndkVersion = '27.1.12297006'
     }
 
     buildTypes {

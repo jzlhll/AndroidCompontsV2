@@ -2,6 +2,22 @@
 大量android的基础框架架构，根据自己负责的公司项目，逐步形成的个人开发脚手架。
 基于各个Module等基础模块可以快速开始大型项目开发。相信能在本工程中找到你感兴趣的点。
 
+### 构建环境与依赖
+
+根工程与 child-monitor 独立入口统一使用 AGP 9.4.0、Gradle 9.6.0、JDK 17、compileSdk 37，应用 targetSdk 保持 36，child-monitor 最低支持 Android 10（API 29）。Android Studio 需支持 AGP 9.4，并安装 Android SDK Platform 37；包含 Module-Native 的工程需 NDK 27.1.12297006 和 CMake 3.22.1。
+
+Android 模块使用 AGP 内置 Kotlin，Kotlin/Compose/Serialization 插件统一为 2.4.20，KSP 插件与处理器 API 统一为 2.3.12；JVM 注解模块保留 Kotlin JVM 插件。Compose 组件由 BOM 2026.09.00 管理，Room 2.8.5、Lifecycle 2.11.0、CameraX 1.6.2、Media3 1.11.1 在两个入口保持一致。child-monitor 保留 Navigation 3 1.2.0，并使用 MediaPipe 1.0.0。
+
+公共依赖版本集中在 `gradle/libs.versions.toml`，child-monitor 专用依赖位于 `child-monitor/gradle/libs.versions.toml`。MMKV 使用 1.3.17 LTS，保留 32 位 ABI 支持；SmartRefresh 使用 3.0.0-alpha 系列，ML Kit Pose 使用 18.0.0-beta5。
+
+mydroid 的 assets 处理使用公开的 `SingleArtifact.ASSETS` 转换接口，在独立输出目录中按应用资源路径加密并保留忽略清单；依赖库 assets 和源目录保持原内容。BuildConfig 字段通过 Variant API 提供，网络配置资源显式启用 `resValues`。
+
+Gradle 9.6.0 位于 Kotlin 2.4.20 的完整支持范围内；AGP 9.4 高于 Kotlin 文档所列完整支持上限 9.3.1，当前组合仍需项目验证。参见 [Kotlin 兼容表](https://kotlinlang.org/docs/gradle-configure-project.html)。
+
+工程同步、依赖解析、编译及真机行为需在上述环境验收，尤其是 assets 打包、CameraX 正式录像、MediaPipe 检测和 Release 混淆。
+
+参考：[AGP 9.4 兼容表](https://developer.android.com/build/releases/agp-9-4-0-release-notes)、[内置 Kotlin 迁移](https://developer.android.com/build/migrate-to-built-in-kotlin)、[AndroidX 稳定版](https://developer.android.com/jetpack/androidx/versions)、[官方 assets 转换示例](https://github.com/android/gradle-recipes/tree/agp-9.2/transformDirectory)。
+
 大致介绍框架：
 
 ### Module-Android

@@ -1,25 +1,20 @@
+import com.android.build.api.variant.BuildConfigField
+
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
 
-    id("com.vanniktech.maven.publish") version "0.36.0"
+    alias(libs.plugins.maven.publish)
 }
 
 android {
     namespace = "com.au.module_android"
     compileSdk = gradle.extra["compileSdk"] as Int
-
-    // 读取外部属性并处理空安全
-    val supportLocales = findProperty("app.supportLocales")?.toString()?.toBoolean() ?: false
-    val supportDarkMode = findProperty("app.supportDarkMode")?.toString()?.toBoolean() ?: false
+    lint.targetSdk = gradle.extra["targetSdk"] as Int
 
     defaultConfig {
         minSdk = gradle.extra["minSdk"] as Int
-        lint.targetSdk = gradle.extra["targetSdk"] as Int
 
         consumerProguardFiles("consumer-rules.pro")
-        buildConfigField("boolean", "SUPPORT_LOCALES", supportLocales.toString())
-        buildConfigField("boolean", "SUPPORT_DARKMODE", supportDarkMode.toString())
     }
 
     buildTypes {
@@ -29,8 +24,7 @@ android {
             // 压缩资源，必须开启isMinifyEnabled才有用
             // shrinkResources = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt")
             )
             // signingConfig = signingConfigs.getByName("auRelease")
             // 设置是否要自动上传
@@ -57,6 +51,16 @@ android {
 
     buildFeatures {
         buildConfig = true
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        mapOf("SUPPORT_LOCALES" to "app.supportLocales", "SUPPORT_DARKMODE" to "app.supportDarkMode").forEach { (field, property) ->
+            checkNotNull(variant.buildConfigFields).put(field, providers.gradleProperty(property).orElse("false").map {
+                BuildConfigField("boolean", it.toBoolean().toString(), "应用功能开关")
+            })
+        }
     }
 }
 

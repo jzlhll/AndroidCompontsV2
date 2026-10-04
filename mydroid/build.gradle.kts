@@ -1,6 +1,7 @@
+import com.android.build.api.artifact.SingleArtifact
+
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
 }
@@ -64,6 +65,7 @@ android {
         targetCompatibility = gradle.extra["targetCompatibility"] as JavaVersion
     }
     buildFeatures {
+        resValues = true
         compose = true
         viewBinding = true
         buildConfig = true
@@ -111,4 +113,6 @@ dependencies {
 }
 
 apply(from = "../plugin-gradle-preaction/preSourceStringEncypt.gradle")
+// 外部 Groovy 脚本没有 AGP 编译类路径，由宿主传入同一插件的产物标识。
+extra["assetsEncryptionArtifact"] = SingleArtifact.ASSETS
 apply(from = "../plugin-gradle-preaction/assetsEncryptRules.gradle")

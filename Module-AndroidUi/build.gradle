@@ -1,32 +1,17 @@
+import com.android.build.api.variant.BuildConfigField
+
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
 }
 
 android {
     namespace='com.au.module_androidui'
     compileSdk=gradle.ext.compileSdk
 
-    def FONT_NORMAL_PATH = findProperty("app.font.normal") ?: ""
-    def FONT_MEDIUM_PATH = findProperty("app.font.medium") ?: ""
-    def FONT_BOLD_PATH = findProperty("app.font.bold") ?: ""
-
-    def FONT_NUMBER_PATH = findProperty("app.font.number") ?: ""
-    def FONT_NUMBER_MEDIUM_PATH = findProperty("app.font.number.medium") ?: ""
-    def FONT_NUMBER_BOLD_PATH = findProperty("app.font.number.bold") ?: ""
-
     defaultConfig {
         minSdk=gradle.ext.minSdk
 
         consumerProguardFiles "consumer-rules.pro"
-
-        buildConfigField("String", "FONT_NORMAL_PATH", "\"${FONT_NORMAL_PATH}\"")
-        buildConfigField("String", "FONT_MEDIUM_PATH", "\"${FONT_MEDIUM_PATH}\"")
-        buildConfigField("String", "FONT_BOLD_PATH", "\"${FONT_BOLD_PATH}\"")
-
-        buildConfigField("String", "FONT_NUMBER_PATH", "\"${FONT_NUMBER_PATH}\"")
-        buildConfigField("String", "FONT_NUMBER_MEDIUM_PATH", "\"${FONT_NUMBER_MEDIUM_PATH}\"")
-        buildConfigField("String", "FONT_NUMBER_BOLD_PATH", "\"${FONT_NUMBER_BOLD_PATH}\"")
     }
 
     buildTypes {
@@ -42,6 +27,18 @@ android {
     buildFeatures {
         viewBinding=true
         buildConfig=true
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        [FONT_NORMAL_PATH: 'app.font.normal', FONT_MEDIUM_PATH: 'app.font.medium',
+         FONT_BOLD_PATH: 'app.font.bold', FONT_NUMBER_PATH: 'app.font.number',
+         FONT_NUMBER_MEDIUM_PATH: 'app.font.number.medium', FONT_NUMBER_BOLD_PATH: 'app.font.number.bold'].each { field, property ->
+            variant.buildConfigFields.put(field, providers.gradleProperty(property).orElse('').map { value ->
+                new BuildConfigField('String', groovy.json.JsonOutput.toJson(value), '字体资源路径')
+            })
+        }
     }
 }
 

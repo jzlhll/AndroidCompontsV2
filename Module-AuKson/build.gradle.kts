@@ -1,16 +1,13 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.jetbrains.kotlin.serialization)
 
-    id("com.vanniktech.maven.publish") version "0.36.0"
+    alias(libs.plugins.maven.publish)
 }
 
 android {
     namespace = "com.au.module_kson"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = gradle.extra["compileSdk"] as Int
 
     defaultConfig {
         minSdk = 26

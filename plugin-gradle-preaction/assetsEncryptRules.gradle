@@ -1,127 +1,107 @@
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+
+import javax.inject.Inject
 import java.nio.file.Paths
 
-String XOR_KEY = findProperty("encrypt.assets.key").toString() // 建议使用更长的密钥增强安全性
-String[] IGNORE_FILES = findProperty("encrypt.assets.ignore_list").toString().split(",")
+/** 在合并后的独立产物中处理应用 assets，保留依赖库资源和源文件。 */
+abstract class EncryptAssetsTask extends DefaultTask {
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getInputDir()
 
-int CHUNK_SIZE = 4096
-/**
- * XOR转换（加密和解密使用相同方法）
- * @param data 要处理的数据
- * @param key 混淆密钥字节数组
- */
-private static def xorTransform(byte[] data, byte[] key) {
-    for (int i = 0; i < data.length; i++) {
-        data[i] = (data[i] ^ key[i % key.length]) as byte
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract ListProperty<Directory> getSourceDirs()
+
+    @Input
+    abstract Property<String> getXorKey()
+
+    @Input
+    abstract ListProperty<String> getIgnoreFiles()
+
+    @Inject
+    abstract FileSystemOperations getFileSystemOperations()
+
+    private static void xorTransform(byte[] data, byte[] key, int size) {
+        for (int i = 0; i < size; i++) {
+            data[i] = (data[i] ^ key[i % key.length]) as byte
+        }
     }
-}
 
-/**
- * 加密文件
- * @param sourceFile 源文件
- * @param targetFile 目标文件
- * @param xorKey 加密密钥
- */
-static def encryptFile(File sourceFile, File targetFile, String xorKey, int chunkSize) throws IOException {
-    byte[] keyBytes = xorKey.getBytes('UTF-8')
-
-    targetFile.withOutputStream { os ->
-        sourceFile.withInputStream { is ->
-            byte[] buffer = new byte[chunkSize]
-            int bytesRead
-
-            while ((bytesRead = is.read(buffer)) != -1) {
-                // 只处理实际读取到的字节
-                xorTransform(buffer, keyBytes)
-                os.write(buffer, 0, bytesRead)
+    private static void encryptFile(File sourceFile, File targetFile, String xorKey, int chunkSize) {
+        byte[] keyBytes = xorKey.getBytes('UTF-8')
+        targetFile.withOutputStream { output ->
+            sourceFile.withInputStream { input ->
+                byte[] buffer = new byte[chunkSize]
+                int size
+                while ((size = input.read(buffer)) != -1) {
+                    xorTransform(buffer, keyBytes, size)
+                    output.write(buffer, 0, size)
+                }
             }
         }
     }
-}
 
-
-/**
- * 判断 fullPath 是否以 relativePath 结尾。
- * relativePath 中始终使用 '/' 分隔，
- * fullPath 中使用当前平台的分隔符。
- *
- * @param relativePath 例如 "transfer/xxx.js"
- * @param fullPath     例如 "D:\\...\\transfer\\xxx.js" 或 "/home/.../transfer/xxx.js"
- */
-static boolean matchesRelative(String relativePath, String fullPath) {
-    // 1. 把 fullPath 转为 Path
-    def full = Paths.get(fullPath)
-
-    // 2. 把 relativePath 按 '/' 分隔，然后构造一个相对 Path
-    String[] parts = relativePath.split("/")
-    def rel = Paths.get(parts[0], Arrays.copyOfRange(parts, 1, parts.length))
-
-    // 3. 用 endsWith 比对末尾元素序列
-    return full.endsWith(rel)
-}
-
-android {
-    applicationVariants.all { variant ->
-
-        def variantName = variant.name
-        def capitalized = variantName.capitalize()
-        def modifiedDir = layout.buildDirectory.dir("tmp/assets_modified/${variantName}").get().asFile
-
-        def copyTask = tasks.register("copyAssetsFor${capitalized}", Copy) {
-            // 排除掉目标目录本身
-            def sourceDirs = variant.sourceSets*.assets.srcDirs.flatten().findAll {
-                !it.absolutePath.startsWith(modifiedDir.absolutePath)
-            }
-
-            //println("[au-assetsEncryptRules] sourceDirs: " + sourceDirs)
-
-            from(sourceDirs)
-            into(modifiedDir)
-
-            // 遇到重复 asset 名字就跳过
-            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        }
-
-        // 2. 注册 Modify 任务，对 copied 文件进行修改
-        def modifyTask = tasks.register("modifyCopiedAssetsFor${capitalized}") {
-            dependsOn(copyTask)
-
-            doLast {
-                //println("[au-assetsEncryptRules] modifying: ${modifiedDir}")
-                modifiedDir.eachFileRecurse { file ->
+    @TaskAction
+    void encryptAssets() {
+        def inputRoot = inputDir.get().asFile
+        def outputRoot = outputDir.get().asFile
+        def applicationPaths = new HashSet<String>()
+        sourceDirs.get().each { directory ->
+            def root = directory.asFile
+            if (root.isDirectory()) {
+                root.eachFileRecurse { file ->
                     if (file.isFile()) {
-                        def isMatchIgnore = false
-                        for (String ignoreFile : IGNORE_FILES) {
-                            if (matchesRelative(ignoreFile, file.absolutePath)) {
-                                isMatchIgnore = true
-                                break
-                            }
-                        }
-
-                        if (!isMatchIgnore) {
-                            // 创建临时加密文件
-                            def tmpFile = new File(file.parent, file.name + ".tmp")
-                            // 调用你定义的加密方法
-                            encryptFile(file, tmpFile, XOR_KEY, CHUNK_SIZE)
-                            // 替换原始文件
-                            file.delete()
-                            def isSuc = tmpFile.renameTo(file)
-                            println("[au-assetsEncryptRules] modifying file: ${file} isSuc ${isSuc}")
-                        } else {
-                            println("[au-assetsEncryptRules] ignore file: ${file}")
-                        }
+                        applicationPaths.add(root.toPath().relativize(file.toPath()).toString())
                     }
                 }
             }
         }
-
-        // 3. 替换原始 sourceSet 的 assets 输入路径
-        android.sourceSets.named(variantName) {
-            assets.srcDirs = [modifiedDir]
+        fileSystemOperations.sync {
+            from(inputRoot)
+            into(outputRoot)
         }
-
-        // 4. 确保 mergeAssets 依赖于我们修改任务
-        variant.mergeAssetsProvider.configure {
-            dependsOn(modifyTask)
+        def ignored = ignoreFiles.get()
+        def key = xorKey.get()
+        if (key.isEmpty()) throw new GradleException('Asset encryption key must not be empty')
+        inputRoot.eachFileRecurse { file ->
+            if (file.isFile()) {
+                def relative = inputRoot.toPath().relativize(file.toPath()).toString()
+                if (applicationPaths.contains(relative) && !ignored.any { Paths.get(relative).endsWith(Paths.get(it)) }) {
+                    encryptFile(file, new File(outputRoot, relative), key, 4096)
+                }
+            }
         }
+    }
+}
+
+def assetsArtifact = project.extensions.extraProperties.get('assetsEncryptionArtifact')
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        def transformTask = tasks.register("modifyCopiedAssetsFor${variant.name.capitalize()}", EncryptAssetsTask) {
+            xorKey.set(providers.gradleProperty('encrypt.assets.key'))
+            ignoreFiles.set(providers.gradleProperty('encrypt.assets.ignore_list').orElse('').map { value ->
+                value.split(',').collect { it.trim() }.findAll { !it.isEmpty() }
+            })
+            sourceDirs.set(variant.sources.assets.all.map { layers -> layers.flatten() })
+        }
+        variant.artifacts.use(transformTask)
+                .wiredWithDirectories({ it.inputDir }, { it.outputDir })
+                .toTransform(assetsArtifact)
     }
 }
