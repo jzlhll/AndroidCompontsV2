@@ -3,12 +3,9 @@ package com.allan.mydroid.repository
 import android.net.Uri
 import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.FROM_PICKER
-import com.allan.mydroid.beansinner.MergedFileInfo
 import com.allan.mydroid.beansinner.ShareInBean
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.simpleflow.StatusState
-import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.launchOnThread
 import com.au.module_cached.AppDataStore
 import com.au.module_gson.fromGson
@@ -102,9 +99,8 @@ class GlobalShareInRepoObj(
     }
 
     suspend fun loadShareInAndReceiveBeans(): List<ShareInBean> {
-        val shareInBeans = sendUriMap.values
-        val files = fileListRepository.fileListStateFlow.value
-            .asOrNull<StatusState.Success<List<MergedFileInfo>>>()?.data ?: mutableListOf()
+        val shareInBeans = sendUriMap.values.toList()
+        val files = fileListRepository.reloadFileList()
         val receivedShareInBeans = files.map {
             val bean = ShareInBean.convert(it, FROM_LOCAL)
             bean.isLocalReceiver = true

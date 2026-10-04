@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
+import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.os.ParcelUuid
 import androidx.fragment.app.Fragment
@@ -17,6 +18,7 @@ import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.log.loge
+import com.au.module_android.log.logEx
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_simplepermission.BtPermissionHelp
 import kotlinx.coroutines.Job
@@ -44,9 +46,12 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
     }
     private val advertiser get() = bluetoothAdapter?.bluetoothLeAdvertiser
 
-    @Volatile private var advertising = false
     private val lock = Any()
     private var observeJob: Job? = null
+    private var desiredEndpoint: Pair<String, Int>? = null
+    private var advertisedEndpoint: Pair<String, Int>? = null
+    private var activeAdvertiser: BluetoothLeAdvertiser? = null
+    private var advertiseCallback: AdvertiseCallback? = null
 
     /** 由 AbsLiveFragment.onBindingCreated 启动订阅；服务开启+IP 就绪+端口 Success 时自动广播。 */
     fun start() {
@@ -73,6 +78,8 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
 
     @SuppressLint("MissingPermission")
     fun startAdvertise(ip: String, port: Int) {
+        val endpoint = ip to port
+        synchronized(lock) { desiredEndpoint = endpoint }
         btPermissionHelp.safeRun(notGivePermissionBlock = {
             loge { "ble advertise permission denied" }
         }) {
@@ -85,7 +92,13 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
                 return@safeRun
             }
             synchronized(lock) {
-                if (advertising) return@safeRun
+                // 权限回调可能晚于页面退出或地址变化，不能重新启动过期的广播。
+                if (desiredEndpoint != endpoint) return@safeRun
+                if (advertisedEndpoint == endpoint && advertiseCallback != null) return@safeRun
+                val previous = advertiseCallback
+                advertiseCallback = null
+                advertisedEndpoint = null
+                if (previous != null) stopAdvertising(activeAdvertiser, previous)
                 val settings = AdvertiseSettings.Builder()
                     .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
                     .setConnectable(false)
@@ -97,7 +110,38 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
                     .setIncludeTxPowerLevel(false)
                     .setIncludeDeviceName(false)
                     .build()
-                adv.startAdvertising(settings, data, advertiseCallback)
+                val callback = object : AdvertiseCallback() {
+                    override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+                        synchronized(lock) {
+                            if (advertiseCallback !== this) {
+                                stopAdvertising(adv, this)
+                                return
+                            }
+                            logdNoFile { "ble advertise started: $ip:$port" }
+                        }
+                    }
+
+                    override fun onStartFailure(errorCode: Int) {
+                        synchronized(lock) {
+                            if (advertiseCallback !== this) return
+                            advertiseCallback = null
+                            advertisedEndpoint = null
+                            activeAdvertiser = null
+                            loge { "ble advertise failed: $errorCode" }
+                        }
+                    }
+                }
+                activeAdvertiser = adv
+                advertiseCallback = callback
+                advertisedEndpoint = endpoint
+                try {
+                    adv.startAdvertising(settings, data, callback)
+                } catch (e: Exception) {
+                    advertiseCallback = null
+                    advertisedEndpoint = null
+                    activeAdvertiser = null
+                    loge { "ble advertise start failed: ${e.message}" }
+                }
             }
         }
     }
@@ -105,9 +149,24 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
     @SuppressLint("MissingPermission")
     fun stopAdvertise() {
         synchronized(lock) {
-            if (!advertising) return
-            advertiser?.stopAdvertising(advertiseCallback)
-            advertising = false
+            desiredEndpoint = null
+            val callback = advertiseCallback
+            advertiseCallback = null
+            advertisedEndpoint = null
+            val adv = activeAdvertiser
+            activeAdvertiser = null
+            if (callback != null) stopAdvertising(adv, callback)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun stopAdvertising(adv: BluetoothLeAdvertiser?, callback: AdvertiseCallback) {
+        try {
+            adv?.stopAdvertising(callback)
+        } catch (e: IllegalStateException) {
+            logEx(throwable = e) { "Bluetooth became unavailable while stopping advertising" }
+        } catch (e: SecurityException) {
+            logEx(throwable = e) { "Bluetooth permission revoked while stopping advertising" }
         }
     }
 
@@ -115,18 +174,6 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
     fun stop() {
         observeJob?.cancel()
         stopAdvertise()
-    }
-
-    private val advertiseCallback = object : AdvertiseCallback() {
-        override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-            advertising = true
-            logdNoFile { "ble advertise started" }
-        }
-
-        override fun onStartFailure(errorCode: Int) {
-            advertising = false
-            loge { "ble advertise failed: $errorCode" }
-        }
     }
 
     companion object {

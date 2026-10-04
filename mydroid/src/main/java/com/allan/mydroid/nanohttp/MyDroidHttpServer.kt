@@ -24,9 +24,9 @@ class MyDroidHttpServer(httpPort: Int,
 
     private val handlers: List<AbsHttpRequestHandler> = listOf(
         CommandRequestHandler(globalNetworkMonitor),
-        FileDownloadHandler(),
+        FileDownloadHandler(aliveTrigger),
         StaticAssetHandler(),
-        ChunkUploadHandler(receiverFlowsObj),
+        ChunkUploadHandler(receiverFlowsObj, aliveTrigger),
     )
 
     init {

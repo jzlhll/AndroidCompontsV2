@@ -56,28 +56,56 @@ class GlobalDroidServerObj(
     private val aliveDeadTime = 5 * 60 * 1000L
     private val aliveTsTooFastTime = 6 * 1000L
 
-    @Volatile private var aliveTs = SystemClock.elapsedRealtime()
-    private val aliveCheckRun = Runnable {
-        if (SystemClock.elapsedRealtime() - aliveTs > aliveDeadTime) {
-            logd { "alive Ts timeout, stop server." }
-            _aliveStoppedFlow.tryEmit(Unit)
+    private val aliveLock = Any()
+    private var aliveTs = SystemClock.elapsedRealtime()
+    private var activeTransfers = 0
+    private var aliveTimerEnabled = false
+    private val aliveCheckRun = object : Runnable {
+        override fun run() {
+            synchronized(aliveLock) {
+                if (!aliveTimerEnabled || activeTransfers > 0) return
+                val remaining = aliveDeadTime - (SystemClock.elapsedRealtime() - aliveTs)
+                if (remaining > 0) {
+                    Globals.mainHandler.postDelayed(this, remaining)
+                } else {
+                    logd { "alive Ts timeout, stop server." }
+                    _aliveStoppedFlow.tryEmit(Unit)
+                }
+            }
         }
     }
 
     override fun updateAliveTs(from:String) {
-        val cur = SystemClock.elapsedRealtime()
-        if (cur - aliveTs < aliveTsTooFastTime) {
-            logd { "Update alive Ts too fast ignore: $from" }
-            return
+        synchronized(aliveLock) {
+            val cur = SystemClock.elapsedRealtime()
+            if (!aliveTimerEnabled || cur - aliveTs < aliveTsTooFastTime) return
+            resetAliveTimer(cur, from)
         }
-        resetAliveTimer(cur, from)
+    }
+
+    override fun transferStarted() {
+        synchronized(aliveLock) {
+            activeTransfers++
+            Globals.mainHandler.removeCallbacks(aliveCheckRun)
+        }
+    }
+
+    override fun transferFinished() {
+        synchronized(aliveLock) {
+            activeTransfers--
+            if (activeTransfers == 0 && aliveTimerEnabled) {
+                resetAliveTimer(SystemClock.elapsedRealtime(), "when transfers finish")
+            }
+        }
     }
 
     private fun resetAliveTimer(timestamp: Long, from: String) {
         aliveTs = timestamp
         logd { "Update alive Ts: $from" }
         Globals.mainHandler.removeCallbacks(aliveCheckRun)
-        Globals.mainHandler.postDelayed(aliveCheckRun, aliveDeadTime)
+        if (aliveTimerEnabled && activeTransfers == 0) {
+            Globals.mainHandler.postDelayed(aliveCheckRun, aliveDeadTime)
+        }
     }
 
     private fun startServerWrap() {
@@ -203,7 +231,10 @@ class GlobalDroidServerObj(
         serverRuntimeState.setMode(mode)
         observerIpChanged()
         if (livePages.size == 1) {
-            resetAliveTimer(SystemClock.elapsedRealtime(), "when first live page enter")
+            synchronized(aliveLock) {
+                aliveTimerEnabled = true
+                resetAliveTimer(SystemClock.elapsedRealtime(), "when first live page enter")
+            }
         } else {
             updateAliveTs("when live page enter")
         }
@@ -217,10 +248,13 @@ class GlobalDroidServerObj(
 
         val lastMode = livePages.values.lastOrNull()
         if (lastMode == null) {
+            synchronized(aliveLock) {
+                aliveTimerEnabled = false
+                Globals.mainHandler.removeCallbacks(aliveCheckRun)
+            }
             serverRuntimeState.setMode(MyDroidMode.None)
             stopServer()
             receiverFlowsObj.clearProgress()
-            Globals.mainHandler.removeCallbacks(aliveCheckRun)
         } else {
             serverRuntimeState.setMode(lastMode)
             updateAliveTs("when live page leave")

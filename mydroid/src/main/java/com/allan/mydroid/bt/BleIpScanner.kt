@@ -1,5 +1,6 @@
 package com.allan.mydroid.bt
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -9,13 +10,14 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.ParcelUuid
+import android.os.Build
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.log.loge
 import com.au.module_android.utils.launchOnIOThread
-import com.au.module_simplepermission.BtPermissionHelp
+import com.au.module_simplepermission.createMultiPermissionForResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,13 +25,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 /** client 端扫描发现的一个 host。port 为 host 的 httpPort。 */
 data class DiscoveredHost(val ip: String, val port: Int)
 
 /**
- * client 端 BLE 扫描辅助类。client Tab 共用。包裹 [BtPermissionHelp] + [android.bluetooth.le.BluetoothLeScanner]，
+ * client 端 BLE 扫描辅助类。client Tab 共用，按系统版本申请扫描权限，
  * 扫描 host 广播并解析 IP+port，通过 [discoveredFlow] 与 [scanningFlow] 暴露状态。
  *
  * - 底层 BLE 扫描 12s 自动停止（避免 Android "2 分钟 4 次" 限制），startScan/stopScan 必须主线程配对调用。
@@ -37,7 +39,14 @@ data class DiscoveredHost(val ip: String, val port: Int)
  * - discoveredMap 用 synchronized 保护，参照 [com.au.audiorecordplayer.bt.ble.BleScanner] 样板。
  */
 class BleIpScanner(private val fragment: Fragment) {
-    private val btPermissionHelp = BtPermissionHelp(fragment)
+    private val btPermissionHelp = fragment.createMultiPermissionForResult(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            arrayOf(Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    )
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
         (Globals.app.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
     }
@@ -81,7 +90,7 @@ class BleIpScanner(private val fragment: Fragment) {
             sc.startScan(listOf(filter), settings, scanCallback)
 
             bleScanStopJob = fragment.lifecycleScope.launchOnIOThread {
-                delay(12.seconds)
+                delay(12000.milliseconds)
                 withContext(Dispatchers.Main) {
                     sc.stopScan(scanCallback)
                 }
@@ -90,7 +99,7 @@ class BleIpScanner(private val fragment: Fragment) {
             }
 
             uiScanningStopJob = fragment.lifecycleScope.launchOnIOThread {
-                delay(35.seconds)
+                delay(35000.milliseconds)
                 _scanningFlow.value = false
                 logdNoFile { "ui scanning state stopped (35s)" }
             }
