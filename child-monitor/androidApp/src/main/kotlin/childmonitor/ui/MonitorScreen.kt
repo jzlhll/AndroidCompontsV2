@@ -6,18 +6,15 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.RectF
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -25,9 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -41,24 +36,26 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
 import childmonitor.android.R
 import childmonitor.app.MonitorApplication
 import childmonitor.model.*
 
+private enum class SettingsPage { Settings, Avatar, Storage }
+
 @Composable
 fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenProbe: () -> Unit,
-    onAlbum: () -> Unit, onStorage: () -> Unit, onAvatar: () -> Unit, onResult: (String, Boolean) -> Unit, onCleanup: () -> Unit,
+    onAlbum: () -> Unit, onAvatar: () -> Unit, onResult: (String, Boolean) -> Unit, onCleanup: () -> Unit,
     modifier: Modifier = Modifier) {
     val snapshot by viewModel.snapshotFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val runtime = viewModel.runtime
     var panel by rememberSaveable { mutableStateOf(false) }
+    var settingsPage by rememberSaveable { mutableStateOf(SettingsPage.Settings) }
     var denied by rememberSaveable { mutableStateOf(false) }
     var gate by remember { mutableStateOf(false) }
     var confirmStop by remember { mutableStateOf(false) }
-    var placementFailed by remember { mutableStateOf(false) }
-    var roi by remember { mutableStateOf(RectF()) }
     val active = snapshot.runState in listOf(RunState.Starting, RunState.Preparing, RunState.Monitoring, RunState.Stopping)
     val preview = remember(context) { PreviewView(context).apply {
         implementationMode = PreviewView.ImplementationMode.COMPATIBLE
@@ -114,7 +111,7 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
         Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding().padding(20.dp)
             .then(if (panel) Modifier.clearAndSetSemantics {} else Modifier),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            MonitorToolbar(app, onAlbum = { guarded(onAlbum) }, onSettings = { panel = true })
+            MonitorToolbar(app, onAlbum = { guarded(onAlbum) }, onSettings = { settingsPage = SettingsPage.Settings; panel = true })
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                 AndroidView(factory = { preview }, modifier = Modifier.fillMaxSize())
                 if (!active) Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
@@ -124,47 +121,31 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
                         TextButton({ guarded(onAvatar) }) { Text(stringResource(R.string.avatar_edit), style = ComposeTypography.buttonLabelLarge) }
                     }
                 }
-                if (snapshot.runState == RunState.Preparing) {
-                    Canvas(Modifier.fillMaxSize().pointerInput(snapshot.emptySeatReady) {
-                        if (snapshot.emptySeatReady) return@pointerInput
-                        var start = Offset.Zero
-                        detectDragGestures(onDragStart = { start = it }, onDrag = { change, _ ->
-                            change.consume()
-                            val end = change.position
-                            roi = RectF(if (start.x < end.x) start.x else end.x, if (start.y < end.y) start.y else end.y,
-                                if (start.x > end.x) start.x else end.x, if (start.y > end.y) start.y else end.y)
-                        })
-                    }) {
-                        if (!roi.isEmpty) drawRect(Color.Green, Offset(roi.left, roi.top), androidx.compose.ui.geometry.Size(roi.width(), roi.height()), style = Stroke(3.dp.toPx()))
-                    }
-                }
             }
             Text(stringResource(when (snapshot.runState) {
                 RunState.Idle -> R.string.monitor_idle
                 RunState.Starting -> R.string.monitor_starting
                 RunState.Preparing -> R.string.monitor_preparing
-                RunState.Monitoring -> if (snapshot.unclear) R.string.monitor_unclear else if (snapshot.away) R.string.monitor_away else R.string.monitor_observing
+                RunState.Monitoring -> when {
+                    snapshot.unclear -> R.string.monitor_unclear
+                    snapshot.away -> R.string.monitor_away
+                    !snapshot.faceComplete -> R.string.detection_face_incomplete
+                    snapshot.sceneChanged -> R.string.detection_scene_change
+                    else -> R.string.monitor_observing
+                }
                 RunState.Stopping -> R.string.monitor_stopping
                 RunState.Stopped -> R.string.monitor_stopped
             }), style = ComposeTypography.titleMedium)
             if (snapshot.runState == RunState.Preparing) {
                 PlacementGuide(snapshot)
-                Text(stringResource(if (snapshot.emptySeatReady) R.string.placement_sit_down else R.string.placement_help), style = ComposeTypography.bodySmall)
-                if (!snapshot.emptySeatReady) Button({
-                    val region = app.capture.mapPlacement(roi)
-                    placementFailed = region == null
-                    if (region != null) viewModel.command { runtime.confirmPlacement(region, it) }
-                }, enabled = !roi.isEmpty) {
-                    Text(stringResource(R.string.placement_confirm), style = ComposeTypography.buttonLabelLarge)
-                }
-                else if (!snapshot.needsGuardian) TextButton({ panel = true }) {
-                    Text(stringResource(R.string.reposition), style = ComposeTypography.buttonLabelLarge)
-                }
+                Text(stringResource(R.string.placement_help), style = ComposeTypography.bodySmall)
             }
-            if (placementFailed) Text(stringResource(R.string.placement_invalid), style = ComposeTypography.bodyMedium)
+            if (snapshot.runState == RunState.Monitoring && snapshot.seated && !snapshot.faceComplete) {
+                Text(stringResource(R.string.placement_head), style = ComposeTypography.bodySmall)
+            }
             if (snapshot.needsGuardian) {
                 Text(stringResource(R.string.placement_required), style = ComposeTypography.bodyMedium)
-                TextButton({ panel = true }) { Text(stringResource(R.string.reposition), style = ComposeTypography.buttonLabelLarge) }
+                TextButton({ settingsPage = SettingsPage.Settings; panel = true }) { Text(stringResource(R.string.reposition), style = ComposeTypography.buttonLabelLarge) }
             }
             snapshot.interruptionId?.let { id -> Row {
                 TextButton({ onResult(id, false) }) { Text(stringResource(R.string.interruption_result), style = ComposeTypography.buttonLabelLarge) }
@@ -183,7 +164,7 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
                 Text(stringResource(R.string.permission_settings), style = ComposeTypography.buttonLabelLarge)
             }
             Text(stringResource(R.string.monitor_duration, formatDuration(snapshot.durationUs)), style = ComposeTypography.titleMedium)
-            val targetMs = snapshot.settings?.monitorSettings?.targetDurationMs ?: 0L
+            val targetMs = (if (active) snapshot.sessionSettings else snapshot.settings?.monitorSettings)?.targetDurationMs ?: 0L
             if (targetMs > 0) Text(stringResource(if (snapshot.targetReached) R.string.target_reached else R.string.target_progress,
                 formatDuration(if (targetMs * 1_000 > snapshot.durationUs) targetMs * 1_000 - snapshot.durationUs else 0)), style = ComposeTypography.bodyMedium)
             Button(onClick = {
@@ -195,11 +176,18 @@ fun MonitorRoute(viewModel: MonitorViewModel, app: MonitorApplication, onOpenPro
             }
         }
         if (panel) {
-            SettingsOverlay(onClose = { panel = false }) {
+            SettingsOverlay(onClose = { if (settingsPage == SettingsPage.Settings) panel = false else settingsPage = SettingsPage.Settings }) {
                 ParentProtected(app, protected = true, onCancel = { panel = false }) {
-                    SettingsScreen(viewModel, onAvatar = onAvatar, onBack = { panel = false }, onStorage = onStorage,
-                        onOpenProbe = onOpenProbe,
-                        onReposition = { panel = false; viewModel.command { runtime.reposition(it) } })
+                    when (settingsPage) {
+                        SettingsPage.Settings -> SettingsScreen(viewModel, onAvatar = { settingsPage = SettingsPage.Avatar },
+                            onBack = { panel = false }, onStorage = { settingsPage = SettingsPage.Storage }, onOpenProbe = onOpenProbe,
+                            onReposition = { panel = false; viewModel.command { runtime.reposition(it) } })
+                        SettingsPage.Avatar -> AvatarScreen(viewModel, onBack = { settingsPage = SettingsPage.Settings })
+                        SettingsPage.Storage -> {
+                            val records = composeViewModel { RecordViewModel(runtime) }
+                            StorageScreen(records, onManage = { panel = false; onCleanup() }, onBack = { settingsPage = SettingsPage.Settings })
+                        }
+                    }
                 }
             }
         }

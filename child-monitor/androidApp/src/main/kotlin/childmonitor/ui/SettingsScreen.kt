@@ -24,29 +24,31 @@ fun SettingsPanel(snapshot: UiSnapshot, onChange: (MonitorSettings) -> Unit, onR
     val config = snapshot.settings?.monitorSettings ?: return
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SettingSwitch(R.string.detection_head_down, config.headDownEnabled, access) { onChange(config.copy(headDownEnabled = it)) }
-        TimeChoice(R.string.head_down_time, config.headDownConfirmMs, listOf(3_000, 5_000, 10_000), access, available = config.headDownEnabled) { onChange(config.copy(headDownConfirmMs = it)) }
+        TimeChoice(R.string.head_down_time, config.headDownConfirmMs, listOf(3_000, 5_000, 10_000), access, available = config.headDownEnabled, featureLabel = R.string.detection_head_down) { onChange(config.copy(headDownConfirmMs = it)) }
         SettingSwitch(R.string.detection_head_tilt, config.headTiltEnabled, access) { onChange(config.copy(headTiltEnabled = it)) }
-        TimeChoice(R.string.head_tilt_time, config.headTiltConfirmMs, listOf(3_000, 5_000, 10_000), access, available = config.headTiltEnabled) { onChange(config.copy(headTiltConfirmMs = it)) }
+        TimeChoice(R.string.head_tilt_time, config.headTiltConfirmMs, listOf(3_000, 5_000, 10_000), access, available = config.headTiltEnabled, featureLabel = R.string.detection_head_tilt) { onChange(config.copy(headTiltConfirmMs = it)) }
         SettingSwitch(R.string.detection_body_lean, config.bodyLeanEnabled, access) { onChange(config.copy(bodyLeanEnabled = it)) }
-        TimeChoice(R.string.body_lean_time, config.bodyLeanConfirmMs, listOf(3_000, 5_000, 10_000), access, available = config.bodyLeanEnabled) { onChange(config.copy(bodyLeanConfirmMs = it)) }
+        TimeChoice(R.string.body_lean_time, config.bodyLeanConfirmMs, listOf(3_000, 5_000, 10_000), access, available = config.bodyLeanEnabled, featureLabel = R.string.detection_body_lean) { onChange(config.copy(bodyLeanConfirmMs = it)) }
         SettingSwitch(R.string.detection_away, config.awayEnabled, access) { onChange(config.copy(awayEnabled = it)) }
-        TimeChoice(R.string.away_confirm_time, config.awayConfirmMs, listOf(2_000, 3_000, 5_000), access, available = config.awayEnabled) { onChange(config.copy(awayConfirmMs = it)) }
-        TimeChoice(R.string.away_max_time, config.maxAwayMs, listOf(60_000, 120_000, 180_000), access, available = config.awayEnabled) { onChange(config.copy(maxAwayMs = it)) }
+        TimeChoice(R.string.away_confirm_time, config.awayConfirmMs, listOf(2_000, 3_000, 5_000), access, available = config.awayEnabled, featureLabel = R.string.detection_away) { onChange(config.copy(awayConfirmMs = it)) }
+        TimeChoice(R.string.away_max_time, config.maxAwayMs, listOf(60_000, 120_000, 180_000), access, available = config.awayEnabled, featureLabel = R.string.detection_away) { onChange(config.copy(maxAwayMs = it)) }
         val sensitivityAvailable = config.headDownEnabled || config.headTiltEnabled || config.bodyLeanEnabled
-        RestrictedSetting(access, available = sensitivityAvailable) { enabled ->
+        val sensitivityReason = stringResource(R.string.settings_enable_posture)
+        RestrictedSetting(access, available = sensitivityAvailable, unavailableReason = sensitivityReason) { enabled ->
             Column {
-                Text(settingLabel(stringResource(R.string.sensitivity), enabled), style = ComposeTypography.titleSmall)
+                Text(stringResource(R.string.sensitivity), style = ComposeTypography.titleSmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Sensitivity.entries.forEach { value ->
-                        FilterChip(value == config.sensitivity, { access.run(sensitivityAvailable) { onChange(config.copy(sensitivity = value)) } }, enabled = enabled,
+                        FilterChip(value == config.sensitivity, { access.run(sensitivityAvailable, unavailableReason = sensitivityReason) { onChange(config.copy(sensitivity = value)) } }, enabled = enabled,
                             label = { Text(stringResource(when (value) { Sensitivity.Low -> R.string.low; Sensitivity.Standard -> R.string.standard; Sensitivity.High -> R.string.high }), style = ComposeTypography.buttonLabelLarge) })
                     }
                 }
+                if (!sensitivityAvailable) Text(sensitivityReason, style = ComposeTypography.bodySmall)
             }
         }
         SettingSwitch(R.string.sound_enabled, config.soundEnabled, access) { onChange(config.copy(soundEnabled = it)) }
-        TimeChoice(R.string.reminder_repeat_time, config.repeatReminderMs, listOf(30_000, 60_000, 120_000), access, available = config.soundEnabled) { onChange(config.copy(repeatReminderMs = it)) }
-        TimeChoice(R.string.reminder_gap_time, config.reminderGapMs, listOf(10_000, 20_000, 30_000), access, available = config.soundEnabled) { onChange(config.copy(reminderGapMs = it)) }
+        TimeChoice(R.string.reminder_repeat_time, config.repeatReminderMs, listOf(30_000, 60_000, 120_000), access, available = config.soundEnabled, featureLabel = R.string.sound_enabled) { onChange(config.copy(repeatReminderMs = it)) }
+        TimeChoice(R.string.reminder_gap_time, config.reminderGapMs, listOf(10_000, 20_000, 30_000), access, available = config.soundEnabled, featureLabel = R.string.sound_enabled) { onChange(config.copy(reminderGapMs = it)) }
         if (snapshot.runState in listOf(RunState.Preparing, RunState.Monitoring)) TextButton(onReposition) {
             Text(stringResource(R.string.reposition), style = ComposeTypography.buttonLabelLarge)
         }
@@ -65,26 +67,27 @@ fun SettingsScreen(viewModel: MonitorViewModel, onAvatar: () -> Unit, onBack: ()
             TextButton(onBack) { Text(stringResource(R.string.close), style = ComposeTypography.buttonLabelLarge) }
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (!access.enabled) Text(stringResource(if (access.recording) R.string.settings_locked_hint else R.string.settings_unavailable), style = ComposeTypography.bodySmall)
+            if (!access.enabled) Text(stringResource(R.string.settings_unavailable), style = ComposeTypography.bodySmall)
+            if (access.recording && access.enabled) Text(stringResource(R.string.settings_locked_hint), style = ComposeTypography.bodySmall)
             SettingsPanel(snapshot, onChange = { value ->
                 settings?.let { config -> viewModel.command { viewModel.runtime.updateSettings(value, config.monitorRevision, it) } }
             }, onReposition = onReposition, access = access)
             if (settings != null) {
                 SettingsAction(stringResource(R.string.avatar_edit), access, onAvatar)
-                TimeChoice(R.string.darken_time, settings.preferences.darkenAfterMs, listOf(30_000, 60_000, 120_000), access) { value ->
+                TimeChoice(R.string.darken_time, settings.preferences.darkenAfterMs, listOf(30_000, 60_000, 120_000), access, policy = SettingPolicy.Stopped) { value ->
                     viewModel.command { viewModel.runtime.updatePreferences(UserPreferencesPatch(darkenAfterMs = value), settings.preferencesRevision, it) }
                 }
                 Text(stringResource(R.string.darken_description), style = ComposeTypography.bodyMedium)
                 SettingSwitch(R.string.rest_enabled, settings.monitorSettings.restRemindEnabled, access) { value ->
                     viewModel.command { viewModel.runtime.updateSettings(settings.monitorSettings.copy(restRemindEnabled = value), settings.monitorRevision, it) }
                 }
-                TimeChoice(R.string.rest_time, settings.monitorSettings.restRemindMs, listOf(1_200_000, 1_800_000, 2_700_000), access, available = settings.monitorSettings.restRemindEnabled) { value ->
+                TimeChoice(R.string.rest_time, settings.monitorSettings.restRemindMs, listOf(1_200_000, 1_800_000, 2_700_000), access, available = settings.monitorSettings.restRemindEnabled, featureLabel = R.string.rest_enabled) { value ->
                     viewModel.command { viewModel.runtime.updateSettings(settings.monitorSettings.copy(restRemindMs = value), settings.monitorRevision, it) }
                 }
             }
             SettingsEnhancements(viewModel, snapshot, access)
             SettingsAction(stringResource(R.string.storage_title), access, onStorage)
-            if (BuildConfig.DEBUG) SettingsAction(stringResource(R.string.probe_title), access, onOpenProbe)
+            if (BuildConfig.DEBUG) SettingsAction(stringResource(R.string.probe_title), access, onOpenProbe, policy = SettingPolicy.Stopped)
             ParentSettings(access = access)
             if (snapshot.error != null) Text(stringResource(R.string.operation_failed), style = ComposeTypography.bodyMedium)
         }
@@ -92,10 +95,11 @@ fun SettingsScreen(viewModel: MonitorViewModel, onAvatar: () -> Unit, onBack: ()
 }
 
 @Composable
-fun SettingsAction(label: String, access: SettingsAccess, onClick: () -> Unit, modifier: Modifier = Modifier, available: Boolean = true) {
-    RestrictedSetting(access, modifier, available) { enabled ->
-        TextButton({ access.run(available, onClick) }, enabled = enabled) {
-            Text(settingLabel(label, enabled), style = ComposeTypography.buttonLabelLarge)
+fun SettingsAction(label: String, access: SettingsAccess, onClick: () -> Unit, modifier: Modifier = Modifier,
+    available: Boolean = true, policy: SettingPolicy = SettingPolicy.Live, unavailableReason: String? = null) {
+    RestrictedSetting(access, modifier, available, policy, unavailableReason) { enabled ->
+        TextButton({ access.run(available, policy, unavailableReason, onClick) }, enabled = enabled) {
+            Text(settingLabel(label, access, policy), style = ComposeTypography.buttonLabelLarge)
         }
     }
 }
@@ -109,7 +113,7 @@ fun AvatarScreen(viewModel: MonitorViewModel, onBack: () -> Unit, modifier: Modi
     var saving by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
     Column(modifier.fillMaxSize().safeDrawingPadding().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        Text(settingLabel(stringResource(R.string.avatar_title), access.enabled && !saving), style = ComposeTypography.headlineSmall)
+        Text(stringResource(R.string.avatar_title), style = ComposeTypography.headlineSmall)
         Image(painterResource(AvatarResources.drawable(draft)), null, Modifier.size(180.dp))
         RestrictedSetting(access, available = !saving) { enabled ->
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -138,22 +142,25 @@ fun AvatarScreen(viewModel: MonitorViewModel, onBack: () -> Unit, modifier: Modi
 private fun SettingSwitch(label: Int, checked: Boolean, access: SettingsAccess, modifier: Modifier = Modifier, onChange: (Boolean) -> Unit) {
     RestrictedSetting(access, modifier) { enabled ->
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(settingLabel(stringResource(label), enabled), Modifier.weight(1f), style = ComposeTypography.bodyLarge)
+            Text(stringResource(label), Modifier.weight(1f), style = ComposeTypography.bodyLarge)
             Switch(checked, { value -> access.run { onChange(value) } }, enabled = enabled)
         }
     }
 }
 
 @Composable
-private fun TimeChoice(label: Int, value: Long, choices: List<Long>, access: SettingsAccess, modifier: Modifier = Modifier, available: Boolean = true, onChange: (Long) -> Unit) {
-    RestrictedSetting(access, modifier, available) { enabled ->
+private fun TimeChoice(label: Int, value: Long, choices: List<Long>, access: SettingsAccess, modifier: Modifier = Modifier,
+    available: Boolean = true, policy: SettingPolicy = SettingPolicy.Live, featureLabel: Int? = null, onChange: (Long) -> Unit) {
+    val reason = featureLabel?.let { stringResource(R.string.settings_enable_feature, stringResource(it)) }
+    RestrictedSetting(access, modifier, available, policy, reason) { enabled ->
         Column {
-            Text(settingLabel(stringResource(label), enabled), style = ComposeTypography.bodyMedium)
+            Text(settingLabel(stringResource(label), access, policy), style = ComposeTypography.bodyMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                choices.forEach { duration -> FilterChip(duration == value, { access.run(available) { onChange(duration) } }, enabled = enabled,
+                choices.forEach { duration -> FilterChip(duration == value, { access.run(available, policy, reason) { onChange(duration) } }, enabled = enabled,
                     label = { Text(stringResource(if (duration >= 60_000) R.string.minutes_value else R.string.seconds_value,
                         duration / if (duration >= 60_000) 60_000 else 1_000), style = ComposeTypography.buttonLabelMedium) }) }
             }
+            if (!available && reason != null) Text(reason, style = ComposeTypography.bodySmall)
         }
     }
 }

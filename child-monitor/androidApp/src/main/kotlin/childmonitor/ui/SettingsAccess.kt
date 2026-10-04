@@ -10,16 +10,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import childmonitor.android.R
 import childmonitor.model.RunState
+import childmonitor.model.SettingPolicy
 import childmonitor.model.UiSnapshot
+import childmonitor.model.canChangeSettings
 
-/** 所有设置共用当前运行状态，受限控件仍可点击查看原因。 */
+/** 按生效方式检查设置权限，只有必须停录的操作标记星号。 */
 class SettingsAccess(private val context: Context, private val snapshot: () -> UiSnapshot) {
     val recording: Boolean get() = snapshot().runState !in listOf(RunState.Idle, RunState.Stopped) || !snapshot().captureReleased
-    val enabled: Boolean get() = !recording && snapshot().ready && snapshot().settings != null && !snapshot().operationBusy
+    val enabled: Boolean get() = enabled(SettingPolicy.Live)
 
-    fun run(available: Boolean = true, action: () -> Unit = {}) {
-        if (enabled && available) action()
-        else Toast.makeText(context, if (recording) R.string.settings_stop_recording else R.string.settings_unavailable, Toast.LENGTH_SHORT).show()
+    fun enabled(policy: SettingPolicy): Boolean = snapshot().canChangeSettings(policy)
+    fun requiresStop(policy: SettingPolicy): Boolean = recording && policy == SettingPolicy.Stopped
+
+    fun run(available: Boolean = true, policy: SettingPolicy = SettingPolicy.Live,
+        unavailableReason: String? = null, action: () -> Unit = {}) {
+        if (enabled(policy) && available) action()
+        else Toast.makeText(context, when {
+            requiresStop(policy) -> context.getString(R.string.settings_stop_recording)
+            !available && unavailableReason != null -> unavailableReason
+            else -> context.getString(R.string.settings_unavailable)
+        }, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -31,14 +41,15 @@ fun rememberSettingsAccess(snapshot: UiSnapshot): SettingsAccess {
 }
 
 @Composable
-fun settingLabel(text: String, enabled: Boolean): String =
-    if (enabled) text else stringResource(R.string.setting_unavailable_label, text)
+fun settingLabel(text: String, access: SettingsAccess, policy: SettingPolicy = SettingPolicy.Live): String =
+    if (access.requiresStop(policy)) stringResource(R.string.setting_unavailable_label, text) else text
 
 @Composable
-fun RestrictedSetting(access: SettingsAccess, modifier: Modifier = Modifier, available: Boolean = true, content: @Composable (Boolean) -> Unit) {
-    val enabled = access.enabled && available
+fun RestrictedSetting(access: SettingsAccess, modifier: Modifier = Modifier, available: Boolean = true,
+    policy: SettingPolicy = SettingPolicy.Live, unavailableReason: String? = null, content: @Composable (Boolean) -> Unit) {
+    val enabled = access.enabled(policy) && available
     Box(modifier) {
         content(enabled)
-        if (!enabled) Box(Modifier.matchParentSize().clickable { access.run(available) })
+        if (!enabled) Box(Modifier.matchParentSize().clickable { access.run(available, policy, unavailableReason) })
     }
 }

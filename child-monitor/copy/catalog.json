@@ -337,7 +337,7 @@
     {
       "id": "common.childMonitor.probe_mapping_pending",
       "values": {
-        "zh-Hans": "这些时间来自不同边界，尚未建立精确的媒体起点映射。姿态回调不能作为儿童身份、空座位或行为判断；人体检测与定位仍待接入。"
+        "zh-Hans": "这些时间来自不同边界，尚未建立精确的媒体起点映射。探针姿态回调不能作为儿童身份、人脸完整性或行为判断。"
       },
       "platforms": {
         "android": "probe_mapping_pending"
@@ -472,25 +472,16 @@
     {
       "id": "common.childMonitor.placement_help",
       "values": {
-        "zh-Hans": "框选座位并确认范围，然后让座位保持空置、无遮挡约 3 秒，采集空座位基准。"
+        "zh-Hans": "固定设备，让孩子的完整人脸和双肩入镜，保持正常姿态约 3 秒，自动开始监控。"
       },
       "platforms": {
         "android": "placement_help"
       }
     },
     {
-      "id": "common.childMonitor.placement_confirm",
-      "values": {
-        "zh-Hans": "确认座位范围"
-      },
-      "platforms": {
-        "android": "placement_confirm"
-      }
-    },
-    {
       "id": "common.childMonitor.placement_required",
       "values": {
-        "zh-Hans": "持续无法识别，请调整设备并重新定位。"
+        "zh-Hans": "设备位置变化，请调整画面并重新校准。"
       },
       "platforms": {
         "android": "placement_required"
@@ -499,7 +490,7 @@
     {
       "id": "common.childMonitor.reposition",
       "values": {
-        "zh-Hans": "重新定位"
+        "zh-Hans": "重新校准"
       },
       "platforms": {
         "android": "reposition"
@@ -1226,15 +1217,6 @@
       }
     },
     {
-      "id": "common.childMonitor.placement_invalid",
-      "values": {
-        "zh-Hans": "范围未落在有效画面内，请重新框选。"
-      },
-      "platforms": {
-        "android": "placement_invalid"
-      }
-    },
-    {
       "id": "common.childMonitor.event_rest",
       "values": {
         "zh-Hans": "建议休息"
@@ -1451,36 +1433,18 @@
       }
     },
     {
-      "id": "common.childMonitor.placement_sit_down",
-      "values": {
-        "zh-Hans": "空座位已确认，请孩子入座，保持正常坐姿约 3 秒。"
-      },
-      "platforms": {
-        "android": "placement_sit_down"
-      }
-    },
-    {
       "id": "common.childMonitor.placement_steps",
       "values": {
-        "zh-Hans": "① 固定设备并框选座位　② 空座位采集　③ 入座校准"
+        "zh-Hans": "① 固定设备　② 完整人脸入镜　③ 自动校准"
       },
       "platforms": {
         "android": "placement_steps"
       }
     },
     {
-      "id": "common.childMonitor.placement_region",
-      "values": {
-        "zh-Hans": "框选孩子坐下后头部和双肩所在的区域。"
-      },
-      "platforms": {
-        "android": "placement_region"
-      }
-    },
-    {
       "id": "common.childMonitor.placement_moved",
       "values": {
-        "zh-Hans": "设备位置变化，请重新定位。"
+        "zh-Hans": "设备位置发生变化，请固定设备并重新校准。"
       },
       "platforms": {
         "android": "placement_moved"
@@ -1489,7 +1453,7 @@
     {
       "id": "common.childMonitor.placement_multiple",
       "values": {
-        "zh-Hans": "检测到多人，请让其他人离开画面。"
+        "zh-Hans": "画面中出现多人，请只保留需要监控的孩子。"
       },
       "platforms": {
         "android": "placement_multiple"
@@ -1505,45 +1469,18 @@
       }
     },
     {
-      "id": "common.childMonitor.placement_occupied",
-      "values": {
-        "zh-Hans": "请先让座位空置，采集无遮挡的空座位。"
-      },
-      "platforms": {
-        "android": "placement_occupied"
-      }
-    },
-    {
-      "id": "common.childMonitor.placement_empty",
-      "values": {
-        "zh-Hans": "保持空座位无遮挡，正在采集基准。"
-      },
-      "platforms": {
-        "android": "placement_empty"
-      }
-    },
-    {
       "id": "common.childMonitor.placement_shoulders",
       "values": {
-        "zh-Hans": "请孩子入座，让双肩完整出现在画面中。"
+        "zh-Hans": "请让双肩完整出现在画面中，便于判断姿态变化。"
       },
       "platforms": {
         "android": "placement_shoulders"
       }
     },
     {
-      "id": "common.childMonitor.placement_outside",
-      "values": {
-        "zh-Hans": "请坐在已框选的座位区域内。"
-      },
-      "platforms": {
-        "android": "placement_outside"
-      }
-    },
-    {
       "id": "common.childMonitor.placement_head",
       "values": {
-        "zh-Hans": "请让头部和双肩完整入镜。"
+        "zh-Hans": "请让整张脸完整入镜，避免半脸、贴边、遮挡或明显转头。"
       },
       "platforms": {
         "android": "placement_head"
@@ -1561,7 +1498,7 @@
     {
       "id": "common.childMonitor.placement_stable",
       "values": {
-        "zh-Hans": "姿态可用，请保持不动直到校准完成。"
+        "zh-Hans": "完整人脸和姿态可用，正在自动校准。"
       },
       "platforms": {
         "android": "placement_stable"
@@ -1597,7 +1534,7 @@
     {
       "id": "common.childMonitor.target_duration",
       "values": {
-        "zh-Hans": "本次目标时长（分钟，0 表示不限）"
+        "zh-Hans": "目标时长（分钟，0 表示不限）"
       },
       "platforms": {
         "android": "target_duration"
@@ -1669,7 +1606,7 @@
     {
       "id": "common.childMonitor.help_body",
       "values": {
-        "zh-Hans": "固定设备并保证头部、双肩入镜；先采集空座位，再入座校准。\n识别不确定时请检查光线、遮挡和多人干扰，必要时重新定位。\n应用内暗屏仍在工作，系统锁屏或切到后台会结束本次监控。\n内容保存在本机，卸载可能丢失记录；需要保留时先导出。"
+        "zh-Hans": "固定设备，让完整人脸和双肩入镜，保持正常姿态约 3 秒即可自动校准。\n监控全画面的人物和物体变化；低头、偏头、半脸、贴边或脸部不可见都需要关注。\n光线不足、遮挡或多人干扰时请检查画面，设备移动后重新校准。\n应用内暗屏仍在监控；系统锁屏或离开应用会结束本次会话。"
       },
       "platforms": {
         "android": "help_body"
@@ -2308,7 +2245,7 @@
     {
       "id": "common.childMonitor.settings_unavailable",
       "values": {
-        "zh-Hans": "此设置暂不可用，请先开启对应功能或等待当前操作完成。"
+        "zh-Hans": "当前操作尚未完成，请稍候再修改。"
       },
       "platforms": {
         "android": "settings_unavailable"
@@ -2326,10 +2263,91 @@
     {
       "id": "common.childMonitor.settings_locked_hint",
       "values": {
-        "zh-Hans": "带 * 的设置暂不可修改；正在录像时，请先停止录像再设置。"
+        "zh-Hans": "检测与提醒参数可在录像中调整；带 * 的项目需停止录像后操作。"
       },
       "platforms": {
         "android": "settings_locked_hint"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_person",
+      "values": {
+        "zh-Hans": "请让需要监控的孩子出现在画面中。"
+      },
+      "platforms": {
+        "android": "placement_person"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_face_small",
+      "values": {
+        "zh-Hans": "人脸太小，请靠近摄像头，让整张脸和双肩清晰入镜。"
+      },
+      "platforms": {
+        "android": "placement_face_small"
+      }
+    },
+    {
+      "id": "common.childMonitor.detection_face_incomplete",
+      "values": {
+        "zh-Hans": "人脸未完整入镜"
+      },
+      "platforms": {
+        "android": "detection_face_incomplete"
+      }
+    },
+    {
+      "id": "common.childMonitor.detection_scene_change",
+      "values": {
+        "zh-Hans": "画面中的物体发生变化"
+      },
+      "platforms": {
+        "android": "detection_scene_change"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_enable_feature",
+      "values": {
+        "zh-Hans": "请先开启「%1$s」再调整。"
+      },
+      "platforms": {
+        "android": "settings_enable_feature"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_enable_posture",
+      "values": {
+        "zh-Hans": "请先开启至少一项姿态检测，再调整灵敏度。"
+      },
+      "platforms": {
+        "android": "settings_enable_posture"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_target_required",
+      "values": {
+        "zh-Hans": "设置并保存大于 0 的目标时长后，可开启到时自动停止。"
+      },
+      "platforms": {
+        "android": "settings_target_required"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_target_next_session",
+      "values": {
+        "zh-Hans": "目标时长和自动停止设置下次监控生效，本次保持开始时的设置。"
+      },
+      "platforms": {
+        "android": "settings_target_next_session"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_volume_next_playback",
+      "values": {
+        "zh-Hans": "音量调整从下一次播放开始生效。"
+      },
+      "platforms": {
+        "android": "settings_volume_next_playback"
       }
     }
   ]

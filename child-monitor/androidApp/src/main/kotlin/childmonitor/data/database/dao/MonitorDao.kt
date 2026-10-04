@@ -94,8 +94,13 @@ interface MonitorDao {
         updateSession(session)
     }
 
-    suspend fun changeSettings(json: String, expected: Long) {
+    @Transaction
+    suspend fun changeSettings(json: String, expected: Long, revision: ConfigRevisionEntity? = null,
+        session: SessionEntity? = null, events: List<EventEntity> = emptyList(),
+        coverage: List<CoverageEntity> = emptyList(), rest: List<RestWindowEntity> = emptyList()) {
         check(updateSettings(json, expected) == 1) { "Settings revision conflict" }
+        if (revision != null) insertRevision(revision)
+        if (session != null) checkpoint(session, events, coverage, rest)
     }
 
     @Transaction

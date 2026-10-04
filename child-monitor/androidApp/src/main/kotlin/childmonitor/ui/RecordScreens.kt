@@ -239,6 +239,8 @@ fun eventTitle(kind: String) = stringResource(when (kind) {
     "Away" -> R.string.detection_away
     "Return" -> R.string.event_return
     "Rest" -> R.string.event_rest
+    "FaceIncomplete" -> R.string.detection_face_incomplete
+    "SceneChange" -> R.string.detection_scene_change
     "Uncertain" -> R.string.monitor_unclear
     else -> R.string.event_interruption
 })

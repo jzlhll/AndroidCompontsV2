@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import childmonitor.model.CURRENT_DETECTION_MODEL_ID
 
 @Entity(tableName = "config_revisions", foreignKeys = [
     ForeignKey(entity = SessionEntity::class, parentColumns = ["id"], childColumns = ["session_id"], onDelete = ForeignKey.CASCADE)
@@ -15,6 +16,6 @@ data class ConfigRevisionEntity(
     @ColumnInfo(name = "effective_us") val effectiveUs: Long,
     @ColumnInfo(name = "settings_json") val settingsJson: String,
     @ColumnInfo(name = "calibration_json") val calibrationJson: String? = null,
-    @ColumnInfo(name = "model_id") val modelId: String = "mlkit-pose-beta5/efficientdet-lite0-int8-v1",
+    @ColumnInfo(name = "model_id") val modelId: String = CURRENT_DETECTION_MODEL_ID,
     @ColumnInfo(name = "mapping_version") val mappingVersion: Int = 1,
 )

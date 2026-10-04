@@ -43,6 +43,7 @@ class MonitorRuntime(
     private var engine: DetectionEngine? = null
     private var generation = 0L
     private var revisionId = ""
+    private var configEffectiveUs = 0L
     private var originUs: Long? = null
     private var invalidSinceUs: Long? = null
     private var preparingSinceUs = 0L
@@ -70,18 +71,21 @@ class MonitorRuntime(
                         val state = snapshotFlow.value
                         if (state.runState !in listOf(RunState.Preparing, RunState.Monitoring)) return@withLock
                         val elapsed = elapsed()
-                        val config = checkNotNull(state.settings).monitorSettings
+                        val config = checkNotNull(state.sessionSettings)
                         if (elapsed - lastObservationUs > DefaultMonitorConfig.evidenceMaxGapMs * 1_000) {
                             engine?.unknown(elapsed, revisionId)
                             if (invalidSinceUs == null) invalidSinceUs = lastObservationUs
                         }
                         if (state.runState == RunState.Preparing && elapsed - preparingSinceUs >= DefaultMonitorConfig.ineffectiveTimeoutMs * 1_000 && engine?.calibration == null) timeout = EndReason.PrepareTimeout
                         if (timeout == null && invalidSinceUs?.let { elapsed - it >= DefaultMonitorConfig.ineffectiveTimeoutMs * 1_000 } == true) timeout = EndReason.IneffectiveTimeout
-                        val needsAction = engine?.lastFeedback?.needsGuardian == true || invalidSinceUs?.let { elapsed - it >= DefaultMonitorConfig.qualityActionMs * 1_000 } == true
+                        val feedback = engine?.lastFeedback
+                        val needsAction = feedback?.needsGuardian == true || invalidSinceUs?.let { elapsed - it >= DefaultMonitorConfig.qualityActionMs * 1_000 } == true
                         val darkened = state.runState == RunState.Monitoring && !needsAction &&
                             clock.monotonicUs() - lastInteractionUs >= checkNotNull(state.settings).preferences.darkenAfterMs * 1_000
                         publish { it.copy(durationUs = elapsed, needsGuardian = needsAction, darkened = darkened,
-                            unclear = engine?.lastFeedback?.unclear ?: true) }
+                            unclear = feedback?.unclear ?: true, seated = feedback?.seated ?: false,
+                            away = feedback?.away ?: false, faceComplete = feedback?.faceComplete ?: false,
+                            sceneChanged = feedback?.sceneChanged ?: false) }
                         if (elapsed - lastCheckpointUs >= DefaultMonitorConfig.checkpointMs * 1_000) {
                             checkpoint(elapsed)
                         }
@@ -147,15 +151,15 @@ class MonitorRuntime(
         acceptedObservations = 0; rejectedObservations = 0; loggedEventStates.clear()
         logdNoFile(tag = TAG) { "start accepted sessionId=$id generation=$token requestId=$requestId monitorRevision=${state.settings?.monitorRevision} config=${Json.encodeToString(checkNotNull(state.settings).monitorSettings)}" }
         current = null; engine = null; preparingSinceUs = 0
-        originUs = null; invalidSinceUs = null; recoveringSinceUs = null; lastStorageCheckUs = 0; lastObservationUs = 0; lastCheckpointUs = 0
+        originUs = null; invalidSinceUs = null; recoveringSinceUs = null; lastStorageCheckUs = 0; lastObservationUs = 0; lastCheckpointUs = 0; configEffectiveUs = 0
         lastInteractionUs = clock.monotonicUs()
         reminders.clear()
         publish { it.copy(runState = RunState.Starting, captureReleased = false, sessionId = id,
-            resultId = null, interruptionId = null, error = null, reminderId = null, emptySeatReady = false, targetReached = false, placementIssue = "region", placementProgress = 0f, needsGuardian = false, darkened = false) }
+            sessionSettings = checkNotNull(state.settings).monitorSettings,
+            resultId = null, interruptionId = null, error = null, reminderId = null, faceComplete = false, sceneChanged = false, targetReached = false, placementIssue = "head", placementProgress = 0f, needsGuardian = false, darkened = false) }
         startJob = scope.launch {
             try {
                 val path = mutex.withLock {
-                    val config = checkNotNull(snapshotFlow.value.settings)
                     val wall = clock.wallUs()
                     val zone = clock.timezoneId()
                     val date = Instant.ofEpochMilli(wall / 1_000).atZone(ZoneId.of(zone)).toLocalDate().toString()
@@ -163,7 +167,7 @@ class MonitorRuntime(
                     val session = SessionEntity(id, zone, date, wall, initialConfigId = revisionId)
                     val media = MediaEntity(id, "sessions/$date/$id/video.mp4", "sessions/$date/$id/recording.pending.mp4", configRevisionId = revisionId)
                     files.create(coordinator.manifest(session, media, "recording"))
-                    dao.createSession(session, ConfigRevisionEntity(revisionId, id, 0, Json.encodeToString(config.monitorSettings)), media)
+                    dao.createSession(session, ConfigRevisionEntity(revisionId, id, 0, Json.encodeToString(checkNotNull(snapshotFlow.value.sessionSettings))), media)
                     current = session
                     engine = DetectionEngine(id, clock::newId)
                     media.stagingPath
@@ -341,7 +345,7 @@ class MonitorRuntime(
         val first = originUs ?: return@withLock
         if (observation.sessionId != current?.id || observation.generation != generation || state.runState !in listOf(RunState.Preparing, RunState.Monitoring)) return@withLock
         val time = observation.frameTimeUs - first
-        if (time < 0 || time <= lastObservationUs || elapsed() - time > DefaultMonitorConfig.evidenceMaxGapMs * 1_000) {
+        if (time < configEffectiveUs || time <= lastObservationUs || elapsed() - time > DefaultMonitorConfig.evidenceMaxGapMs * 1_000) {
             rejectedObservations++
             return@withLock
         }
@@ -351,7 +355,8 @@ class MonitorRuntime(
         val previousCalibration = engine.calibration
         val previousFacts = engine.facts()
         val previousFeedback = engine.lastFeedback
-        val feedback = engine.accept(observation.copy(frameTimeUs = time), checkNotNull(state.settings).monitorSettings, revisionId)
+        val config = checkNotNull(state.sessionSettings)
+        val feedback = engine.accept(observation.copy(frameTimeUs = time), config, revisionId)
         if (feedback.unclear) {
             recoveringSinceUs = null
             if (invalidSinceUs == null) invalidSinceUs = time
@@ -362,25 +367,21 @@ class MonitorRuntime(
         if (feedback.calibration != previousCalibration && feedback.calibration != null) {
             revisionId = clock.newId()
             dao.insertRevision(ConfigRevisionEntity(revisionId, observation.sessionId, time,
-                Json.encodeToString(checkNotNull(state.settings).monitorSettings), Json.encodeToString(feedback.calibration)))
+                Json.encodeToString(config), Json.encodeToString(feedback.calibration),
+                modelId = observation.modelId, mappingVersion = observation.mappingVersion))
             logdNoFile(tag = TAG) { "calibration committed sessionId=${observation.sessionId} generation=$generation revisionId=$revisionId atUs=$time calibrationVersion=${feedback.calibration.version} transformVersion=${feedback.calibration.transformVersion} modelId=${observation.modelId} mappingVersion=${observation.mappingVersion}" }
             current = checkNotNull(current).copy(state = RunState.Monitoring.name)
         }
-        reminders.playing?.let { if (!reminders.stillValid(it, feedback)) reminderJob?.cancel() }
+        reminders.playing?.let { if (!reminders.stillValid(it, feedback, config, time,
+            engine.ordinaryAwayUs(), engine.allowedAwayUs(config), engine.seatedSinceUs)) reminderJob?.cancel() }
         publish { it.copy(runState = if (feedback.calibration != null) RunState.Monitoring else RunState.Preparing,
-            seated = feedback.seated, emptySeatReady = engine.emptySeatReady,
+            seated = feedback.seated, faceComplete = feedback.faceComplete, sceneChanged = feedback.sceneChanged,
             placementIssue = engine.placementIssue, placementProgress = engine.placementProgress, away = feedback.away, unclear = feedback.unclear, needsGuardian = feedback.needsGuardian) }
         val nextFacts = engine.facts()
         if (nextFacts.events.size != previousFacts.events.size || nextFacts.coverage.size != previousFacts.coverage.size ||
             previousFeedback.activeKinds != feedback.activeKinds || feedback.calibration != previousCalibration) checkpoint(time)
     }
 
-    suspend fun confirmPlacement(region: SeatRegion, requestId: String) = command("confirm placement", requestId) {
-        check(snapshotFlow.value.runState == RunState.Preparing)
-        checkNotNull(engine).confirmRegion(region)
-        logdNoFile(tag = TAG) { "confirm placement sessionId=${current?.id} requestId=$requestId atUs=${elapsed()}" }
-        publish { it.copy(emptySeatReady = false) }
-    }
     suspend fun reposition(requestId: String) = command("reposition", requestId) {
         records.requireAccess()
         check(snapshotFlow.value.runState in listOf(RunState.Preparing, RunState.Monitoring))
@@ -388,28 +389,62 @@ class MonitorRuntime(
         engine?.reposition(preparingSinceUs)
         logdNoFile(tag = TAG) { "reposition accepted sessionId=${current?.id} requestId=$requestId atUs=$preparingSinceUs invalidSinceUs=$invalidSinceUs" }
         recoveringSinceUs = null
-        publish { it.copy(runState = RunState.Preparing, emptySeatReady = false, seated = false, away = false,
-            unclear = true, needsGuardian = false, darkened = false) }
+        publish { it.copy(runState = RunState.Preparing, faceComplete = false, sceneChanged = false, seated = false, away = false,
+            unclear = true, needsGuardian = false, placementIssue = "head", placementProgress = 0f, darkened = false) }
     }
     suspend fun interact(requestId: String) = command("interact", requestId) {
         lastInteractionUs = clock.monotonicUs()
         publish { it.copy(darkened = false) }
     }
     suspend fun updateSettings(value: MonitorSettings, expectedRevision: Long, requestId: String) = command("update settings", requestId) {
+        applySettings(value, expectedRevision, requestId)
+    }
+    suspend fun restoreSettings(expectedRevision: Long, requestId: String) = command("restore settings", requestId) {
+        checkIdle()
+        applySettings(DefaultMonitorConfig.settings, expectedRevision, requestId)
+    }
+    private suspend fun applySettings(value: MonitorSettings, expectedRevision: Long, requestId: String) {
         records.requireAccess()
         value.validate()
-        checkIdle()
-        val old = checkNotNull(snapshotFlow.value.settings)
+        val state = snapshotFlow.value
+        if (!state.canChangeSettings()) throw CommandFailure(ErrorCode.Busy)
+        val old = checkNotNull(state.settings)
         if (old.monitorRevision != expectedRevision) throw CommandFailure(ErrorCode.SettingsConflict)
+        if (old.monitorSettings == value) return
         val configJson = Json.encodeToString(value)
-        dao.changeSettings(configJson, expectedRevision)
+        val previous = state.sessionSettings?.takeIf { state.runState in listOf(RunState.Preparing, RunState.Monitoring) }
+        val effective = previous?.let { value.copy(targetDurationMs = it.targetDurationMs, targetAutoStop = it.targetAutoStop) }
+        val activeEngine = engine?.takeIf { effective != null && effective != previous }
+        if (activeEngine != null) {
+            val time = elapsed()
+            val nextRevision = clock.newId()
+            val facts = activeEngine.factsAtConfigBoundary(checkNotNull(effective))
+            val session = checkNotNull(current).copy(durationUs = time, lastCheckpointUs = time)
+            dao.changeSettings(configJson, expectedRevision,
+                ConfigRevisionEntity(nextRevision, session.id, time, Json.encodeToString(effective),
+                    activeEngine.calibration?.let { Json.encodeToString(it) }), session, facts.events, facts.coverage, facts.rest)
+            activeEngine.changeConfig(time, checkNotNull(previous), effective, nextRevision, facts)
+            reminders.changeConfig(previous, effective)
+            revisionId = nextRevision
+            configEffectiveUs = time
+            current = session
+            lastCheckpointUs = time
+            reminders.playing?.let { kind ->
+                if (previous.soundEnabled != effective.soundEnabled || !reminders.stillValid(kind, activeEngine.lastFeedback,
+                    effective, time, activeEngine.ordinaryAwayUs(), activeEngine.allowedAwayUs(effective), activeEngine.seatedSinceUs)) reminderJob?.cancel()
+            }
+            logdNoFile(tag = TAG) { "update session settings committed sessionId=${session.id} requestId=$requestId revisionId=$nextRevision atUs=$time" }
+        } else dao.changeSettings(configJson, expectedRevision)
         logdNoFile(tag = TAG) { "update settings committed requestId=$requestId oldRevision=$expectedRevision newRevision=${expectedRevision + 1} config=$configJson" }
-        if (old.monitorSettings.soundEnabled && !value.soundEnabled) reminderJob?.cancel()
-        publish { it.copy(settings = old.copy(monitorRevision = expectedRevision + 1, monitorSettings = value)) }
+        if (old.monitorSettings.soundEnabled && !value.soundEnabled) { reminderJob?.cancel(); terminalAudioJob?.cancel() }
+        val feedback = activeEngine?.lastFeedback
+        publish { it.copy(settings = old.copy(monitorRevision = expectedRevision + 1, monitorSettings = value),
+            sessionSettings = effective ?: it.sessionSettings, durationUs = if (activeEngine != null) checkNotNull(current).durationUs else it.durationUs,
+            away = feedback?.away ?: it.away, unclear = feedback?.unclear ?: it.unclear) }
     }
     suspend fun updatePreferences(patch: UserPreferencesPatch, expectedRevision: Long, requestId: String) = command("update preferences", requestId) {
         records.requireAccess()
-        checkIdle()
+        if (!snapshotFlow.value.canChangeSettings(if (patch.darkenAfterMs != null) SettingPolicy.Stopped else SettingPolicy.Live)) throw CommandFailure(ErrorCode.Busy)
         val saved = settings.preferences.update(patch, expectedRevision)
         logdNoFile(tag = TAG) { "update preferences committed requestId=$requestId oldRevision=$expectedRevision newRevision=${saved.preferencesRevision} avatarChanged=${patch.avatarId != null} darkenMs=${saved.darkenAfterMs} retentionDays=${saved.retentionDays}" }
         publish { it.copy(settings = checkNotNull(it.settings).copy(preferences = saved)) }
@@ -436,7 +471,6 @@ class MonitorRuntime(
     }
     suspend fun storageOverview(requestId: String) = command("storage overview", requestId) {
         records.requireAccess()
-        checkIdle()
         StorageOverview(files.usedBytes(), files.availableBytes(), dao.pendingMediaCount())
     }
     suspend fun purgeVideos(ids: List<String>, protectedId: String?, requestId: String) = command("purge videos", requestId) {
@@ -470,7 +504,8 @@ class MonitorRuntime(
     }
     suspend fun previewReminder(clip: String, requestId: String) = command("preview reminder", requestId) {
         records.requireAccess()
-        checkIdle()
+        if (!snapshotFlow.value.canChangeSettings()) throw CommandFailure(ErrorCode.Busy)
+        check(checkNotNull(snapshotFlow.value.settings).monitorSettings.soundEnabled)
         require(clip in listOf("reminder_head_down", "reminder_away", "reminder_rest"))
         launchTerminalAudio(clip, reminderJob)
     }
@@ -577,8 +612,10 @@ class MonitorRuntime(
                         val startedUs = clock.monotonicUs()
                         scope.launch {
                             mutex.withLock {
+                                val currentConfig = snapshotFlow.value.sessionSettings ?: return@withLock
                                 if (completed || generation != token || snapshotFlow.value.runState !in listOf(RunState.Preparing, RunState.Monitoring) ||
-                                    !reminders.stillValid(kind, engine.lastFeedback)) return@withLock
+                                    !reminders.stillValid(kind, engine.lastFeedback, currentConfig,
+                                        elapsed(), engine.ordinaryAwayUs(), engine.allowedAwayUs(currentConfig), engine.seatedSinceUs)) return@withLock
                                 val now = startedUs - (reminderOriginUs ?: startedUs)
                                 row = row.copy(startedUs = now, result = "started")
                                 if (persistReminder(row)) {
@@ -590,7 +627,7 @@ class MonitorRuntime(
                                 }
                             }
                         }
-                    }, config.soundVolume)
+                    }, snapshotFlow.value.sessionSettings?.soundVolume ?: config.soundVolume)
                 }
                 mutex.withLock {
                     completed = true
@@ -646,9 +683,9 @@ class MonitorRuntime(
         mutableSnapshotFlow.value = next
         if (previous.runState != next.runState || previous.captureReleased != next.captureReleased ||
             previous.unclear != next.unclear || previous.seated != next.seated || previous.away != next.away ||
-            previous.needsGuardian != next.needsGuardian || previous.emptySeatReady != next.emptySeatReady ||
+            previous.needsGuardian != next.needsGuardian || previous.faceComplete != next.faceComplete || previous.sceneChanged != next.sceneChanged ||
             previous.placementIssue != next.placementIssue || previous.darkened != next.darkened || previous.targetReached != next.targetReached || previous.error != next.error) {
-            logdNoFile(tag = TAG) { "state changed sessionId=${next.sessionId} generation=$generation revision=${next.revision} state=${next.runState} atUs=${next.durationUs} released=${next.captureReleased} seated=${next.seated} away=${next.away} unclear=${next.unclear} guardian=${next.needsGuardian} emptySeatReady=${next.emptySeatReady} placementIssue=${next.placementIssue} darkened=${next.darkened} targetReached=${next.targetReached} invalidSinceUs=$invalidSinceUs error=${next.error}" }
+            logdNoFile(tag = TAG) { "state changed sessionId=${next.sessionId} generation=$generation revision=${next.revision} state=${next.runState} atUs=${next.durationUs} released=${next.captureReleased} seated=${next.seated} away=${next.away} unclear=${next.unclear} guardian=${next.needsGuardian} faceComplete=${next.faceComplete} sceneChanged=${next.sceneChanged} placementIssue=${next.placementIssue} darkened=${next.darkened} targetReached=${next.targetReached} invalidSinceUs=$invalidSinceUs error=${next.error}" }
         }
     }
     private suspend fun <T> command(operation: String, requestId: String, block: suspend () -> T): CommandResult<T> = scope.async {

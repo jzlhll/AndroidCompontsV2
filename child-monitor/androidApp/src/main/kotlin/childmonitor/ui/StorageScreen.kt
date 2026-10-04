@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import childmonitor.android.R
 import childmonitor.model.UserPreferencesPatch
+import childmonitor.model.SettingPolicy
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -45,7 +46,7 @@ fun StorageScreen(viewModel: RecordViewModel, onManage: () -> Unit, onBack: () -
         TextButton({ viewModel.loadStorage() }, enabled = !state.busy) { Text(stringResource(R.string.refresh), style = ComposeTypography.buttonLabelLarge) }
         RestrictedSetting(access, available = !state.busy) { enabled ->
             Column {
-                Text(settingLabel(stringResource(R.string.storage_retention), enabled), style = ComposeTypography.titleMedium)
+                Text(stringResource(R.string.storage_retention), style = ComposeTypography.titleMedium)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf(0, 7, 30, 90).forEach { days ->
                         FilterChip(prefs?.retentionDays == days, { access.run(!state.busy) { if (days == 0) save(0) else selected = days } }, enabled = enabled,
@@ -55,7 +56,7 @@ fun StorageScreen(viewModel: RecordViewModel, onManage: () -> Unit, onBack: () -
             }
         }
         Text(stringResource(R.string.retention_explain), style = ComposeTypography.bodyMedium)
-        Button(onManage) { Text(stringResource(R.string.manage), style = ComposeTypography.buttonLabelLarge) }
+        SettingsAction(stringResource(R.string.manage), access, onManage, policy = SettingPolicy.Stopped)
         TextButton(onBack) { Text(stringResource(R.string.back), style = ComposeTypography.buttonLabelLarge) }
     }
     if (selected != null) AlertDialog(onDismissRequest = { selected = null }, text = { Text(stringResource(R.string.retention_confirm), style = ComposeTypography.bodyMedium) },

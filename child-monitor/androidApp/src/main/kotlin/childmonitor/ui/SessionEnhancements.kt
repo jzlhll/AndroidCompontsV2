@@ -2,17 +2,12 @@ package childmonitor.ui
 
 import android.content.Context
 import android.media.AudioManager
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,23 +22,13 @@ import childmonitor.model.*
 fun PlacementGuide(snapshot: UiSnapshot, modifier: Modifier = Modifier) {
     Column(modifier) {
         Text(stringResource(R.string.placement_steps), style = ComposeTypography.labelMedium)
-        Canvas(Modifier.fillMaxWidth().height(48.dp)) {
-            val x = size.width / 2
-            drawRect(Color.Gray, Offset(x - 24.dp.toPx(), 2.dp.toPx()), Size(48.dp.toPx(), 44.dp.toPx()), style = Stroke(2.dp.toPx()))
-            if (snapshot.emptySeatReady) {
-                drawCircle(Color(0xFF6E9E86), 7.dp.toPx(), Offset(x, 13.dp.toPx()))
-                drawLine(Color(0xFF6E9E86), Offset(x - 16.dp.toPx(), 32.dp.toPx()), Offset(x + 16.dp.toPx(), 32.dp.toPx()), 4.dp.toPx())
-            }
-        }
         Text(stringResource(when (snapshot.placementIssue) {
-            "region" -> R.string.placement_region
+            "person" -> R.string.placement_person
+            "face_small" -> R.string.placement_face_small
             "moved" -> R.string.placement_moved
             "multiple" -> R.string.placement_multiple
             "lighting" -> R.string.placement_lighting
-            "occupied" -> R.string.placement_occupied
-            "empty" -> R.string.placement_empty
             "shoulders" -> R.string.placement_shoulders
-            "outside" -> R.string.placement_outside
             "head" -> R.string.placement_head
             "upright" -> R.string.placement_upright
             else -> R.string.placement_stable
@@ -66,23 +51,27 @@ fun SettingsEnhancements(viewModel: MonitorViewModel, snapshot: UiSnapshot, acce
     var invalid by remember { mutableStateOf(false) }
     var restore by remember { mutableStateOf(false) }
     var help by remember { mutableStateOf(false) }
+    val soundReason = stringResource(R.string.settings_enable_feature, stringResource(R.string.sound_enabled))
+    val targetReason = stringResource(R.string.settings_target_required)
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        RestrictedSetting(access, available = config.soundEnabled) { enabled ->
+        RestrictedSetting(access, available = config.soundEnabled, unavailableReason = soundReason) { enabled ->
             Column {
-                Text(settingLabel(stringResource(R.string.sound_volume, (volume * 100).toInt()), enabled), style = ComposeTypography.bodyMedium)
+                Text(stringResource(R.string.sound_volume, (volume * 100).toInt()), style = ComposeTypography.bodyMedium)
                 Slider(volume, { volume = it }, enabled = enabled, onValueChangeFinished = {
-                    access.run(config.soundEnabled) { viewModel.command { viewModel.runtime.updateSettings(config.copy(soundVolume = volume), revision, it) } }
+                    access.run(config.soundEnabled, unavailableReason = soundReason) { viewModel.command { viewModel.runtime.updateSettings(config.copy(soundVolume = volume), revision, it) } }
                 })
+                if (!config.soundEnabled) Text(soundReason, style = ComposeTypography.bodySmall)
+                else if (access.recording) Text(stringResource(R.string.settings_volume_next_playback), style = ComposeTypography.bodySmall)
             }
         }
         SettingsAction(stringResource(R.string.sound_preview), access, {
             lowVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) <= 1
             viewModel.command { viewModel.runtime.previewReminder("reminder_head_down", it) }
-        }, available = config.soundEnabled)
+        }, available = config.soundEnabled, unavailableReason = soundReason)
         if (lowVolume) Text(stringResource(R.string.sound_system_low), style = ComposeTypography.bodySmall)
-        RestrictedSetting(access) { enabled ->
+        RestrictedSetting(access, policy = SettingPolicy.NextSession) { enabled ->
             OutlinedTextField(minutes, { minutes = it; invalid = false }, enabled = enabled,
-                modifier = Modifier.fillMaxWidth(), label = { Text(settingLabel(stringResource(R.string.target_duration), enabled), style = ComposeTypography.labelMedium) },
+                modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.target_duration), style = ComposeTypography.labelMedium) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, isError = invalid)
         }
         if (invalid) Text(stringResource(R.string.target_invalid), style = ComposeTypography.bodySmall)
@@ -90,20 +79,22 @@ fun SettingsEnhancements(viewModel: MonitorViewModel, snapshot: UiSnapshot, acce
             val value = minutes.toLongOrNull()
             invalid = value == null || value !in 0..480
             if (!invalid) viewModel.command { viewModel.runtime.updateSettings(config.copy(targetDurationMs = checkNotNull(value) * 60_000), revision, it) }
-        })
-        RestrictedSetting(access, available = config.targetDurationMs > 0) { enabled ->
+        }, policy = SettingPolicy.NextSession)
+        RestrictedSetting(access, available = config.targetDurationMs > 0, policy = SettingPolicy.NextSession, unavailableReason = targetReason) { enabled ->
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Checkbox(config.targetAutoStop, { value -> access.run(config.targetDurationMs > 0) {
+                Checkbox(config.targetAutoStop, { value -> access.run(config.targetDurationMs > 0, SettingPolicy.NextSession, targetReason) {
                     viewModel.command { viewModel.runtime.updateSettings(config.copy(targetAutoStop = value), revision, it) }
                 } }, enabled = enabled)
-                Text(settingLabel(stringResource(R.string.target_auto_stop), enabled), style = ComposeTypography.bodyMedium)
+                Text(stringResource(R.string.target_auto_stop), style = ComposeTypography.bodyMedium)
             }
         }
-        SettingsAction(stringResource(R.string.settings_restore), access, { restore = true })
+        if (config.targetDurationMs == 0L) Text(targetReason, style = ComposeTypography.bodySmall)
+        if (access.recording) Text(stringResource(R.string.settings_target_next_session), style = ComposeTypography.bodySmall)
+        SettingsAction(stringResource(R.string.settings_restore), access, { restore = true }, policy = SettingPolicy.Stopped)
         TextButton({ help = true }) { Text(stringResource(R.string.help_title), style = ComposeTypography.buttonLabelLarge) }
     }
     if (restore) AlertDialog(onDismissRequest = { restore = false }, text = { Text(stringResource(R.string.settings_restore_confirm), style = ComposeTypography.bodyMedium) },
-        confirmButton = { TextButton({ restore = false; access.run { viewModel.command { viewModel.runtime.updateSettings(DefaultMonitorConfig.settings, revision, it) } } }) { Text(stringResource(R.string.save), style = ComposeTypography.buttonLabelLarge) } },
+        confirmButton = { TextButton({ restore = false; access.run(policy = SettingPolicy.Stopped) { viewModel.command { viewModel.runtime.restoreSettings(revision, it) } } }) { Text(stringResource(R.string.save), style = ComposeTypography.buttonLabelLarge) } },
         dismissButton = { TextButton({ restore = false }) { Text(stringResource(R.string.cancel), style = ComposeTypography.buttonLabelLarge) } })
     if (help) AlertDialog(onDismissRequest = { help = false }, title = { Text(stringResource(R.string.help_title), style = ComposeTypography.titleMedium) },
         text = { Column { Text(stringResource(R.string.help_body), style = ComposeTypography.bodyMedium); Text(stringResource(R.string.app_version, BuildConfig.VERSION_NAME), style = ComposeTypography.labelSmall) } },
@@ -112,4 +103,4 @@ fun SettingsEnhancements(viewModel: MonitorViewModel, snapshot: UiSnapshot, acce
 
 @Preview(showBackground = true)
 @Composable
-private fun PlacementGuidePreview() { AppPreview { PlacementGuide(UiSnapshot(placementIssue = "empty", placementProgress = .5f)) } }
+private fun PlacementGuidePreview() { AppPreview { PlacementGuide(UiSnapshot(placementIssue = "stable", placementProgress = .5f)) } }

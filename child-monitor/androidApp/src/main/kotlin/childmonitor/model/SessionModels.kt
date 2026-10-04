@@ -2,6 +2,8 @@ package childmonitor.model
 
 import kotlinx.serialization.Serializable
 
+const val CURRENT_DETECTION_MODEL_ID = "mlkit-pose-beta5/face-16.1.7/efficientdet-lite0-int8-v2"
+
 @Serializable
 enum class RunState { Idle, Starting, Preparing, Monitoring, Stopping, Stopped }
 @Serializable
@@ -9,10 +11,12 @@ enum class SaveState { Finalizing, Saved, RetryableFailure, Unrecoverable, Metad
 @Serializable
 enum class EndReason { UserStop, TargetReached, SystemLocked, Background, CameraInterrupted, CaptureFailed, IneffectiveTimeout, StorageLow, PrepareTimeout }
 @Serializable
-enum class EventKind { HeadDown, LeanForward, HeadTilt, BodyLean, Away, Return, Uncertain, Interruption }
+enum class EventKind { HeadDown, LeanForward, HeadTilt, BodyLean, Away, Return, Uncertain, Interruption, FaceIncomplete, SceneChange }
 
 @Serializable
-data class Point(val x: Float, val y: Float, val confidence: Float = 1f)
+data class Point(val x: Float, val y: Float, val confidence: Float = 1f) {
+    val inFrame: Boolean get() = x in .02f..0.98f && y in .02f..0.98f
+}
 @Serializable
 data class SeatRegion(val left: Float, val top: Float, val right: Float, val bottom: Float) {
     fun validate() {
@@ -23,8 +27,16 @@ data class SeatRegion(val left: Float, val top: Float, val right: Float, val bot
 }
 
 @Serializable
-data class Calibration(val roi: SeatRegion, val headHeight: Float, val headAngle: Float,
-    val bodyAngle: Float?, val shoulderWidth: Float, val transformVersion: Int, val version: Long)
+data class Calibration(val headHeight: Float, val headAngle: Float,
+    val bodyAngle: Float?, val shoulderWidth: Float, val transformVersion: Int, val version: Long,
+    val facePitch: Float = 0f, val faceYaw: Float = 0f,
+    // 兼容历史配置快照，新会话不再保存或使用座位区域。
+    val roi: SeatRegion? = null)
+
+data class FaceObservation(val bounds: SeatRegion, val complete: Boolean,
+    val pitch: Float, val yaw: Float, val largeEnough: Boolean)
+
+data class DetectedObject(val category: String, val bounds: SeatRegion)
 
 data class SceneCell(val luminance: Float, val redChroma: Float, val blueChroma: Float, val texture: Float)
 data class SceneGrid(val columns: Int, val rows: Int, val cells: List<SceneCell>)
@@ -39,7 +51,9 @@ data class Observation(
     val sceneClear: Boolean,
     val deviceMoved: Boolean,
     val sceneGrid: SceneGrid? = null,
-    val modelId: String = "mlkit-pose-beta5/efficientdet-lite0-int8-v1",
+    val faces: List<FaceObservation> = emptyList(),
+    val objects: List<DetectedObject> = emptyList(),
+    val modelId: String = CURRENT_DETECTION_MODEL_ID,
     val mappingVersion: Int = 1,
 )
 

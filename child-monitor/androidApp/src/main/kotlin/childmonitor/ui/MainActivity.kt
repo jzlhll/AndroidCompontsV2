@@ -115,7 +115,7 @@ private fun MonitorNavigation(app: MonitorApplication) {
                     entry<HomeKey> {
                         val model = viewModel { MonitorViewModel(app.runtime) }
                         MonitorRoute(model, app, onOpenProbe = { if (BuildConfig.DEBUG) go(CapabilityProbeKey) },
-                            onAlbum = { go(AlbumKey()) }, onStorage = { go(StorageKey) }, onAvatar = { go(AvatarKey(false)) }, onResult = { id, celebrate -> go(ResultKey(id, celebrate)) }, onCleanup = { go(AlbumKey(cleanup = true)) })
+                            onAlbum = { go(AlbumKey()) }, onAvatar = { go(AvatarKey(false)) }, onResult = { id, celebrate -> go(ResultKey(id, celebrate)) }, onCleanup = { go(AlbumKey(cleanup = true)) })
                     }
                     entry<StatisticsKey> {
                         val model = viewModel { RecordViewModel(app.runtime) }

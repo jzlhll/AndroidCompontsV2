@@ -13,6 +13,7 @@ lifecycle = "2.11.0"
 navigation3 = "1.2.0"
 camera = "1.6.2"
 pose = "18.0.0-beta5"
+face = "16.1.7"
 mediapipe = "1.0.0"
 media3 = "1.11.1"
 
@@ -40,6 +41,7 @@ camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = 
 camera-video = { module = "androidx.camera:camera-video", version.ref = "camera" }
 camera-view = { module = "androidx.camera:camera-view", version.ref = "camera" }
 camera-mlkit = { module = "androidx.camera:camera-mlkit-vision", version.ref = "camera" }
+mlkit-face = { module = "com.google.mlkit:face-detection", version.ref = "face" }
 mlkit-pose = { module = "com.google.mlkit:pose-detection", version.ref = "pose" }
 
 mediapipe-vision = { module = "com.google.mediapipe:tasks-vision", version.ref = "mediapipe" }

@@ -8,14 +8,16 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import androidx.camera.view.transform.ImageProxyTransformFactory
-import androidx.camera.view.transform.OutputTransform
 import childmonitor.model.*
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.framework.image.MPImage
 import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.objectdetector.ObjectDetector
+import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceContour
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseLandmark
@@ -30,7 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-/** 两个模型共用复制后的图像，由本适配器唯一负责关闭 ImageProxy，最多一帧推理在途。 */
+/** 人脸、人体与姿态模型共用复制后的图像，由本适配器唯一负责关闭 ImageProxy，最多一帧推理在途。 */
 class PosePersonAnalyzer(
     context: Context,
     private val scope: CoroutineScope,
@@ -38,14 +40,16 @@ class PosePersonAnalyzer(
     private val generation: Long,
     private val deliver: (Observation) -> Unit,
     private val onFailure: () -> Unit,
-    private val onTransform: (OutputTransform, Int, Int) -> Unit,
 ) : ImageAnalysis.Analyzer {
     private val pose = PoseDetection.getClient(PoseDetectorOptions.Builder().setDetectorMode(PoseDetectorOptions.STREAM_MODE).build())
     private val people = try { ObjectDetector.createFromOptions(context, ObjectDetector.ObjectDetectorOptions.builder()
         .setBaseOptions(BaseOptions.builder().setModelAssetPath("models/efficientdet_lite0.tflite").build())
-        .setRunningMode(RunningMode.IMAGE).setScoreThreshold(.45f).setMaxResults(6)
-        .setCategoryAllowlist(listOf("person")).build()) }
+        .setRunningMode(RunningMode.IMAGE).setScoreThreshold(.45f).setMaxResults(20).build()) }
     catch (e: Exception) { pose.close(); throw e }
+    private val faces = try { FaceDetection.getClient(FaceDetectorOptions.Builder()
+        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+        .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL).build()) }
+    catch (e: Exception) { try { pose.close() } finally { people.close() }; throw e }
     val released = CompletableDeferred<Unit>()
     private val busy = AtomicBoolean(false)
     private val modelsClosed = AtomicBoolean(false)
@@ -53,6 +57,11 @@ class PosePersonAnalyzer(
     private var lastNs = 0L
     private var diagnosticFormat: String? = null
     private var previousBorder: List<Float>? = null
+    private val featureSizes = mapOf(FaceContour.FACE to 36, FaceContour.LEFT_EYE to 16, FaceContour.RIGHT_EYE to 16,
+        FaceContour.NOSE_BOTTOM to 3, FaceContour.UPPER_LIP_TOP to 11, FaceContour.LOWER_LIP_BOTTOM to 9)
+    private val names = mapOf(PoseLandmark.NOSE to "nose", PoseLandmark.LEFT_EYE to "leftEye", PoseLandmark.RIGHT_EYE to "rightEye",
+        PoseLandmark.LEFT_EAR to "leftEar", PoseLandmark.RIGHT_EAR to "rightEar", PoseLandmark.LEFT_SHOULDER to "leftShoulder",
+        PoseLandmark.RIGHT_SHOULDER to "rightShoulder", PoseLandmark.LEFT_HIP to "leftHip", PoseLandmark.RIGHT_HIP to "rightHip")
 
     override fun analyze(image: ImageProxy) {
         if (closed || image.imageInfo.timestamp - lastNs < 200_000_000L || !busy.compareAndSet(false, true)) {
@@ -72,8 +81,6 @@ class PosePersonAnalyzer(
                 logdNoFile(tag = TAG) { "analysis format sessionId=$sessionId generation=$generation width=${image.width} height=${image.height} rotationDegrees=$rotation sampleIntervalMs=200" }
                 diagnosticFormat = format
             }
-            val transform = ImageProxyTransformFactory().apply { isUsingRotationDegrees = true; isUsingCropRect = true }.getOutputTransform(image)
-            onTransform(transform, if (rotation % 180 == 0) image.width else image.height, if (rotation % 180 == 0) image.height else image.width)
             val raw = image.toBitmap()
             bitmap = if (rotation == 0) raw else Bitmap.createBitmap(raw, 0, 0, raw.width, raw.height,
                 Matrix().apply { postRotate(rotation.toFloat()) }, true).also { if (it !== raw) raw.recycle() }
@@ -91,14 +98,31 @@ class PosePersonAnalyzer(
                         if (continuation.isActive) continuation.resume(it)
                     }.addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
                 }
-                input = BitmapImageBuilder(bitmap).build()
-                val boxes = people.detect(input).detections().map { detection ->
-                    val box = detection.boundingBox()
-                    SeatRegion(box.left / bitmap.width, box.top / bitmap.height, box.right / bitmap.width, box.bottom / bitmap.height)
+                val detectedFaces = suspendCancellableCoroutine<List<Face>> { continuation ->
+                    faces.process(InputImage.fromBitmap(bitmap, 0)).addOnSuccessListener {
+                        if (continuation.isActive) continuation.resume(it)
+                    }.addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
+                }.map { face ->
+                    val box = face.boundingBox
+                    val bounds = SeatRegion(box.left.toFloat() / bitmap.width, box.top.toFloat() / bitmap.height,
+                        box.right.toFloat() / bitmap.width, box.bottom.toFloat() / bitmap.height)
+                    val largeEnough = box.width() >= 200 && box.height() >= 200
+                    val contoursComplete = featureSizes.all { (kind, size) ->
+                        val points = face.getContour(kind)?.points.orEmpty()
+                        points.size == size && points.all { Point(it.x / bitmap.width, it.y / bitmap.height).inFrame }
+                    }
+                    FaceObservation(bounds = bounds, complete = largeEnough && contoursComplete &&
+                        listOf(bounds.left, bounds.top, bounds.right, bounds.bottom).all { it in .02f..0.98f } &&
+                        face.headEulerAngleX.isFinite() && face.headEulerAngleZ.isFinite() && abs(face.headEulerAngleY) <= 35f,
+                        pitch = face.headEulerAngleX, yaw = face.headEulerAngleY, largeEnough = largeEnough)
                 }
-                val names = mapOf(PoseLandmark.NOSE to "nose", PoseLandmark.LEFT_EYE to "leftEye", PoseLandmark.RIGHT_EYE to "rightEye",
-                    PoseLandmark.LEFT_EAR to "leftEar", PoseLandmark.RIGHT_EAR to "rightEar", PoseLandmark.LEFT_SHOULDER to "leftShoulder",
-                    PoseLandmark.RIGHT_SHOULDER to "rightShoulder", PoseLandmark.LEFT_HIP to "leftHip", PoseLandmark.RIGHT_HIP to "rightHip")
+                input = BitmapImageBuilder(bitmap).build()
+                val objects = people.detect(input).detections().mapNotNull { detection ->
+                    val category = detection.categories().maxByOrNull { it.score() }?.categoryName() ?: return@mapNotNull null
+                    val box = detection.boundingBox()
+                    DetectedObject(category, SeatRegion(box.left / bitmap.width, box.top / bitmap.height, box.right / bitmap.width, box.bottom / bitmap.height))
+                }
+                val boxes = objects.filter { it.category == "person" }.map { it.bounds }
                 val landmarks = result.allPoseLandmarks.mapNotNull { point -> names[point.landmarkType]?.let {
                     it to Point(point.position.x / bitmap.width, point.position.y / bitmap.height, point.inFrameLikelihood)
                 } }.toMap()
@@ -131,7 +155,7 @@ class PosePersonAnalyzer(
                 previousBorder = border
                 if (!closed) deliver(Observation(sessionId, generation, timestamp, rotation, landmarks, boxes,
                     sceneClear = mean in 25.0..235.0 && variance > 100, deviceMoved = moved,
-                    sceneGrid = SceneGrid(columns, rows, cells)))
+                    sceneGrid = SceneGrid(columns, rows, cells), faces = detectedFaces, objects = objects.filter { it.category != "person" }))
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) {
                 logEx(tag = TAG, throwable = e) { "analysis frame failed sessionId=$sessionId generation=$generation timestampUs=$timestamp" }
@@ -154,7 +178,7 @@ class PosePersonAnalyzer(
     }
     private fun releaseModels() {
         if (modelsClosed.compareAndSet(false, true)) {
-            try { try { pose.close() } finally { people.close() }; released.complete(Unit) }
+            try { try { pose.close() } finally { try { people.close() } finally { faces.close() } }; released.complete(Unit) }
             catch (e: Exception) { released.completeExceptionally(e) }
         }
     }

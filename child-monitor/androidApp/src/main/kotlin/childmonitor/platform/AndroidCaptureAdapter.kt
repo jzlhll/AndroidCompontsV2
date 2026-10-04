@@ -9,10 +9,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraCharacteristics
 import android.view.Surface
-import android.graphics.RectF
-import androidx.camera.view.transform.CoordinateTransform
-import androidx.camera.view.transform.OutputTransform
-import childmonitor.model.SeatRegion
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
 import androidx.camera.core.resolutionselector.ResolutionSelector
@@ -51,24 +47,9 @@ class AndroidCaptureAdapter(
     private var video: VideoCapture<TimestampedVideoOutput>? = null
     private var output: TimestampedVideoOutput? = null
     private var analyzer: PosePersonAnalyzer? = null
-    @Volatile private var frameTransform: OutputTransform? = null
-    @Volatile private var frameWidth = 0
-    @Volatile private var frameHeight = 0
     private var ownsPermit = false
     private var diagnosticSessionId: String? = null
     private val executor = Executors.newSingleThreadExecutor()
-
-    @SuppressLint("UnsafeOptInUsageError")
-    fun mapPlacement(rect: RectF): SeatRegion? {
-        val target = frameTransform ?: return null
-        val source = previewView?.outputTransform ?: return null
-        if (frameWidth <= 0 || frameHeight <= 0) return null
-        return try {
-            val mapped = RectF(rect)
-            CoordinateTransform(source, target).mapRect(mapped)
-            SeatRegion(mapped.left / frameWidth, mapped.top / frameHeight, mapped.right / frameWidth, mapped.bottom / frameHeight).also { it.validate() }
-        } catch (_: Exception) { null }
-    }
 
     fun attach(owner: LifecycleOwner, view: PreviewView) { this.owner = owner; previewView = view }
     fun detach(view: PreviewView) {
@@ -108,8 +89,7 @@ class AndroidCaptureAdapter(
         try {
             analyzer = withContext(Dispatchers.Default) {
                 PosePersonAnalyzer(context, scope, sessionId, generation, onObservation,
-                    onFailure = { onInterrupted(EndReason.CaptureFailed) },
-                    onTransform = { transform, width, height -> frameWidth = width; frameHeight = height; frameTransform = transform })
+                    onFailure = { onInterrupted(EndReason.CaptureFailed) })
                     .also { created = it }
             }
         } finally {

@@ -10,6 +10,7 @@ data class UiSnapshot(
     val requestId: String? = null,
     val ready: Boolean = false,
     val settings: SettingsSnapshot? = null,
+    val sessionSettings: MonitorSettings? = null,
     val runState: RunState = RunState.Idle,
     val sessionId: String? = null,
     val durationUs: Long = 0,
@@ -18,8 +19,9 @@ data class UiSnapshot(
     val needsGuardian: Boolean = false,
     val unclear: Boolean = false,
     val seated: Boolean = false,
-    val emptySeatReady: Boolean = false,
-    val placementIssue: String = "region",
+    val faceComplete: Boolean = false,
+    val sceneChanged: Boolean = false,
+    val placementIssue: String = "head",
     val placementProgress: Float = 0f,
     val targetReached: Boolean = false,
     val away: Boolean = false,
@@ -30,6 +32,15 @@ data class UiSnapshot(
     val operationBusy: Boolean = false,
 
 )
+
+enum class SettingPolicy { Live, NextSession, Stopped }
+
+fun UiSnapshot.canChangeSettings(policy: SettingPolicy = SettingPolicy.Live): Boolean =
+    ready && settings != null && !operationBusy && when (runState) {
+        RunState.Idle, RunState.Stopped -> captureReleased
+        RunState.Preparing, RunState.Monitoring -> policy != SettingPolicy.Stopped
+        else -> false
+    }
 
 sealed interface CommandResult<out T> {
     val requestId: String

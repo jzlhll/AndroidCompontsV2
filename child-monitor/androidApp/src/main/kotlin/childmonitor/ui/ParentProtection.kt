@@ -92,7 +92,7 @@ fun ParentSettings(access: SettingsAccess, modifier: Modifier = Modifier) {
         finally { busy = false }
     } }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(settingLabel(stringResource(R.string.parent_set), access.enabled && !busy), style = ComposeTypography.titleMedium)
+        Text(stringResource(R.string.parent_set), style = ComposeTypography.titleMedium)
         Text(stringResource(R.string.parent_description), style = ComposeTypography.bodyMedium)
         RestrictedSetting(access, available = !busy) { enabled ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -117,7 +117,7 @@ fun ParentSettings(access: SettingsAccess, modifier: Modifier = Modifier) {
 @Composable
 private fun PinField(value: String, onChange: (String) -> Unit, label: Int, modifier: Modifier = Modifier, enabled: Boolean = true) {
     OutlinedTextField(value, { if (it.length <= 6 && it.all { char -> char in '0'..'9' }) onChange(it) },
-        modifier = modifier.fillMaxWidth(), enabled = enabled, label = { Text(settingLabel(stringResource(label), enabled), style = ComposeTypography.labelMedium) }, singleLine = true,
+        modifier = modifier.fillMaxWidth(), enabled = enabled, label = { Text(stringResource(label), style = ComposeTypography.labelMedium) }, singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), visualTransformation = PasswordVisualTransformation())
 }
 

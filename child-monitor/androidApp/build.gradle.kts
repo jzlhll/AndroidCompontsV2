@@ -55,6 +55,7 @@ dependencies {
     implementation(childMonitorLibs.camera.view)
     implementation(childMonitorLibs.camera.mlkit)
     implementation(childMonitorLibs.mlkit.pose)
+    implementation(childMonitorLibs.mlkit.face)
     implementation(childMonitorLibs.mediapipe.vision)
     implementation(childMonitorLibs.media3.exoplayer)
     implementation(childMonitorLibs.media3.ui)
