@@ -31,6 +31,11 @@ gradle.ext.minSdk              = 29
 ///////end of extra params
 
 dependencyResolutionManagement {
+    versionCatalogs {
+        childMonitorLibs {
+            from(files('child-monitor/gradle/libs.versions.toml'))
+        }
+    }
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
@@ -71,6 +76,8 @@ include ':ClassNameAnnotations-ksp'
 include ':Module-Native'
 include ':Module-AndroidLogSystem'
 include ':mydroid'
+include ':child-monitor'
+project(':child-monitor').projectDir = file('child-monitor/androidApp')
 include ':appMultiMedia'
 include ':appcompose'
 //include ':appgallery'

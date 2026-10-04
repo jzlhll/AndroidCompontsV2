@@ -1,0 +1,101 @@
+{
+  "formatVersion": 1,
+  "clips": {
+    "reminder_head_down": "抬抬头，坐直一点哦",
+    "reminder_head_tilt": "把小脑袋摆正一点哦",
+    "reminder_body_lean": "身体坐正一点哦",
+    "reminder_posture": "抬抬头，把身体和小脑袋摆正一点哦",
+    "reminder_away": "离开座位有一会儿啦，记得回来哦",
+    "reminder_unclear": "我看不清啦，请帮忙调整一下摄像头",
+    "reminder_rest": "坐了有一会儿啦，可以起来活动一下",
+    "reminder_interruption_locked": "本次监控已停止，请保持屏幕常亮后再开始",
+    "reminder_interruption_generic": "本次监控已停止",
+    "reminder_save_failed": "本次录像保存失败，请查看本次结果"
+  },
+  "source": "Microsoft Edge online TTS / zh-CN-XiaoxiaoNeural，预先生成普通话女声；运行时离线播放，不使用 TTS",
+  "encoding": "AAC-LC / M4A / 64 kbps / 24 kHz / mono",
+  "sha256": {
+    "reminder_head_down.m4a": "1554181330d83b39758918a8d9ad317cb7b48e597488bc3368cb77941c6c83a0",
+    "reminder_head_tilt.m4a": "23ed2db8c848665d6be7dd1a42ef90eb6d4c9a3f03c7d1bd75ce9339e93507bf",
+    "reminder_body_lean.m4a": "fdab8ec924701a775635ac30abc0c1b43925a7ad42d2d2722aa071292d98272c",
+    "reminder_posture.m4a": "13e83cff5d4ef574c33525b1ceaa7e1e68dcf28a1f98e53874239a463d0a2c1d",
+    "reminder_away.m4a": "f8e5a7b850c6f37c6e910b7d4386a5add049415f14de474505905a7176520684",
+    "reminder_unclear.m4a": "3f68c3daf3dad393e638a343344a45be3fa92227ae475b0a25f13594fff2c6c4",
+    "reminder_rest.m4a": "47e431c522a5a16db58534948c8a8e1e5a58fb7b9edcf21a957083278f2a4caa",
+    "reminder_interruption_locked.m4a": "1798da744d7c29a8ca2c09f3725155a9c5061dd93733088b740974bd85ba7729",
+    "reminder_interruption_generic.m4a": "0b5ad32d831c915a79f6b57ddaab3b19b6d8f7d53cfc110210c5c60bc35fa2a5",
+    "reminder_save_failed.m4a": "9978019e03170e7afb1fee665cd814b9f8e50a2d8d1f24fdd56d2e5cb05807d8"
+  },
+  "generation": {
+    "provider": "edge-tts",
+    "providerVersion": "7.2.8",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "rate": "-8%",
+    "pitch": "+0Hz",
+    "ffmpegFilter": "loudnorm=I=-20:TP=-3:LRA=7",
+    "ffmpegVersion": "ffmpeg version 5.1.2-tessus Copyright (c) 2000-2022 the FFmpeg developers",
+    "script": "tools/generate-voice.py"
+  },
+  "audioInfo": {
+    "reminder_head_down.m4a": {
+      "durationSeconds": 2.688,
+      "rmsDbfs": -20.83,
+      "peakDbfs": -4.03,
+      "bytes": 20959
+    },
+    "reminder_head_tilt.m4a": {
+      "durationSeconds": 2.517,
+      "rmsDbfs": -20.68,
+      "peakDbfs": -4.68,
+      "bytes": 22050
+    },
+    "reminder_body_lean.m4a": {
+      "durationSeconds": 2.219,
+      "rmsDbfs": -20.97,
+      "peakDbfs": -5.39,
+      "bytes": 18498
+    },
+    "reminder_posture.m4a": {
+      "durationSeconds": 4.096,
+      "rmsDbfs": -20.2,
+      "peakDbfs": -5.5,
+      "bytes": 35215
+    },
+    "reminder_away.m4a": {
+      "durationSeconds": 3.371,
+      "rmsDbfs": -20.12,
+      "peakDbfs": -5.5,
+      "bytes": 26260
+    },
+    "reminder_unclear.m4a": {
+      "durationSeconds": 4.139,
+      "rmsDbfs": -20.35,
+      "peakDbfs": -6.0,
+      "bytes": 34015
+    },
+    "reminder_rest.m4a": {
+      "durationSeconds": 3.456,
+      "rmsDbfs": -20.18,
+      "peakDbfs": -4.71,
+      "bytes": 27906
+    },
+    "reminder_interruption_locked.m4a": {
+      "durationSeconds": 5.035,
+      "rmsDbfs": -20.52,
+      "peakDbfs": -5.74,
+      "bytes": 43116
+    },
+    "reminder_interruption_generic.m4a": {
+      "durationSeconds": 2.432,
+      "rmsDbfs": -20.86,
+      "peakDbfs": -5.05,
+      "bytes": 19556
+    },
+    "reminder_save_failed.m4a": {
+      "durationSeconds": 4.352,
+      "rmsDbfs": -20.71,
+      "peakDbfs": -5.43,
+      "bytes": 36425
+    }
+  }
+}

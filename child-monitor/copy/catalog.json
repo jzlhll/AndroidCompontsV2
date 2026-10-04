@@ -1,0 +1,2336 @@
+{
+  "formatVersion": 1,
+  "entries": [
+    {
+      "id": "common.childMonitor.app_name",
+      "values": {
+        "zh-Hans": "儿童监控"
+      },
+      "platforms": {
+        "android": "app_name"
+      }
+    },
+    {
+      "id": "common.childMonitor.home_mark",
+      "values": {
+        "zh-Hans": "伴"
+      },
+      "platforms": {
+        "android": "home_mark"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_idle",
+      "values": {
+        "zh-Hans": "未开始监控"
+      },
+      "platforms": {
+        "android": "monitor_idle"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_initial_duration",
+      "values": {
+        "zh-Hans": "本次监控 00:00:00"
+      },
+      "platforms": {
+        "android": "monitor_initial_duration"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_start",
+      "values": {
+        "zh-Hans": "开始监控"
+      },
+      "platforms": {
+        "android": "monitor_start"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_unavailable",
+      "values": {
+        "zh-Hans": "监控功能准备中，暂不可开始。"
+      },
+      "platforms": {
+        "android": "monitor_unavailable"
+      }
+    },
+    {
+      "id": "common.childMonitor.foundation_title",
+      "values": {
+        "zh-Hans": "开发版 · 设备检查"
+      },
+      "platforms": {
+        "android": "foundation_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_available",
+      "values": {
+        "zh-Hans": "应用所在存储卷可用空间：%1$d MiB"
+      },
+      "platforms": {
+        "android": "storage_available"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_failed",
+      "values": {
+        "zh-Hans": "无法读取存储空间，请重试。"
+      },
+      "platforms": {
+        "android": "storage_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_checking",
+      "values": {
+        "zh-Hans": "正在读取存储空间…"
+      },
+      "platforms": {
+        "android": "storage_checking"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_unchecked",
+      "values": {
+        "zh-Hans": "尚未读取存储空间"
+      },
+      "platforms": {
+        "android": "storage_unchecked"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_refresh",
+      "values": {
+        "zh-Hans": "刷新存储空间"
+      },
+      "platforms": {
+        "android": "storage_refresh"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_title",
+      "values": {
+        "zh-Hans": "相机能力检查"
+      },
+      "platforms": {
+        "android": "probe_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_description",
+      "values": {
+        "zh-Hans": "检查前摄预览、无声录像和姿态分析能否同时运行。采集约 5 秒，结束后删除临时录像，不生成监控记录。"
+      },
+      "platforms": {
+        "android": "probe_description"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_idle",
+      "values": {
+        "zh-Hans": "等待开始检查"
+      },
+      "platforms": {
+        "android": "probe_idle"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_starting",
+      "values": {
+        "zh-Hans": "正在启动前置相机…"
+      },
+      "platforms": {
+        "android": "probe_starting"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_recording",
+      "values": {
+        "zh-Hans": "正在采集临时录像与分析画面…"
+      },
+      "platforms": {
+        "android": "probe_recording"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_finishing",
+      "values": {
+        "zh-Hans": "正在封装临时录像并释放相机…"
+      },
+      "platforms": {
+        "android": "probe_finishing"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_complete",
+      "values": {
+        "zh-Hans": "采集与封装检查通过"
+      },
+      "platforms": {
+        "android": "probe_complete"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_failed",
+      "values": {
+        "zh-Hans": "本次检查未通过"
+      },
+      "platforms": {
+        "android": "probe_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_canceled",
+      "values": {
+        "zh-Hans": "本次检查已取消"
+      },
+      "platforms": {
+        "android": "probe_canceled"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_frames",
+      "values": {
+        "zh-Hans": "有效分析回调 %1$d 次，其中检测到姿态 %2$d 次"
+      },
+      "platforms": {
+        "android": "probe_frames"
+      }
+    },
+    {
+      "id": "common.childMonitor.permission_denied",
+      "values": {
+        "zh-Hans": "需要相机权限才能检查。可再次授权，或前往系统设置。"
+      },
+      "platforms": {
+        "android": "permission_denied"
+      }
+    },
+    {
+      "id": "common.childMonitor.permission_settings",
+      "values": {
+        "zh-Hans": "去设置授权"
+      },
+      "platforms": {
+        "android": "permission_settings"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_camera_busy",
+      "values": {
+        "zh-Hans": "上一次检查尚未释放相机，请稍后重试。"
+      },
+      "platforms": {
+        "android": "probe_camera_busy"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_no_front_camera",
+      "values": {
+        "zh-Hans": "未发现可用的前置相机。"
+      },
+      "platforms": {
+        "android": "probe_no_front_camera"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_unsupported_size",
+      "values": {
+        "zh-Hans": "该前摄不支持要求的录像或分析尺寸。"
+      },
+      "platforms": {
+        "android": "probe_unsupported_size"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_model_failed",
+      "values": {
+        "zh-Hans": "姿态模型处理失败，请重试。"
+      },
+      "platforms": {
+        "android": "probe_model_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_no_analysis",
+      "values": {
+        "zh-Hans": "录像期间未取得连续的有效分析回调。"
+      },
+      "platforms": {
+        "android": "probe_no_analysis"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_finalize_failed",
+      "values": {
+        "zh-Hans": "临时录像未能正常封装。"
+      },
+      "platforms": {
+        "android": "probe_finalize_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_invalid_media",
+      "values": {
+        "zh-Hans": "临时视频轨道、尺寸或样本不符合要求。"
+      },
+      "platforms": {
+        "android": "probe_invalid_media"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_timeout",
+      "values": {
+        "zh-Hans": "启动相机超时，请重试。"
+      },
+      "platforms": {
+        "android": "probe_timeout"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_cleanup_failed",
+      "values": {
+        "zh-Hans": "临时录像清理失败，下次检查将再次清理。"
+      },
+      "platforms": {
+        "android": "probe_cleanup_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_capture_failed",
+      "values": {
+        "zh-Hans": "无法同时启动前摄预览、录像和分析。"
+      },
+      "platforms": {
+        "android": "probe_capture_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_release_pending",
+      "values": {
+        "zh-Hans": "尚未确认相机与录像资源释放，请彻底退出应用后重试。"
+      },
+      "platforms": {
+        "android": "probe_release_pending"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_media",
+      "values": {
+        "zh-Hans": "实际编码：%1$d × %2$d，无音轨\n首个视频 PTS：%3$d μs\n末个视频 PTS：%4$d μs"
+      },
+      "platforms": {
+        "android": "probe_media"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_timestamps",
+      "values": {
+        "zh-Hans": "分析首帧：%1$d ns\n分析末帧：%2$d ns\n录像开始回调：%3$d ns（elapsedRealtime）"
+      },
+      "platforms": {
+        "android": "probe_timestamps"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_mapping_pending",
+      "values": {
+        "zh-Hans": "这些时间来自不同边界，尚未建立精确的媒体起点映射。姿态回调不能作为儿童身份、空座位或行为判断；人体检测与定位仍待接入。"
+      },
+      "platforms": {
+        "android": "probe_mapping_pending"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_cancel",
+      "values": {
+        "zh-Hans": "取消检查"
+      },
+      "platforms": {
+        "android": "probe_cancel"
+      }
+    },
+    {
+      "id": "common.childMonitor.probe_start",
+      "values": {
+        "zh-Hans": "开始检查"
+      },
+      "platforms": {
+        "android": "probe_start"
+      }
+    },
+    {
+      "id": "common.childMonitor.back_home",
+      "values": {
+        "zh-Hans": "返回首页"
+      },
+      "platforms": {
+        "android": "back_home"
+      }
+    },
+    {
+      "id": "common.childMonitor.album_title",
+      "values": {
+        "zh-Hans": "监控相册"
+      },
+      "platforms": {
+        "android": "album_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_title",
+      "values": {
+        "zh-Hans": "设置"
+      },
+      "platforms": {
+        "android": "settings_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.avatar_edit",
+      "values": {
+        "zh-Hans": "修改头像"
+      },
+      "platforms": {
+        "android": "avatar_edit"
+      }
+    },
+    {
+      "id": "common.childMonitor.avatar_title",
+      "values": {
+        "zh-Hans": "修改头像"
+      },
+      "platforms": {
+        "android": "avatar_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_starting",
+      "values": {
+        "zh-Hans": "正在启动监控"
+      },
+      "platforms": {
+        "android": "monitor_starting"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_preparing",
+      "values": {
+        "zh-Hans": "准备定位"
+      },
+      "platforms": {
+        "android": "monitor_preparing"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_unclear",
+      "values": {
+        "zh-Hans": "暂时无法可靠识别"
+      },
+      "platforms": {
+        "android": "monitor_unclear"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_away",
+      "values": {
+        "zh-Hans": "已确认离座"
+      },
+      "platforms": {
+        "android": "monitor_away"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_observing",
+      "values": {
+        "zh-Hans": "正在监控"
+      },
+      "platforms": {
+        "android": "monitor_observing"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_stopping",
+      "values": {
+        "zh-Hans": "正在停止并保存"
+      },
+      "platforms": {
+        "android": "monitor_stopping"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_stopped",
+      "values": {
+        "zh-Hans": "监控已停止"
+      },
+      "platforms": {
+        "android": "monitor_stopped"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_help",
+      "values": {
+        "zh-Hans": "框选座位并确认范围，然后让座位保持空置、无遮挡约 3 秒，采集空座位基准。"
+      },
+      "platforms": {
+        "android": "placement_help"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_confirm",
+      "values": {
+        "zh-Hans": "确认座位范围"
+      },
+      "platforms": {
+        "android": "placement_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_required",
+      "values": {
+        "zh-Hans": "持续无法识别，请调整设备并重新定位。"
+      },
+      "platforms": {
+        "android": "placement_required"
+      }
+    },
+    {
+      "id": "common.childMonitor.reposition",
+      "values": {
+        "zh-Hans": "重新定位"
+      },
+      "platforms": {
+        "android": "reposition"
+      }
+    },
+    {
+      "id": "common.childMonitor.interruption_result",
+      "values": {
+        "zh-Hans": "本次监控已中断 · 查看结果"
+      },
+      "platforms": {
+        "android": "interruption_result"
+      }
+    },
+    {
+      "id": "common.childMonitor.dismiss",
+      "values": {
+        "zh-Hans": "关闭提示"
+      },
+      "platforms": {
+        "android": "dismiss"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_low",
+      "values": {
+        "zh-Hans": "存储空间不足，请清理后重试。"
+      },
+      "platforms": {
+        "android": "storage_low"
+      }
+    },
+    {
+      "id": "common.childMonitor.operation_failed",
+      "values": {
+        "zh-Hans": "操作未完成，请重试；已有数据会保留。"
+      },
+      "platforms": {
+        "android": "operation_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.retry",
+      "values": {
+        "zh-Hans": "重试"
+      },
+      "platforms": {
+        "android": "retry"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_duration",
+      "values": {
+        "zh-Hans": "本次监控 %1$s"
+      },
+      "platforms": {
+        "android": "monitor_duration"
+      }
+    },
+    {
+      "id": "common.childMonitor.start_cancel",
+      "values": {
+        "zh-Hans": "取消启动"
+      },
+      "platforms": {
+        "android": "start_cancel"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_stop",
+      "values": {
+        "zh-Hans": "停止监控"
+      },
+      "platforms": {
+        "android": "monitor_stop"
+      }
+    },
+    {
+      "id": "common.childMonitor.monitor_dark",
+      "values": {
+        "zh-Hans": "监控中 · 点击唤醒"
+      },
+      "platforms": {
+        "android": "monitor_dark"
+      }
+    },
+    {
+      "id": "common.childMonitor.navigation_guard",
+      "values": {
+        "zh-Hans": "请先停止监控，再打开其他页面。"
+      },
+      "platforms": {
+        "android": "navigation_guard"
+      }
+    },
+    {
+      "id": "common.childMonitor.understood",
+      "values": {
+        "zh-Hans": "知道了"
+      },
+      "platforms": {
+        "android": "understood"
+      }
+    },
+    {
+      "id": "common.childMonitor.detection_head_down",
+      "values": {
+        "zh-Hans": "低头 / 前倾"
+      },
+      "platforms": {
+        "android": "detection_head_down"
+      }
+    },
+    {
+      "id": "common.childMonitor.detection_head_tilt",
+      "values": {
+        "zh-Hans": "偏头"
+      },
+      "platforms": {
+        "android": "detection_head_tilt"
+      }
+    },
+    {
+      "id": "common.childMonitor.detection_body_lean",
+      "values": {
+        "zh-Hans": "身体侧倾"
+      },
+      "platforms": {
+        "android": "detection_body_lean"
+      }
+    },
+    {
+      "id": "common.childMonitor.detection_away",
+      "values": {
+        "zh-Hans": "离座"
+      },
+      "platforms": {
+        "android": "detection_away"
+      }
+    },
+    {
+      "id": "common.childMonitor.head_down_time",
+      "values": {
+        "zh-Hans": "低头 / 前倾确认时间"
+      },
+      "platforms": {
+        "android": "head_down_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.head_tilt_time",
+      "values": {
+        "zh-Hans": "偏头确认时间"
+      },
+      "platforms": {
+        "android": "head_tilt_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.body_lean_time",
+      "values": {
+        "zh-Hans": "身体侧倾确认时间"
+      },
+      "platforms": {
+        "android": "body_lean_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.away_confirm_time",
+      "values": {
+        "zh-Hans": "离座确认时间"
+      },
+      "platforms": {
+        "android": "away_confirm_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.away_max_time",
+      "values": {
+        "zh-Hans": "离开多久后提醒"
+      },
+      "platforms": {
+        "android": "away_max_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.sensitivity",
+      "values": {
+        "zh-Hans": "检测灵敏度"
+      },
+      "platforms": {
+        "android": "sensitivity"
+      }
+    },
+    {
+      "id": "common.childMonitor.low",
+      "values": {
+        "zh-Hans": "低"
+      },
+      "platforms": {
+        "android": "low"
+      }
+    },
+    {
+      "id": "common.childMonitor.standard",
+      "values": {
+        "zh-Hans": "标准"
+      },
+      "platforms": {
+        "android": "standard"
+      }
+    },
+    {
+      "id": "common.childMonitor.high",
+      "values": {
+        "zh-Hans": "高"
+      },
+      "platforms": {
+        "android": "high"
+      }
+    },
+    {
+      "id": "common.childMonitor.sound_enabled",
+      "values": {
+        "zh-Hans": "提醒声音"
+      },
+      "platforms": {
+        "android": "sound_enabled"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_repeat_time",
+      "values": {
+        "zh-Hans": "同一异常重复提醒间隔"
+      },
+      "platforms": {
+        "android": "reminder_repeat_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_gap_time",
+      "values": {
+        "zh-Hans": "不同提醒最短间隔"
+      },
+      "platforms": {
+        "android": "reminder_gap_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.more_settings",
+      "values": {
+        "zh-Hans": "更多设置"
+      },
+      "platforms": {
+        "android": "more_settings"
+      }
+    },
+    {
+      "id": "common.childMonitor.close",
+      "values": {
+        "zh-Hans": "关闭"
+      },
+      "platforms": {
+        "android": "close"
+      }
+    },
+    {
+      "id": "common.childMonitor.darken_time",
+      "values": {
+        "zh-Hans": "自动暗屏等待时间"
+      },
+      "platforms": {
+        "android": "darken_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.darken_description",
+      "values": {
+        "zh-Hans": "应用内暗屏仍持续录像和检测，触摸可唤醒。系统锁屏或切到后台会停止本次监控。"
+      },
+      "platforms": {
+        "android": "darken_description"
+      }
+    },
+    {
+      "id": "common.childMonitor.rest_enabled",
+      "values": {
+        "zh-Hans": "久坐休息提醒"
+      },
+      "platforms": {
+        "android": "rest_enabled"
+      }
+    },
+    {
+      "id": "common.childMonitor.rest_time",
+      "values": {
+        "zh-Hans": "连续在座提醒时长"
+      },
+      "platforms": {
+        "android": "rest_time"
+      }
+    },
+    {
+      "id": "common.childMonitor.back",
+      "values": {
+        "zh-Hans": "返回"
+      },
+      "platforms": {
+        "android": "back"
+      }
+    },
+    {
+      "id": "common.childMonitor.save",
+      "values": {
+        "zh-Hans": "保存"
+      },
+      "platforms": {
+        "android": "save"
+      }
+    },
+    {
+      "id": "common.childMonitor.minutes_value",
+      "values": {
+        "zh-Hans": "%1$d 分钟"
+      },
+      "platforms": {
+        "android": "minutes_value"
+      }
+    },
+    {
+      "id": "common.childMonitor.seconds_value",
+      "values": {
+        "zh-Hans": "%1$d 秒"
+      },
+      "platforms": {
+        "android": "seconds_value"
+      }
+    },
+    {
+      "id": "common.childMonitor.result_title",
+      "values": {
+        "zh-Hans": "本次结算"
+      },
+      "platforms": {
+        "android": "result_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_missing",
+      "values": {
+        "zh-Hans": "该记录已不存在。"
+      },
+      "platforms": {
+        "android": "record_missing"
+      }
+    },
+    {
+      "id": "common.childMonitor.evaluation_great",
+      "values": {
+        "zh-Hans": "Great · 太棒啦，这次坐得很稳，继续保持！"
+      },
+      "platforms": {
+        "android": "evaluation_great"
+      }
+    },
+    {
+      "id": "common.childMonitor.evaluation_good",
+      "values": {
+        "zh-Hans": "Good · 完成啦！下次继续保持好坐姿哦。"
+      },
+      "platforms": {
+        "android": "evaluation_good"
+      }
+    },
+    {
+      "id": "common.childMonitor.evaluation_not_bad",
+      "values": {
+        "zh-Hans": "NotBad · 完成一次练习啦，下次一起坐得更端正！"
+      },
+      "platforms": {
+        "android": "evaluation_not_bad"
+      }
+    },
+    {
+      "id": "common.childMonitor.evaluation_complete",
+      "values": {
+        "zh-Hans": "完成啦！感谢坚持这次练习。"
+      },
+      "platforms": {
+        "android": "evaluation_complete"
+      }
+    },
+    {
+      "id": "common.childMonitor.partial_data",
+      "values": {
+        "zh-Hans": "基于已识别片段；未检测项目不按零异常计算。"
+      },
+      "platforms": {
+        "android": "partial_data"
+      }
+    },
+    {
+      "id": "common.childMonitor.result_durations",
+      "values": {
+        "zh-Hans": "在座：%1$s\n离座：%2$s\n建议休息：%3$s\n准备定位：%4$s\n无法判断：%5$s"
+      },
+      "platforms": {
+        "android": "result_durations"
+      }
+    },
+    {
+      "id": "common.childMonitor.result_item",
+      "values": {
+        "zh-Hans": "%1$s：%2$d 次，持续 %3$s；有效检测 %4$s"
+      },
+      "platforms": {
+        "android": "result_item"
+      }
+    },
+    {
+      "id": "common.childMonitor.result_away_count",
+      "values": {
+        "zh-Hans": "离座 %1$d 次，其中超时 %2$d 次"
+      },
+      "platforms": {
+        "android": "result_away_count"
+      }
+    },
+    {
+      "id": "common.childMonitor.view_video",
+      "values": {
+        "zh-Hans": "查看录像"
+      },
+      "platforms": {
+        "android": "view_video"
+      }
+    },
+    {
+      "id": "common.childMonitor.retry_save",
+      "values": {
+        "zh-Hans": "重试保存"
+      },
+      "platforms": {
+        "android": "retry_save"
+      }
+    },
+    {
+      "id": "common.childMonitor.cleanup",
+      "values": {
+        "zh-Hans": "去清理"
+      },
+      "platforms": {
+        "android": "cleanup"
+      }
+    },
+    {
+      "id": "common.childMonitor.discard_record",
+      "values": {
+        "zh-Hans": "放弃本次"
+      },
+      "platforms": {
+        "android": "discard_record"
+      }
+    },
+    {
+      "id": "common.childMonitor.done",
+      "values": {
+        "zh-Hans": "完成"
+      },
+      "platforms": {
+        "android": "done"
+      }
+    },
+    {
+      "id": "common.childMonitor.cancel",
+      "values": {
+        "zh-Hans": "取消"
+      },
+      "platforms": {
+        "android": "cancel"
+      }
+    },
+    {
+      "id": "common.childMonitor.manage",
+      "values": {
+        "zh-Hans": "管理"
+      },
+      "platforms": {
+        "android": "manage"
+      }
+    },
+    {
+      "id": "common.childMonitor.select_all",
+      "values": {
+        "zh-Hans": "全选"
+      },
+      "platforms": {
+        "android": "select_all"
+      }
+    },
+    {
+      "id": "common.childMonitor.refresh",
+      "values": {
+        "zh-Hans": "刷新"
+      },
+      "platforms": {
+        "android": "refresh"
+      }
+    },
+    {
+      "id": "common.childMonitor.album_empty",
+      "values": {
+        "zh-Hans": "暂无监控记录"
+      },
+      "platforms": {
+        "android": "album_empty"
+      }
+    },
+    {
+      "id": "common.childMonitor.protected_record",
+      "values": {
+        "zh-Hans": "待处理 · 本次不可清理"
+      },
+      "platforms": {
+        "android": "protected_record"
+      }
+    },
+    {
+      "id": "common.childMonitor.load_more",
+      "values": {
+        "zh-Hans": "加载更多"
+      },
+      "platforms": {
+        "android": "load_more"
+      }
+    },
+    {
+      "id": "common.childMonitor.delete_count",
+      "values": {
+        "zh-Hans": "删除所选（%1$d）"
+      },
+      "platforms": {
+        "android": "delete_count"
+      }
+    },
+    {
+      "id": "common.childMonitor.cleanup_done",
+      "values": {
+        "zh-Hans": "完成清理"
+      },
+      "platforms": {
+        "android": "cleanup_done"
+      }
+    },
+    {
+      "id": "common.childMonitor.delete_confirmation",
+      "values": {
+        "zh-Hans": "删除所选录像及关联监控记录？此操作无法撤销。"
+      },
+      "platforms": {
+        "android": "delete_confirmation"
+      }
+    },
+    {
+      "id": "common.childMonitor.delete",
+      "values": {
+        "zh-Hans": "删除"
+      },
+      "platforms": {
+        "android": "delete"
+      }
+    },
+    {
+      "id": "common.childMonitor.media_saved",
+      "values": {
+        "zh-Hans": "录像已保存"
+      },
+      "platforms": {
+        "android": "media_saved"
+      }
+    },
+    {
+      "id": "common.childMonitor.media_pending",
+      "values": {
+        "zh-Hans": "待保存"
+      },
+      "platforms": {
+        "android": "media_pending"
+      }
+    },
+    {
+      "id": "common.childMonitor.media_unavailable",
+      "values": {
+        "zh-Hans": "录像不可用，已有记录保留"
+      },
+      "platforms": {
+        "android": "media_unavailable"
+      }
+    },
+    {
+      "id": "common.childMonitor.event_return",
+      "values": {
+        "zh-Hans": "回座"
+      },
+      "platforms": {
+        "android": "event_return"
+      }
+    },
+    {
+      "id": "common.childMonitor.event_interruption",
+      "values": {
+        "zh-Hans": "监控中断"
+      },
+      "platforms": {
+        "android": "event_interruption"
+      }
+    },
+    {
+      "id": "common.childMonitor.end_locked",
+      "values": {
+        "zh-Hans": "系统锁屏或息屏导致本次停止，不计入孩子表现。"
+      },
+      "platforms": {
+        "android": "end_locked"
+      }
+    },
+    {
+      "id": "common.childMonitor.end_background",
+      "values": {
+        "zh-Hans": "应用进入后台，本次监控已停止。"
+      },
+      "platforms": {
+        "android": "end_background"
+      }
+    },
+    {
+      "id": "common.childMonitor.end_unclear",
+      "values": {
+        "zh-Hans": "持续无法有效识别，本次监控已停止。"
+      },
+      "platforms": {
+        "android": "end_unclear"
+      }
+    },
+    {
+      "id": "common.childMonitor.end_prepare",
+      "values": {
+        "zh-Hans": "本次未完成定位。"
+      },
+      "platforms": {
+        "android": "end_prepare"
+      }
+    },
+    {
+      "id": "common.childMonitor.end_capture",
+      "values": {
+        "zh-Hans": "采集或保存发生中断，显示最后可靠记录。"
+      },
+      "platforms": {
+        "android": "end_capture"
+      }
+    },
+    {
+      "id": "common.childMonitor.playback_title",
+      "values": {
+        "zh-Hans": "录像回看"
+      },
+      "platforms": {
+        "android": "playback_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.pause",
+      "values": {
+        "zh-Hans": "暂停"
+      },
+      "platforms": {
+        "android": "pause"
+      }
+    },
+    {
+      "id": "common.childMonitor.play",
+      "values": {
+        "zh-Hans": "播放"
+      },
+      "platforms": {
+        "android": "play"
+      }
+    },
+    {
+      "id": "common.childMonitor.playback_failed",
+      "values": {
+        "zh-Hans": "录像暂时无法播放，仍可查看已保存的记录。"
+      },
+      "platforms": {
+        "android": "playback_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.all_events",
+      "values": {
+        "zh-Hans": "全部"
+      },
+      "platforms": {
+        "android": "all_events"
+      }
+    },
+    {
+      "id": "common.childMonitor.event_row",
+      "values": {
+        "zh-Hans": "%1$s · %2$s"
+      },
+      "platforms": {
+        "android": "event_row"
+      }
+    },
+    {
+      "id": "common.childMonitor.keep_statistics",
+      "values": {
+        "zh-Hans": "保留统计"
+      },
+      "platforms": {
+        "android": "keep_statistics"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_invalid",
+      "values": {
+        "zh-Hans": "范围未落在有效画面内，请重新框选。"
+      },
+      "platforms": {
+        "android": "placement_invalid"
+      }
+    },
+    {
+      "id": "common.childMonitor.event_rest",
+      "values": {
+        "zh-Hans": "建议休息"
+      },
+      "platforms": {
+        "android": "event_rest"
+      }
+    },
+    {
+      "id": "common.childMonitor.event_unknown",
+      "values": {
+        "zh-Hans": "无法判断"
+      },
+      "platforms": {
+        "android": "event_unknown"
+      }
+    },
+    {
+      "id": "common.childMonitor.encourage_great",
+      "values": {
+        "zh-Hans": "太棒啦，这次坐得很稳，继续保持！"
+      },
+      "platforms": {
+        "android": "encourage_great"
+      }
+    },
+    {
+      "id": "common.childMonitor.encourage_good",
+      "values": {
+        "zh-Hans": "完成啦！下次继续保持好坐姿哦。"
+      },
+      "platforms": {
+        "android": "encourage_good"
+      }
+    },
+    {
+      "id": "common.childMonitor.encourage_not_bad",
+      "values": {
+        "zh-Hans": "完成一次练习啦，下次一起坐得更端正！"
+      },
+      "platforms": {
+        "android": "encourage_not_bad"
+      }
+    },
+    {
+      "id": "common.childMonitor.encourage_complete",
+      "values": {
+        "zh-Hans": "完成啦，坚持了 %1$s！调整一下摄像头，下次就能看到更多表现啦。"
+      },
+      "platforms": {
+        "android": "encourage_complete"
+      }
+    },
+    {
+      "id": "common.childMonitor.suggest_head_down",
+      "values": {
+        "zh-Hans": "抬起头，保持舒适的阅读距离。"
+      },
+      "platforms": {
+        "android": "suggest_head_down"
+      }
+    },
+    {
+      "id": "common.childMonitor.suggest_head_tilt",
+      "values": {
+        "zh-Hans": "把头摆正，放松一下脖子。"
+      },
+      "platforms": {
+        "android": "suggest_head_tilt"
+      }
+    },
+    {
+      "id": "common.childMonitor.suggest_body_lean",
+      "values": {
+        "zh-Hans": "坐正身体，放松双肩。"
+      },
+      "platforms": {
+        "android": "suggest_body_lean"
+      }
+    },
+    {
+      "id": "common.childMonitor.suggest_away",
+      "values": {
+        "zh-Hans": "休息结束后，记得及时回到座位。"
+      },
+      "platforms": {
+        "android": "suggest_away"
+      }
+    },
+    {
+      "id": "common.childMonitor.timeline_title",
+      "values": {
+        "zh-Hans": "事件时间轴"
+      },
+      "platforms": {
+        "android": "timeline_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.timeline_outside",
+      "values": {
+        "zh-Hans": "该时间点超出可播放范围"
+      },
+      "platforms": {
+        "android": "timeline_outside"
+      }
+    },
+    {
+      "id": "common.childMonitor.media_saving",
+      "values": {
+        "zh-Hans": "正在保存…"
+      },
+      "platforms": {
+        "android": "media_saving"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_head_down",
+      "values": {
+        "zh-Hans": "抬抬头，坐直一点哦"
+      },
+      "platforms": {
+        "android": "reminder_head_down"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_head_tilt",
+      "values": {
+        "zh-Hans": "把小脑袋摆正一点哦"
+      },
+      "platforms": {
+        "android": "reminder_head_tilt"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_body_lean",
+      "values": {
+        "zh-Hans": "身体坐正一点哦"
+      },
+      "platforms": {
+        "android": "reminder_body_lean"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_posture",
+      "values": {
+        "zh-Hans": "抬抬头，把身体和小脑袋摆正一点哦"
+      },
+      "platforms": {
+        "android": "reminder_posture"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_away",
+      "values": {
+        "zh-Hans": "离开座位有一会儿啦，记得回来哦"
+      },
+      "platforms": {
+        "android": "reminder_away"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_unclear",
+      "values": {
+        "zh-Hans": "我看不清啦，请帮忙调整一下摄像头"
+      },
+      "platforms": {
+        "android": "reminder_unclear"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_rest",
+      "values": {
+        "zh-Hans": "坐了有一会儿啦，可以起来活动一下"
+      },
+      "platforms": {
+        "android": "reminder_rest"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_interruption_locked",
+      "values": {
+        "zh-Hans": "本次监控已停止，请保持屏幕常亮后再开始"
+      },
+      "platforms": {
+        "android": "reminder_interruption_locked"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_interruption_generic",
+      "values": {
+        "zh-Hans": "本次监控已停止"
+      },
+      "platforms": {
+        "android": "reminder_interruption_generic"
+      }
+    },
+    {
+      "id": "common.childMonitor.reminder_save_failed",
+      "values": {
+        "zh-Hans": "本次录像保存失败，请查看本次结果"
+      },
+      "platforms": {
+        "android": "reminder_save_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.result_item_unknown",
+      "values": {
+        "zh-Hans": "%1$s：未检测或暂无法判断"
+      },
+      "platforms": {
+        "android": "result_item_unknown"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_sit_down",
+      "values": {
+        "zh-Hans": "空座位已确认，请孩子入座，保持正常坐姿约 3 秒。"
+      },
+      "platforms": {
+        "android": "placement_sit_down"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_steps",
+      "values": {
+        "zh-Hans": "① 固定设备并框选座位　② 空座位采集　③ 入座校准"
+      },
+      "platforms": {
+        "android": "placement_steps"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_region",
+      "values": {
+        "zh-Hans": "框选孩子坐下后头部和双肩所在的区域。"
+      },
+      "platforms": {
+        "android": "placement_region"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_moved",
+      "values": {
+        "zh-Hans": "设备位置变化，请重新定位。"
+      },
+      "platforms": {
+        "android": "placement_moved"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_multiple",
+      "values": {
+        "zh-Hans": "检测到多人，请让其他人离开画面。"
+      },
+      "platforms": {
+        "android": "placement_multiple"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_lighting",
+      "values": {
+        "zh-Hans": "画面过暗、过亮或纹理不足，请调整光线和角度。"
+      },
+      "platforms": {
+        "android": "placement_lighting"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_occupied",
+      "values": {
+        "zh-Hans": "请先让座位空置，采集无遮挡的空座位。"
+      },
+      "platforms": {
+        "android": "placement_occupied"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_empty",
+      "values": {
+        "zh-Hans": "保持空座位无遮挡，正在采集基准。"
+      },
+      "platforms": {
+        "android": "placement_empty"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_shoulders",
+      "values": {
+        "zh-Hans": "请孩子入座，让双肩完整出现在画面中。"
+      },
+      "platforms": {
+        "android": "placement_shoulders"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_outside",
+      "values": {
+        "zh-Hans": "请坐在已框选的座位区域内。"
+      },
+      "platforms": {
+        "android": "placement_outside"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_head",
+      "values": {
+        "zh-Hans": "请让头部和双肩完整入镜。"
+      },
+      "platforms": {
+        "android": "placement_head"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_upright",
+      "values": {
+        "zh-Hans": "请保持正常坐姿，避免明显歪斜或趴下。"
+      },
+      "platforms": {
+        "android": "placement_upright"
+      }
+    },
+    {
+      "id": "common.childMonitor.placement_stable",
+      "values": {
+        "zh-Hans": "姿态可用，请保持不动直到校准完成。"
+      },
+      "platforms": {
+        "android": "placement_stable"
+      }
+    },
+    {
+      "id": "common.childMonitor.sound_volume",
+      "values": {
+        "zh-Hans": "提醒音量：%1$d%%"
+      },
+      "platforms": {
+        "android": "sound_volume"
+      }
+    },
+    {
+      "id": "common.childMonitor.sound_preview",
+      "values": {
+        "zh-Hans": "试听提醒"
+      },
+      "platforms": {
+        "android": "sound_preview"
+      }
+    },
+    {
+      "id": "common.childMonitor.sound_system_low",
+      "values": {
+        "zh-Hans": "系统媒体音量较低，请使用音量键调整。"
+      },
+      "platforms": {
+        "android": "sound_system_low"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_duration",
+      "values": {
+        "zh-Hans": "本次目标时长（分钟，0 表示不限）"
+      },
+      "platforms": {
+        "android": "target_duration"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_auto_stop",
+      "values": {
+        "zh-Hans": "到点自动结束并保存"
+      },
+      "platforms": {
+        "android": "target_auto_stop"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_reached",
+      "values": {
+        "zh-Hans": "已达到本次目标时长"
+      },
+      "platforms": {
+        "android": "target_reached"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_progress",
+      "values": {
+        "zh-Hans": "距离本次目标还有 %1$s"
+      },
+      "platforms": {
+        "android": "target_progress"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_invalid",
+      "values": {
+        "zh-Hans": "请输入 0，或 1～480 的整数分钟。"
+      },
+      "platforms": {
+        "android": "target_invalid"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_restore",
+      "values": {
+        "zh-Hans": "恢复默认监控参数"
+      },
+      "platforms": {
+        "android": "settings_restore"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_restore_confirm",
+      "values": {
+        "zh-Hans": "恢复检测、声音、提醒和目标时长的默认值？头像、历史记录及其他偏好保留。"
+      },
+      "platforms": {
+        "android": "settings_restore_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.help_title",
+      "values": {
+        "zh-Hans": "使用帮助与版本"
+      },
+      "platforms": {
+        "android": "help_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.help_body",
+      "values": {
+        "zh-Hans": "固定设备并保证头部、双肩入镜；先采集空座位，再入座校准。\n识别不确定时请检查光线、遮挡和多人干扰，必要时重新定位。\n应用内暗屏仍在工作，系统锁屏或切到后台会结束本次监控。\n内容保存在本机，卸载可能丢失记录；需要保留时先导出。"
+      },
+      "platforms": {
+        "android": "help_body"
+      }
+    },
+    {
+      "id": "common.childMonitor.app_version",
+      "values": {
+        "zh-Hans": "版本 %1$s"
+      },
+      "platforms": {
+        "android": "app_version"
+      }
+    },
+    {
+      "id": "common.childMonitor.target_save",
+      "values": {
+        "zh-Hans": "保存目标时长"
+      },
+      "platforms": {
+        "android": "target_save"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_title",
+      "values": {
+        "zh-Hans": "存储管理"
+      },
+      "platforms": {
+        "android": "storage_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_overview",
+      "values": {
+        "zh-Hans": "本地数据占用 %1$s，设备可用 %2$s；待恢复录像 %3$d 条"
+      },
+      "platforms": {
+        "android": "storage_overview"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_retention",
+      "values": {
+        "zh-Hans": "录像保留期限"
+      },
+      "platforms": {
+        "android": "storage_retention"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_forever",
+      "values": {
+        "zh-Hans": "不自动清理"
+      },
+      "platforms": {
+        "android": "retention_forever"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_days",
+      "values": {
+        "zh-Hans": "%1$d 天"
+      },
+      "platforms": {
+        "android": "retention_days"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_explain",
+      "values": {
+        "zh-Hans": "默认不自动清理。启用后，在下次打开应用或开始监控前清理超期且已保存的录像，统计保留；待保存和待恢复记录跳过。"
+      },
+      "platforms": {
+        "android": "retention_explain"
+      }
+    },
+    {
+      "id": "common.childMonitor.retention_confirm",
+      "values": {
+        "zh-Hans": "启用后，超期录像将按所选期限自动删除且无法恢复，统计保留。是否启用？"
+      },
+      "platforms": {
+        "android": "retention_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.purge_video",
+      "values": {
+        "zh-Hans": "只删除录像，保留统计"
+      },
+      "platforms": {
+        "android": "purge_video"
+      }
+    },
+    {
+      "id": "common.childMonitor.purge_confirm",
+      "values": {
+        "zh-Hans": "删除所选记录的已保存录像？事件、评价和备注保留，录像无法恢复。待保存或待恢复项不会删除。"
+      },
+      "platforms": {
+        "android": "purge_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_only",
+      "values": {
+        "zh-Hans": "仅统计记录"
+      },
+      "platforms": {
+        "android": "statistics_only"
+      }
+    },
+    {
+      "id": "common.childMonitor.storage_retention_save",
+      "values": {
+        "zh-Hans": "确认保留期限"
+      },
+      "platforms": {
+        "android": "storage_retention_save"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_edit",
+      "values": {
+        "zh-Hans": "名称与备注"
+      },
+      "platforms": {
+        "android": "record_edit"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_name",
+      "values": {
+        "zh-Hans": "记录名称（最多 80 字）"
+      },
+      "platforms": {
+        "android": "record_name"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_note",
+      "values": {
+        "zh-Hans": "备注（最多 1000 字）"
+      },
+      "platforms": {
+        "android": "record_note"
+      }
+    },
+    {
+      "id": "common.childMonitor.record_filter",
+      "values": {
+        "zh-Hans": "筛选记录"
+      },
+      "platforms": {
+        "android": "record_filter"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_active",
+      "values": {
+        "zh-Hans": "正在按所选条件筛选"
+      },
+      "platforms": {
+        "android": "filter_active"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_from",
+      "values": {
+        "zh-Hans": "起始日期"
+      },
+      "platforms": {
+        "android": "filter_from"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_to",
+      "values": {
+        "zh-Hans": "结束日期"
+      },
+      "platforms": {
+        "android": "filter_to"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_query",
+      "values": {
+        "zh-Hans": "搜索名称或备注"
+      },
+      "platforms": {
+        "android": "filter_query"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_normal",
+      "values": {
+        "zh-Hans": "正常结束"
+      },
+      "platforms": {
+        "android": "filter_normal"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_interrupted",
+      "values": {
+        "zh-Hans": "中断记录"
+      },
+      "platforms": {
+        "android": "filter_interrupted"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_pending",
+      "values": {
+        "zh-Hans": "待保存"
+      },
+      "platforms": {
+        "android": "filter_pending"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_clear",
+      "values": {
+        "zh-Hans": "清除筛选"
+      },
+      "platforms": {
+        "android": "filter_clear"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_title",
+      "values": {
+        "zh-Hans": "每日汇总与趋势"
+      },
+      "platforms": {
+        "android": "statistics_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_range",
+      "values": {
+        "zh-Hans": "最近 %1$d 天"
+      },
+      "platforms": {
+        "android": "statistics_range"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_day",
+      "values": {
+        "zh-Hans": "%1$s · %2$d 次 · %3$s"
+      },
+      "platforms": {
+        "android": "statistics_day"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_coverage",
+      "values": {
+        "zh-Hans": "有效识别 %1$d%% · 在座 %2$s · 离座 %3$d 次"
+      },
+      "platforms": {
+        "android": "statistics_coverage"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_item",
+      "values": {
+        "zh-Hans": "%1$s：异常占比 %2$d%%（有效 %3$s）"
+      },
+      "platforms": {
+        "android": "statistics_item"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_insufficient",
+      "values": {
+        "zh-Hans": "样本不足，仅展示时长，不作趋势比较"
+      },
+      "platforms": {
+        "android": "statistics_insufficient"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_no_data",
+      "values": {
+        "zh-Hans": "这段时间还没有监控记录"
+      },
+      "platforms": {
+        "android": "statistics_no_data"
+      }
+    },
+    {
+      "id": "common.childMonitor.statistics_explain",
+      "values": {
+        "zh-Hans": "按每次记录开始时的本地日期分组。姿态占比以对应项目的有效识别时长为分母；单日有效时长不足 10 分钟时不展示比例。缺失数据不算正常，家长标记不改变原始评价。"
+      },
+      "platforms": {
+        "android": "statistics_explain"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_video",
+      "values": {
+        "zh-Hans": "导出录像"
+      },
+      "platforms": {
+        "android": "export_video"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_card",
+      "values": {
+        "zh-Hans": "分享统计卡片"
+      },
+      "platforms": {
+        "android": "export_card"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_success",
+      "values": {
+        "zh-Hans": "录像已导出"
+      },
+      "platforms": {
+        "android": "export_success"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_failed",
+      "values": {
+        "zh-Hans": "导出未完成，请重试"
+      },
+      "platforms": {
+        "android": "export_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_notice",
+      "values": {
+        "zh-Hans": "导出的录像含有孩子影像，请自行选择保存位置；统计卡片不包含录像。"
+      },
+      "platforms": {
+        "android": "export_notice"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_title",
+      "values": {
+        "zh-Hans": "本次监控统计"
+      },
+      "platforms": {
+        "android": "report_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_date",
+      "values": {
+        "zh-Hans": "日期：%1$s"
+      },
+      "platforms": {
+        "android": "report_date"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_duration",
+      "values": {
+        "zh-Hans": "监控时长：%1$s"
+      },
+      "platforms": {
+        "android": "report_duration"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_seated",
+      "values": {
+        "zh-Hans": "在座时长：%1$s"
+      },
+      "platforms": {
+        "android": "report_seated"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_away",
+      "values": {
+        "zh-Hans": "离座：%1$d 次"
+      },
+      "platforms": {
+        "android": "report_away"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_partial",
+      "values": {
+        "zh-Hans": "部分数据不可评价"
+      },
+      "platforms": {
+        "android": "report_partial"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_local",
+      "values": {
+        "zh-Hans": "本机生成 · 不含录像"
+      },
+      "platforms": {
+        "android": "report_local"
+      }
+    },
+    {
+      "id": "common.childMonitor.report_share",
+      "values": {
+        "zh-Hans": "分享统计卡片"
+      },
+      "platforms": {
+        "android": "report_share"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_title",
+      "values": {
+        "zh-Hans": "家长操作验证"
+      },
+      "platforms": {
+        "android": "parent_title"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_pin",
+      "values": {
+        "zh-Hans": "6 位家长 PIN"
+      },
+      "platforms": {
+        "android": "parent_pin"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_pin_confirm",
+      "values": {
+        "zh-Hans": "再次输入 PIN"
+      },
+      "platforms": {
+        "android": "parent_pin_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_unlock",
+      "values": {
+        "zh-Hans": "解锁"
+      },
+      "platforms": {
+        "android": "parent_unlock"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_failed",
+      "values": {
+        "zh-Hans": "验证失败或操作未完成；连续输错 5 次需等待 1 分钟。"
+      },
+      "platforms": {
+        "android": "parent_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_set",
+      "values": {
+        "zh-Hans": "设置或修改家长 PIN"
+      },
+      "platforms": {
+        "android": "parent_set"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_disable",
+      "values": {
+        "zh-Hans": "关闭家长保护"
+      },
+      "platforms": {
+        "android": "parent_disable"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_description",
+      "values": {
+        "zh-Hans": "保护设置、历史记录、删除和导出。当前前台会话内无需重复验证，离开应用后重新验证。停止监控不需要 PIN。"
+      },
+      "platforms": {
+        "android": "parent_description"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_device",
+      "values": {
+        "zh-Hans": "使用设备密码验证"
+      },
+      "platforms": {
+        "android": "parent_device"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_device_prompt",
+      "values": {
+        "zh-Hans": "验证设备密码后可管理儿童监控"
+      },
+      "platforms": {
+        "android": "parent_device_prompt"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_invalid",
+      "values": {
+        "zh-Hans": "请填写两次相同的 6 位数字 PIN。"
+      },
+      "platforms": {
+        "android": "parent_invalid"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_recovery",
+      "values": {
+        "zh-Hans": "忘记 PIN 时可使用本机锁屏密码验证后重新设置；建议先为设备设置锁屏密码。"
+      },
+      "platforms": {
+        "android": "parent_recovery"
+      }
+    },
+    {
+      "id": "common.childMonitor.parent_remove_confirm",
+      "values": {
+        "zh-Hans": "关闭家长操作保护？"
+      },
+      "platforms": {
+        "android": "parent_remove_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.stop_confirm",
+      "values": {
+        "zh-Hans": "结束本次监控并保存录像与统计？"
+      },
+      "platforms": {
+        "android": "stop_confirm"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_add",
+      "values": {
+        "zh-Hans": "标记此事件"
+      },
+      "platforms": {
+        "android": "annotation_add"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_false",
+      "values": {
+        "zh-Hans": "家长标记：误报"
+      },
+      "platforms": {
+        "android": "annotation_false"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_uncertain",
+      "values": {
+        "zh-Hans": "家长标记：无法判断"
+      },
+      "platforms": {
+        "android": "annotation_uncertain"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_note",
+      "values": {
+        "zh-Hans": "原因或备注（最多 500 字）"
+      },
+      "platforms": {
+        "android": "annotation_note"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_explain",
+      "values": {
+        "zh-Hans": "标记用于回看和排查，不修改原始检测事实、统计或历史评价。"
+      },
+      "platforms": {
+        "android": "annotation_explain"
+      }
+    },
+    {
+      "id": "common.childMonitor.annotation_remove",
+      "values": {
+        "zh-Hans": "移除标记"
+      },
+      "platforms": {
+        "android": "annotation_remove"
+      }
+    },
+    {
+      "id": "common.childMonitor.export_cleanup_failed",
+      "values": {
+        "zh-Hans": "导出未完成，目标文件无法自动清理，请手动删除后重试。"
+      },
+      "platforms": {
+        "android": "export_cleanup_failed"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_no_date",
+      "values": {
+        "zh-Hans": "不限日期"
+      },
+      "platforms": {
+        "android": "filter_no_date"
+      }
+    },
+    {
+      "id": "common.childMonitor.filter_clear_date",
+      "values": {
+        "zh-Hans": "清除日期"
+      },
+      "platforms": {
+        "android": "filter_clear_date"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_stop_recording",
+      "values": {
+        "zh-Hans": "正在录像，请先停止录像再设置。"
+      },
+      "platforms": {
+        "android": "settings_stop_recording"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_unavailable",
+      "values": {
+        "zh-Hans": "此设置暂不可用，请先开启对应功能或等待当前操作完成。"
+      },
+      "platforms": {
+        "android": "settings_unavailable"
+      }
+    },
+    {
+      "id": "common.childMonitor.setting_unavailable_label",
+      "values": {
+        "zh-Hans": "%1$s *"
+      },
+      "platforms": {
+        "android": "setting_unavailable_label"
+      }
+    },
+    {
+      "id": "common.childMonitor.settings_locked_hint",
+      "values": {
+        "zh-Hans": "带 * 的设置暂不可修改；正在录像时，请先停止录像再设置。"
+      },
+      "platforms": {
+        "android": "settings_locked_hint"
+      }
+    }
+  ]
+}

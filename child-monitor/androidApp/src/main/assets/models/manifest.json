@@ -1,0 +1,12 @@
+{
+  "formatVersion": 1,
+  "id": "efficientdet-lite0-int8-v1",
+  "file": "efficientdet_lite0.tflite",
+  "source": "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite",
+  "sha256": "0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb",
+  "bytes": 4602795,
+  "categories": [
+    "person"
+  ],
+  "runtime": "MediaPipe Tasks Vision 0.10.21"
+}
