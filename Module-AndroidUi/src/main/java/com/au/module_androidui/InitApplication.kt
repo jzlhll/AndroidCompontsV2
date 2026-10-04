@@ -8,13 +8,6 @@ import com.au.module_androidui.ui.monitorActivityFrameRate
 import com.au.module_androidui.ui.monitorActivityLoadTime
 
 open class InitApplication : CommonInitApplication() {
-    override fun config(): FirstInitialConfig {
-        return FirstInitialConfig(
-            isDebug = BuildConfig.DEBUG,
-            hasFileDebug = BuildConfig.DEBUG
-        )
-    }
-
     override fun onCreate() {
         super.onCreate()
         if (ENABLE_MONITOR) {
