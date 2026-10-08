@@ -4,26 +4,25 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_okhttp.exceptions.RefreshTokenExpiredException
 import com.au.module_okhttp.exceptions.TimestampErrorException
 import com.au.module_okhttp.exceptions.TokenExpiredException
+import okhttp3.Call
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.internal.connection.RealCall
-import okhttp3.internal.http2.ConnectionShutdownException
-import java.io.EOFException
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.net.ProtocolException
-import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import java.net.UnknownServiceException
 import java.security.cert.CertificateException
 import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLPeerUnverifiedException
 
 /**
- * 参考 RetryAndFollowUpInterceptor 实现一个简易够用的版本。如果使用了该拦截器，请将okhttpBuilder移除retryWhenFail。
- * 必须在OkhttpPretreatmentInterceptor之前添加。
- * 1. 内部网络问题重试支持，简化实现
- * 2. 重试timestamp
+ * 简易重试拦截器，使用时保持 OkHttpClient.Builder.retryOnConnectionFailure(false)。
+ * 必须通过 addInterceptor 在 PretreatmentInterceptor 之前添加。
+ * 1. 根据异常类型和请求体可重发性进行有限次数的网络重试，不判断剩余路由。
+ * 2. 支持时间戳纠正和 Token 刷新后的业务重试。
  */
 class SimpleRetryInterceptor(
     val headersResetBlock:(Request)-> Request,
@@ -37,20 +36,17 @@ class SimpleRetryInterceptor(
         var request = chain.request()
         var errorException: Exception? = null
         var isTimestampAlreadyRetry = false
-        val call = chain.call() as? RealCall
+        val call = chain.call()
 
         while (true) {
-            var response: Response
             try {
-                if (call?.isCanceled() == true) {
+                if (call.isCanceled()) {
                     throw IOException("Canceled")
                 }
-                response = chain.proceed(request)
-                return response
+                return chain.proceed(request)
             } catch (e: IOException) {
                 errorException = e
-                // An attempt to communicate with a server failed. The request may have been sent.
-                val isRecoverable = recover(e,  call, request)
+                val isRecoverable = recover(e, call, request)
                 if (!isRecoverable) {
                     break
                 }
@@ -79,82 +75,49 @@ class SimpleRetryInterceptor(
                 break
             }
 
-            logdNoFile { "retry url ${request.url} exception: ${errorException.message}" }
-            if (retryCount++ < retryMaxCount) {
-                request = headersResetBlock(request)
-                Thread.sleep(200) //重试的时候，略微延迟，等等网络。
-            } else {
+            // 业务异常同样不能重复发送一次性或双工请求体。
+            val body = request.body
+            if (retryCount >= retryMaxCount || call.isCanceled() ||
+                Thread.currentThread().isInterrupted ||
+                body?.isOneShot() == true || body?.isDuplex() == true
+            ) {
                 break
+            }
+            retryCount++
+            logdNoFile { "retry url ${request.url} exception: ${errorException.message}" }
+            request = headersResetBlock(request)
+            try {
+                Thread.sleep(200) // 重试前略微等待网络恢复。
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw InterruptedIOException("Interrupted while waiting to retry").apply {
+                    initCause(e)
+                }
             }
         }
         throw errorException
     }
 
-    private fun requestIsOneShot(
-        e: IOException,
-        userRequest: Request,
-    ): Boolean {
-        val requestBody = userRequest.body
-        return (requestBody != null && requestBody.isOneShot()) ||
-                e is FileNotFoundException
-    }
-
     private fun recover(
         e: IOException,
-        call:RealCall?,
+        call: Call,
         userRequest: Request,
     ): Boolean {
-        val requestSendStarted = e !is ConnectionShutdownException
+        if (call.isCanceled() || Thread.currentThread().isInterrupted) return false
 
-        // We can't send the request body again.
-        if (requestSendStarted && requestIsOneShot(e, userRequest)) return false
+        // 无法确认发送进度，保守地禁止重复发送一次性或双工请求体。
+        val body = userRequest.body
+        if (body?.isOneShot() == true || body?.isDuplex() == true) return false
 
-        // 处理EOFException和包含unexpected end of stream的流终止错误，标记为可恢复
-        if (e is EOFException || e.message?.contains("unexpected end of stream") == true) {
-            return true
+        return when {
+            e is FileNotFoundException -> false
+            e is UnknownHostException -> false
+            e is UnknownServiceException -> false
+            e is ProtocolException -> false
+            e is InterruptedIOException -> false
+            e is SSLPeerUnverifiedException -> false
+            e is SSLHandshakeException && e.cause is CertificateException -> false
+            else -> true
         }
-
-        // No more routes to attempt.
-        if (call != null && !call.retryAfterFailure()) return false
-
-        // This exception is fatal.
-        if (!isRecoverable(e, requestSendStarted)) return false
-
-        // For failure recovery, use the same route selector with a new connection.
-        return true
-    }
-
-    private fun isRecoverable(
-        e: IOException,
-        requestSendStarted: Boolean,
-    ): Boolean {
-        // If there was a protocol problem, don't recover.
-        if (e is ProtocolException) {
-            return false
-        }
-
-        // If there was an interruption don't recover, but if there was a timeout connecting to a route
-        // we should try the next route (if there is one).
-        if (e is InterruptedIOException) {
-            return e is SocketTimeoutException && !requestSendStarted
-        }
-
-        // Look for known client-side or negotiation errors that are unlikely to be fixed by trying
-        // again with a different route.
-        if (e is SSLHandshakeException) {
-            // If the problem was a CertificateException from the X509TrustManager,
-            // do not retry.
-            if (e.cause is CertificateException) {
-                return false
-            }
-        }
-        if (e is SSLPeerUnverifiedException) {
-            // e.g. a certificate pinning error.
-            return false
-        }
-        // An example of one we might want to retry with a different route is a problem connecting to a
-        // proxy and would manifest as a standard IOException. Unless it is one we know we should not
-        // retry, we return true and try a new route.
-        return true
     }
 }

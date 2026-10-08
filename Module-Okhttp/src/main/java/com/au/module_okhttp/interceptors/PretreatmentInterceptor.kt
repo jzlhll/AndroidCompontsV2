@@ -36,35 +36,45 @@ class PretreatmentInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val response = chain.proceed(request)
-        val responseCode = response.code
-        //过滤掉sse
-        if (request.isEventStream()) {
-            return response
+        try {
+            val responseCode = response.code
+            //过滤掉sse
+            if (request.isEventStream()) {
+                return response
+            }
+            val responseBody = response.body ?: return response
+            //过滤掉sse
+            if (responseBody.isEventStream()) {
+                return response
+            }
+
+            val url = request.url.toString()
+
+            //现在不论如何都解析httpCode 和 content
+            val error = checkHttpResponseCode(responseCode)
+            val result = getCloneResult(response)
+
+            // 1. 如果响应异常，但是 result 解析不出来。就直接报响应错误
+            if (error != null && result == null) {
+                throw ResponseErrorException(responseCode, error)
+            }
+
+            logdNoFile{"($error): $responseCode $result"}
+            // 2. 我们直接在result 进行业务错误码解析，
+            // 因为暂时我不能肯定是否影响错误的逻辑，一定不是httpSuccess200。所以不在上面直接 return。
+            // later：优化。
+            //所以这里不论是否是错误都会走，正常逻辑也会走。效率上大约拷贝+json 解析了一次。
+            checkContentThrow(responseCode, url, result)
+            return response //大概率不走了。
+        } catch (e: Throwable) {
+            // 异常响应不会交给调用方，必须在上层重试前关闭，并保留原始异常。
+            try {
+                response.close()
+            } catch (closeException: Throwable) {
+                e.addSuppressed(closeException)
+            }
+            throw e
         }
-        val responseBody = response.body ?: return response
-        //过滤掉sse
-        if (responseBody.isEventStream()) {
-            return response
-        }
-
-        val url = request.url.toString()
-
-        //现在不论如何都解析httpCode 和 content
-        val error = checkHttpResponseCode(responseCode)
-        val result = getCloneResult(response)
-
-        // 1. 如果响应异常，但是 result 解析不出来。就直接报响应错误
-        if (error != null && result == null) {
-            throw ResponseErrorException(responseCode, error)
-        }
-
-        logdNoFile{"($error): $responseCode $result"}
-        // 2. 我们直接在result 进行业务错误码解析，
-        // 因为暂时我不能肯定是否影响错误的逻辑，一定不是httpSuccess200。所以不在上面直接 return。
-        // later：优化。
-        //所以这里不论是否是错误都会走，正常逻辑也会走。效率上大约拷贝+json 解析了一次。
-        checkContentThrow(responseCode, url, result)
-        return response //大概率不走了。
     }
 
     private fun ResponseBody.isEventStream(): Boolean {
