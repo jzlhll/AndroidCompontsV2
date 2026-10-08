@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.au.module_androidui.widget.BgBuildLinearLayout
+        android:id="@+id/dialogHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        app:backgroundNormal="@color/windowDialogBackground"
+        app:cornerRadius="32dp"
+        app:strokeColor="@color/windowDialogBackground"
+        app:strokeWidth="1dp">
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/titleTv"
+            style="@style/StyleAuBTextTitle2"
+            app:customFontMode="mid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="4dp"
+            android:paddingBottom="2dp"
+            tools:text="Name" />
+
+        <com.au.module_androidui.widget.BgBuildLinearLayout
+            android:id="@+id/inputHost"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:backgroundNormal="@color/color_normal_block0"
+            app:cornerRadius="16dp"
+            app:strokeColor="@color/color_normal_block"
+            app:strokeWidth="2dp">
+
+            <com.au.module_androidui.widget.CustomEditText
+                android:id="@+id/nameEdit"
+                style="@style/StyleNoBgInputEditText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:gravity="center_vertical"
+                android:imeOptions="actionDone"
+                android:inputType="text"
+                android:singleLine="true"
+                tools:text="Moments of tranquility" />
+
+            <com.au.module_androidui.widget.CustomFontText
+                android:id="@+id/countTv"
+                style="@style/StyleAuTextNormalDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                tools:text="22/30" />
+        </com.au.module_androidui.widget.BgBuildLinearLayout>
+
+        <LinearLayout
+            android:id="@+id/buttonsHost"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.au.module_androidui.widget.CustomButton
+                android:id="@+id/cancelButton"
+                style="@style/StyleButtonSecondary"
+                android:minHeight="0dp"
+                android:layout_marginBottom="0dp"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="@string/cancel"
+                app:backgroundNormal="@color/color_normal_block"
+                app:cornerRadius="12dp"
+                app:strokeWidth="0dp" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <com.au.module_androidui.widget.CustomButton
+                android:id="@+id/doneButton"
+                style="@style/StyleButtonWarn"
+                android:minHeight="0dp"
+                android:layout_marginBottom="0dp"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                app:backgroundNormal="@color/color_warn_btn_bg"
+                app:cornerRadius="12dp"
+                tools:text="Done" />
+        </LinearLayout>
+    </com.au.module_androidui.widget.BgBuildLinearLayout>
+</LinearLayout>

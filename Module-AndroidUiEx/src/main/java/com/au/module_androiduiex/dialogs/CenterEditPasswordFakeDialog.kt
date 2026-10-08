@@ -6,8 +6,8 @@ import com.au.module_android.click.onClick
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.showImeNew
 import com.au.module_android.utils.visible
+import com.au.module_androidcolor.R
 import com.au.module_androidui.dialogs.AbsCenterFakeDialog
-import com.au.module_androiduiex.R
 import com.au.module_androiduiex.databinding.CenterEditInputPasswordBinding
 
 class CenterEditPasswordFakeDialog : AbsCenterFakeDialog<CenterEditInputPasswordBinding>() {
@@ -43,7 +43,7 @@ class CenterEditPasswordFakeDialog : AbsCenterFakeDialog<CenterEditInputPassword
             isHide = !isHide
             changeEditHideMode(isHide)
             if (isHide) {
-                binding.eye.setImageResource(R.drawable.ic_input_eye_hide)
+                binding.eye.setImageResource(R.drawable.ic_input_eye_close)
             } else {
                 binding.eye.setImageResource(R.drawable.ic_input_eye_open)
             }

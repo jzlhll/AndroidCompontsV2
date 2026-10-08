@@ -49,7 +49,7 @@ abstract class EncryptAssetsTask extends DefaultTask {
                 byte[] buffer = new byte[chunkSize]
                 int size
                 while ((size = input.read(buffer)) != -1) {
-                    xorTransform(buffer, keyBytes, size)
+                    EncryptAssetsTask.xorTransform(buffer, keyBytes, size)
                     output.write(buffer, 0, size)
                 }
             }
@@ -82,7 +82,7 @@ abstract class EncryptAssetsTask extends DefaultTask {
             if (file.isFile()) {
                 def relative = inputRoot.toPath().relativize(file.toPath()).toString()
                 if (applicationPaths.contains(relative) && !ignored.any { Paths.get(relative).endsWith(Paths.get(it)) }) {
-                    encryptFile(file, new File(outputRoot, relative), key, 4096)
+                    EncryptAssetsTask.encryptFile(file, new File(outputRoot, relative), key, 4096)
                 }
             }
         }

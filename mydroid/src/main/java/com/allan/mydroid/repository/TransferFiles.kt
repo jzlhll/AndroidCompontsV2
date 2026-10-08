@@ -17,7 +17,9 @@ object TransferFiles {
         }
         // 兼容此前放在 cacheDir 根目录的上传准备文件。
         Globals.app.cacheDir.listFiles()?.filter { it.name.startsWith("upload-") && it.name.endsWith(".tmp") }
-            ?.forEach { if (!it.delete()) loge { "Cannot remove abandoned upload: ${it.name}" } }
+            ?.forEach { file ->
+                if (!file.delete()) loge { "Cannot remove abandoned upload: ${file.name}" }
+            }
         File(root, UUID.randomUUID().toString()).apply {
             if (!isDirectory && !mkdirs()) throw IOException("Cannot create transfer directory")
         }

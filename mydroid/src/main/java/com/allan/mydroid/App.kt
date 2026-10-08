@@ -20,6 +20,7 @@ import com.allan.mydroid.repository.UriPermissionChecker
 import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.au.logsystem.DefaultActivitiesFollowCallback
 import com.au.module_android.Globals
+import com.au.module_android.log.logEx
 import com.au.module_androidui.InitApplication
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
@@ -137,7 +138,7 @@ class App : InitApplication() {
             try {
                 TransferFiles.clearAbandonedFiles()
             } catch (e: Exception) {
-                com.au.module_android.log.logEx(throwable = e) { "Prepare transfer directory failed" }
+                logEx(throwable = e) { "Prepare transfer directory failed" }
             }
             AppNative.strEk(this@App)
             clearDirOldFiles(cacheImportCopyDir(), 0)

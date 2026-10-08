@@ -39,7 +39,7 @@ open class CenterGotItListDialog : BindingDialog<CenterGotItListDialogBinding>()
             dialog.onShownBlock = {
                 val textColor = ContextCompat.getColor(
                     dialog.requireContext(),
-                    AndroidColorR.color.i8o_color_text_normal,
+                    AndroidColorR.color.color_text_normal,
                 )
                 dialog.binding.titleTv.text = title
                 dialog.binding.descTv.text = desc

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.au.module_androidui.widget.BgBuildLinearLayout
+        android:id="@+id/dialogHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="18dp"
+        app:backgroundNormal="@color/windowDialogBackground"
+        app:cornerRadius="32dp">
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/titleTv"
+            style="@style/StyleAuBTextTitle2"
+            app:customFontMode="mid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
+            tools:text="Unable to Delete" />
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/descTv"
+            style="@style/StyleAuTextThin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:gravity="center"
+            android:maxLines="4"
+            tools:text="You can't delete these photos because they were not uploaded by you." />
+
+        <com.au.module_androidui.widget.CustomButton
+            android:id="@+id/gotItBtn"
+            style="@style/StyleButtonWarn"
+            android:minHeight="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            app:backgroundNormal="@color/color_warn_btn_bg"
+            app:cornerRadius="16dp"
+            tools:text="Got It!" />
+    </com.au.module_androidui.widget.BgBuildLinearLayout>
+</LinearLayout>

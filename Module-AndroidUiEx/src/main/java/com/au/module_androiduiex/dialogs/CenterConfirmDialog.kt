@@ -43,7 +43,7 @@ open class CenterConfirmDialog : BindingDialog<CenterConfirmDialogBinding>() {
                 confirmBtn.setTextColor(
                     ContextCompat.getColor(
                         dialog.requireContext(),
-                        if (confirmTextRed) R.color.i8o_color_red else R.color.color_text_normal,
+                        if (confirmTextRed) R.color.color_warn_btn_bg else R.color.color_text_normal,
                     ),
                 )
                 if (cancelText == null) {

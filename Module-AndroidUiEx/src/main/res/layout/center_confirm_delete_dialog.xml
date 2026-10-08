@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.au.module_androidui.widget.BgBuildLinearLayout
+        android:id="@+id/dialogHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/ui_padding_edge"
+        android:orientation="vertical"
+        android:padding="@dimen/ui_padding_edge"
+        app:backgroundNormal="@color/windowDialogBackground"
+        app:cornerRadius="32dp">
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/titleTv"
+            style="@style/StyleAuBTextTitle2"
+            app:customFontMode="mid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
+            tools:text="Delete item?" />
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/descTv"
+            style="@style/StyleAuTextThin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            tools:text="Are you sure you want to delete this item?\nThe contents will not be deleted" />
+
+        <com.au.module_androidui.widget.CustomButton
+            android:id="@+id/firstBtn"
+            style="@style/StyleAuTextNormalMid"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:visibility="gone"
+            app:backgroundNormal="@color/color_normal_block"
+            app:cornerRadius="22dp"
+            tools:text="Remove" />
+
+        <com.au.module_androidui.widget.CustomButton
+            android:id="@+id/deleteBtn"
+            style="@style/StyleButtonMainColor"
+            android:minHeight="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            app:backgroundNormal="@color/color_normal_block"
+            app:cornerRadius="22dp"
+            app:customFontMode="mid"
+            tools:text="Delete" />
+
+        <com.au.module_androidui.widget.CustomButton
+            android:id="@+id/cancelBtn"
+            style="@style/StyleAuTextNormalMid"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            app:backgroundNormal="@color/color_normal_block"
+            app:cornerRadius="22dp"
+            tools:text="Cancel" />
+    </com.au.module_androidui.widget.BgBuildLinearLayout>
+</LinearLayout>

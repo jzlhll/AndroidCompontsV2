@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
-/** 对应 XML StyleI8oShadowWhiteBlock 的 Compose 阴影白底块。 */
+/** 对应 XML StyleShadowWhiteBlock 的 Compose 阴影白底块。 */
 @Composable
 fun Modifier.composeShadowWhiteBlock(
     cornerRadius: Dp = 16.dp,
@@ -402,7 +402,7 @@ private fun Modifier.composeWhiteBlockFrame(
 @Composable
 fun Modifier.composeBlurredCircleBackground(
     blurRadius: Dp = 4.dp,
-    overlayColor: Color = ComposeColors.TextDesc50Percent,
+    overlayColor: Color = ComposeColors.TextDesc.copy(alpha = 0.5f),
 ): Modifier {
     return clip(CircleShape)
         .drawWithContent {

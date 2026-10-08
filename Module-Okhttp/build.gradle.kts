@@ -41,9 +41,8 @@ dependencies {
     implementation(project(":Module-AndroidCommon"))
     implementation(project(":Module-AuGsonMMKV"))
 
-    // define a BOM and its version
-    implementation(platform(libs.okhttp.bom))
-    // define any required OkHttp artifacts without version
+    // 向调用模块传递版本约束，供无版本号的 OkHttp 依赖使用。
+    api(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
     api(libs.okhttp.logging)
     implementation(libs.okhttp.tls)

@@ -94,6 +94,7 @@ dependencies {
 
     implementation(libs.blurview)
     implementation(project(":Module-AndroidCommon"))
+    implementation(project(":Module-AndroidColor"))
 
     implementation(project(":Module-AndroidUi"))
     implementation(project(":Module-AndroidUiEx"))

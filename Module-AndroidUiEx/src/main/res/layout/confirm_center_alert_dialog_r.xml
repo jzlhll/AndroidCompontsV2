@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
+        android:layout_width="match_parent"
+        android:minHeight="175dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="25dp"
+        app:backgroundNormal="@color/windowDialogBackground"
+        app:cornerSizeTopLeft="12dp"
+        app:cornerSizeTopRight="12dp"
+        app:cornerSizeBottomLeft="12dp"
+        app:cornerSizeBottomRight="12dp">
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/titleTv"
+            style="@style/StyleAuBTextTitle2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:gravity="center"
+            android:paddingHorizontal="30dp"
+            android:textColor="@color/color_text_normal"
+            android:textSize="20sp"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="fir" />
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/contentTv"
+            style="@style/StyleAuTextNormalDesc"
+            app:layout_constraintTop_toBottomOf="@id/titleTv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="30dp"
+            android:layout_marginTop="15dp"
+            android:gravity="center"
+            tools:text="Your customiz" />
+
+        <com.au.module_androidui.widget.CustomButton
+            android:id="@+id/sureButton"
+            style="@style/StyleButtonMainColor"
+            android:minHeight="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            tools:text="delete"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/cancelButton"
+            app:layout_constraintTop_toBottomOf="@id/contentTv"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            android:layout_marginTop="15dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="12dp" />
+
+        <com.au.module_androidui.widget.CustomButton
+            android:id="@+id/cancelButton"
+            style="@style/StyleButtonSecondary"
+            android:minHeight="0dp"
+            android:layout_marginBottom="0dp"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/sureButton"
+            app:layout_constraintTop_toTopOf="@id/sureButton"
+            android:layout_marginEnd="30dp"
+            android:layout_marginStart="12dp"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:text="@string/cancel"/>
+
+        <View
+            android:id="@+id/bottomView"
+            android:background="@color/windowDialogBackground"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cancelButton"
+            android:layout_width="0.01dp"
+            android:layout_height="25dp"/>
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
+</LinearLayout>

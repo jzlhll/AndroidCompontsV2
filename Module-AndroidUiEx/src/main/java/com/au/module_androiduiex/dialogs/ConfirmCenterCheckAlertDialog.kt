@@ -16,7 +16,6 @@ import com.au.module_android.click.onClick
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 import com.au.module_androidui.ui.bindings.BindingDialog
-import com.au.module_androiduiex.R
 import com.au.module_androiduiex.databinding.ConfirmCenterCheckAlertDialogBinding
 
 /**
@@ -51,24 +50,17 @@ open class ConfirmCenterCheckAlertDialog : BindingDialog<ConfirmCenterCheckAlert
                     dialog.binding.dialogHost.minimumHeight = 0
                     dialog.binding.checkHost.gone()
                 }
-                var isChecked = defaultChecked
-                val updateCheckIcon = {
-                    dialog.binding.checkImg.setImageResource(
-                        if (isChecked) R.drawable.ic_check_yes else R.drawable.ic_check_not
-                    )
-                }
+                dialog.binding.checkImg.isChecked = defaultChecked
                 dialog.binding.checkTv.text = checkText
-                updateCheckIcon()
 
                 dialog.binding.checkHost.onClick {
-                    isChecked = !isChecked
-                    updateCheckIcon()
+                    dialog.binding.checkImg.isChecked = !dialog.binding.checkImg.isChecked
                 }
                 dialog.binding.cancelButton.onClick {
                     dialog.dismissAllowingStateLoss()
                 }
                 dialog.binding.sureButton.onClick {
-                    sureClick?.invoke(dialog, isChecked)
+                    sureClick?.invoke(dialog, dialog.binding.checkImg.isChecked)
                     dialog.dismissAllowingStateLoss()
                 }
             }

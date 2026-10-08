@@ -30,6 +30,7 @@ import com.allan.mydroid.client.download.DownloadTask
 import com.au.module_androiduiex.preview.AppPreview
 import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androiduiex.styles.ComposeHeaderLeftTitle
+import com.au.module_androidcolor.R as AndroidColorR
 
 /** 对方文件与本地记录独立展示，远端移除文件或断连后仍可使用已下载文件。 */
 @Composable
@@ -45,7 +46,7 @@ fun ConnectToHostReceiveScreen(
     var deleteTask by remember { mutableStateOf<DownloadTask?>(null) }
     Column(modifier.fillMaxSize().navigationBarsPadding()) {
         if (endpoint == null) {
-            ComposeHeaderLeftTitle(titleText, R.drawable.ic_dialog_back36, onBack,
+            ComposeHeaderLeftTitle(titleText, AndroidColorR.drawable.icon_back, onBack,
                 leftIconContentDescription = stringResource(R.string.transfer_back))
         } else {
             ConnectToHostHeader(titleText, endpoint.ip, endpoint.httpPort)
