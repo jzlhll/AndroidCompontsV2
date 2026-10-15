@@ -147,11 +147,12 @@ class WebsocketServer(
         clientListFlowsObj.clear()
     }
 
-    fun broadcastTextChatFromApp(bean: TextChatMessageBean) {
+    fun broadcastTextChatFromApp(bean: TextChatMessageBean, excludedClient: ServerWebsocketClient? = null) {
         val textBase64 = Base64.encodeToString(bean.text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
         val data = TextChatWsData(textBase64, bean.ip, "", bean.timestamp, bean.iconColor)
         scope.launch {
             clients.forEach { client ->
+                if (client === excludedClient) return@forEach
                 try {
                     client.sendApiResult(API_WS_TEXT_CHAT_CALLBACK, data)
                 } catch (e: Exception) {
@@ -174,12 +175,8 @@ class WebsocketServer(
     )
     private val currentColorIconIndex = java.util.concurrent.atomic.AtomicInteger((Math.random() * colorIconList.size).toInt())
 
-    private fun nextColor() : String{
-        return if(currentColorIconIndex.get() >= colorIconList.size) {
-            currentColorIconIndex.set(0)
-            colorIconList[currentColorIconIndex.get()]
-        } else {
-            colorIconList[currentColorIconIndex.getAndIncrement()]
-        }
+    private fun nextColor(): String {
+        val index = currentColorIconIndex.getAndUpdate { (it + 1) % colorIconList.size }
+        return colorIconList[index]
     }
 }

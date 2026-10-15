@@ -24,6 +24,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import org.json.JSONObject
+import org.json.JSONException
 import java.io.IOException
 
 class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
@@ -53,6 +54,7 @@ class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
     var openTs:Long = System.currentTimeMillis()
 
     private var isActive = true
+    private var initialized = false
 
     private var mFreeSpaceJob : Job? = null
 
@@ -64,7 +66,6 @@ class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
         openTs = System.currentTimeMillis() //必须在前面
         server.addIntoConnections(this)
 
-        messenger.onOpen()
         getFreeSpaceJob()
     }
 
@@ -100,17 +101,26 @@ class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
     override fun onMessage(message: NanoWSD.WebSocketFrame) {
         val text = message.textPayload
         logt { "$clientName on Message:$text" }
-        val json = JSONObject(text)
+        val json = try {
+            JSONObject(text)
+        } catch (e: JSONException) {
+            // 转换为框架能处理的协议异常，避免解析异常逃逸到连接线程。
+            throw NanoWSD.WebSocketException(
+                NanoWSD.WebSocketFrame.CloseCode.InvalidFramePayloadData, "Invalid JSON message", e)
+        }
         val api = json.optString("api")
 
         server.updateAliveFromClient(api)
         when (api) {
             API_WS_INIT -> {
+                if (initialized) return
+                initialized = true
                 platform = json.optString("platform")
                 clientName = remoteIpStr ?: ""
                 server.triggerConnectionsList()
 
                 clientInit()
+                messenger.onOpen()
             }
 
             API_WS_PING -> {

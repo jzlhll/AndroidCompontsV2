@@ -75,5 +75,6 @@ class WebsocketTextChatModeMessenger(client: ServerWebsocketClient) : AbsWebSock
         )
         textChatObj.addMessage(bean)
         textChatObj.emitIncoming(bean)
+        client.server.broadcastTextChatFromApp(bean, excludedClient = client)
     }
 }

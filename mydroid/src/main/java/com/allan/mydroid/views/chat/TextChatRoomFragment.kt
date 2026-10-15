@@ -78,7 +78,9 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         }
         observeTextChatMessage()
 
+        val currentView = binding.root
         binding.root.post {
+            if (view !== currentView) return@post
             val navigationBarHeight = requireActivity().currentStatusBarAndNavBarHeight()?.second ?: 0
             updateRootBottomPadding(navigationBarHeight)
             updateRecyclerBottomPadding()
@@ -92,11 +94,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         binding.chatRcv.layoutManager = LinearLayoutManager(requireContext())
         binding.chatRcv.adapter = messageAdapter
         textChatStore.loadHistory()
-        if (textChatStore.historyFlow.value.isNotEmpty()) {
-            messageList.addAll(textChatStore.historyFlow.value)
-            messageAdapter.submitList(messageList.toList(), false)
-            scrollToBottom(false)
-        }
+
     }
 
     // 监听输入框发送动作。
@@ -108,7 +106,9 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
             updateInputEditHeight()
             updateRecyclerBottomPadding()
         }
+        val currentView = binding.root
         binding.inputEdit.post {
+            if (view !== currentView) return@post
             updateInputEditHeight()
             updateRecyclerBottomPadding()
         }
@@ -125,8 +125,11 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     // 监听从 websocket 进入 app 的文本消息。
     private fun observeTextChatMessage() {
         launchRepeatOnStarted {
-            textChatStore.incomingMessageFlow.collect { bean ->
-            appendMessage(bean, false, true)
+            textChatStore.historyFlow.collect { history ->
+                messageList.clear()
+                messageList.addAll(history)
+                messageAdapter.submitList(messageList.toList(), false)
+                scrollToBottom(false)
             }
         }
     }
@@ -181,6 +184,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     // 利用输入法监听同步底部输入区和列表滚动。
     private fun initImeAssist() {
         ImeHelper.assist(requireActivity()).setOnImeListener { imeOffset, _, _, navigationBarHeight ->
+            if (view == null) return@setOnImeListener
             updateRootBottomPadding(navigationBarHeight)
             currentImeOffset = max(0, imeOffset - navigationBarHeight)
             binding.inputHost.translationY = min(0f, -imeOffset.toFloat() + navigationBarHeight)
@@ -203,23 +207,11 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
             timestamp = System.currentTimeMillis(),
             iconColor = SELF_ICON_COLOR,
         )
-        appendMessage(bean, true, true)
+        textChatStore.addMessage(bean)
         AppGlobals.globalDroidServer.broadcastTextChatFromApp(bean)
         binding.inputEdit.setText("")
         updateInputEditHeight()
         updateRecyclerBottomPadding()
-    }
-
-    // 将消息写入本地会话并刷新界面。
-    private fun appendMessage(bean: TextChatMessageBean, saveHistory: Boolean, scrollBottom: Boolean) {
-        if (saveHistory) {
-            textChatStore.addMessage(bean)
-        }
-        messageList.add(bean)
-        messageAdapter.submitList(messageList.toList(), false)
-        if (scrollBottom) {
-            scrollToBottom(true)
-        }
     }
 
     private fun clientItem(index:Int) : MydroidSendClientBinding {
@@ -250,7 +242,9 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
 
     // 让输入框随内容增高，到最大高度后启用内部滚动。
     private fun updateInputEditHeight() {
+        val currentView = binding.root
         binding.inputEdit.post {
+            if (view !== currentView) return@post
             val layout = binding.inputEdit.layout
             val desiredHeight = if (layout == null) {
                 inputMinHeight
@@ -297,7 +291,9 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         if (targetPosition < 0) {
             return
         }
+        val currentView = binding.root
         binding.chatRcv.post {
+            if (view !== currentView) return@post
             if (smooth) {
                 binding.chatRcv.smoothScrollToPosition(targetPosition)
             } else {
@@ -315,6 +311,12 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
             binding.root.updatePadding(bottom = navBarHeight)
             requireActivity().changeBarsColor(statusBarTextDark = false)
         }
+    }
+
+    override fun onDestroyView() {
+        sendClientBindings.clear()
+        currentImeOffset = 0
+        super.onDestroyView()
     }
 
     override fun toolbarInfo(): YourToolbarInfo? {

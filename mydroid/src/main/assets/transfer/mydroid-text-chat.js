@@ -85,6 +85,7 @@
         if (!trimText) {
             return;
         }
+        if (messageList.some(item => item.ip === ip && item.timestamp === timestamp && item.text === trimText)) return;
         messageList.push({
             type,
             text: trimText,
@@ -253,7 +254,7 @@
     };
 
     window.appendPhoneMessage = function(text, ip = "phone", timestamp = Date.now(), iconColor = "") {
-        appendMessage("client", text, ip, timestamp, iconColor);
+        appendMessage(ip === selfIp ? "self" : "client", text, ip, timestamp, iconColor);
     };
 
     function escapeHtml(text) {
