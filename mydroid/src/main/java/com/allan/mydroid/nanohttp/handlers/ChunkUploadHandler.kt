@@ -62,7 +62,7 @@ class ChunkUploadHandler(
         }
     }
     /**
-     * key 按来源地址、文件名与 MD5 隔离
+     * key 按来源地址、上传会话、文件名与 MD5 隔离；旧客户端未传会话时保留原协议。
      * value是chunkInfo组
      */
     private val fileChunkInfosMap = HashMap<String, ArrayList<ChunkInfoResult>>()
@@ -110,6 +110,7 @@ class ChunkUploadHandler(
             chunkIndex = params["chunkIndex"]?.first()?.toInt() ?: 0
             totalChunks = params["totalChunks"]?.first()?.toInt() ?: 0
             md5 = params["md5"]?.first() ?: ""
+            val source = uploadSource(session, params["uploadId"]?.firstOrNull().orEmpty())
 
             require(fileName.isNotBlank() && totalChunks > 0 && chunkIndex in 1..totalChunks)
             require(md5.matches(Regex("[a-fA-F0-9]{32}")))
@@ -132,7 +133,7 @@ class ChunkUploadHandler(
             check(tmpFile.renameTo(chunkTmpFile)) { "Cannot retain chunk" }
 
             val chunkInfo = ChunkInfoResult(fileName, chunkIndex, totalChunks, md5, chunkTmpFile)
-            addChunkInfo(session.remoteIpAddress, chunkInfo)
+            addChunkInfo(source, chunkInfo)
 
             receiverFlowsObj.emitProgress(
                 mapOf(
@@ -166,7 +167,7 @@ class ChunkUploadHandler(
             return ResultBean<ChunkInfoResult>(
                 CODE_FAIL_RECEIVER_CHUNK,
                 "$fileName Chunk $chunkIndex/$totalChunks received failed!",
-                null).okJsonResponse()
+                null).okJsonResponse().also { it.addHeader("Connection", "close") }
         }
     }
 
@@ -197,7 +198,7 @@ class ChunkUploadHandler(
             )
         )
 
-        val chunkInfoList = removeChunkInfoList(session.remoteIpAddress, fileName, md5)
+        val chunkInfoList = removeChunkInfoList(uploadSource(session, params.optString("uploadId")), fileName, md5)
         if (chunkInfoList == null) {
             val noChunkStr = Globals.getString(R.string.no_chunks)
 
@@ -282,12 +283,18 @@ class ChunkUploadHandler(
         val fileName = params.optString("fileName")
         val md5 = params.optString("md5")
 
-        removeChunkInfoList(session.remoteIpAddress, fileName, md5)?.forEach { chunkInfo->
+        removeChunkInfoList(uploadSource(session, params.optString("uploadId")), fileName, md5)?.forEach { chunkInfo->
             chunkInfo.chunkTmpFile.delete() // 删除已合并的分片
         }
         return ResultBean<String>(
             CODE_SUC,
             Globals.getString(R.string.clear_up), null).jsonResponse(Status.OK)
+    }
+
+    private fun uploadSource(session: IHTTPSession, uploadId: String): String {
+        if (uploadId.isEmpty()) return session.remoteIpAddress
+        require(uploadId.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Invalid upload session" }
+        return "${session.remoteIpAddress}:$uploadId"
     }
 
     // 辅助方法：将请求体转为字符串

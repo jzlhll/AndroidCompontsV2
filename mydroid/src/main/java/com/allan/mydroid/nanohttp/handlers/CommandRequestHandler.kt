@@ -44,11 +44,11 @@ class CommandRequestHandler(
                 // 不能对所有 POST 都 parseBody，否则会消费 upload-chunk/merge-chunks 的请求体。
                 when (uri) {
                     READ_WEBSOCKET_IP_PORT -> {
-                        runCatching { session.parseBody(HashMap()) }
+                        session.parseBody(HashMap())
                         return getWebsocketIpPort()
                     }
                     REQUEST_FILE_LIST -> {
-                        runCatching { session.parseBody(HashMap()) }
+                        session.parseBody(HashMap())
                         return getFileList()
                     }
                 }

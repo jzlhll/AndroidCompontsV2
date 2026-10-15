@@ -45,7 +45,7 @@
     }
 
     // 通知服务器合并分片
-    async function mergeChunks(md5, fileName, totalChunks, lastModified) {
+    async function mergeChunks(md5, fileName, totalChunks, lastModified, uploadId) {
         let response = null;
         try {
             response = await fetch(MERGE_CHUNKS, {
@@ -53,7 +53,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ md5, fileName, totalChunks, lastModified }),
+                body: JSON.stringify({ md5, fileName, totalChunks, lastModified, uploadId }),
             });
         } catch(e) {}
         if (!response) throw new Error(loc["error_upload_failure_e03"]);
@@ -61,7 +61,7 @@
         return await response.json();
     }
 
-    async function abortUploadChunk(md5, fileName) {
+    async function abortUploadChunk(md5, fileName, uploadId) {
                 let response = null;
         try {
             response = await fetch(ABORT_UPLOAD_CHUNKS, {
@@ -69,7 +69,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ md5, fileName }),
+                body: JSON.stringify({ md5, fileName, uploadId }),
             });
         } catch(e) {}
         if (!response) throw new Error(loc["error_upload_failure_e05"]);
@@ -96,6 +96,7 @@
             throw new Error(loc["no_file_selected"]);
         }
     
+        const uploadId = generateUUID();
         const fileName = file.name;
         const fileSize = file.size;
         const chunkSize = getChunkSize(fileSize);
@@ -112,7 +113,7 @@
         for (let i = 0; i < chunks; i++) {
             //放在这里可以让最后一包如果完成的话，就接着完成。
             if (startTs != window.lastStartTsFlagArr.startUploadTime) {
-                await abortUploadChunk(md5, fileName);
+                await abortUploadChunk(md5, fileName, uploadId);
                 isAbort = true;
                 break;
             }
@@ -130,6 +131,7 @@
             formData.append('chunkIndex', i + 1);
             formData.append('totalChunks', chunks);
             formData.append('md5', md5);
+            formData.append('uploadId', uploadId);
 
             const ans = await uploadChunk(formData); // 上传分片
             //console.log(`chunkResponse: code=${ans.code} msg=${ans.msg}`);
@@ -158,7 +160,7 @@
         } else {
             console.log('所有分片上传完成，通知服务器合并文件', file);
             onProgress(chunks, chunks, "", "mergeChunksStart");
-            const mergeAns = await mergeChunks(md5, fileName, chunks, file.lastModified); // 通知服务器合并分片
+            const mergeAns = await mergeChunks(md5, fileName, chunks, file.lastModified, uploadId); // 通知服务器合并分片
             if (mergeAns.code != 0) {
                 throw new Error(`${mergeAns.msg}`);
             }

@@ -9,6 +9,9 @@ import com.allan.mydroid.nanohttp.handlers.StaticAssetHandler
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.au.module_android.Globals
+import com.au.module_android.log.logEx
+import com.au.module_okhttp.api.ResultBean
+import org.json.JSONException
 import com.au.module_android.log.logdNoFile
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.Response.Status
@@ -46,9 +49,24 @@ class MyDroidHttpServer(httpPort: Int,
         val uri = session.uri ?: ""
         logdNoFile { "handle ${session.method} request $uri" }
 
-        for (handler in handlers) {
-            val response = handler.tryHandle(session.method, uri, session)
-            if (response != null) return response
+        try {
+            for (handler in handlers) {
+                val response = handler.tryHandle(session.method, uri, session)
+                if (response != null) return response
+            }
+        } catch (e: Exception) {
+            logEx(throwable = e) { "Handle HTTP request failed: $uri" }
+            val status = when (e) {
+                is JSONException, is IllegalArgumentException -> Status.BAD_REQUEST
+                is ResponseException -> e.status
+                else -> Status.INTERNAL_ERROR
+            }
+            return ResultBean<Unit>(CODE_FAIL,
+                Globals.getString(com.allan.mydroid.R.string.something_error), null)
+                .jsonResponse(status).also {
+                    // 请求体可能未完整消费，不能把残余字节当成下一条请求。
+                    it.addHeader("Connection", "close")
+                }
         }
         return when (session.method) {
             Method.GET -> NanoHTTPD.newFixedLengthResponse(
@@ -56,7 +74,9 @@ class MyDroidHttpServer(httpPort: Int,
                 MIME_PLAINTEXT,
                 Globals.getString(com.allan.mydroid.R.string.server_not_support) + "(E01)"
             )
-            else -> NanoHTTPD.newFixedLengthResponse(Globals.getString(com.allan.mydroid.R.string.invalid_request_from_appserver))
+            else -> NanoHTTPD.newFixedLengthResponse(Status.BAD_REQUEST, MIME_PLAINTEXT,
+                Globals.getString(com.allan.mydroid.R.string.invalid_request_from_appserver))
+                .also { it.addHeader("Connection", "close") }
         }
     }
 

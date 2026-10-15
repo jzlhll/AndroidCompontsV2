@@ -76,11 +76,14 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
             // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
             val encodedFileName = URLEncoder.encode(filename, "UTF-8")
                 .replace("\\+".toRegex(), "%20") // 替换空格编码
+            val fallbackFileName = filename.map { character ->
+                if (character !in ' '..'~' || character == '"' || character == '\\') '_'
+                else character
+            }.joinToString("")
             response.addHeader(
                 "Content-Disposition",
                 "attachment; filename=\"" +
-                        String(filename.toByteArray(charset("GBK")),
-                            charset("ISO-8859-1")) + "\"; " +
+                        fallbackFileName + "\"; " +
                         "filename*=UTF-8''" + encodedFileName
             )
             // Avoid browser/proxy caching large binary downloads in memory or disk cache.

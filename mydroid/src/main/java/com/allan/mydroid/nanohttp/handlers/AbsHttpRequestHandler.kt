@@ -26,7 +26,8 @@ abstract class AbsHttpRequestHandler : KoinComponent {
     }
 
     protected fun invalidRequestResponse(): Response {
-        return NanoHTTPD.newFixedLengthResponse(Globals.getString(com.allan.mydroid.R.string.invalid_request_from_appserver))
+        return NanoHTTPD.newFixedLengthResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT,
+            Globals.getString(com.allan.mydroid.R.string.invalid_request_from_appserver))
     }
 
     companion object {

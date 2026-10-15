@@ -1,6 +1,7 @@
 package com.allan.mydroid.client.api
 
 import android.net.Uri
+import java.util.UUID
 import com.allan.mydroid.R
 import com.au.module_android.Globals
 import com.au.module_android.log.logEx
@@ -31,9 +32,10 @@ class ClientChunkUploader {
         val count = (totalSize - 1) / chunkSize + 1
         require(count <= Int.MAX_VALUE) { "Too many chunks" }
         val totalChunks = count.toInt()
+        val uploadId = UUID.randomUUID().toString()
         var merged = false
         try {
-            ClientApi.abortUploadChunks(baseUrl, md5, fileName)
+            ClientApi.abortUploadChunks(baseUrl, md5, fileName, uploadId)
             var sentBytes = 0L
             onProgress(0, totalSize)
             for (chunkIndex in 1..totalChunks) {
@@ -41,7 +43,7 @@ class ClientChunkUploader {
                 val offset = (chunkIndex - 1).toLong() * chunkSize
                 val remaining = totalSize - offset
                 val length = if (remaining < chunkSize) remaining else chunkSize.toLong()
-                ClientApi.uploadChunk(baseUrl, uri, fileName, chunkIndex, totalChunks, md5, offset, length)
+                ClientApi.uploadChunk(baseUrl, uri, fileName, chunkIndex, totalChunks, md5, offset, length, uploadId)
                 sentBytes += length
                 onProgress(sentBytes, totalSize)
             }
@@ -51,7 +53,7 @@ class ClientChunkUploader {
             val savedName = withContext(NonCancellable) {
                 try {
                     withTimeoutOrNull(120000.milliseconds) {
-                        ClientApi.mergeChunks(baseUrl, md5, fileName, totalChunks, lastModified)
+                        ClientApi.mergeChunks(baseUrl, md5, fileName, totalChunks, lastModified, uploadId)
                     } ?: throw IllegalStateException(Globals.getString(R.string.transfer_merge_uncertain))
                 } catch (e: CancellationException) {
                     throw e
@@ -68,7 +70,7 @@ class ClientChunkUploader {
                 withContext(NonCancellable) {
                     try {
                         val cleaned = withTimeoutOrNull(5000.milliseconds) {
-                            ClientApi.abortUploadChunks(baseUrl, md5, fileName)
+                            ClientApi.abortUploadChunks(baseUrl, md5, fileName, uploadId)
                             true
                         } == true
                         if (!cleaned) onCleanupFailed()

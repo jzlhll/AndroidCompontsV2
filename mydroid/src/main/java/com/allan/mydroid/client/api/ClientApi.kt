@@ -100,7 +100,8 @@ object ClientApi {
         totalChunks: Int,
         md5: String,
         offset: Long,
-        length: Long
+        length: Long,
+        uploadId: String = ""
     ): String = withIOThread {
         val url = "$baseUrl/upload-chunk"
         val multipartBuilder = MultipartBody.Builder()
@@ -109,6 +110,7 @@ object ClientApi {
             .addFormDataPart("chunkIndex", chunkIndex.toString())
             .addFormDataPart("totalChunks", totalChunks.toString())
             .addFormDataPart("md5", md5)
+            .addFormDataPart("uploadId", uploadId)
 
         val context = currentCoroutineContext()
         val chunkBody = UriChunkRequestBody(Globals.app.contentResolver, uri, offset, length) {
@@ -130,13 +132,15 @@ object ClientApi {
         md5: String,
         fileName: String,
         totalChunks: Int,
-        lastModified: Long
+        lastModified: Long,
+        uploadId: String = ""
     ): String = withIOThread {
         val json = JSONObject().apply {
             put("md5", md5)
             put("fileName", fileName)
             put("totalChunks", totalChunks)
             put("lastModified", lastModified)
+            put("uploadId", uploadId)
         }.toString()
         val resp = postJson("$baseUrl/merge-chunks", json)
         val bean = resp.fromGson<ResultBean<Map<String, String>>>() ?: throw IllegalStateException("parse mergeChunks resp failed: $resp")
@@ -145,10 +149,11 @@ object ClientApi {
     }
 
     /** POST /abort-upload-chunks JSON。 */
-    suspend fun abortUploadChunks(baseUrl: String, md5: String, fileName: String): String = withIOThread {
+    suspend fun abortUploadChunks(baseUrl: String, md5: String, fileName: String, uploadId: String = ""): String = withIOThread {
         val json = JSONObject().apply {
             put("md5", md5)
             put("fileName", fileName)
+            put("uploadId", uploadId)
         }.toString()
         val resp = postJson("$baseUrl/abort-upload-chunks", json)
         val bean = resp.fromGson<ResultBean<Unit>>() ?: throw IllegalStateException("parse abort resp failed: $resp")
