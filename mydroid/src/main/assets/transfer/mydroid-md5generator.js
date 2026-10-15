@@ -13,7 +13,8 @@
             };
             
             worker.onerror = (e) => {
-                reject(`Worker error: ${e.message}`);
+                reject(new Error(`Worker error: ${e.message}`));
+                reader.cancel().catch(() => {});
                 worker.terminate();
             };
             const stream = file.stream();
@@ -44,7 +45,12 @@
                 }
             };
             
-            processChunk();
+            processChunk().catch(error => {
+                worker.terminate();
+                reader.cancel().catch(() => {});
+                try { reader.releaseLock(); } catch (_) {}
+                reject(error);
+            });
         });
     };
   })();

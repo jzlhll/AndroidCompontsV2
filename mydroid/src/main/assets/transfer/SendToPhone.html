@@ -339,11 +339,10 @@
             //3. 开始generate md5
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
+                const one = selectedFileMap.get(i);
+                const oneStartTs = Date.now();
                 try {
                     let md5 = "";
-                    const one = selectedFileMap.get(i);
-
-                    const oneStartTs = Date.now();
                     //console.log(`show FileInfo file list 3.1 ${one.name}`);
                     if (window.Worker && file.size > 50 * 1024 * 1024) { //50MB就用大的
                         md5 = await streamBasedHashWorker(file, startTs);
@@ -355,7 +354,7 @@
                     console.log(`show FileInfo file list 3.2 ${one.name} ${one.md5} ${one.md5Time}`);
                 } catch(error) {
                     if (error == 'aborted') {
-                        console.log(`md5: ${file.name} (${fileSize}) 已终止。`);
+                        console.log(`MD5 canceled: ${file.name}`);
                     } else {
                         console.log(`md5: ${file.name} 错误：(${error})。`);
                     }

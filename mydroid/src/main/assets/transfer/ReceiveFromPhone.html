@@ -309,7 +309,7 @@
         }
         
         function startDownload(uriUuid) {
-            const url = `http://${window.mydroidIpPort.ip}:${window.mydroidIpPort.httpPort}/file_download_uuid/${uriUuid}`;
+            const url = `/file_download_uuid/${encodeURIComponent(uriUuid)}`;
             const tmpLink = document.createElement('a');
             tmpLink.href = url;
             tmpLink.style.display = 'none';
