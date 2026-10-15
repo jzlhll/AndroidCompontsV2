@@ -69,8 +69,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     private fun deleteBean(bean: ShareInBean) {
-        shareInRepository.deleteUris(listOf(bean.uriUuid))
-        lifecycleScope.launchOnThread {
+        viewLifecycleOwner.lifecycleScope.launchOnThread {
+            shareInRepository.deleteUris(listOf(bean.uriUuid))
             common.reload()
         }
     }
