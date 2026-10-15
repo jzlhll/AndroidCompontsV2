@@ -148,8 +148,8 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
         initTabs()
         initRcv()
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mViewModel.historyState.collectStatusState(
                     onSuccess = {
                         val colorNormal = getString(com.au.module_androidcolor.R.string.color_text_normal_str)
@@ -166,8 +166,8 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                 )
             }
         }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 fileListRepository.fileListStateFlow.collectStatusState(
                     onSuccess = { fileList->
                         mAdapter.submitList(fileList, false)

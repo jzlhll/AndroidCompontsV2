@@ -38,7 +38,7 @@ class SendListSelectorDialog : BindingFragment<DialogMyDroidSendlistBinding>() {
 
     override fun onStart() {
         super.onStart()
-        lifecycleScope.launchOnThread {
+        viewLifecycleOwner.lifecycleScope.launchOnThread {
             common.reload()
         }
     }

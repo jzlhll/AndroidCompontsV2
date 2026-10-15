@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.PICKER_NEED_PERMISSION
@@ -35,6 +36,9 @@ import com.au.module_imagecompressed.multiPickForResult
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.openMultipleDocsForResult
 import com.bumptech.glide.request.target.Target
+import kotlinx.coroutines.CancellationException
+import kotlin.time.Duration.Companion.milliseconds
+import com.au.module_android.log.logEx
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -70,8 +74,15 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     private fun deleteBean(bean: ShareInBean) {
         viewLifecycleOwner.lifecycleScope.launchOnThread {
-            shareInRepository.deleteUris(listOf(bean.uriUuid))
-            common.reload()
+            try {
+                shareInRepository.deleteUris(listOf(bean.uriUuid))
+                common.reload()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logEx(throwable = e) { "Delete shared item failed" }
+                ToastBuilder().setOnTopLater().setMessage(Globals.getString(R.string.something_error)).toast()
+            }
         }
     }
 
@@ -101,7 +112,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
     }
 
-    private val autoImport by unsafeLazy { arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true }
+    private val autoImport get() = arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true
 
     val pickerResult = multiPickForResult(9)
     val documentResult = openMultipleDocsForResult()
@@ -115,9 +126,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         return String.format(fmt, mDelayTime)
     }
 
-    private val menuMgr by unsafeLazy {
-        ToolbarMenuManager(
-            this, binding.toolbar,
+    private val menuMgr get() = ToolbarMenuManager(
+            viewLifecycleOwner, binding.toolbar,
             R.menu.menu_next,
             Color.WHITE
         ) { menuItem ->
@@ -135,9 +145,11 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 }
             }
         }
-    }
 
     private fun jumpIntoMyDroidSend() {
+        mAutoNextJob?.cancel()
+        if (!viewLifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            findNavController().currentDestination?.id != R.id.sendListSelectorFragment) return
         mDelayCancelDialog?.dismissAllowingStateLoss()
         mDelayCancelDialog = null
         findNavController().navigate(R.id.actionSendSelectorToFiles)
@@ -175,9 +187,16 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
             }
         }
 
-        lifecycleScope.launchOnThread {
-            shareInRepository.addShareInUris(uris, FROM_PICKER)
-            common.reload()
+        viewLifecycleOwner.lifecycleScope.launchOnThread {
+            try {
+                shareInRepository.addShareInUris(uris, FROM_PICKER)
+                common.reload()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logEx(throwable = e) { "Add selected files failed" }
+                ToastBuilder().setOnTopLater().setMessage(Globals.getString(R.string.something_error)).toast()
+            }
         }
     }
 
@@ -203,7 +222,10 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         menuMgr.showMenu()
 
         common.onCreated()
-        if (autoImport) autoImportAction()
+        if (autoImport) {
+            arguments?.putBoolean(KEY_AUTO_ENTER_SEND_VIEW, false)
+            autoImportAction()
+        }
     }
 
     override fun immersiveMode(): ImmersiveMode {
@@ -219,7 +241,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     override fun onStart() {
         super.onStart()
-        lifecycleScope.launchOnThread {
+        viewLifecycleOwner.lifecycleScope.launchOnThread {
             common.reload()
         }
     }
@@ -234,16 +256,29 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
             it.dismissAllowingStateLoss()
         }
 
-        mAutoNextJob = lifecycleScope.launch {
-            while(mDelayTime-- > 0) {
-                delay(1000)
+        mAutoNextJob = viewLifecycleOwner.lifecycleScope.launch {
+            while (mDelayTime > 0) {
+                delay(1000.milliseconds)
+                mDelayTime--
                 mDelayCancelDialog?.changeContent(dialogContent())
             }
-            //自动跳入
+            mDelayCancelDialog?.dismissAllowingStateLoss()
+            mDelayCancelDialog = null
             if (!common.isEmpty()) {
                 jumpIntoMyDroidSend()
             }
         }
     }
 
+    override fun onStop() {
+        mAutoNextJob?.cancel()
+        mDelayCancelDialog?.dismissAllowingStateLoss()
+        mDelayCancelDialog = null
+        super.onStop()
+    }
+
+    override fun onDestroyView() {
+        hasSetBigImageClick = false
+        super.onDestroyView()
+    }
 }

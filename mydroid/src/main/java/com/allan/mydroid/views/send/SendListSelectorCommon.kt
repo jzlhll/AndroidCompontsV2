@@ -7,6 +7,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.au.module_android.Globals
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
+import kotlinx.coroutines.CancellationException
+import com.au.module_android.log.logEx
+import com.au.module_androidui.toast.ToastBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.allan.mydroid.R
@@ -37,9 +40,16 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
 
     @WorkerThread
     suspend fun reload() {
-        val scanList = shareInRepository.loadShareInAndReceiveBeans()
-        withContext(Dispatchers.Main) {
-            updateList(scanList)
+        try {
+            val scanList = shareInRepository.loadShareInAndReceiveBeans()
+            withContext(Dispatchers.Main) { updateList(scanList) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logEx(throwable = e) { "Load shared files failed" }
+            withContext(Dispatchers.Main) {
+                ToastBuilder().setOnTop().setMessage(Globals.getString(R.string.something_error)).toast()
+            }
         }
     }
 

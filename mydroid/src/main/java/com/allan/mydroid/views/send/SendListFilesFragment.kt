@@ -154,7 +154,7 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
 
     override fun onStart() {
         super.onStart()
-        lifecycleScope.launchOnThread {
+        viewLifecycleOwner.lifecycleScope.launchOnThread {
             common.reload()
         }
     }
@@ -169,5 +169,11 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
         binding = MydroidSendClientBinding.inflate(layoutInflater)
         sendClientBindings.add(binding)
         return binding
+    }
+
+    override fun onDestroyView() {
+        sendClientBindings.clear()
+        hasSetBigImageClick = false
+        super.onDestroyView()
     }
 }

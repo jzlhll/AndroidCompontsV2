@@ -29,9 +29,8 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
     private val serverRuntimeState: GlobalServerRuntimeObj by inject()
     private val clientListState: GlobalClientListFlowsObj by inject()
 
-    private val menuMgr by unsafeLazy {
-        ToolbarMenuManager(
-            this, binding.toolbar,
+    private val menuMgr get() = ToolbarMenuManager(
+            viewLifecycleOwner, binding.toolbar,
             R.menu.menu_more,
             Color.WHITE
         ) { menuItem ->
@@ -44,7 +43,6 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
                 }
             }
         }
-    }
 
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.FullImmersive { statusBarsHeight, navBarHeight ->

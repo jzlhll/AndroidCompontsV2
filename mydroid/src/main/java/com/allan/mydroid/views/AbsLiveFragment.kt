@@ -78,11 +78,11 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
         }
 
         if (whenIpNullShowExitDialog) {
-            lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    networkMonitor.networkInfoFlow.collect { networkInfo->
-                        val ip = networkInfo?.ip
-                        if (ip.isNullOrEmpty()) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    networkMonitor.networkFlow.collect { status ->
+                        if (status == GlobalNetworkMonitorObj.NetworkStatus.Uninitialized) return@collect
+                        if (status == GlobalNetworkMonitorObj.NetworkStatus.Disconnected) {
                             if (waitDialog == null) {
                                 ConfirmBottomSingleDialog.show(childFragmentManager, getString(R.string.tips),
                                     getString(R.string.exit_with_wifi_reminder),
@@ -112,6 +112,8 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
 
     @CallSuper
     override fun onDestroyView() {
+        waitDialog?.dismissAllowingStateLoss()
+        waitDialog = null
         super.onDestroyView()
         if (shouldAdvertiseIp) {
             bleIpAdvertiser.stop()
