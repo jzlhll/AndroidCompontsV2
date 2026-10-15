@@ -32,7 +32,8 @@ abstract class BaseAdapter<DATA: IViewTypeBean, VH: BindViewHolder<DATA, *>> : R
     // 数据发生新一轮提交或同步修改后，后台尚未完成的旧 diff 不再允许落地。
     private var dataSubmissionGeneration = 0L
 
-    internal fun nextDataSubmissionGeneration(): Long {
+    /** 开始新一轮提交，使尚未完成的旧 Diff 失效。 */
+    fun nextDataSubmissionGeneration(): Long {
         dataSubmissionGeneration++
         return dataSubmissionGeneration
     }

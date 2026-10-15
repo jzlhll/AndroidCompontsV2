@@ -27,14 +27,14 @@ abstract class BaseAllConnectors {
     @Volatile protected var mCurrentConnector: IWebSocket? = null
 
     /**
-     * 获取当前connector的frameId，仅用于一些判断是否连接的状态可行。
+     * 获取当前连接器的设备标识，用于连接状态判断。
      */
-    fun getCurrentFrameConnectorFrameId() = mCurrentConnector?.nameTag
+    fun getCurrentConnectorDeviceId() = mCurrentConnector?.nameTag
 
     /**
      * 获取当前connector是否已连接
      */
-    fun getCurrentFrameConnectorIsConnected() = mCurrentConnector?.state == IWebSocket.State.CONNECTED
+    fun isCurrentConnectorConnected() = mCurrentConnector?.state == IWebSocket.State.CONNECTED
 
     private val currentConnectListener = object : IWebsocketConnectedListener {
         override fun onConnected(ws: IWebSocket, isConnected: Boolean, reason: IWebsocketConnectedListener.Reason) {

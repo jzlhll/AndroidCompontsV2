@@ -12,7 +12,7 @@ import com.au.module_android.utilsmedia.myParse
 import java.io.File
 import java.io.InputStream
 
-internal class SizeParseUtil {
+class SizeParseUtil {
 
     private class CancelImageDecodeException : RuntimeException("Cancel image size decoder")
 

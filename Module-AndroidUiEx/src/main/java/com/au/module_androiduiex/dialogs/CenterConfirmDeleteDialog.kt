@@ -1,14 +1,3 @@
-/*
-* Created by jiangzhonglun@imagecho.ai on 2026/06/23.
-*
-* Copyright (C) 2026 [imagecho.ai]. All Rights Reserved.
-*
-* This software is proprietary and confidential. Unauthorized use, copying,
-* modification, or distribution is prohibited without prior written consent.
-*
-* For inquiries, contact: [contacts@imagecho.ai]
-*/
-
 package com.au.module_androiduiex.dialogs
 
 import android.view.View
@@ -31,7 +20,7 @@ open class CenterConfirmDeleteDialog : BindingDialog<CenterConfirmDeleteDialogBi
         fun show(
             manager: FragmentManager,
             title: String,
-            desc: String,
+            desc: CharSequence,
             deleteText: String,
             cancelText: String,
             deleteClick: Function1<CenterConfirmDeleteDialog, Unit>?,
@@ -43,7 +32,7 @@ open class CenterConfirmDeleteDialog : BindingDialog<CenterConfirmDeleteDialogBi
             dialog.onShownBlock = {
                 dialog.binding.titleTv.text = title
                 dialog.binding.descTv.text = desc
-                dialog.binding.descTv.visibility = if (desc.isBlank()) View.GONE else View.VISIBLE
+                dialog.binding.descTv.visibility = if (desc.toString().isBlank()) View.GONE else View.VISIBLE
                 dialog.binding.firstBtn.visibility = if (showFirstButton) View.VISIBLE else View.GONE
                 dialog.binding.firstBtn.text = firstButtonText
                 dialog.binding.deleteBtn.text = deleteText

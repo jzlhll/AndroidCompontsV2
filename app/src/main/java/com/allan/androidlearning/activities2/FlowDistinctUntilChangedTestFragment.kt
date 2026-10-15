@@ -32,7 +32,7 @@ class FlowDistinctUntilChangedTestFragment : BindingFragment<FragmentFlowDistinc
         }
 
         binding.tickBtn.onClick {
-            WebsocketFlowResearch.tickCurrentFrameFromTime()
+            WebsocketFlowResearch.tickCurrentDeviceFromTime()
         }
 
         lifecycleScope.launch {

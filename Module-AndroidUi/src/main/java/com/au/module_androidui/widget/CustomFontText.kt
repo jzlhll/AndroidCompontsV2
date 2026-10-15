@@ -40,6 +40,6 @@ open class CustomFontText : MaterialTextView {
         attrs,
         defStyleAttr
     ) {
-        mode = checkBoldAndSetFont(context, attrs)
+        mode = checkBoldAndSetFont(context, attrs, defStyleAttr)
     }
 }

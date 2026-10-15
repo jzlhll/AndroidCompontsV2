@@ -71,8 +71,8 @@ public class InfiniteCanvasView extends View implements InfiniteBlockManager.Cal
         bitmapPaint.setFilterBitmap(true);
     }
 
-    public void setFrameImageList(@NonNull List<UriParsedInfo> list) {
-        blockManager.setFrameImageList(list);
+    public void setImageList(@NonNull List<UriParsedInfo> list) {
+        blockManager.setImageList(list);
     }
 
     @Override

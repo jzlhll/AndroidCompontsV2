@@ -19,20 +19,42 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.load.resource.bitmap.VideoDecoder
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
 import com.bumptech.glide.signature.MediaStoreSignature
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+
+/** 已下载的缩略图按文件原尺寸解码，裁剪与放大由展示端完成。 */
+fun thumbnailOptions(): RequestOptions = RequestOptions()
+    .override(Target.SIZE_ORIGINAL)
+    .downsample(DownsampleStrategy.NONE)
+    .dontTransform()
+    .format(DecodeFormat.PREFER_RGB_565)
+    .disallowHardwareConfig()
+    .diskCacheStrategy(DiskCacheStrategy.NONE)
+
+/** 系统原图与本地缩略图共用固定过渡图规格，保持比例且不放大，展示裁剪交给 View。 */
+fun quickThumbnailOptions(
+    policy: TinyThumbnailPolicy = TinyThumbnailPolicy.DEFAULT,
+): RequestOptions = RequestOptions()
+    .override(policy.maxDimension, policy.maxDimension)
+    .centerInside()
+    .format(policy.decodeFormat)
+    .disallowHardwareConfig()
+    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
 
 /**
  * 预初始化 Glide，建议在 Application 的 onCreate 中调用。
@@ -166,7 +188,7 @@ fun ImageView.glideLoadFile(localFile: File,
         .load(localFile)
         .apply(options)
     if (onResourceReady != null || onLoadFailed != null) {
-        request = request.listener(object : RequestListener<Drawable> {
+        request = request.addListener(object : RequestListener<Drawable> {
             override fun onLoadFailed(
                 e: GlideException?,
                 model: Any?,
@@ -280,7 +302,7 @@ fun ImageView.glideLoadContentUri(
         .load(contentUri) // 传入Content URI
         .apply(options)
     if (onResourceReady != null || onLoadFailed != null) {
-        request = request.listener(object : RequestListener<Drawable> {
+        request = request.addListener(object : RequestListener<Drawable> {
             override fun onLoadFailed(
                 e: GlideException?,
                 model: Any?,

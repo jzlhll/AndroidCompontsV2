@@ -17,7 +17,7 @@ data class UriParsedInfo(
     val videoDuration:Long? = null,
     val isFile: Boolean = false,
     val lastModified:Long? = null, /* 最后修改时间 */
-    val size: Size? = null, /* 图片像素尺寸 */) {
+    val size: Size? = null,  /* 图片像素尺寸 */) {
     fun isFullPath() : Boolean = fullPath != null
 
     fun goodFileName(): String {

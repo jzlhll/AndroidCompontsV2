@@ -83,8 +83,8 @@ class BitmapLoadHelper(private val listener: OnBitmapLoadListener?) {
     /**
      * 初始化数据源
      */
-    fun onInitial(frameImageList: List<UriParsedInfo>) {
-        this.allImageBeans = frameImageList
+    fun onInitial(imageList: List<UriParsedInfo>) {
+        this.allImageBeans = imageList
         blockIndexMap.clear()
         bitmapCache.evictAll()
         cancelAllTasks()

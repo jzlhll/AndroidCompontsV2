@@ -246,3 +246,27 @@ fun LifecycleOwner.createPostNotificationPermissionResult() =
     } else {
         AlwaysRunPermissionForResult(this)
     }
+
+/**
+ * 读取当前手机相册完整照片及视频权限，不缓存授权结果
+ */
+fun Context.hasPhotoLibraryFullAccess(): Boolean {
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+    } else {
+        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+    return hasPermission(*permissions)
+}
+
+/**
+ * 相册已表达过授权意向：部分授权（Android 14 Select photos）或曾拒绝过，此时应引导到受限访问页而非重复弹系统框
+ */
+fun Activity.hasPhotoLibraryPartialAccess(): Boolean {
+    val hasLimitedAccess = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        hasPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+    return hasLimitedAccess ||
+        ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_MEDIA_IMAGES) ||
+        ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_MEDIA_VIDEO) ||
+        ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+}

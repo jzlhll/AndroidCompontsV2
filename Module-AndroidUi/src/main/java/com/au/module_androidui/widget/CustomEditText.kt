@@ -11,7 +11,9 @@ import com.google.android.material.textfield.TextInputEditText
  * @description:
  */
 open class CustomEditText : TextInputEditText {
-    constructor(context: Context) : super(context)
+    constructor(context: Context) : super(context) {
+        checkBoldAndSetFont(context, null)
+    }
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
         checkBoldAndSetFont(context, attrs)
     }
@@ -21,7 +23,7 @@ open class CustomEditText : TextInputEditText {
         attrs,
         defStyleAttr
     ) {
-        checkBoldAndSetFont(context, attrs)
+        checkBoldAndSetFont(context, attrs, defStyleAttr)
     }
 
     private var onSelectionChanged:((edit: CustomEditText, selStart:Int, selEnd:Int)->Unit)? = null

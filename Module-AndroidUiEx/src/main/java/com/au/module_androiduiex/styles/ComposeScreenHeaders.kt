@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * 左侧图标 + 居中文案的顶栏。
+ * 左侧图标 +  居中文案的顶栏。
  */
 @Composable
 fun ComposeHeaderLeftTitle(

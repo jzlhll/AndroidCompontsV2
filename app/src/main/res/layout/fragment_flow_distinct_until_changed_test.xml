@@ -27,7 +27,7 @@
         android:id="@+id/tickBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tick Current Frame" />
+        android:text="Tick Current Device" />
 
     <TextView
         android:id="@+id/resultText"

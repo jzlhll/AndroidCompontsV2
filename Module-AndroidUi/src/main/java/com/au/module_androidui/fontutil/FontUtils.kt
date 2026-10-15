@@ -1,7 +1,11 @@
 package com.au.module_androidui.fontutil
 
 import android.content.Context
+import android.content.res.AssetManager
 import android.graphics.Typeface
+import android.graphics.fonts.Font
+import android.graphics.fonts.FontFamily
+import android.graphics.fonts.FontStyle
 import android.util.AttributeSet
 import android.widget.TextView
 import androidx.core.content.withStyledAttributes
@@ -11,11 +15,22 @@ import com.au.module_androidui.R
 import com.au.module_androidui.widget.FontMode
 import com.au.module_androidui.widget.TextViewCheckMode
 
-/**
- * 全局字体默认文件。可以自行更换任意一项，目前虽然一样。
- */
-
 private val fontFaceMap by lazy { hashMapOf<String, Typeface?>() }
+
+private data class TextFontFamilyKey(
+    val assets: AssetManager,
+    val isNumber: Boolean,
+    val fontName: String,
+)
+
+private data class TextFontKey(
+    val family: TextFontFamilyKey,
+    val mode: FontMode,
+    val italic: Boolean,
+)
+
+private val textFontFamilyMap = hashMapOf<TextFontFamilyKey, FontFamily?>()
+private val textFontFaceMap = hashMapOf<TextFontKey, Typeface>()
 
 fun getOrCreateFontFace(context: Context, assetsPath: String?) : Typeface? {
     if(assetsPath.isNullOrEmpty()) return null
@@ -27,100 +42,91 @@ fun getOrCreateFontFace(context: Context, assetsPath: String?) : Typeface? {
     return newTypeFace
 }
 
-/**
- * 设置assets里面的字体文件
- * @return true表示设置成功。
- */
-private fun TextView.setFontFromAssets(context: Context, assetsPath: String?) : Boolean {
-    if (isInEditMode) return false
-    val tf = getOrCreateFontFace(context, assetsPath) ?: return false
-    //性能优化，防止多次赋值
-    if (tf == typeface) {
-        return true
-    }
-
-    typeface = tf
-    return true
-}
-
-/**
- * 检查是否设置字体的粗体。
- * 这里支持，bold，mid，普通三种。查看attr.xml fontMode的定义和isNumberFont的定义。
- * 这样的话，就可以给FontEdit，FontText设置三种模式的字体。
- *
- * xml中给FontEdit，FontText添加fontMode、isNumberFont来实现粗体或者数字类型字体。
- * 代码中通过修改代码来实现。
- */
-fun TextView.checkBoldAndSetFont(cxt: Context, attrs: AttributeSet?) : TextViewCheckMode {
-    //具体的判断。优先使用。
-    var isNumber = false
-    var fontMode: FontMode = FontMode.NORMAL
-    var fontName = ""
-
-    if (attrs != null) {
-        cxt.withStyledAttributes(attrs, R.styleable.CustomFontText) {
-            fontName = getString(R.styleable.CustomFontText_customFontName) ?: ""
-            when (getString(R.styleable.CustomFontText_customFontMode)) {
-                FontMode.BOLD.mode -> fontMode = FontMode.BOLD
-                FontMode.MID.mode -> fontMode = FontMode.MID
-                null -> {
-                    val textStyle = attrs.getAttributeIntValue(
-                        "http://schemas.android.com/apk/res/android",
-                        "textStyle",
-                        -1
-                    )
-                    if (textStyle == 1) { //解析textStyle是否是bold。
-                        fontMode = FontMode.BOLD
-                    } else if (textStyle == -1) {
-                        //如果textStyle申明在控件上，是可以的。
-                        //如果设置在@style/xxx中，是不支持的。这里采取名字匹配策略二次解决。
-                        val sid = attrs.getAttributeResourceValue(null, "style", 0) //same as: attrs?.getStyleAttribute()
-                        if (sid != 0) {
-                            val styleName = cxt.resources.getResourceEntryName(sid)
-                            if (styleName.contains("BText")) {
-                                fontMode = FontMode.BOLD
-                            } else if (styleName.contains("MText")) {
-                                fontMode = FontMode.MID
-                            }
+/** 文字字体统一保留字重和斜体请求，缺失字形由系统 fallback 链处理。 */
+fun getOrCreateTextFontFace(
+    assets: AssetManager,
+    mode: FontMode,
+    isNumber: Boolean = false,
+    fontName: String = "",
+    italic: Boolean = false,
+): Typeface = synchronized(textFontFaceMap) {
+    val familyKey = TextFontFamilyKey(assets, isNumber, fontName)
+    val key = TextFontKey(familyKey, mode, italic)
+    textFontFaceMap.getOrPut(key) {
+        if (!textFontFamilyMap.containsKey(familyKey)) {
+            val fonts = if (fontName.isNotEmpty()) {
+                listOfNotNull(ignoreError { Font.Builder(assets, "fonts/$fontName").build() })
+            } else {
+                FontMode.entries.mapNotNull { fontMode ->
+                    val path = if (isNumber) {
+                        when (fontMode) {
+                            FontMode.NORMAL -> BuildConfig.FONT_NUMBER_PATH
+                            FontMode.MID -> BuildConfig.FONT_NUMBER_MEDIUM_PATH
+                            FontMode.BOLD -> BuildConfig.FONT_NUMBER_BOLD_PATH
+                            FontMode.HEAVY -> BuildConfig.FONT_NUMBER_HEAVY_PATH
                         }
+                    } else {
+                        when (fontMode) {
+                            FontMode.NORMAL -> BuildConfig.FONT_NORMAL_PATH
+                            FontMode.MID -> BuildConfig.FONT_MEDIUM_PATH
+                            FontMode.BOLD -> BuildConfig.FONT_BOLD_PATH
+                            FontMode.HEAVY -> BuildConfig.FONT_HEAVY_PATH
+                        }
+                    }
+                    if (path.isEmpty()) null else ignoreError {
+                        Font.Builder(assets, path).setWeight(fontMode.weight).build()
                     }
                 }
             }
-
-            isNumber = getBoolean(R.styleable.CustomFontText_customFontIsNum, false)
+            textFontFamilyMap[familyKey] = fonts.firstOrNull()?.let { firstFont ->
+                val builder = FontFamily.Builder(firstFont)
+                fonts.drop(1).forEach { builder.addFont(it) }
+                builder.build()
+            }
         }
+        val family = textFontFamilyMap[familyKey]
+        if (family == null) {
+            Typeface.create(Typeface.SANS_SERIF, mode.weight, italic)
+        } else {
+            val slant = if (italic) FontStyle.FONT_SLANT_ITALIC else FontStyle.FONT_SLANT_UPRIGHT
+            Typeface.CustomFallbackBuilder(family)
+                .setSystemFallback("sans-serif")
+                .setStyle(FontStyle(mode.weight, slant))
+                .build()
+        }
+    }
+}
+
+/** customFontMode 优先于平台样式，已有 bold 默认使用 600。 */
+fun TextView.checkBoldAndSetFont(
+    cxt: Context,
+    attrs: AttributeSet?,
+    defStyleAttr: Int = 0,
+): TextViewCheckMode {
+    var isNumber = false
+    var fontMode = when {
+        (typeface?.weight ?: 400) >= FontMode.BOLD.weight -> FontMode.BOLD
+        (typeface?.weight ?: 400) >= FontMode.MID.weight -> FontMode.MID
+        else -> FontMode.NORMAL
+    }
+    var fontName = ""
+
+    cxt.withStyledAttributes(attrs, R.styleable.CustomFontText, defStyleAttr) {
+        fontName = getString(R.styleable.CustomFontText_customFontName) ?: ""
+        val requestedMode = getString(R.styleable.CustomFontText_customFontMode)
+        fontMode = FontMode.entries.firstOrNull { it.mode == requestedMode } ?: fontMode
+        isNumber = getBoolean(R.styleable.CustomFontText_customFontIsNum, false)
     }
 
     setFontFromAsset(context, fontMode, isNumber, fontName)
     return TextViewCheckMode(fontMode, isNumber, fontName)
 }
 
-fun TextView.setFontFromAsset(context: Context, mode: FontMode, isNumber:Boolean, fontName:String) {
-    if (fontName.isNotEmpty()) {
-        setFontFromAssets(context, "fonts/$fontName")
-        return
-    }
-
-    //todo 根据是否存在这些字体，来决定比如mid=bold，或者num=非num。
-    val isSuc = if (!isNumber) {
-        when (mode) {
-            FontMode.NORMAL -> setFontFromAssets(context, BuildConfig.FONT_NORMAL_PATH)
-            FontMode.MID -> setFontFromAssets(context, BuildConfig.FONT_MEDIUM_PATH)
-            FontMode.BOLD -> setFontFromAssets(context, BuildConfig.FONT_BOLD_PATH)
-        }
-    } else {
-        when (mode) {
-            FontMode.NORMAL -> setFontFromAssets(context, BuildConfig.FONT_NUMBER_PATH)
-            FontMode.MID -> setFontFromAssets(context, BuildConfig.FONT_NUMBER_MEDIUM_PATH)
-            FontMode.BOLD -> setFontFromAssets(context, BuildConfig.FONT_NUMBER_BOLD_PATH)
-        }
-    }
-
-    if (!isSuc) {
-        when (mode) {
-            FontMode.NORMAL -> this.setTypeface(null, Typeface.NORMAL)
-            FontMode.MID,
-            FontMode.BOLD -> this.setTypeface(null, Typeface.BOLD)
-        }
+fun TextView.setFontFromAsset(context: Context, mode: FontMode, isNumber: Boolean, fontName: String) {
+    val tf = getOrCreateTextFontFace(context.assets, mode, isNumber, fontName, typeface?.isItalic == true)
+    paint.isFakeBoldText = false
+    paint.textSkewX = 0f
+    if (tf != typeface) {
+        typeface = tf
     }
 }
