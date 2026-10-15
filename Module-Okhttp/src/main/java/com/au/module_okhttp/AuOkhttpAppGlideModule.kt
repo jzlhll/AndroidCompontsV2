@@ -2,7 +2,9 @@ package com.au.module_okhttp
 
 import android.content.Context
 import android.util.Log
-import com.au.module_android.BuildConfig
+import com.au.module_android.glide.GlideFailureListener
+import com.au.module_android.glide.applyGlideCacheConfig
+import com.au.module_android.glide.glideCacheConfig
 import com.au.module_okhttp.beans.OkhttpInitParams
 import com.bumptech.glide.Glide
 import com.bumptech.glide.GlideBuilder
@@ -12,7 +14,6 @@ import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.integration.okhttp3.OkHttpLibraryGlideModule
 import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader
 import com.bumptech.glide.load.DecodeFormat
-import com.bumptech.glide.load.engine.cache.InternalCacheDiskCacheFactory
 import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.module.AppGlideModule
 import com.bumptech.glide.request.RequestOptions
@@ -43,22 +44,12 @@ class AuOkhttpAppGlideModule : AppGlideModule() {
 
     override fun applyOptions(context: Context, builder: GlideBuilder) {
         builder.apply {
-            //设置Bitmap的缓存池
-            //setBitmapPool(LruBitmapPool(30))
-            //设置内存缓存
-            //val maxMemory = Runtime.getRuntime().maxMemory().toInt()
-            //val cacheSize = maxMemory / 8
-            //setMemoryCache(LruResourceCache(cacheSize.toLong()))
-            //设置磁盘缓存
-            setDiskCache(InternalCacheDiskCacheFactory(context, "imageCache", 1024 * 1024 * 32))
-            //设置日志级别
-            if (BuildConfig.DEBUG) {
-                setLogLevel(Log.DEBUG)
-            } else {
-                setLogLevel(Log.WARN)
-            }
-            //设置全局选项
-            setDefaultRequestOptions(RequestOptions().format(DecodeFormat.PREFER_ARGB_8888))
+            applyGlideCacheConfig(context, context.glideCacheConfig)
+            // 原生 WARN 无法区分缓存探测；统一由 listener 分类并保留真实失败堆栈。
+            setLogLevel(Log.ERROR)
+            addGlobalRequestListener(GlideFailureListener<Any>())
+            // 普通图片优先使用 565，单图预览和整行大图由入口显式选择 8888。
+            setDefaultRequestOptions(RequestOptions().format(DecodeFormat.PREFER_RGB_565).disallowHardwareConfig())
         }
     }
 

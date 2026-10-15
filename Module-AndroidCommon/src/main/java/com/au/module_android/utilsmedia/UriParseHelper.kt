@@ -179,7 +179,7 @@ internal class UriParseHelper {
                         lastModified = if (dateAddedIndex == -1) null else cursor.getLong(dateAddedIndex)
                     }
 
-                    //解析图片像素尺寸
+                    // 解析图片像素尺寸
                     val widthIndex = cursor.getColumnIndex(MediaStore.MediaColumns.WIDTH)
                     val heightIndex = cursor.getColumnIndex(MediaStore.MediaColumns.HEIGHT)
                     if (mimeType.startsWith("image/") && widthIndex != -1 && heightIndex != -1) {

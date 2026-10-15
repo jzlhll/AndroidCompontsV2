@@ -1,7 +1,7 @@
 package com.allan.androidlearning.activities2
 
 /**
- * 研究用：combine(currentFrameFlow, connectorsStateChangedFlow) 与可变 WebSocket 列表。
+ * 研究用：combine(currentDeviceIdFlow, connectorsStateChangedFlow) 与可变 WebSocket 列表。
  * 可复制到带 kotlinx-coroutines-core 的 JVM 工程运行 main；本仓库根目录默认不参与 Gradle 编译。
  */
 
@@ -44,18 +44,18 @@ object WebsocketFlowResearch {
     private val mConnectorsStateChangedFlow = MutableStateFlow(0L)
     val connectorsStateChangedFlow: StateFlow<Long> = mConnectorsStateChangedFlow
 
-    private val mCurrentFrameFlow = MutableStateFlow(
+    private val mCurrentDeviceIdFlow = MutableStateFlow(
         "${System.currentTimeMillis()}-${UUID.randomUUID().toString().take(8)}"
     )
-    val currentFrameFlow: StateFlow<String> = mCurrentFrameFlow
+    val currentDeviceIdFlow: StateFlow<String> = mCurrentDeviceIdFlow
 
     val deviceStateFlow = combine(
-        currentFrameFlow,
+        currentDeviceIdFlow,
         connectorsStateChangedFlow
-    ) { frame, changed ->
-        android.util.Log.d("alland", "frame $frame change $changed\n"
+    ) { deviceId, changed ->
+        android.util.Log.d("alland", "deviceId $deviceId change $changed\n"
                 + "Details: \n---\n${websocketList.joinToString("\n")}\n")
-        websocketList.find { it.deviceId == frame }
+        websocketList.find { it.deviceId == deviceId }
     }.distinctUntilChangedBy {
         it?.deviceId + it?.state.toString()
     }
@@ -69,12 +69,12 @@ object WebsocketFlowResearch {
         mConnectorsStateChangedFlow.value = System.currentTimeMillis()
     }
 
-    fun tickCurrentFrameFromTime() {
+    fun tickCurrentDeviceFromTime() {
         synchronized(listLock) {
             if (websocketList.isNotEmpty()) {
                 val idx = Random.nextInt(websocketList.size)
                 val selectedNameTag = websocketList[idx].deviceId
-                mCurrentFrameFlow.value = selectedNameTag
+                mCurrentDeviceIdFlow.value = selectedNameTag
             }
         }
     }

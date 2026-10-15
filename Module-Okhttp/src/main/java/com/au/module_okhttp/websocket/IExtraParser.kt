@@ -9,7 +9,7 @@ import org.json.JSONObject
 interface IExtraParser {
     /**
      * 解析设备 push 消息。
-     * @param nameTag 设备标识，通常是 frameId
+     * @param nameTag 设备标识
      * @param text 原始消息文本
      * @param jo 解析后的JSON对象
      */

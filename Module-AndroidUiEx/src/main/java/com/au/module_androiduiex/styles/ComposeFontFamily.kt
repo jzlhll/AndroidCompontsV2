@@ -1,13 +1,17 @@
 package com.au.module_androiduiex.styles
 
+import android.content.Context
 import android.content.res.AssetManager
-import androidx.compose.ui.text.font.Font
+import android.graphics.Typeface
+import androidx.compose.ui.text.font.AndroidFont
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontLoadingStrategy
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.font.FontWeight
 import com.au.module_android.Globals
-
-private const val REGULAR_TTF = "fonts/normal.ttf"
-private const val MEDIUM_TTF = "fonts/medium.ttf"
-private const val BOLD_TTF = "fonts/bold.ttf"
+import com.au.module_androidui.fontutil.getOrCreateTextFontFace
+import com.au.module_androidui.widget.FontMode
 
 private lateinit var previewFontAssets: AssetManager
 
@@ -20,11 +24,32 @@ fun bindPreviewFontAssets(assets: AssetManager) {
     previewFontAssets = assets
 }
 
-/** 从宿主 App assets/fonts 加载 Lufga 字体。 */
-val RegularFontFamily by lazy { FontFamily(Font(REGULAR_TTF, fontAssets)) }
+/** Compose 与 View 共用原生字体族，确保声明字重与实际 fallback 请求一致。 */
+private class AppFont(val mode: FontMode, override val style: FontStyle) : AndroidFont(
+    loadingStrategy = FontLoadingStrategy.Blocking,
+    typefaceLoader = AppFontLoader,
+    variationSettings = FontVariation.Settings(),
+) {
+    override val weight = FontWeight(mode.weight)
+}
 
-/** 从宿主 App assets/fonts 加载 Lufga Medium 字体。 */
-val MediumFontFamily by lazy { FontFamily(Font(MEDIUM_TTF, fontAssets)) }
+private object AppFontLoader : AndroidFont.TypefaceLoader {
+    override fun loadBlocking(context: Context, font: AndroidFont): Typeface {
+        val appFont = font as AppFont
+        return getOrCreateTextFontFace(
+            fontAssets,
+            appFont.mode,
+            italic = appFont.style == FontStyle.Italic,
+        )
+    }
 
-/** 从宿主 App assets/fonts 加载 Lufga SemiBold 字体。 */
-val SemiBoldFontFamily by lazy { FontFamily(Font(BOLD_TTF, fontAssets)) }
+    override suspend fun awaitLoad(context: Context, font: AndroidFont): Typeface = loadBlocking(context, font)
+}
+
+val RegularFontFamily by lazy { FontFamily(AppFont(FontMode.NORMAL, FontStyle.Normal)) }
+
+val MediumFontFamily by lazy { FontFamily(AppFont(FontMode.MID, FontStyle.Normal)) }
+
+val SemiBoldFontFamily by lazy { FontFamily(AppFont(FontMode.BOLD, FontStyle.Normal)) }
+
+val HeavyFontFamily by lazy { FontFamily(AppFont(FontMode.HEAVY, FontStyle.Normal)) }

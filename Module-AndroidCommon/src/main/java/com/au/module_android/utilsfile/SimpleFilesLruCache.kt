@@ -2,7 +2,6 @@ package com.au.module_android.utilsfile
 
 import com.au.module_android.Globals
 import com.au.module_android.log.logEx
-import com.au.module_android.log.logdNoFile
 import com.au.module_android.utilthread.SingleCoroutineTaskExecutor
 import kotlinx.coroutines.delay
 import java.io.File
@@ -107,7 +106,6 @@ class SimpleFilesLruCache(
             // 检查是否需要清理旧文件
             val size = getTotalSize()
             if (size > maxSize) {
-                logdNoFile { "cache total size: $size max:$maxSize" }
                 cleanupOldFiles(size)
             }
 
@@ -172,10 +170,6 @@ class SimpleFilesLruCache(
                         "file=${file.name} error=${e::class.java.simpleName}"
                 }
             } finally {
-                logdNoFile {
-                    "lru operation completed: cache=$dirName operation=$operateType " +
-                        "file=${file.name} status=${if (success) "SUCCESS" else "FAILURE"}"
-                }
                 onComplete?.invoke(success)
             }
         }
@@ -194,7 +188,6 @@ class SimpleFilesLruCache(
         var currentSize = totalSize
         val clearToSize : Long = maxSize / 100 * clearToRatio
 
-        logdNoFile { "deleted totalSize $currentSize , clearToSize: $clearToSize" }
         // 删除最旧的，直到满足大小限制
         for (entry in sortedEntries) {
             if (currentSize <= clearToSize) {
@@ -204,7 +197,6 @@ class SimpleFilesLruCache(
             val file = File(entry.key)
             if (file.exists()) {
                 val deleted = file.delete()
-                logdNoFile { "deleted ${file.name} , size: ${entry.value.fileSize}" }
                 if (deleted) {
                     currentSize -= entry.value.fileSize
                     fileMetadata.remove(entry.key)

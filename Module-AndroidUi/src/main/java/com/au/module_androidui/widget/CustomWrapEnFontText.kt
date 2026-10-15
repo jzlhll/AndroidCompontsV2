@@ -37,7 +37,7 @@ open class CustomWrapEnFontText : MaterialTextView {
         }
 
     constructor(context: Context) : super(context) {
-        mode = TextViewCheckMode(FontMode.NORMAL, false, "")
+        mode = checkBoldAndSetFont(context, null)
     }
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
         mode = checkBoldAndSetFont(context, attrs)
@@ -48,7 +48,7 @@ open class CustomWrapEnFontText : MaterialTextView {
         attrs,
         defStyleAttr
     ) {
-        mode = checkBoldAndSetFont(context, attrs)
+        mode = checkBoldAndSetFont(context, attrs, defStyleAttr)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

@@ -33,8 +33,9 @@ android {
 androidComponents {
     onVariants(selector().all()) { variant ->
         [FONT_NORMAL_PATH: 'app.font.normal', FONT_MEDIUM_PATH: 'app.font.medium',
-         FONT_BOLD_PATH: 'app.font.bold', FONT_NUMBER_PATH: 'app.font.number',
-         FONT_NUMBER_MEDIUM_PATH: 'app.font.number.medium', FONT_NUMBER_BOLD_PATH: 'app.font.number.bold'].each { field, property ->
+         FONT_BOLD_PATH: 'app.font.bold', FONT_HEAVY_PATH: 'app.font.heavy',
+         FONT_NUMBER_PATH: 'app.font.number', FONT_NUMBER_MEDIUM_PATH: 'app.font.number.medium',
+         FONT_NUMBER_BOLD_PATH: 'app.font.number.bold', FONT_NUMBER_HEAVY_PATH: 'app.font.number.heavy'].each { field, property ->
             variant.buildConfigFields.put(field, providers.gradleProperty(property).orElse('').map { value ->
                 new BuildConfigField('String', groovy.json.JsonOutput.toJson(value), '字体资源路径')
             })

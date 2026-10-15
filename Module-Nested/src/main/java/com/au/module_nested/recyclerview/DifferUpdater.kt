@@ -17,7 +17,6 @@ private fun <DATA: IViewTypeBean> BaseAdapter<DATA, *>.diffUpdate(
 
         withContext(Dispatchers.Main) {
             if (!isLatestDataSubmission(generation)) {
-                endCallback()
                 return@withContext
             }
             //完事后，再更改本地list

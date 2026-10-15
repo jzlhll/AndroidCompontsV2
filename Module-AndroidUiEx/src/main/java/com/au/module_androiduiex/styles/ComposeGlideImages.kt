@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -30,6 +31,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * 返回用于将 Compose 图像转换为灰度的颜色滤镜。
@@ -46,9 +49,9 @@ fun GlideRoundedImage(
     model: Any?,
     contentDescription: String?,
     width: Dp,
+    modifier: Modifier = Modifier,
     height: Dp = width,
     cornerRadius: Dp = 0.dp,
-    modifier: Modifier = Modifier,
     @DrawableRes placeholderResId: Int? = null,
     @DrawableRes errorResId: Int? = placeholderResId,
     diskCacheStrategy: DiskCacheStrategy = DiskCacheStrategy.AUTOMATIC,
@@ -61,9 +64,11 @@ fun GlideRoundedImage(
     onResourceReady: ((Drawable) -> Unit)? = null,
     onResourceFailed: (() -> Unit)? = null,
     onResourceCleared: ((Drawable?) -> Unit)? = null,
+    canDisplayResource: ((Drawable) -> Boolean)? = null,
     requestBuilderTransform: ((RequestBuilder<Drawable>) -> RequestBuilder<Drawable>)? = null,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val requestManager = remember(context) { Glide.with(context) }
     val widthPx = with(LocalDensity.current) { requestWidth.roundToPx() }
     val heightPx = with(LocalDensity.current) { requestHeight.roundToPx() }
@@ -72,10 +77,11 @@ fun GlideRoundedImage(
     val currentOnResourceReady by rememberUpdatedState(onResourceReady)
     val currentOnResourceFailed by rememberUpdatedState(onResourceFailed)
     val currentOnResourceCleared by rememberUpdatedState(onResourceCleared)
+    val currentCanDisplayResource by rememberUpdatedState(canDisplayResource)
 
     val displayedResource = if (model == null) null else state.displayedResource
     val displayedTarget = displayedResource?.target
-    LaunchedEffect(displayedTarget) {
+    LaunchedEffect(displayedResource) {
         if (displayedTarget != null) {
             withFrameNanos { }
             currentOnResourceReady?.invoke(requireNotNull(displayedResource).drawable)
@@ -107,6 +113,21 @@ fun GlideRoundedImage(
                     transition: Transition<in Drawable>?,
                 ) {
                     if (state.pendingTarget !== this && state.displayedResource?.target !== this) return
+                    if (currentCanDisplayResource?.invoke(resource) == false) {
+                        val rejectedTarget = this
+                        // 等 Glide 结束当前回调后释放被拒绝的最终资源，不打断仍在升级的过渡图。
+                        scope.launch(Dispatchers.Main) {
+                            if (rejectedTarget.request?.isComplete == true && state.displayedResource?.target !== rejectedTarget) {
+                                requestManager.clear(rejectedTarget)
+                            }
+                        }
+                        return
+                    }
+                    val previous = state.displayedResource
+                    // 同一 Target 升级图片时通知外部解除旧图引用，资源释放仍由 Glide 管理。
+                    if (previous != null && previous.target === this && previous.drawable !== resource) {
+                        currentOnResourceCleared?.invoke(previous.drawable)
+                    }
                     state.displayedResource = DisplayedGlideResource(resource, this)
                     state.failed = false
                     if (state.pendingTarget === this) {
@@ -149,11 +170,16 @@ fun GlideRoundedImage(
                 .diskCacheStrategy(diskCacheStrategy)
                 .override(widthPx, heightPx)
             val transformedBuilder = currentRequestBuilderTransform?.invoke(builder) ?: builder
-            transformedBuilder.into(target)
+            val requestJob = scope.launch(Dispatchers.Main) {
+                transformedBuilder.into(target)
+            }
 
             onDispose {
+                requestJob.cancel()
                 if (state.pendingTarget === target) {
                     state.pendingTarget = null
+                }
+                if (target.request?.isComplete != true || state.displayedResource?.target !== target) {
                     requestManager.clear(target)
                 }
             }

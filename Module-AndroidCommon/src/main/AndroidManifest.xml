@@ -22,7 +22,7 @@
                 android:resource="@xml/file_path" />
         </provider>
 
-        <activity
+        <activity 
             android:name=".crash.CrashActivity"
             android:exported="false"/>
 

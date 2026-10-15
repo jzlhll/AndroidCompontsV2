@@ -53,7 +53,7 @@ fun getIpAddress(): Pair<String?, NetworkType> {
             }
         }
     } catch (e: Exception) {
-        logEx(throwable = e) { "Read Wi-Fi link addresses failed" }
+        "".logEx(throwable = e) { "Read Wi-Fi link addresses failed" }
     }
 
     // 热点下行接口通常不属于 ConnectivityManager 的 Network，不能从默认网络推断。
@@ -77,7 +77,7 @@ fun getIpAddress(): Pair<String?, NetworkType> {
             }
         }
     } catch (e: Exception) {
-        logEx(throwable = e) { "Read hotspot interfaces failed" }
+        "".logEx(throwable = e) { "Read hotspot interfaces failed" }
     }
     return ipv6Fallback ?: (null to NetworkType.UNKNOWN)
 }

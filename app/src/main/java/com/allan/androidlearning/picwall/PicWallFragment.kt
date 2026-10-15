@@ -54,7 +54,7 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
                     onSuccess = { data ->
                         // TODO: 处理成功数据
                         logdNoFile { "view model loaded data.size: ${data.size}" }
-                        binding.infiniteCanvasView.setFrameImageList(data)
+                        binding.infiniteCanvasView.setImageList(data)
                     }
                 )
             }

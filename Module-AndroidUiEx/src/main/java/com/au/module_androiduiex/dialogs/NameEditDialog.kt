@@ -1,14 +1,3 @@
-/*
-* Created by jiangzhonglun@imagecho.ai on 2026/06/22.
-*
-* Copyright (C) 2026 [imagecho.ai]. All Rights Reserved.
-*
-* This software is proprietary and confidential. Unauthorized use, copying,
-* modification, or distribution is prohibited without prior written consent.
-*
-* For inquiries, contact: [contacts@imagecho.ai]
-*/
-
 package com.au.module_androiduiex.dialogs
 
 import android.text.Editable

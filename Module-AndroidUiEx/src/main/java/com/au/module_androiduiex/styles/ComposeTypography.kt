@@ -5,8 +5,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import com.au.module_androidui.widget.FontMode
 
 object ComposeTypography {
     val FontToolbarB @Composable @ReadOnlyComposable get() = composeTextStyleWithoutLineHeight(20.sp, fontFamily = SemiBoldFontFamily)
@@ -85,6 +87,7 @@ private fun composeTextStyle(
     fontSize = fontSize,
     lineHeight = (fontSize.value + lineSpacingExtra.value).sp,
     fontFamily = fontFamily,
+    fontWeight = composeFontWeight(fontFamily),
     color = color,
 )
 
@@ -97,5 +100,15 @@ private fun composeTextStyleWithoutLineHeight(
 ) = TextStyle(
     fontSize = fontSize,
     fontFamily = fontFamily,
+    fontWeight = composeFontWeight(fontFamily),
     color = color,
+)
+
+private fun composeFontWeight(fontFamily: FontFamily): FontWeight = FontWeight(
+    when (fontFamily) {
+        MediumFontFamily -> FontMode.MID.weight
+        SemiBoldFontFamily -> FontMode.BOLD.weight
+        HeavyFontFamily -> FontMode.HEAVY.weight
+        else -> FontMode.NORMAL.weight
+    }
 )

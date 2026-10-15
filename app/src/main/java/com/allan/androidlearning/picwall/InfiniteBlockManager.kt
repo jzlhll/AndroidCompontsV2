@@ -135,11 +135,11 @@ class InfiniteBlockManager(
 
     private var mHasData = false
 
-    fun setFrameImageList(list: List<UriParsedInfo>) {
+    fun setImageList(list: List<UriParsedInfo>) {
         bitmapLoadHelper.onInitial(list)
         mHasData = list.isNotEmpty()
-        calculateDrawBlocks("set Frame ImageList")
-        callback.invalidateView("set Frame ImageList")
+        calculateDrawBlocks("set ImageList")
+        callback.invalidateView("set ImageList")
     }
 
     fun getDrawBlockList(): List<BlockInfo> {

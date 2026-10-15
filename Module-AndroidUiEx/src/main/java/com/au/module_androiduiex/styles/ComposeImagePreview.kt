@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import kotlin.math.abs
 import kotlin.math.max
@@ -95,7 +96,7 @@ fun ComposeImagePreview(
             cornerRadius = cornerRadius,
             diskCacheStrategy = diskCacheStrategy,
             contentScale = ContentScale.Fit,
-        )
+        ) { it.format(DecodeFormat.PREFER_ARGB_8888) }
     }
 }
 

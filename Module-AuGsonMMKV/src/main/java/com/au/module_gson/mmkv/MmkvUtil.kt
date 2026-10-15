@@ -98,6 +98,8 @@ fun mmkvSetAny(key:String, value:Any) {
 
 fun mmkvAllKeys(): Array<String> = mmkv.allKeys() ?: emptyArray()
 
+fun mmkvContainsKey(key: String): Boolean = mmkv.containsKey(key)
+
 fun mmkvClearKey(key: String) {
     mmkv.removeValueForKey(key)
 }
