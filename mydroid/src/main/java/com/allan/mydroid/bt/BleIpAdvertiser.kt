@@ -58,19 +58,23 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
         observeJob?.cancel()
         observeJob = fragment.viewLifecycleOwner.lifecycleScope.launch {
             fragment.viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                combine(
-                    serverRuntimeState.serverIsOpenFlow,
-                    networkMonitor.networkFlow,
-                    serverRuntimeState.portsFlow,
-                ) { open, netStatus, ports ->
-                    Triple(open, (netStatus as? GlobalNetworkMonitorObj.NetworkStatus.Connected)?.ip, ports)
-                }.collect { (open, ip, ports) ->
-                    val port = ((ports as? StatusState.Success<*>)?.data as? Pair<Int, Int>)?.first
-                    if (open && !ip.isNullOrEmpty() && port != null) {
-                        startAdvertise(ip, port)
-                    } else {
-                        stopAdvertise()
+                try {
+                    combine(
+                        serverRuntimeState.serverIsOpenFlow,
+                        networkMonitor.networkFlow,
+                        serverRuntimeState.portsFlow,
+                    ) { open, netStatus, ports ->
+                        Triple(open, (netStatus as? GlobalNetworkMonitorObj.NetworkStatus.Connected)?.ip, ports)
+                    }.collect { (open, ip, ports) ->
+                        val port = (ports as? StatusState.Success)?.data?.first
+                        if (open && !ip.isNullOrEmpty() && port != null) {
+                            startAdvertise(ip, port)
+                        } else {
+                            stopAdvertise()
+                        }
                     }
+                } finally {
+                    stopAdvertise()
                 }
             }
         }
@@ -78,12 +82,26 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
 
     @SuppressLint("MissingPermission")
     fun startAdvertise(ip: String, port: Int) {
+        // 当前 BLE 协议固定携带 IPv4；IPv6 仍可通过页面地址访问，不能交给 IPv4 编码器。
+        val segments = ip.split('.')
+        if (segments.size != 4 || segments.any { segment -> segment.toIntOrNull()?.let { it in 0..255 } != true } || port !in 1..65535) {
+            stopAdvertise()
+            return
+        }
         val endpoint = ip to port
         synchronized(lock) { desiredEndpoint = endpoint }
         btPermissionHelp.safeRun(notGivePermissionBlock = {
             loge { "ble advertise permission denied" }
         }) {
-            val adv = advertiser ?: run {
+            if (fragment.viewLifecycleOwnerLiveData.value?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) != true) {
+                return@safeRun
+            }
+            val adv = try {
+                advertiser
+            } catch (e: SecurityException) {
+                logEx(throwable = e) { "Bluetooth advertise permission unavailable" }
+                null
+            } ?: run {
                 loge { "bluetoothLeAdvertiser is null, not supported" }
                 return@safeRun
             }
@@ -192,7 +210,7 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
                     require(v in 0..255) { "invalid ipv4 segment: $s" }
                     out[i] = v.toByte()
                 }
-                require(port in 0..65535) { "invalid port: $port" }
+                require(port in 1..65535) { "invalid port: $port" }
                 out[4] = (port shr 8).toByte()
                 out[5] = port.toByte()
             }
@@ -203,6 +221,8 @@ class BleIpAdvertiser(private val fragment: Fragment) : KoinComponent {
             if (bytes.size != 6) return null
             val ip = "${bytes[0].toInt() and 0xff}.${bytes[1].toInt() and 0xff}.${bytes[2].toInt() and 0xff}.${bytes[3].toInt() and 0xff}"
             val port = ((bytes[4].toInt() and 0xff) shl 8) or (bytes[5].toInt() and 0xff)
+            if (port == 0 || (bytes[0].toInt() and 0xff) == 0 ||
+                (bytes[0].toInt() and 0xff) == 127 || (bytes[0].toInt() and 0xff) >= 224) return null
             return ip to port
         }
     }

@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -12,32 +13,25 @@ import android.content.Context
 import android.os.ParcelUuid
 import android.os.Build
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.log.loge
-import com.au.module_android.utils.launchOnIOThread
+import com.au.module_android.log.logEx
 import com.au.module_simplepermission.createMultiPermissionForResult
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
 /** client 端扫描发现的一个 host。port 为 host 的 httpPort。 */
 data class DiscoveredHost(val ip: String, val port: Int)
 
-/**
- * client 端 BLE 扫描辅助类。client Tab 共用，按系统版本申请扫描权限，
- * 扫描 host 广播并解析 IP+port，通过 [discoveredFlow] 与 [scanningFlow] 暴露状态。
- *
- * - 底层 BLE 扫描 12s 自动停止（避免 Android "2 分钟 4 次" 限制），startScan/stopScan 必须主线程配对调用。
- * - UI 雷达动画 [scanningFlow] 持续 35s 才置 false（假装扫描 35s），底层停止后 UI 动画继续。
- * - discoveredMap 用 synchronized 保护，参照 [com.au.audiorecordplayer.bt.ble.BleScanner] 样板。
- */
+/** client 端 BLE 发现，扫描与页面视图生命周期绑定，状态只反映真实扫描过程。 */
 class BleIpScanner(private val fragment: Fragment) {
     private val btPermissionHelp = fragment.createMultiPermissionForResult(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -58,74 +52,91 @@ class BleIpScanner(private val fragment: Fragment) {
     private val _scanningFlow = MutableStateFlow(false)
     val scanningFlow: StateFlow<Boolean> = _scanningFlow.asStateFlow()
 
-    private val discoveredMap = linkedMapOf<String, DiscoveredHost>()  // key=ip
+    private val discoveredMap = linkedMapOf<String, DiscoveredHost>()
     private var bleScanStopJob: Job? = null
-    private var uiScanningStopJob: Job? = null
-
-    @Volatile private var isBleScanning = false
+    private var activeScanner: BluetoothLeScanner? = null
+    private var scanCallback: ScanCallback? = null
+    private var scanRequested = false
 
     @SuppressLint("MissingPermission")
     fun startScan() {
+        if (scanRequested) return
+        scanRequested = true
         btPermissionHelp.safeRun(notGivePermissionBlock = {
+            scanRequested = false
             _scanningFlow.value = false
             loge { "ble scan permission denied" }
         }) {
-            val sc = scanner ?: run {
-                _scanningFlow.value = false
+            val owner = fragment.viewLifecycleOwnerLiveData.value
+            if (!scanRequested || owner == null || !owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                scanRequested = false
                 return@safeRun
             }
-            if (isBleScanning) return@safeRun
-            isBleScanning = true
-            _scanningFlow.value = true
-            synchronized(discoveredMap) { discoveredMap.clear() }
-            _discoveredFlow.value = emptyList()
-
-            val filter = ScanFilter.Builder()
-                .setServiceUuid(ParcelUuid(BleIpAdvertiser.BLE_IP_UUID))
-                .build()
-            val settings = ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                .build()
-            sc.startScan(listOf(filter), settings, scanCallback)
-
-            bleScanStopJob = fragment.lifecycleScope.launchOnIOThread {
-                delay(12000.milliseconds)
-                withContext(Dispatchers.Main) {
-                    sc.stopScan(scanCallback)
+            try {
+                val sc = scanner ?: run {
+                    scanRequested = false
+                    return@safeRun
                 }
-                isBleScanning = false
-                logdNoFile { "ble scan stopped (12s limit)" }
-            }
+                val callback = object : ScanCallback() {
+                    override fun onScanResult(callbackType: Int, result: ScanResult) {
+                        if (scanCallback !== this) return
+                        val bytes = result.scanRecord?.getServiceData(ParcelUuid(BleIpAdvertiser.BLE_IP_UUID)) ?: return
+                        val (ip, port) = BleIpAdvertiser.decodeIpPort(bytes) ?: return
+                        discoveredMap["$ip:$port"] = DiscoveredHost(ip, port)
+                        _discoveredFlow.value = discoveredMap.values.toList()
+                    }
 
-            uiScanningStopJob = fragment.lifecycleScope.launchOnIOThread {
-                delay(35000.milliseconds)
-                _scanningFlow.value = false
-                logdNoFile { "ui scanning state stopped (35s)" }
+                    override fun onScanFailed(errorCode: Int) {
+                        if (scanCallback !== this) return
+                        loge { "ble scan failed: $errorCode" }
+                        stopScan()
+                    }
+                }
+                val filter = ScanFilter.Builder()
+                    .setServiceUuid(ParcelUuid(BleIpAdvertiser.BLE_IP_UUID))
+                    .build()
+                val settings = ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                    .build()
+                discoveredMap.clear()
+                _discoveredFlow.value = emptyList()
+                activeScanner = sc
+                scanCallback = callback
+                _scanningFlow.value = true
+                sc.startScan(listOf(filter), settings, callback)
+                bleScanStopJob = owner.lifecycleScope.launch {
+                    delay(12000.milliseconds)
+                    stopScan()
+                    logdNoFile { "ble scan stopped after 12 seconds" }
+                }
+            } catch (e: SecurityException) {
+                logEx(throwable = e) { "Bluetooth scan permission unavailable" }
+                stopScan()
+            } catch (e: IllegalStateException) {
+                logEx(throwable = e) { "Bluetooth unavailable while starting scan" }
+                stopScan()
             }
         }
     }
 
     @SuppressLint("MissingPermission")
     fun stopScan() {
+        scanRequested = false
         bleScanStopJob?.cancel()
-        uiScanningStopJob?.cancel()
-        scanner?.stopScan(scanCallback)
-        isBleScanning = false
+        bleScanStopJob = null
+        val callback = scanCallback
+        val sc = activeScanner
+        scanCallback = null
+        activeScanner = null
         _scanningFlow.value = false
-    }
-
-    @SuppressLint("MissingPermission")
-    private val scanCallback = object : ScanCallback() {
-        override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val bytes = result.scanRecord?.getServiceData(ParcelUuid(BleIpAdvertiser.BLE_IP_UUID)) ?: return
-            val (ip, port) = BleIpAdvertiser.decodeIpPort(bytes) ?: return
-            val snapshot: List<DiscoveredHost>
-            synchronized(discoveredMap) {
-                discoveredMap[ip] = DiscoveredHost(ip, port)
-                snapshot = discoveredMap.values.toList()
-            }
-            _discoveredFlow.value = snapshot
+        if (callback == null || sc == null) return
+        try {
+            sc.stopScan(callback)
+        } catch (e: SecurityException) {
+            logEx(throwable = e) { "Bluetooth permission revoked while stopping scan" }
+        } catch (e: IllegalStateException) {
+            logEx(throwable = e) { "Bluetooth unavailable while stopping scan" }
         }
     }
 }
