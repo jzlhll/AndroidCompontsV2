@@ -162,6 +162,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                         updateTabsTitle(false)
                     },
                     onError = {
+                        ToastBuilder().setOnTop().setMessage(getString(R.string.something_error)).toast()
                     }
                 )
             }

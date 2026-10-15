@@ -6,8 +6,10 @@ import androidx.fragment.app.FragmentManager
 import com.allan.mydroid.BuildConfig
 import com.allan.mydroid.R
 import com.au.module_android.Globals
-import com.au.module_android.utils.ignoreError
-import com.au.module_android.utils.launchOnThread
+import com.au.module_android.log.logEx
+import com.au.module_android.utils.withIOThread
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import com.au.module_android.utils.serializableCompat
 import com.au.module_android.utilsmedia.myParseSuspend
 import com.au.module_android.utilsmedia.openWith
@@ -15,7 +17,6 @@ import com.au.module_android.utilsmedia.saveFileToPublicDirectory
 import com.au.module_android.utilsmedia.shareFile
 import com.au.module_androidui.dialogs.AbsActionDialogFragment
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
-import kotlinx.coroutines.delay
 import java.io.File
 import java.lang.ref.WeakReference
 
@@ -73,45 +74,34 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
     }
 
     private fun export(delete: Boolean) {
-        Globals.mainScope.launchOnThread {
-            exportInThread(file, delete)
+        val target = file ?: return
+        val success = fileExportSuccessCallback?.get()
+        val failure = fileExportFailCallback?.get()
+        val refresh = refreshFileListCallback?.get()
+        Globals.mainScope.launch {
+            try {
+                val result = withIOThread { exportInThread(target, delete) }
+                if (delete) refresh?.invoke()
+                if (result == null) failure?.invoke(Globals.getString(R.string.save_failed))
+                else success?.invoke(result.first, result.second)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logEx(throwable = e) { "Export received file failed" }
+                failure?.invoke(Globals.getString(R.string.save_failed))
+            }
         }
     }
 
     @SuppressLint("SdCardPath")
-    private suspend fun exportInThread(file: File?, delete: Boolean) {
-        if (file == null) {
-            return
-        }
-        delay(0)
-
-        val uri = ignoreError {
-            saveFileToPublicDirectory(
-                Globals.app,
-                file,
-                delete,
-                "MyDroidTransfer"
-            )
-        }
-
-        if (delete) {
-            refreshFileListCallback?.get()?.invoke()
-        }
-
-        val parsedInfo = uri?.myParseSuspend(Globals.app.contentResolver)
-        if (parsedInfo != null) {
-            val fullPath = parsedInfo.fullPath
-            val relativePath = parsedInfo.relativePath
-            if (!fullPath.isNullOrEmpty()) {
-                val firstStr = String.format(getString(R.string.save_to_success), fullPath)
-                fileExportSuccessCallback?.get()?.invoke(firstStr, fullPath.replace("/storage/emulated/0/", "/sdcard/"))
-            } else if (!relativePath.isNullOrEmpty()) {
-                val p = relativePath.replace("/storage/emulated/0/", "/sdcard/")
-                fileExportSuccessCallback?.get()?.invoke(relativePath, "/sdcard/$p")
-            }
-        } else {
-            fileExportFailCallback?.get()?.invoke(getString(R.string.save_failed))
-        }
+    private suspend fun exportInThread(file: File, delete: Boolean): Pair<String, String>? {
+        val uri = saveFileToPublicDirectory(Globals.app, file, delete, "MyDroidTransfer") ?: return null
+        val parsedInfo = uri.myParseSuspend(Globals.app.contentResolver)
+        val path = parsedInfo.fullPath?.takeIf { it.isNotEmpty() }
+            ?: parsedInfo.relativePath?.takeIf { it.isNotEmpty() }?.let { "/sdcard/$it" }
+            ?: uri.toString()
+        val displayPath = path.replace("/storage/emulated/0/", "/sdcard/")
+        return String.format(Globals.getString(R.string.save_to_success), displayPath) to displayPath
     }
 
     override fun notify(tag: Any) {
@@ -134,10 +124,18 @@ class ReceiveHolderActionDialog : AbsActionDialogFragment() {
                 export(true)
             }
             TAG_DELETE -> {
-                Globals.mainScope.launchOnThread {
-                    ignoreError { file.delete() }
-                    delay(100)
-                    refreshFileListCallback?.get()?.invoke()
+                val refresh = refreshFileListCallback?.get()
+                val failure = fileExportFailCallback?.get()
+                Globals.mainScope.launch {
+                    try {
+                        withIOThread { check(file.delete()) { "Cannot delete received file" } }
+                        refresh?.invoke()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logEx(throwable = e) { "Delete received file failed" }
+                        failure?.invoke(Globals.getString(R.string.something_error))
+                    }
                 }
             }
         }

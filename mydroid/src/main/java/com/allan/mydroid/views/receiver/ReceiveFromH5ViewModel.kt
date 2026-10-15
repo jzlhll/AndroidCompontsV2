@@ -9,7 +9,10 @@ import com.au.module_android.simpleflow.IActionDispatcher
 import com.au.module_android.simpleflow.IStateAction
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.launchOnThread
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,21 +26,29 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
     class WriteHistoryAction(val newHistoryItem: String) : IStateAction
     class LoadFileListAction : IStateAction
 
+    private val historyMutex = Mutex()
     private val _historyState = MutableStateFlow<StatusState<String>>(StatusState.Loading)
     val historyState: StateFlow<StatusState<String>> = _historyState.asStateFlow()
 
     init {
         getActionStore().apply {
             reduce(LoadHistoryAction::class.java) {
-                viewModelScope.launchOnThread {
-                    loadHistory()
+                viewModelScope.launch {
+                    historyMutex.withLock { loadHistory() }
                 }
             }
             reduce(WriteHistoryAction::class.java) { action->
-                viewModelScope.launchOnThread {
-                    exportHistoryRepository.writeNewExportHistory(action.newHistoryItem)
-                    delay(100)
-                    loadHistory()
+                viewModelScope.launch {
+                    historyMutex.withLock {
+                        try {
+                            exportHistoryRepository.writeNewExportHistory(action.newHistoryItem)
+                            loadHistory()
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            _historyState.value = StatusState.Error(e)
+                        }
+                    }
                 }
             }
             reduce(LoadFileListAction::class.java) { action ->
@@ -49,8 +60,14 @@ class ReceiveFromH5ViewModel : ViewModel(), IActionDispatcher by ActionDispatche
     }
 
     private suspend fun loadHistory() {
-        val history = exportHistoryRepository.loadExportHistory()
-        _historyState.value = StatusState.Success(history)
+        try {
+            val history = exportHistoryRepository.loadExportHistory()
+            _historyState.value = StatusState.Success(history)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _historyState.value = StatusState.Error(e)
+        }
     }
 
 }

@@ -78,31 +78,31 @@ fun saveFileToPublicDirectory(
     path: String,
     setContentValues: Function1<ContentValues, Unit>? = null
 ) : Uri?{
-    if (origFile.isDirectory) {
-        return null
-    }
-
+    if (!origFile.isFile) return null
+    val resolver = context.contentResolver
     val uri = insertFileToContentResolverFile(context, origFile, origFile.name, path, setContentValues)
-    var isSuc = false
-    if (uri != null) {
-        context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+        ?: return null
+    try {
+        val output = resolver.openOutputStream(uri) ?: run {
+            resolver.delete(uri, null, null)
+            return null
+        }
+        output.use { outputStream ->
             origFile.inputStream().buffered().use { inputStream ->
-                val buffer = ByteArray(1024 * 32)
-                var bytesRead: Int
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    outputStream.write(buffer, 0, bytesRead)
-                    isSuc = true
-                }
+                inputStream.copyTo(outputStream, 32 * 1024)
             }
         }
-
-        ignoreError {
-            if (isSuc && deleteOldFile) {
-                origFile.delete()
-            }
+    } catch (e: Exception) {
+        // 失败时移除不完整的公共文件，保留源文件供用户重试。
+        try {
+            resolver.delete(uri, null, null)
+        } catch (cleanupError: Exception) {
+            e.addSuppressed(cleanupError)
         }
+        throw e
     }
-    return if(isSuc) uri else null
+    if (deleteOldFile) origFile.delete()
+    return uri
 }
 
 fun deleteFromContentResolver(mediaUri: Uri) {
