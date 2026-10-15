@@ -109,7 +109,8 @@ class GlobalDroidServerObj(
     }
 
     private fun startServerWrap() {
-        if (!serverRuntimeState.serverIsOpenFlow.value && livePages.isNotEmpty()) {
+        if (!serverRuntimeState.serverIsOpenFlow.value && livePages.isNotEmpty() &&
+            networkMonitor.networkFlow.value is GlobalNetworkMonitorObj.NetworkStatus.Connected) {
             startServer { msg ->
                 mainScope.launch {
                     ToastBuilder()

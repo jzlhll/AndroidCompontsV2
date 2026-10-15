@@ -8,6 +8,7 @@ import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.ext.SdkExtensions
+import com.au.module_android.log.logEx
 import com.au.module_android.Globals
 import java.net.Inet4Address
 import java.net.Inet6Address
@@ -24,55 +25,61 @@ enum class NetworkType {
 
 fun isWifiConnected(): Boolean {
     val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities)
-    if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) return true
-
-    // 默认网络可能走蜂窝，保留原有 Wi-Fi 地址判断作为补充。
-    val netType = getIpAddress().second
-    return netType == NetworkType.WIFI_IPV4 || netType == NetworkType.WIFI_IPV6
+    return manager.allNetworks.any { network ->
+        val capabilities = manager.getNetworkCapabilities(network)
+        capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true &&
+            !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+    }
 }
 
-/**
- * 获取设备的IP地址和网络类型
- * 返回 Pair<IP地址, 网络类型>，IP地址可为空
- */
+/** 获取局域网地址，优先使用系统 Wi-Fi 链路信息；热点接口作为补充。 */
 fun getIpAddress(): Pair<String?, NetworkType> {
+    var ipv6Fallback: Pair<String?, NetworkType>? = null
+    val managedInterfaces = mutableSetOf<String>()
     try {
-        // IPv4 优先：先收集 IPv6 作为回退，遇到 IPv4 立即返回
-        var ipv6Fallback: Pair<String?, NetworkType>? = null
-        val interfaces = NetworkInterface.getNetworkInterfaces()
-        while (interfaces.hasMoreElements()) {
-            val netInterface = interfaces.nextElement()
-            val isWifi = netInterface.displayName.equals("wlan0", ignoreCase = true)
-            val isAp = netInterface.name.startsWith("ap", ignoreCase = true)
-
-            if (isWifi || isAp) {
-                for (addr in netInterface.inetAddresses) {
-                    val result = getIPAddress(addr) ?: continue
-                    val (ip, type) = result
-                    // 根据接口类型调整NetworkType
-                    val adjustedType = when (type) {
-                        NetworkType.WIFI_IPV4 -> if (isWifi) NetworkType.WIFI_IPV4 else NetworkType.AP_IPV4
-                        NetworkType.WIFI_IPV6 -> if (isWifi) NetworkType.WIFI_IPV6 else NetworkType.AP_IPV6
-                        else -> type
-                    }
-                    if (type == NetworkType.WIFI_IPV4) {
-                        return ip to adjustedType
-                    }
-                    if (ipv6Fallback == null) {
-                        ipv6Fallback = ip to adjustedType
-                    }
-                }
+        val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = manager.activeNetwork
+        val networks = manager.allNetworks.sortedBy { if (it == activeNetwork) 0 else 1 }
+        for (network in networks) {
+            val capabilities = manager.getNetworkCapabilities(network) ?: continue
+            val properties = manager.getLinkProperties(network) ?: continue
+            properties.interfaceName?.let { managedInterfaces.add(it) }
+            if (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue
+            for (link in properties.linkAddresses) {
+                val result = getIPAddress(link.address) ?: continue
+                if (result.second == NetworkType.WIFI_IPV4) return result
+                if (ipv6Fallback == null) ipv6Fallback = result
             }
         }
-        // 无 IPv4 时回退到 IPv6
-        if (ipv6Fallback != null) {
-            return ipv6Fallback
+    } catch (e: Exception) {
+        logEx(throwable = e) { "Read Wi-Fi link addresses failed" }
+    }
+
+    // 热点下行接口通常不属于 ConnectivityManager 的 Network，不能从默认网络推断。
+    try {
+        val interfaces = NetworkInterface.getNetworkInterfaces()
+        while (interfaces != null && interfaces.hasMoreElements()) {
+            val netInterface = interfaces.nextElement()
+            if (!netInterface.isUp || netInterface.isLoopback || netInterface.name in managedInterfaces) continue
+            val name = netInterface.name.lowercase()
+            val isAp = name.startsWith("ap") || name.startsWith("swlan") || name.startsWith("softap")
+            val isWifi = name.startsWith("wlan") || name.startsWith("wifi")
+            if (!isAp && !isWifi) continue
+            for (address in netInterface.inetAddresses) {
+                val (ip, type) = getIPAddress(address) ?: continue
+                val result = ip to when (type) {
+                    NetworkType.WIFI_IPV4 -> NetworkType.AP_IPV4
+                    else -> NetworkType.AP_IPV6
+                }
+                if (type == NetworkType.WIFI_IPV4) return result
+                if (ipv6Fallback == null) ipv6Fallback = result
+            }
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        logEx(throwable = e) { "Read hotspot interfaces failed" }
     }
-    return null to NetworkType.UNKNOWN
+    return ipv6Fallback ?: (null to NetworkType.UNKNOWN)
 }
 
 /**
@@ -90,13 +97,13 @@ fun getIPAddress(nsd: NsdServiceInfo): String? {
  * 从InetAddress列表获取IP地址
  */
 fun getIPAddress(addresses: List<InetAddress>): String? {
-    for (addr in addresses) {
-        val result = getIPAddress(addr)
-        if (result != null) {
-            return result.first
-        }
+    var ipv6Fallback: String? = null
+    for (address in addresses) {
+        val (ip, type) = getIPAddress(address) ?: continue
+        if (type == NetworkType.WIFI_IPV4) return ip
+        if (ipv6Fallback == null) ipv6Fallback = ip
     }
-    return null
+    return ipv6Fallback
 }
 
 /**
@@ -155,7 +162,7 @@ private fun getIPAddress(address: InetAddress?): Pair<String?, NetworkType>? {
 fun getIPAddressWifiManager(ctx: Context): String? {
     return try {
         val wifiManager = ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        if (wifiManager.isWifiEnabled) getWifiIP(wifiManager) else getIpAddress().first
+        getIpAddress().first ?: if (wifiManager.isWifiEnabled) getWifiIP(wifiManager) else null
     } catch (e: java.lang.Exception) {
         e.printStackTrace()
         ""
@@ -170,7 +177,7 @@ private fun getWifiIP(wifiManager: WifiManager): String? {
     return try {
         @SuppressLint("MissingPermission") val wifiInfo = wifiManager.connectionInfo
         val ip: String
-        if (wifiInfo != null) {
+        if (wifiInfo != null && wifiInfo.ipAddress != 0) {
             ip = intToIp(wifiInfo.ipAddress)
             return ip
         }

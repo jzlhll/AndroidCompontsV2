@@ -74,7 +74,7 @@ class ConnectToHostReceiveViewModel(private val endpoint: HostEndpoint?) : ViewM
         refreshJob = viewModelScope.launch {
             _uiState.update { it.copy(refreshing = true, error = null) }
             try {
-                val files = ClientApi.requestFileList("http://${host.ip}:${host.httpPort}")
+                val files = ClientApi.requestFileList(ClientApi.baseUrl(host.ip, host.httpPort))
                 _uiState.update { it.copy(files = files.filter { file -> file.uriUuid.isNotBlank() }.distinctBy { file -> file.uriUuid }) }
             } catch (e: CancellationException) {
                 throw e

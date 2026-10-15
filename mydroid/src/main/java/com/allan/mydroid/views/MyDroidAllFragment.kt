@@ -157,7 +157,7 @@ class MyDroidAllFragment : ComposeViewFragment() {
         val owner = viewLifecycleOwner
         connectJob = owner.lifecycleScope.launch {
             try {
-                val mode = ClientApi.fetchMode("http://${host.ip}:${host.port}")
+                val mode = ClientApi.fetchMode(ClientApi.baseUrl(host.ip, host.port))
                 if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) navigateToConnect(host, mode)
             } catch (e: CancellationException) {
                 throw e

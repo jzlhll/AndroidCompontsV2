@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.allan.mydroid.R
 import com.allan.mydroid.repository.TransferFiles
 import com.allan.mydroid.client.HostEndpoint
+import com.allan.mydroid.client.api.ClientApi
 import com.allan.mydroid.client.api.ClientChunkUploader
 import com.allan.mydroid.client.api.ClientWsClient
 import com.allan.mydroid.client.api.WsFrame
@@ -35,7 +36,7 @@ class ConnectToHostSendViewModel(private val endpoint: HostEndpoint) : ViewModel
     private val wsClient: ClientWsClient by inject()
     private val _uiState = MutableStateFlow(ConnectToHostSendUiState())
     val uiState = _uiState.asStateFlow()
-    private val baseUrl get() = "http://${endpoint.ip}:${endpoint.httpPort}"
+    private val baseUrl get() = ClientApi.baseUrl(endpoint.ip, endpoint.httpPort)
     private var uploadJob: Job? = null
     private var stopRequested = false
 

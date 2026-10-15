@@ -121,9 +121,9 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
                 if (netInfo.httpPort == null) {
                     binding.title.text = netInfo.ip
                 } else if (serverRuntimeState.serverIsOpenFlow.value) {
-                    binding.title.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), netInfo.ip, "" + netInfo.httpPort)
+                    binding.title.text = String.format(getString(com.allan.mydroid.R.string.lan_access_fmt), netInfo.urlHost, "" + netInfo.httpPort)
                 } else {
-                    binding.title.text = netInfo.ip + ":" + netInfo.httpPort
+                    binding.title.text = netInfo.urlHost + ":" + netInfo.httpPort
                 }
             }
         }

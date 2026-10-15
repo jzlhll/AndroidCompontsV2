@@ -21,9 +21,9 @@ import okhttp3.Response
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.HttpUrl
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -46,7 +46,8 @@ object ClientApi {
 
     class ClientApiException(val code: String, msg: String) : Exception(msg)
 
-    private val httpClient get() = ClientHttp.client
+    fun baseUrl(ip: String, port: Int): String = HttpUrl.Builder()
+        .scheme("http").host(ip).port(port).build().toString().removeSuffix("/")
 
     /** POST /read-websocket-ip-port，返回 host 的 ws/http 端口信息。 */
     suspend fun fetchWsIpPort(baseUrl: String): IpPortResult = withIOThread {
@@ -64,13 +65,9 @@ object ClientApi {
      */
     suspend fun fetchMode(baseUrl: String): MyDroidMode = withIOThread {
         val request = Request.Builder().url("$baseUrl$GET_MODE").get().build()
-        val resp = try {
-            withTimeout(MODE_FETCH_TIMEOUT) {
-                executeText(request)
-            }
-        } catch (e: TimeoutCancellationException) {
-            throw IllegalStateException("fetch mode timeout", e)
-        }
+        val resp = withTimeoutOrNull(MODE_FETCH_TIMEOUT) {
+            executeText(request)
+        } ?: throw IllegalStateException("fetch mode timeout")
         val bean = resp.fromGson<ResultBean<String>>() ?: throw IllegalStateException("parse mode failed: $resp")
         ensureSuc(bean.code, bean.msg)
         val name = bean.data ?: throw IllegalStateException("mode data is null")
@@ -161,7 +158,8 @@ object ClientApi {
 
     /** 拼下载 URL 字符串。实际下载由 DownloadService 用 OkHttp 流式 GET 执行。 */
     fun downloadFileUrl(ip: String, httpPort: Int, uriUuid: String): String {
-        return "http://$ip:$httpPort/file_download_uuid/$uriUuid"
+        return HttpUrl.Builder().scheme("http").host(ip).port(httpPort)
+            .addPathSegment("file_download_uuid").addPathSegment(uriUuid).build().toString()
     }
 
     private suspend fun postJson(url: String, json: String): String = withIOThread {
@@ -173,7 +171,7 @@ object ClientApi {
     }
 
     private suspend fun executeText(request: Request): String = suspendCancellableCoroutine { continuation ->
-        val call = httpClient.newCall(request)
+        val call = ClientHttp.forUrl(request.url).newCall(request)
         continuation.invokeOnCancellation { call.cancel() }
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {

@@ -3,7 +3,8 @@ package com.allan.mydroid.api
 import com.allan.mydroid.nanohttp.WebsocketServer
 import com.au.module_cached.delegate.AppDataStoreLongCache
 import com.au.module_okhttp.creator.AbsOkhttpApi
-import okhttp3.OkHttpClient
+import com.allan.mydroid.client.api.ClientHttp
+import okhttp3.HttpUrl
 import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
@@ -39,10 +40,11 @@ object Api : AbsOkhttpApi() {
 
     // 创建并启动WebSocket连接。对齐 host WebsocketServer.openWebSocket 的 /ws-test 端点。
     fun connectWSServer(ip:String, port:Int, listener:WebSocketListener): WebSocket {
-        val client = OkHttpClient.Builder()
+        val url = HttpUrl.Builder().scheme("http").host(ip).port(port).addPathSegment("ws-test").build()
+        val client = ClientHttp.forUrl(url).newBuilder()
             .pingInterval(WebsocketServer.HEARTBEAT_INTERVAL, TimeUnit.MILLISECONDS)
             .build()
-        val request: Request = Request.Builder().url("ws://$ip:$port/ws-test").build()
+        val request: Request = Request.Builder().url(url).build()
         return client.newWebSocket(request, listener)
     }
 }

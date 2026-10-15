@@ -79,7 +79,7 @@ class ClientWsClient {
         _connectionStateFlow.value = if (reconnectAttempt == 0) WsConnectionState.Connecting else WsConnectionState.Reconnecting
         reconnectJob = scope.launch {
             try {
-                val baseUrl = "http://${ep.ip}:${ep.httpPort}"
+                val baseUrl = ClientApi.baseUrl(ep.ip, ep.httpPort)
                 val mode = ClientApi.fetchMode(baseUrl)
                 if (mode != ep.mode || mode == MyDroidMode.None) {
                     _connectionStateFlow.value = WsConnectionState.ModeChanged

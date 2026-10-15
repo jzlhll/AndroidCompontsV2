@@ -2,6 +2,7 @@ package com.allan.mydroid.network
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
@@ -9,84 +10,74 @@ import com.allan.mydroid.R
 import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.au.module_android.Globals
 import com.au.module_android.init.GlobalBackgroundCallback
+import com.au.module_android.log.logt
 import com.au.module_android.scopes.BackAppScope
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.getIpAddress
-import com.au.module_android.log.logd
-import com.au.module_android.log.logdNoFile
-import com.au.module_android.log.logt
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
+/** 持续跟踪 Wi-Fi 和热点地址，统一提供页面与服务端的连接信息。 */
 class GlobalNetworkMonitorObj(
     private val serverRuntimeState: GlobalServerRuntimeObj,
     private val backScope : BackAppScope,
 ) {
     private val networkEventFlow = callbackFlow<Unit> {
-
         val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        // 局域网传输不要求外网能力，且需要观察非默认 Wi-Fi 网络。
         val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
             .build()
-
-        var isRegister = false
-
         val netObserver = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                logd { "network on Available" }
+            override fun onAvailable(network: Network) { trySend(Unit) }
+            override fun onLost(network: Network) { trySend(Unit) }
+            override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
                 trySend(Unit)
             }
-
-            override fun onLost(network: Network) {
-                logd { "network on Lost" }
-                trySend(Unit)
-            }
-
-            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-                logd { "network on CapabilitiesChanged" }
+            override fun onLinkPropertiesChanged(network: Network, properties: LinkProperties) {
                 trySend(Unit)
             }
         }
-
         val bgListener = object : GlobalBackgroundCallback.IBackgroundListener {
             override fun onBackground(isBackground: Boolean) {
-                logdNoFile { "Network observer is in bg $isBackground" }
-                if (isBackground) {
-                    logd { "Unregistering network callback" }
-                    if (isRegister) {
-                        manager.unregisterNetworkCallback(netObserver)
-                        isRegister = false
-                    }
-                } else {
-                    logd { "Starting network" }
-                    if (!isRegister) {
-                        manager.registerNetworkCallback(request, netObserver)
-                        isRegister = true
-                    }
+                if (!isBackground) trySend(Unit)
+            }
+        }
+        // 注册时立即读取现状，不能等待已经发生过的前台事件。
+        manager.registerNetworkCallback(request, netObserver)
+        GlobalBackgroundCallback.addListener(bgListener)
+        trySend(Unit)
+        // 热点下行没有 NetworkCallback；前台和服务存活期间补充刷新。
+        val refreshJob = launch {
+            while (isActive) {
+                delay(2000.milliseconds)
+                if (GlobalBackgroundCallback.isForeground || serverRuntimeState.serverIsOpenFlow.value) {
+                    trySend(Unit)
                 }
             }
         }
-
-        GlobalBackgroundCallback.addListener(bgListener)
-
-        trySend(Unit)
-
         awaitClose {
+            refreshJob.cancel()
             GlobalBackgroundCallback.removeListener(bgListener)
-            if (isRegister) {
-                manager.unregisterNetworkCallback(netObserver)
-                isRegister = false
-            }
+            manager.unregisterNetworkCallback(netObserver)
         }
-    }
+    }.buffer(Channel.CONFLATED)
 
-    val networkFlow: Flow<NetworkStatus> = networkEventFlow
+    val networkFlow: StateFlow<NetworkStatus> = networkEventFlow
         .map {
             val (ip, netType) = getIpAddress()
             if (ip == null) {
@@ -95,6 +86,7 @@ class GlobalNetworkMonitorObj(
                 NetworkStatus.Connected(ip, netType.toString())
             }
         }
+        .flowOn(Dispatchers.IO)
         .distinctUntilChanged()
         .stateIn(scope = Globals.mainScope, started = SharingStarted.Lazily, initialValue = NetworkStatus.Uninitialized)
 
@@ -107,10 +99,11 @@ class GlobalNetworkMonitorObj(
                 val httpPort = ports?.first
                 val wsPort = ports?.second
                 val ip = networkStatus.ip
+                val host = if (ip.contains(':')) "[$ip]" else ip
 
                 NetworkInfo(
                     ip, httpPort, wsPort, networkStatus.networkType,
-                    String.format(strFmt, "${ip}:${httpPort}")
+                    String.format(strFmt, if (httpPort == null) ip else "$host:$httpPort")
                 )
             }
 
@@ -121,7 +114,7 @@ class GlobalNetworkMonitorObj(
         }
     }.stateIn(
         scope = backScope,
-        started = SharingStarted.Lazily,
+        started = SharingStarted.Eagerly,
         initialValue = null
     )
 
@@ -134,5 +127,7 @@ class GlobalNetworkMonitorObj(
     data class NetworkInfo(val ip: String?,
                            val httpPort:Int?, val wsPort:Int?,
                            val networkType: String,
-                           val ipHttpPortStr: String)
+                           val ipHttpPortStr: String) {
+        val urlHost: String? get() = ip?.let { if (it.contains(':')) "[$it]" else it }
+    }
 }
