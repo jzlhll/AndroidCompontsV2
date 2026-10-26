@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 局域网主机使用动态 IP，通过 HTTP 和 WebSocket 提供传输服务。 -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

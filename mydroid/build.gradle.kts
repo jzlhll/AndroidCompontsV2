@@ -42,7 +42,7 @@ android {
             )
 
             signingConfig = signingConfigs.getByName("auRelease")
-            resValue("xml", "network_security", "@xml/network_release")
+            resValue("xml", "network_security", "@xml/network_mydroid")
             //apply plugin: 'com.au.plugins.plugin-string-encrypt'
             // 上传bundle包所需的原生调试符号
             ndk {
