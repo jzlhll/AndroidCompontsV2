@@ -270,3 +270,54 @@ fun Activity.hasPhotoLibraryPartialAccess(): Boolean {
         ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_MEDIA_VIDEO) ||
         ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)
 }
+
+/**
+ * 读取当前手机相册权限：完整授权或 Android 14 部分授权（Select photos）均视为已授权，
+ * 对应 iOS 的 .authorized / .limited。完全无权限时返回 false（需引导去设置）。
+ * 注意：曾拒绝权限（shouldShowRequestPermissionRationale 为 true）不属于已授权。
+ */
+/** 相册完整访问判定：Android 13+ 图片或视频权限「任一」授予即为完整访问。 */
+private fun Context.hasPhotoLibraryMediaPermission(): Boolean =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        hasPermission(Manifest.permission.READ_MEDIA_IMAGES) ||
+            hasPermission(Manifest.permission.READ_MEDIA_VIDEO)
+    } else {
+        hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+
+/** 完整图片权限：只有具备它才能看到完整图片集合，可用于删除对账。 */
+fun Context.hasPhotoLibraryFullImageAccess(): Boolean =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        hasPermission(Manifest.permission.READ_MEDIA_IMAGES)
+    } else {
+        hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+
+fun Context.hasPhotoLibraryAccess(): Boolean {
+    // 严格对齐官方三态判定：完整访问是 OR 而非 AND，
+    // 否则只申请了图片权限的用户即便给了完整图片访问也会被误判成无权限；
+    // Android 14+ 再额外接受 READ_MEDIA_VISUAL_USER_SELECTED，即部分授权。
+    if (hasPhotoLibraryMediaPermission()) return true
+    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        hasPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+}
+
+/**
+ * 当前为「部分图片授权」（Android 14 Select photos）：能读到图片，但只有用户选中的子集。
+ *
+ * 只看 READ_MEDIA_VISUAL_USER_SELECTED 会被完整授权误判 —— 系统在完整图片授权时同样会报告该权限位，
+ * 所以先排除完整图片权限。判定按图片维度：仅有视频权限不属于部分图片授权。
+ * 不能写成 hasPhotoLibraryAccess() && !hasPhotoLibraryFullAccess()——
+ * 后者是图片且视频的 AND 语义，只给图片权限的用户会被误判成部分授权。
+ */
+fun Context.hasPhotoLibraryLimitedAccess(): Boolean =
+    !hasPhotoLibraryFullImageAccess() &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+        hasPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+
+/** 跳转到本 App 的系统设置页，用于照片权限等引导入口。 */
+fun Context.openAppSettingsPage() {
+    startActivity(
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri()),
+    )
+}

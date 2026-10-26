@@ -1,108 +1,78 @@
 package com.au.module_imagecompressed.compressor
 
 import android.content.Context
-import android.graphics.ImageDecoder
 import android.net.Uri
 import com.au.module_android.log.logdNoFile
-import com.au.module_android.utils.ignoreError
-import com.au.module_android.utilsfile.SimpleFilesLruCache
 import com.au.module_android.utilsmedia.UriParsedInfo
 import com.au.module_android.utilsmedia.myParse
+import com.au.module_android.utilsmedia.resolveUploadUri
 import com.au.module_imagecompressed.compressor.BestImageCompressor.Config
+import com.au.module_imagecompressed.compressor.imagesource.FileImageSource
+import com.au.module_imagecompressed.compressor.imagesource.IImageSource
+import com.au.module_imagecompressed.compressor.imagesource.UriImageSource
 import java.io.File
-import java.io.FileInputStream
-import java.util.UUID
+import java.io.IOException
 
 /**
  * 公开使用的函数
- * @param uri 传入File型 或 Content型的Uri都可以，会parse后进行处理
+ * @param uri 传入 File 型或 Content 型的 Uri；调用方须先通过 [resolveUploadUri] 处理，本函数保留输入中可读取的 EXIF。
+ * @throws IOException 动态照片处理失败时抛出，不按 alwaysCopyMode 回退到原图。
  */
-suspend fun useCompress(context: Context, uri: Uri, config: Config = Config()) : File? {
+suspend fun useCompress(
+    context: Context,
+    uri: Uri,
+    config: Config = Config(),
+): File? {
     val parsedInfo = uri.myParse(context)
-    val magicCode = UUID.randomUUID().toString().substring(0, 8) + " Compress:$uri"
 
     if (!parsedInfo.isUriImage()) {
-        "".logdNoFile{ "$magicCode Don't pass not image uri to Compressor!" }
+        "".logdNoFile("ImageProcess") { "compression skipped: reason=not_image, uri=$uri" }
         return null
     }
 
-    "".logdNoFile { "$magicCode parsed info extension ${parsedInfo.extension}" }
+    val source: IImageSource = if (parsedInfo.isFile) {
+        FileImageSource(parsedInfo.file()!!)
+    } else {
+        UriImageSource(context.contentResolver, uri, parsedInfo)
+    }
 
-    //1. 判断忽略大小和文件类型
-    val beIgnore = parsedInfo.fileLength < config.ignoreSizeInKB * 1024
-            || config.ignoreFileTypes.contains(parsedInfo.extension.lowercase())
+    if (!config.isCompressionEnabledFor(source.extension)) {
+        return copy(config, context, uri, parsedInfo)
+    }
+
+    val compressor = BestImageCompressor(source = source, config = config)
+    val hasMotionPhoto = compressor.hasMotionPhoto()
+    // 保留动态内容时直接沿用原文件，只有要求复制时才生成完整副本。
+    if (hasMotionPhoto && config.keepMotionPhoto) return copy(config, context, uri, parsedInfo)
+    // 忽略格式已提前排除，动态照片和特殊格式仅绕过小图及收益检查。
+    val alwaysCompress = hasMotionPhoto || BestImageCompressor.COMMON_IMAGE_FILE_TYPES.none {
+        it.equals(source.extension, ignoreCase = true)
+    }
+    val beIgnore = !alwaysCompress && source.fileSize < config.ignoreSizeInKB * 1024
 
     var targetFile: File? = null
     if (!beIgnore) {
         //2. 开始压缩
-        val isFile = parsedInfo.isFile
-        val compressor = if (isFile) {
-            createFileCompressor(parsedInfo, config)
-        } else {
-            createUriCompressor(parsedInfo, config, context, uri)
-        }
-        val compressed = ignoreError { compressor.compress() }
+        val compressed = compressor.compress()
         if (compressed != null) {
             val compressedSize = compressed.length()
-            if (compressedSize <= parsedInfo.fileLength) {
-                //2.2 没有变大，返回压缩文件
-                CompressCacheConstManager.afterFileOperator(compressed, SimpleFilesLruCache.FileOperateType.SAVE)
+            if (alwaysCompress || compressedSize <= source.fileSize) {
+                // 始终压缩时保留成功产物，其余图片只接受不变大的结果。
                 targetFile = compressed
             } else {
                 //2.3 压缩变大了
-                ignoreError { compressed.delete() }
+                CompressCacheConstManager.delete(compressed)
             }
-        } else {
-            "".logdNoFile { "$magicCode compress fail." }
         }
-    } else {
-        "".logdNoFile { "$magicCode ignored." }
     }
 
-    if (beIgnore || targetFile == null) {
+    if (hasMotionPhoto && targetFile == null) {
+        throw IOException("Motion Photo processing failed: keepMotionPhoto=${config.keepMotionPhoto}")
+    }
+    if (targetFile == null) {
         targetFile = copy(config, context, uri, parsedInfo)
-        "".logdNoFile { "$magicCode copied: $targetFile" }
     }
     return targetFile
-}
-
-private fun createFileCompressor(
-    parsedInfo: UriParsedInfo,
-    config: Config?
-): BestImageCompressor {
-    val source = parsedInfo.file()!!
-    return BestImageCompressor(
-        config = config ?: Config(),
-        provideInputStream = {
-            FileInputStream(source)
-        },
-        provideFileSize = {
-            parsedInfo.fileLength
-        },
-        provideImageDecodeSource = {
-            ImageDecoder.createSource(source)
-        }
-    )
-}
-
-private fun createUriCompressor(
-    parsedInfo: UriParsedInfo,
-    config: Config?,
-    context: Context,
-    uri: Uri
-): BestImageCompressor {
-    return BestImageCompressor(
-        config = config ?: Config(),
-        provideInputStream = {
-            context.contentResolver.openInputStream(uri)
-        },
-        provideFileSize = {
-            parsedInfo.fileLength
-        },
-        provideImageDecodeSource = {
-            ImageDecoder.createSource(context.contentResolver, uri)
-        }
-    )
 }
 
 private suspend fun copy(config : Config, context: Context, uri: Uri, parsedInfo: UriParsedInfo) : File? {
@@ -112,9 +82,9 @@ private suspend fun copy(config : Config, context: Context, uri: Uri, parsedInfo
         }
         "onlyUri" -> {
             if (parsedInfo.isFile) {
-                uri.copyToCacheFile(context)
+                parsedInfo.file()
             } else {
-                null
+                uri.copyToCacheFile(context)
             }
         }
         else -> { //none /null

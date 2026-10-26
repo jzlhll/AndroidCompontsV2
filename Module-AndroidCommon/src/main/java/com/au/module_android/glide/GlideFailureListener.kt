@@ -13,7 +13,7 @@ interface ExpectedGlideFailure {
     val isExpectedGlideFailure: Boolean
 }
 
-/** 区分缓存探测、正常来源切换与真实失败，避免 Glide 将预期分支统一打印为异常。 */
+/**  区分缓存探测、正常来源切换与真实失败，避免 Glide 将预期分支统一打印为异常。 */
 class GlideFailureListener<T : Any>(private val cacheOnly: Boolean = false) : RequestListener<T> {
     override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<T>, isFirstResource: Boolean): Boolean {
         val causes = e?.rootCauses.orEmpty()

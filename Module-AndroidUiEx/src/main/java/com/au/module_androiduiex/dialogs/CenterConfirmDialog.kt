@@ -13,7 +13,7 @@ import com.au.module_androiduiex.databinding.CenterConfirmDialogBinding
 open class CenterConfirmDialog : BindingDialog<CenterConfirmDialogBinding>() {
     companion object {
         /**
-         * 显示居中确认弹窗。
+         *  显示居中确认弹窗。
          */
         fun show(
             manager: FragmentManager,

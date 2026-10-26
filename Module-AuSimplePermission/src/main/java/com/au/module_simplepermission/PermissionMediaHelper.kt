@@ -56,16 +56,21 @@ class PermissionMediaHelper {
     fun getRequiredPermissions(mediaTypes: Array<PermissionMediaType>) : Array<String> {
         val permissions: MutableList<String> = ArrayList()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 14+
-            // Android 14+需额外声明READ_MEDIA_VISUAL_USER_SELECTED
-            mediaTypes.forEach {mediaType->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            mediaTypes.forEach { mediaType ->
                 when (mediaType) {
                     PermissionMediaType.IMAGE -> permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
                     PermissionMediaType.VIDEO -> permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
                     PermissionMediaType.AUDIO -> permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
                 }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            // Android 14+ 必须与 READ_MEDIA_IMAGES/VIDEO 在同一次请求中带上 READ_MEDIA_VISUAL_USER_SELECTED，
+            // 否则系统会走兼容模式：用户选「Select photos」只拿到 READ_MEDIA_IMAGES 的会话级临时授权
+            // （退后台即撤销），READ_MEDIA_VISUAL_USER_SELECTED 永远不会被授予，
+            // hasPhotoLibraryAccess() 恒为 false，表现为「已设 limited 却仍被判成完全无权限」。
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                mediaTypes.any { it == PermissionMediaType.IMAGE || it == PermissionMediaType.VIDEO }
+            ) {
                 permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
             }
         } else { // Android 12及以下

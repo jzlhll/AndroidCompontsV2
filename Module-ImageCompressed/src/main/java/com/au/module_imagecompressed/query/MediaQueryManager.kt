@@ -14,13 +14,29 @@ import kotlinx.coroutines.withContext
 
 /**
  * 所有查询方法均在IO线程执行，推荐协程调用
+ * @param config 图片格式过滤策略，相册统计、封面和媒体列表共用。
  */
-class MediaQueryManager(private val context: Context) {
+class MediaQueryManager(
+    private val context: Context,
+    private val config: Config = Config(),
+) {
+    /** 相册查询过滤配置，允许业务独立设置白名单开关和扩展名范围。 */
+    data class Config(
+        /** 是否按图片扩展名白名单过滤，默认开启；关闭时不限制图片格式。 */
+        val filterByImageWhitelist: Boolean = true,
+        /** 允许的图片扩展名，不带点且忽略大小写；开启过滤且为空时不返回图片。 */
+        val supportedImageExtensions: Set<String> = setOf(
+            "jpg", "jpeg", "png", "heic", "heif", "dng",
+            "srw", "raf", "rw2", "pef", "nrw", "cr2", "arw",
+        ),
+    )
+
     private val contentResolver by lazy { context.contentResolver }
     private val cameraRelativePath = "${Environment.DIRECTORY_DCIM}/Camera/"
     private val screenshotRelativePath =
         "${Environment.DIRECTORY_PICTURES}/${Environment.DIRECTORY_SCREENSHOTS}/"
     private val screenshotDirectoryName = Environment.DIRECTORY_SCREENSHOTS
+    private val supportedImageExtensions = config.supportedImageExtensions.map { it.lowercase() }.distinct()
 
     // ==================== 1. 查询所有相册列表 ====================
     suspend fun queryAllAlbums(ignoreScreenshots: Boolean = false): List<Album> = withContext(Dispatchers.IO) {
@@ -40,6 +56,7 @@ class MediaQueryManager(private val context: Context) {
             FileColumns.MEDIA_TYPE_IMAGE.toString(),
             FileColumns.MEDIA_TYPE_VIDEO.toString()
         )
+        addSupportedImageFilter(selectionBuilder, selectionArgs, includeVideos = true)
         addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
 
         // 按时间逆序，这样 map 中记录的第一个就是该相册最新的图，适合做封面
@@ -118,6 +135,7 @@ class MediaQueryManager(private val context: Context) {
         mediaTypes.forEach { selectionArgs.add(it.toString()) }
         // 筛选指定相册
         addAlbumFilter(selectionBuilder, selectionArgs, album)
+        addSupportedImageFilter(selectionBuilder, selectionArgs, includeVideos = true)
         addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
 
         val baseSortOrder = "${FileColumns.DATE_MODIFIED} DESC"
@@ -159,6 +177,7 @@ class MediaQueryManager(private val context: Context) {
 
         // 仅筛选指定相册，无需筛选媒体类型（专属Uri已限定）
         addAlbumFilter(selectionBuilder, selectionArgs, album)
+        addSupportedImageFilter(selectionBuilder, selectionArgs)
         addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
 
         val cursor: Cursor? = queryMediaWithLimit(
@@ -175,6 +194,24 @@ class MediaQueryManager(private val context: Context) {
             mediaList.addAll(parseMediaCursor(it))
         }
         return@withContext mediaList
+    }
+
+    // ==================== 3.5 轻量查询：可读取图片数量（仅用于检测可见集合是否变化，不解析成对象） ====================
+    suspend fun queryImageCount(ignoreScreenshots: Boolean = false): Int = withContext(Dispatchers.IO) {
+        val contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val selectionBuilder = StringBuilder()
+        val selectionArgs = mutableListOf<String>()
+        addAlbumFilter(selectionBuilder, selectionArgs, null)
+        addScreenshotFilter(selectionBuilder, selectionArgs, ignoreScreenshots)
+        val selection = if (selectionBuilder.isNotEmpty()) selectionBuilder.toString() else null
+        val selectionArgsArray = if (selectionArgs.isNotEmpty()) selectionArgs.toTypedArray() else null
+        contentResolver.query(
+            contentUri,
+            arrayOf(MediaStore.Images.Media._ID),
+            selection,
+            selectionArgsArray,
+            null,
+        )?.use { it.count } ?: 0
     }
 
     // ==================== 4. 查询所有视频（支持指定相册，时间逆序）- 改用MediaStore.Video专属Uri ====================
@@ -308,6 +345,29 @@ class MediaQueryManager(private val context: Context) {
                 args.add("%$name%")
             }
         }
+    }
+
+    // 查询阶段按扩展名白名单保留图片，保持列表、分页、相册计数和封面的筛选一致；混合查询保留视频。
+    private fun addSupportedImageFilter(
+        builder: StringBuilder,
+        args: MutableList<String>,
+        includeVideos: Boolean = false,
+    ) {
+        if (!config.filterByImageWhitelist) return
+        if (builder.isNotEmpty()) builder.append(" AND ")
+        builder.append("(")
+        if (includeVideos) {
+            builder.append("${FileColumns.MEDIA_TYPE} = ? OR ")
+            args.add(FileColumns.MEDIA_TYPE_VIDEO.toString())
+        }
+        val displayNameColumn = MediaStore.MediaColumns.DISPLAY_NAME
+        if (supportedImageExtensions.isEmpty()) {
+            builder.append("0")
+        } else {
+            builder.append(supportedImageExtensions.joinToString(" OR ") { "LOWER($displayNameColumn) LIKE ?" })
+        }
+        builder.append(")")
+        args.addAll(supportedImageExtensions.map { "%.$it" })
     }
 
     private fun addScreenshotFilter(

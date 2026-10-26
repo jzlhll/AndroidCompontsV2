@@ -1,13 +1,18 @@
 package com.au.module_android.utilsmedia
 
+import android.Manifest
 import android.content.ContentResolver
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.text.TextUtils
+import androidx.core.content.ContextCompat
 import com.au.module_android.Globals
 import com.au.module_android.log.LogTag.TAG
 import com.au.module_android.log.logdNoFile
@@ -17,6 +22,32 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 
+
+/**
+ * 为 MediaStore 图片 Uri 添加原图读取标记，避免读取时隐藏 GPS。
+ * 无媒体位置权限或非 MediaStore 图片时返回原 Uri；权限由调用方申请。
+ */
+fun Uri.resolveUploadUri(): Uri {
+    if (scheme != ContentResolver.SCHEME_CONTENT || authority != MediaStore.AUTHORITY) {
+        return this
+    }
+    val segments = pathSegments
+    if (segments.size < 4 || segments[1] != "images" || segments[2] != "media") {
+        return this
+    }
+    if (ContextCompat.checkSelfPermission(
+            Globals.app,
+            Manifest.permission.ACCESS_MEDIA_LOCATION,
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        return this
+    }
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (MediaStore.getRequireOriginal(this)) this else MediaStore.setRequireOriginal(this)
+    } else {
+        MediaStore.setRequireOriginal(this)
+    }
+}
 
 fun File.myParse() = UriParseHelper().parse(this)
 fun Uri.myParse(context: Context = Globals.app) = UriParseHelper().parse(context.contentResolver, this)

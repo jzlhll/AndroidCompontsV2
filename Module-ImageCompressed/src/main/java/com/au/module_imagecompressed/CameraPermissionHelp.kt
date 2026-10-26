@@ -28,14 +28,14 @@ class CameraPermissionHelp : BaseCameraPermissionHelp {
      * @return 返回true表示拍照无法弹出授权。返回false则一定是能弹窗或者直接拍照去了。
      */
     fun safeRunTakePicMust(compress:Boolean = true,
-                           qualityType:String = "default",
+                           quality:Int = 80,
                            callback: (mode:String, uri: Uri?)->Unit) : Boolean{
         val ret = safeRunTakePic({createdTmpFile->
             if (createdTmpFile != null) {
                 if (compress) {
                     Globals.backgroundScope.launch {
                         logdNoFile { "createdTempFile $createdTmpFile size: ${createdTmpFile.length()}" }
-                        val compressedFile = useCompress(realActivity, createdTmpFile.toUri(), BestImageCompressor.Config(qualityType = qualityType))
+                        val compressedFile = useCompress(realActivity, createdTmpFile.toUri(), BestImageCompressor.Config(quality=quality))
                         logdNoFile { "compressedFile $compressedFile size: ${compressedFile?.length()}" }
                         if (compressedFile != null) {
                             withContext(Dispatchers.Main) {

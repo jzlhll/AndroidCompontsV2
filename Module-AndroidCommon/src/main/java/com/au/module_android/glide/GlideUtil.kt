@@ -47,7 +47,7 @@ fun thumbnailOptions(): RequestOptions = RequestOptions()
     .diskCacheStrategy(DiskCacheStrategy.NONE)
 
 /** 系统原图与本地缩略图共用固定过渡图规格，保持比例且不放大，展示裁剪交给 View。 */
-fun quickThumbnailOptions(
+fun tinyThumbnailOptions(
     policy: TinyThumbnailPolicy = TinyThumbnailPolicy.DEFAULT,
 ): RequestOptions = RequestOptions()
     .override(policy.maxDimension, policy.maxDimension)

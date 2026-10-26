@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.MotionEvent
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -75,13 +76,37 @@ class AuTabLayout : TabLayout {
      * 使用CustomFontText来作为customview设置给TabLayout。
      * 由于默认情况，TabLayout的文字都是material效果。故而采用customView来解决文案的颜色和字体。简单一点。
      */
-    fun initAttachToViewPage2AsCustomFontText(viewPage2: ViewPager2, pages:List<Pair<String, Class<out Fragment>>>) {
+    fun initAttachToViewPage2AsCustomFontText(
+        viewPage2: ViewPager2,
+        pages: List<Pair<String, Class<out Fragment>>>,
+        onTabClickIntercept: ((position: Int) -> Boolean)? = null
+    ) {
         TabLayoutMediator(this, viewPage2, true) { tab: Tab, position: Int ->
             tab.customView = createFont(viewPage2.context, pages[position].first)
             applyTabStyle(tab, position, viewPage2.currentItem == position)
         }.attach()
 
         initSelectedListener()
+
+        // 点击前拦截：返回 false 时不驱动 viewPager，tab 选中态也保持不变（用于无权限时禁止切到受限页面）。
+        // TabView.performClick() 在调用 OnClickListener 之后仍会无条件执行 tab.select()，
+        // 仅设置 OnClickListener 挡不住切页，必须在 touch 层消费抬手事件，阻止 performClick 触发。
+        if (onTabClickIntercept != null) {
+            for (index in pages.indices) {
+                getTabAt(index)?.view?.setOnTouchListener { view, event ->
+                    if (event.actionMasked == MotionEvent.ACTION_UP) {
+                        view.isPressed = false
+                        if (onTabClickIntercept.invoke(index)) {
+                            viewPage2.setCurrentItem(index, false)
+                        }
+                        true
+                    } else {
+                        // 其余事件交回框架，保留按下态与 TabLayout 自身的滚动能力。
+                        false
+                    }
+                }
+            }
+        }
     }
 
     private fun initSelectedListener() {

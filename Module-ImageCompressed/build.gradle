@@ -25,5 +25,6 @@ dependencies {
     implementation project(':Module-AndroidCommon')
     implementation project(":Module-AndroidUi")
     implementation project(':Module-AuSimplePermission')
+    implementation libs.androidx.exifinterface
     implementation libs.ucrop
 }

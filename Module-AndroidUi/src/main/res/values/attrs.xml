@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <declare-styleable name="SwitchButton">
+        <attr name="switchOpenedColor" format="color" />
+    </declare-styleable>
+
     <declare-styleable name="SwitchLayoutButton">
         <attr name="first_str" format="string" />
         <attr name="second_str" format="string" />

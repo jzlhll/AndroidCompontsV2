@@ -7,7 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.withStyledAttributes
 import com.au.module_android.click.onClick
+import com.au.module_androidui.R
 import com.au.module_androidui.databinding.SwitchButtonBinding
 
 /**
@@ -19,6 +21,8 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
         context, attrs, defStyleAttr
     ) {
     private var mViewBinding = SwitchButtonBinding.inflate(LayoutInflater.from(context), this, true)
+
+    private var openedColor = context.getColor(com.au.module_androidcolor.R.color.colorPrimary)
 
     /**
      * 默认就是关闭
@@ -41,6 +45,9 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
     var valueCallback : ((Boolean)->Unit)? = null
 
     init {
+        context.withStyledAttributes(attrs, R.styleable.SwitchButton, defStyleAttr, 0) {
+            openedColor = getColor(R.styleable.SwitchButton_switchOpenedColor, openedColor)
+        }
         mViewBinding.selectBgView.visibility = View.INVISIBLE
         mViewBinding.root.onClick {
             if (!abort) {
@@ -127,6 +134,7 @@ class SwitchButton @JvmOverloads constructor(context: Context, attrs: AttributeS
     private fun updateRootState() {
         if (!isClosed) {
             mViewBinding.root.setBackgroundResource(com.au.module_androidcolor.R.drawable.switch_btn_opened)
+            mViewBinding.root.background.mutate().setTint(openedColor)
         } else {
             mViewBinding.root.setBackgroundResource(com.au.module_androidcolor.R.drawable.switch_btn_closed)
         }

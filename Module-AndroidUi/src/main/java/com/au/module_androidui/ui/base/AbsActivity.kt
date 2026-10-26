@@ -19,7 +19,7 @@ import com.au.module_androidui.ui.KEY_ENTER_ANIM
 import com.au.module_androidui.ui.KEY_EXIT_ANIM
 import com.au.module_androidui.ui.immersive
 
-@Deprecated("基础框架的一环，请使用BindingActivity或者ViewActivity")
+@Deprecated(" 基础框架的一环，请使用BindingActivity或者ViewActivity")
 open class AbsActivity : AppCompatActivity(), IFullWindow {
     protected open val isNotCacheFragment = true //不进行自动保存Fragment用于恢复。
 

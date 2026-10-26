@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.au.module_androidui.widget.FontMode
 
-object ComposeTypography {
+object ComposeTypography  {
     val FontToolbarB @Composable @ReadOnlyComposable get() = composeTextStyleWithoutLineHeight(20.sp, fontFamily = SemiBoldFontFamily)
     val Font32M @Composable @ReadOnlyComposable get() = composeTextStyle(32.sp, 0.sp, fontFamily = SemiBoldFontFamily)
     val Font16B @Composable @ReadOnlyComposable get() = composeTextStyleWithoutLineHeight(16.sp, fontFamily = SemiBoldFontFamily)

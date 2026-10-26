@@ -14,7 +14,7 @@ object ComposeColors {
     val TextSecondary @Composable @ReadOnlyComposable get() = colorResource(R.color.color_second_btn_text)
     val TextDesc @Composable @ReadOnlyComposable get() = colorResource(R.color.color_text_desc)
 
-    /** 描述文字  85% 透明度版本（对应源项目 D9）。 */
+    /** 描述文字 85% 透明度版本（对应源项目 D9）。 */
     val TextDescD9 @Composable @ReadOnlyComposable get() = TextDesc.copy(alpha = 0.85f)
 
     /** 深灰文字（无对应资源）。 */
