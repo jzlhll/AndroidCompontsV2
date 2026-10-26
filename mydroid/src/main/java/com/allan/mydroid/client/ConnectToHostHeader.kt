@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +45,13 @@ fun ConnectToHostHeader(
             style = ComposeTypography.Font20M,
         )
         BasicText(
-            text = stringResource(R.string.not_close_window).format(""),
+            text = stringResource(R.string.not_close_window).format("").trim(),
             style = ComposeTypography.Font14sp,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+        BasicText(
+            text = "$ip:$httpPort",
+            style = ComposeTypography.Font14Desc91,
             modifier = Modifier.padding(top = 4.dp),
         )
     }
@@ -83,7 +89,7 @@ fun ConnectionStatus(state: com.allan.mydroid.client.api.WsConnectionState, onRe
         BasicText(stringResource(label), style = ComposeTypography.Font14Desc91)
         if (state == com.allan.mydroid.client.api.WsConnectionState.Failed) {
             androidx.compose.material3.TextButton(onClick = onReconnect) {
-                androidx.compose.material3.Text(stringResource(R.string.connect_to_host_retry), style = ComposeTypography.Font14sp)
+                androidx.compose.material3.Text(stringResource(R.string.connect_to_host_retry), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
             }
         }
     }
@@ -95,7 +101,7 @@ fun TransferMessageDialog(message: String, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         text = { androidx.compose.material3.Text(message, style = ComposeTypography.Font14sp) },
         confirmButton = { androidx.compose.material3.TextButton(onClick = onDismiss) {
-            androidx.compose.material3.Text(stringResource(R.string.action_confirm), style = ComposeTypography.Font14sp)
+            androidx.compose.material3.Text(stringResource(R.string.action_confirm), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
         } }
     )
 }

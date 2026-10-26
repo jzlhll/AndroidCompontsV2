@@ -53,7 +53,7 @@ class DownloadService : AutoStopService(), KoinComponent {
                 val current = globalDownloadObj.findTask(attempt) ?: return@launch
                 task = current
                 val request = Request.Builder().url(current.url).build()
-                val call = ClientHttp.forUrl(request.url).newCall(request)
+                val call = ClientHttp.forUrl(request.url, retryOnConnectionFailure = true).newCall(request)
                 if (!globalDownloadObj.register(current, call)) return@launch
                 registered = true
                 activeCalls[attempt] = call

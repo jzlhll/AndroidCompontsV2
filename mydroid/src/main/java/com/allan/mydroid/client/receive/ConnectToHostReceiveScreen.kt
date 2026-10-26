@@ -2,6 +2,8 @@ package com.allan.mydroid.client.receive
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.painterResource
 import com.allan.mydroid.views.getIcon
 import com.au.module_android.utilsmedia.formatBytes
@@ -13,8 +15,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,6 +33,8 @@ import com.allan.mydroid.client.api.WsConnectionState
 import com.allan.mydroid.client.download.DownloadState
 import com.allan.mydroid.client.download.DownloadTask
 import com.au.module_androiduiex.preview.AppPreview
+import com.allan.mydroid.views.compose.MyDroidComposeColors
+import com.au.module_androiduiex.styles.ComposeColors
 import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androiduiex.styles.ComposeHeaderLeftTitle
 import com.au.module_androidcolor.R as AndroidColorR
@@ -44,7 +51,7 @@ fun ConnectToHostReceiveScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val connected = state.connectionState == WsConnectionState.Connected
     var deleteTask by remember { mutableStateOf<DownloadTask?>(null) }
-    Column(modifier.fillMaxSize().navigationBarsPadding()) {
+    Column(modifier.fillMaxSize().background(ComposeColors.BackgroundBg).navigationBarsPadding()) {
         if (endpoint == null) {
             ComposeHeaderLeftTitle(titleText, AndroidColorR.drawable.icon_back, onBack,
                 leftIconContentDescription = stringResource(R.string.transfer_back))
@@ -72,7 +79,7 @@ fun ConnectToHostReceiveScreen(
                         }
                         if (state.refreshing) CircularProgressIndicator(Modifier.size(24.dp))
                         else TextButton(onClick = viewModel::refreshList, enabled = connected) {
-                            Text(stringResource(R.string.cd_rescan), style = ComposeTypography.Font14sp)
+                            Text(stringResource(R.string.cd_rescan), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
                         }
                     }
                 }
@@ -81,15 +88,17 @@ fun ConnectToHostReceiveScreen(
                 }
                 items(state.files, key = { "remote-${it.uriUuid}" }) { bean ->
                     val existing = state.downloadTasks.find { it.uriUuid == bean.uriUuid }
-                    Row {
-                        Image(painterResource(getIcon(bean.name)), null, Modifier.padding(end = 8.dp).size(36.dp))
-                        Column(Modifier.weight(1f)) {
-                            BasicText(bean.name ?: bean.uriUuid, style = ComposeTypography.Font16M)
+                    Row(Modifier.fillMaxWidth().background(MyDroidComposeColors.NormalBlock, RoundedCornerShape(12.dp))
+                        .padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Image(painterResource(getIcon(bean.name)), null, Modifier.size(36.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            BasicText(bean.name ?: bean.uriUuid, style = ComposeTypography.Font16M, maxLines = 3, overflow = TextOverflow.Ellipsis)
                             BasicText(bean.fileSizeStr, style = ComposeTypography.Font14Desc91)
                         }
                         Button(onClick = { viewModel.downloadFile(bean) }, enabled = connected &&
                             existing?.active != true && existing?.state != DownloadState.Completed) {
-                            Text(stringResource(R.string.download), style = ComposeTypography.Font14sp)
+                            Text(stringResource(R.string.download), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
                         }
                     }
                 }
@@ -128,12 +137,12 @@ fun ConnectToHostReceiveScreen(
     deleteTask?.let { task ->
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { deleteTask = null },
-            text = { Text(stringResource(R.string.transfer_delete_file, task.destFile.name), style = ComposeTypography.Font14sp) },
+            text = { Text(stringResource(R.string.transfer_delete_file, task.destFile.name), style = ComposeTypography.Font14sp, color = LocalContentColor.current) },
             confirmButton = { TextButton(onClick = { viewModel.deleteDownloadedFile(task); deleteTask = null }) {
-                Text(stringResource(R.string.delete), style = ComposeTypography.Font14sp)
+                Text(stringResource(R.string.delete), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
             } },
             dismissButton = { TextButton(onClick = { deleteTask = null }) {
-                Text(stringResource(R.string.connect_to_host_cancel_upload), style = ComposeTypography.Font14sp)
+                Text(stringResource(R.string.connect_to_host_cancel_upload), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
             } }
         )
     }
@@ -142,14 +151,17 @@ fun ConnectToHostReceiveScreen(
 @Composable
 private fun DownloadRow(task: DownloadTask, canRetry: Boolean, onCancel: () -> Unit, onRetry: () -> Unit,
     onOpen: () -> Unit, onSave: () -> Unit, onShare: () -> Unit, onDelete: () -> Unit, onRemove: () -> Unit) {
-    Column {
-        Row {
-            Image(painterResource(getIcon(task.name)), null, Modifier.padding(end = 8.dp).size(36.dp))
-            BasicText(if (task.state == DownloadState.Completed) task.destFile.name else task.name,
-                style = ComposeTypography.Font16M, modifier = Modifier.weight(1f))
+    Column(Modifier.fillMaxWidth().background(MyDroidComposeColors.NormalBlock, RoundedCornerShape(12.dp))
+        .padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Image(painterResource(getIcon(task.name)), null, Modifier.size(36.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                BasicText(if (task.state == DownloadState.Completed) task.destFile.name else task.name,
+                    style = ComposeTypography.Font16M, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                BasicText(task.fileSizeStr, style = ComposeTypography.Font14Desc91)
+                BasicText(task.hostKey, style = ComposeTypography.Font14Desc91)
+            }
         }
-        BasicText(task.fileSizeStr, style = ComposeTypography.Font14Desc91)
-        BasicText(task.hostKey, style = ComposeTypography.Font14Desc91)
         val label = when (task.state) {
             DownloadState.Pending -> R.string.connect_to_host_pending
             DownloadState.Running -> R.string.download
@@ -167,26 +179,26 @@ private fun DownloadRow(task: DownloadTask, canRetry: Boolean, onCancel: () -> U
             }
             LinearProgressIndicator(progress = { task.progress }, modifier = Modifier.fillMaxWidth())
             TextButton(onClick = onCancel, enabled = task.state != DownloadState.Canceling) {
-                Text(stringResource(R.string.connect_to_host_cancel_upload), style = ComposeTypography.Font14sp)
+                Text(stringResource(R.string.connect_to_host_cancel_upload), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
             }
         } else {
             if (task.state == DownloadState.Completed) {
-                Row {
-                    TextButton(onClick = onOpen) { Text(stringResource(R.string.open), style = ComposeTypography.Font14sp) }
-                    TextButton(onClick = onSave) { Text(stringResource(R.string.export), style = ComposeTypography.Font14sp) }
-                    TextButton(onClick = onShare) { Text(stringResource(R.string.share), style = ComposeTypography.Font14sp) }
-                    TextButton(onClick = onDelete) { Text(stringResource(R.string.delete), style = ComposeTypography.Font14sp) }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = onOpen) { Text(stringResource(R.string.open), style = ComposeTypography.Font14sp, color = LocalContentColor.current) }
+                    TextButton(onClick = onSave) { Text(stringResource(R.string.export), style = ComposeTypography.Font14sp, color = LocalContentColor.current) }
+                    TextButton(onClick = onShare) { Text(stringResource(R.string.share), style = ComposeTypography.Font14sp, color = LocalContentColor.current) }
+                    TextButton(onClick = onDelete) { Text(stringResource(R.string.delete), style = ComposeTypography.Font14sp, color = LocalContentColor.current) }
                 }
             } else {
                 TextButton(onClick = onRetry, enabled = canRetry) {
-                    Text(stringResource(R.string.connect_to_host_retry), style = ComposeTypography.Font14sp)
+                    Text(stringResource(R.string.connect_to_host_retry), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
                 }
             }
             TextButton(onClick = onRemove) {
-                Text(stringResource(R.string.transfer_remove_record), style = ComposeTypography.Font14sp)
+                Text(stringResource(R.string.transfer_remove_record), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
             }
         }
-        task.error?.let { BasicText(it, style = ComposeTypography.Font14sp) }
+        task.error?.let { Text(it, style = ComposeTypography.Font14sp, color = ComposeColors.Red) }
     }
 }
 

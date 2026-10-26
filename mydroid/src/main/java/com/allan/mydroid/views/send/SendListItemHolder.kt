@@ -27,11 +27,11 @@ class SendTitleHolder(binding: HolderMydroidSendlistTitleBinding)
 class SendHolder(binding: HolderMydroidSendlistItemBinding,
                  val rootClick: (ShareInBean?) -> Unit,
                  val iconClick: (ShareInBean?) -> Unit,
-                 val deleteClick: (ShareInBean?) -> Unit)
+                 val selectionClick: (ShareInBean?) -> Unit)
     : BindViewHolder<IMultiViewTypeBean, HolderMydroidSendlistItemBinding>(binding) {
     init {
-        binding.deleteBtn.onClick {
-            deleteClick(currentData.asOrNull())
+        binding.selectionCheck.onClick {
+            selectionClick(currentData.asOrNull())
         }
         binding.icon.onClick {
             iconClick(currentData.asOrNull())
@@ -56,7 +56,9 @@ class SendHolder(binding: HolderMydroidSendlistItemBinding,
         binding.fileSizeAndMD5Tv.text = if (!bean.completedMd5.isNullOrEmpty())
             metadata + "\nMD5: " + bean.completedMd5 else metadata
 
-        if(bean.isNoDeleteBtn) binding.deleteBtn.gone() else binding.deleteBtn.visible()
+        binding.selectionCheck.isChecked = bean.isSelected
+        if (bean.isSelectionMode) binding.selectionCheck.visible() else binding.selectionCheck.gone()
+        binding.selectionCheck.contentDescription = binding.fileNameTv.text
 
         if (isImg || isVideo) {
             binding.icon.glideSetAny(bean.uri) {

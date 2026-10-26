@@ -1,7 +1,6 @@
 package com.allan.mydroid.views.send
 
 import android.view.ViewGroup
-import androidx.annotation.DrawableRes
 import com.allan.mydroid.beansinner.ShareInBean
 import com.au.module_nested.recyclerview.BindRcvAdapter
 import com.au.module_nested.recyclerview.IMultiViewTypeBean
@@ -13,7 +12,7 @@ private const val VIEW_TYPE_ICON_TEXT = 1
 const val VIEW_TYPE_URI_INFO = 2
 
 const val CLICK_MODE_ICON = "icon"
-const val CLICK_MODE_DELETE = "delete"
+const val CLICK_MODE_SELECT = "select"
 const val CLICK_MODE_ROOT = "root"
 
 class SendListAdapter(val click: (ShareInBean?, mode:String) -> Unit)
@@ -30,8 +29,8 @@ class SendListAdapter(val click: (ShareInBean?, mode:String) -> Unit)
                     click(it, CLICK_MODE_ROOT)
                 }, iconClick = {
                     click(it, CLICK_MODE_ICON)
-                }, deleteClick = {
-                    click(it, CLICK_MODE_DELETE)
+                }, selectionClick = {
+                    click(it, CLICK_MODE_SELECT)
                 })
             }
 

@@ -38,7 +38,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             app:layout_constraintStart_toEndOf="@id/icon"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/selectionCheck"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/fileSizeAndMD5Tv"
             android:ellipsize="end"
@@ -47,22 +47,19 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content" />
 
-        <com.au.module_androidui.widget.BgBuildCustomFontText
-            android:id="@+id/deleteBtn"
-            style="@style/StyleAuTextSmallDesc"
-            app:cornerRadius="4dp"
-            android:textColor="@color/color_text_normal"
-            app:backgroundNormal="@color/color_ding_bg"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="2dp"
-            android:text="@string/delete"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="2dp"
-            app:layout_constraintStart_toEndOf="@id/icon"
-            app:layout_constraintTop_toBottomOf="@id/fileNameTv"
-            app:layout_constraintBottom_toBottomOf="parent"
+        <androidx.appcompat.widget.AppCompatCheckBox
+            android:id="@+id/selectionCheck"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="48dp"
+            android:minWidth="0dp"
+            android:padding="0dp"
+            android:layout_marginEnd="12dp"
+            android:visibility="gone"
+            app:buttonTint="@color/logic_send"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/fileSizeAndMD5Tv"
@@ -71,11 +68,13 @@
             android:layout_marginEnd="10dp"
             app:layout_goneMarginStart="10dp"
             android:layout_marginTop="2dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:maxLines="4"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/deleteBtn"
+            app:layout_constraintEnd_toStartOf="@id/selectionCheck"
+            app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintTop_toBottomOf="@id/fileNameTv"
             app:layout_constraintVertical_chainStyle="packed"
             tools:text="text ajdkfjfdkfaklfd jakfjkad f  f89fjkadsfjk " />

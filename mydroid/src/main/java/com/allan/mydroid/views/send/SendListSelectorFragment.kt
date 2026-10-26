@@ -23,8 +23,6 @@ import com.au.module_android.log.logd
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.gone
-import com.au.module_android.utils.launchOnThread
-import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
@@ -42,6 +40,7 @@ import com.au.module_android.log.logEx
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancelAndJoin
 import org.koin.android.ext.android.inject
 
 class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding>() {
@@ -58,10 +57,16 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
         override fun empty() = binding.empty
 
+        override fun onSelectionChanged() {
+            updateSelectionActions()
+        }
+
+        override fun onVisibleSectionChanged(title: String) {
+            if (view != null) binding.shareInTitleTv.text = title
+        }
+
         override fun onItemClick(bean: ShareInBean?, mode:String) {
-            if (mode == CLICK_MODE_DELETE && bean != null) {
-                deleteBean(bean)
-            } else if (mode == CLICK_MODE_ROOT && bean != null) {
+            if (mode == CLICK_MODE_ROOT && bean != null) {
                 logd { "click on icon $bean" }
                 val isImg = ExtensionMimeUtil.isUriImage(bean.mimeType)
                 val isVideo = ExtensionMimeUtil.isUriVideo(bean.mimeType)
@@ -72,18 +77,43 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
     }
 
-    private fun deleteBean(bean: ShareInBean) {
-        viewLifecycleOwner.lifecycleScope.launchOnThread {
+    private var reloadJob: Job? = null
+    private var deleteJob: Job? = null
+
+    private fun updateSelectionActions() {
+        val deleting = deleteJob?.isActive == true
+        binding.selectBtn.isEnabled = !deleting
+        binding.selectBtn.setImageResource(
+            if (common.isSelectionMode) R.drawable.ic_cancel_selection else R.drawable.ic_select_items
+        )
+        binding.selectBtn.setContentDescription(Globals.app.getString(
+            if (common.isSelectionMode) com.au.module_androidui.R.string.cancel else R.string.select_items
+        ))
+        binding.deleteBtn.visibility = if (common.isSelectionMode) View.VISIBLE else View.GONE
+        binding.deleteBtn.isEnabled = common.selectedUriUuids.isNotEmpty() && !deleting
+        binding.deleteBtn.alpha = if (binding.deleteBtn.isEnabled) 1f else 0.35f
+    }
+
+    private fun deleteSelectedItems() {
+        val selectedIds = common.selectedUriUuids
+        if (selectedIds.isEmpty() || deleteJob?.isActive == true) return
+        deleteJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
-                shareInRepository.deleteUris(listOf(bean.uriUuid))
+                reloadJob?.cancelAndJoin()
+                shareInRepository.deleteUris(selectedIds)
+                common.updateSelectionMode(false)
                 common.reload()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logEx(throwable = e) { "Delete shared item failed" }
-                ToastBuilder().setOnTopLater().setMessage(Globals.getString(R.string.something_error)).toast()
+                logEx(throwable = e) { "Delete shared items failed" }
+                ToastBuilder().setOnTopLater().setMessage(Globals.app.getString(R.string.something_error)).toast()
+            } finally {
+                deleteJob = null
+                if (view != null) updateSelectionActions()
             }
         }
+        updateSelectionActions()
     }
 
     private var hasSetBigImageClick = false
@@ -190,9 +220,11 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launchOnThread {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
+                deleteJob?.join()
                 shareInRepository.addShareInUris(uris, FROM_PICKER)
+                reloadJob?.cancelAndJoin()
                 common.reload()
             } catch (e: CancellationException) {
                 throw e
@@ -225,6 +257,13 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         menuMgr.showMenu()
 
         common.onCreated()
+        binding.selectBtn.onClick {
+            common.updateSelectionMode(!common.isSelectionMode)
+        }
+        binding.deleteBtn.onClick {
+            deleteSelectedItems()
+        }
+        updateSelectionActions()
         if (autoImport) {
             arguments?.putBoolean(KEY_AUTO_ENTER_SEND_VIEW, false)
             autoImportAction()
@@ -244,7 +283,9 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     override fun onStart() {
         super.onStart()
-        viewLifecycleOwner.lifecycleScope.launchOnThread {
+        if (deleteJob?.isActive == true) return
+        reloadJob?.cancel()
+        reloadJob = viewLifecycleOwner.lifecycleScope.launch {
             common.reload()
         }
     }
@@ -282,6 +323,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
 
     override fun onDestroyView() {
         hasSetBigImageClick = false
+        common.updateSelectionMode(false)
         super.onDestroyView()
     }
 }

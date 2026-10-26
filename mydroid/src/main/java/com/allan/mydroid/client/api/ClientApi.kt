@@ -37,6 +37,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 object ClientApi {
     private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
+    private val CHUNK_MEDIA_TYPE = "application/octet-stream".toMediaType()
 
     /** GET /get-mode 总超时 1.5s。 */
     private val MODE_FETCH_TIMEOUT = 1500.milliseconds
@@ -105,7 +106,7 @@ object ClientApi {
             .addFormDataPart("hashMode", "stream")
             .addFormDataPart("uploadId", uploadId)
 
-        multipartBuilder.addFormDataPart("chunk", fileName, chunk.toRequestBody(null))
+        multipartBuilder.addFormDataPart("chunk", fileName, chunk.toRequestBody(CHUNK_MEDIA_TYPE))
 
         val request = Request.Builder().url(url).post(multipartBuilder.build()).build()
         val resp = executeText(request)
@@ -171,7 +172,7 @@ object ClientApi {
     }
 
     private suspend fun executeText(request: Request): String = suspendCancellableCoroutine { continuation ->
-        val call = ClientHttp.forUrl(request.url).newCall(request)
+        val call = ClientHttp.forUrl(request.url, retryOnConnectionFailure = request.method == "GET").newCall(request)
         continuation.invokeOnCancellation { call.cancel() }
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {

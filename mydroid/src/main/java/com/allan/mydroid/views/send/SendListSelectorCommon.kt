@@ -1,7 +1,6 @@
 package com.allan.mydroid.views.send
 
 import android.widget.TextView
-import androidx.annotation.WorkerThread
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.au.module_android.Globals
@@ -24,7 +23,37 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
     private val shareInRepository: GlobalShareInRepoObj by inject()
 
     private val mAdapter = SendListAdapter {it, mode->
-        onItemClick(it, mode)
+        if (isSelectionMode && it != null && !it.isLocalReceiver) {
+            if (!selectedIds.add(it.uriUuid)) selectedIds.remove(it.uriUuid)
+            refreshSelection()
+        } else {
+            onItemClick(it, mode)
+        }
+    }
+
+    var isSelectionMode = false
+        private set
+    private val selectedIds = mutableSetOf<String>()
+    val selectedUriUuids: List<String> get() = selectedIds.toList()
+
+    open fun onSelectionChanged() = Unit
+    open fun onVisibleSectionChanged(title: String) = Unit
+
+    fun updateSelectionMode(enabled: Boolean) {
+        isSelectionMode = enabled
+        selectedIds.clear()
+        refreshSelection()
+    }
+
+    private fun refreshSelection() {
+        mAdapter.datas.forEachIndexed { index, item ->
+            if (item is ShareInBean) {
+                item.isSelectionMode = isSelectionMode && !item.isLocalReceiver
+                item.isSelected = item.uriUuid in selectedIds
+                mAdapter.notifyItemChanged(index)
+            }
+        }
+        onSelectionChanged()
     }
 
     private var downloads: Map<String, DownloadTransfer> = emptyMap()
@@ -39,9 +68,22 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
         rcv.adapter = mAdapter
         rcv.layoutManager = LinearLayoutManager(rcv.context)
         rcv.setHasFixedSize(true)
+        if (!isNoDeleteBtn) {
+            rcv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    updateVisibleSection(recyclerView)
+                }
+            })
+        }
     }
 
-    @WorkerThread
+    private fun updateVisibleSection(recyclerView: RecyclerView) {
+        val firstVisiblePosition = (recyclerView.layoutManager as? LinearLayoutManager)
+            ?.findFirstVisibleItemPosition() ?: return
+        val section = mAdapter.datas.take(firstVisiblePosition + 1).lastOrNull { it is IconTitle } as? IconTitle
+        onVisibleSectionChanged(section?.title ?: Globals.app.getString(R.string.share_in))
+    }
+
     suspend fun reload() {
         try {
             val scanList = shareInRepository.loadShareInAndReceiveBeans()
@@ -79,23 +121,24 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
         val newList = ArrayList<IMultiViewTypeBean>()
         val shareInList = sendUriList.filter { !it.isLocalReceiver }
         if (shareInList.isNotEmpty()) {
-            newList.add(IconTitle(Globals.getString(R.string.share_in)))
-            for (bean in shareInList) {
-                bean.isNoDeleteBtn = isNoDeleteBtn
-            }
+            if (isNoDeleteBtn) newList.add(IconTitle(Globals.getString(R.string.share_in)))
             newList.addAll(shareInList)
         }
 
         val receiverList = sendUriList.filter { it.isLocalReceiver }
         if (receiverList.isNotEmpty()) {
             newList.add(IconTitle(Globals.getString(R.string.my_transfer_list).trim()))
-            for (bean in receiverList) {
-                bean.isNoDeleteBtn = isNoDeleteBtn
-            }
             newList.addAll(receiverList)
         }
 
+        selectedIds.retainAll(shareInList.map { it.uriUuid }.toSet())
+        sendUriList.forEach { bean ->
+            bean.isSelectionMode = isSelectionMode && !bean.isLocalReceiver
+            bean.isSelected = bean.uriUuid in selectedIds
+        }
         mAdapter.submitList(newList, false)
+        if (!isNoDeleteBtn) updateVisibleSection(rcv())
+        onSelectionChanged()
         if (newList.isEmpty()) {
             empty()?.visible()
         } else {

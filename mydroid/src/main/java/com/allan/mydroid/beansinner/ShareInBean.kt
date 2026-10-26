@@ -38,7 +38,8 @@ data class ShareInBean(val uriUuid:String,
      * 是不是本地接收的文件
      */
     @Transient var isLocalReceiver = false
-    @Transient var isNoDeleteBtn = false
+    @Transient var isSelectionMode = false
+    @Transient var isSelected = false
     @Transient var completedMd5: String? = null
 
     companion object {

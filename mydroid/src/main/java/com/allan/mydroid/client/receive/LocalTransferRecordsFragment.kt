@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.R
+import com.allan.mydroid.client.TransferTheme
 import com.au.module_androiduiex.ui.ComposeViewFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -22,7 +23,9 @@ class LocalTransferRecordsFragment : ComposeViewFragment() {
 
     @Composable
     override fun ScreenContent() {
-        ConnectToHostReceiveScreen(model, null, stringResource(R.string.transfer_records),
-            onBack = { findNavController().popBackStack() })
+        TransferTheme {
+            ConnectToHostReceiveScreen(model, null, stringResource(R.string.transfer_records),
+                onBack = { findNavController().popBackStack() })
+        }
     }
 }

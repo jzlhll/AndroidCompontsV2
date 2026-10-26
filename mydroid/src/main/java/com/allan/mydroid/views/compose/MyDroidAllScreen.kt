@@ -252,21 +252,6 @@ private fun LogicButton(
 
 // ------------------------- client 雷达扫描 UI -------------------------
 
-/** 雷达底盘背景色（浅黄）。 */
-private val RadarBaseColor = Color(0xFFFFF8E1)
-/** 雷达底盘描边色（偏橙）。 */
-private val RadarBaseStrokeColor = Color(0xFFFFB74D)
-/** 雷达水波纹扩散圆颜色（偏橙）。 */
-private val RadarWaveColor = Color(0xFFFF9800)
-/** rescan 图标 tint。 */
-private val RescanIconColor = Color(0xFF666666)
-/** IP 矩形背景色（与页面背景一致）。 */
-private val IpBoxBg = Color.White
-/** 同网段 IP 文字色。 */
-private val IpTextSameSubnet = Color.Black
-/** 跨网段 IP 文字色。 */
-private val IpTextDiffSubnet = Color(0xFF999999)
-
 /**
  * client Tab 雷达 UI。
  * - scanning=true: 雷达水波纹动画启动,隐藏 rescan 与开始搜索按钮。
@@ -326,7 +311,7 @@ private fun ClientPage(
             Icon(
                 painter = painterResource(R.drawable.ic_rescan),
                 contentDescription = stringResource(R.string.cd_rescan),
-                tint = RescanIconColor,
+                tint = ComposeColors.TextDesc,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(end = 16.dp, top = 8.dp)
@@ -350,6 +335,7 @@ private fun BoxScope.RadarBasePlate(scanning: Boolean) {
         label = "radarWaveAnim",
     )
 
+    val radarColor = ComposeColors.BlueLink
     Canvas(modifier = Modifier.fillMaxSize()) {
         val canvasWidth = size.width
         val canvasHeight = size.height
@@ -360,7 +346,7 @@ private fun BoxScope.RadarBasePlate(scanning: Boolean) {
         // 雷达底盘径向渐变：中心深、边缘淡
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(RadarBaseColor, RadarBaseColor.copy(alpha = 0.3f)),
+                colors = listOf(radarColor.copy(alpha = 0.18f), radarColor.copy(alpha = 0.04f)),
                 center = center,
                 radius = maxRadius,
                 tileMode = TileMode.Clamp,
@@ -377,7 +363,7 @@ private fun BoxScope.RadarBasePlate(scanning: Boolean) {
                 val radius = maxRadius * progress
                 val alpha = (1f - progress) * 0.8f
                 drawCircle(
-                    color = RadarWaveColor.copy(alpha = alpha),
+                    color = radarColor.copy(alpha = alpha),
                     radius = radius,
                     center = center,
                     style = Stroke(width = strokePx),
@@ -394,14 +380,14 @@ private fun BoxScope.StartSearchButton(onClick: () -> Unit) {
         modifier = Modifier
             .wrapContentWidth()
             .wrapContentHeight()
-            .background(RadarBaseStrokeColor, RoundedCornerShape(6.dp))
+            .background(ComposeColors.BlueLink, RoundedCornerShape(6.dp))
             .noBackClickable(onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = stringResource(R.string.btn_start_search),
-            style = ComposeTypography.Font16M.copy(color = Color.White, textAlign = TextAlign.Center),
+            style = ComposeTypography.Font16MWhite,
         )
     }
 }
@@ -422,13 +408,14 @@ private fun RowScope.SlotCell(
             val (text, textColor) = ipDisplayTextAndColor(localIp, host.ip)
             Box(
                 modifier = Modifier
-                    .background(IpBoxBg, RoundedCornerShape(4.dp))
+                    .background(MyDroidComposeColors.NormalBlock, RoundedCornerShape(4.dp))
                     .noBackClickable { onIpClick(host) }
                     .padding(horizontal = 6.dp, vertical = 4.dp),
             ) {
-                BasicText(
+                Text(
                     text = text,
-                    style = ComposeTypography.Font16M.copy(color = textColor),
+                    style = ComposeTypography.Font16M,
+                    color = textColor,
                 )
             }
         }
@@ -461,15 +448,16 @@ private fun assignSlots(hosts: List<DiscoveredHost>): Map<Int, DiscoveredHost> {
 
 /**
  * IP 文案显示规则: 本地 IP 与 host IP 都 split('.') 拆 4 段,找第一个不一致的段索引 i。
- * - i == 3 (前 3 段全一致, 同网段): 显示末两段 (如 110.12), 黑色。
+ * - i == 3 (前 3 段全一致, 同网段): 显示末两段 (如 110.12), 正文色。
  * - i < 3 (从第 i 段起不一致, 跨网段): 从第 i 段开始显示到末尾, 灰色。
- * - 本地 IP 为 null 或段数不足 4: 一律按不一致处理, 显示 host 完整 IP, 灰色。
+ * - 本地 IP 为 null 或段数不足 4: 一律按不一致处理, 显示 host 完整 IP, 描述色。
  */
+@Composable
 private fun ipDisplayTextAndColor(localIp: String?, hostIp: String): Pair<String, Color> {
     val local = localIp?.split('.')
     val remote = hostIp.split('.')
     if (local == null || local.size < 4 || remote.size < 4) {
-        return hostIp to IpTextDiffSubnet
+        return hostIp to ComposeColors.TextDesc
     }
     var firstDiff = 4
     for (i in 0 until 4) {
@@ -480,10 +468,10 @@ private fun ipDisplayTextAndColor(localIp: String?, hostIp: String): Pair<String
     }
     return if (firstDiff == 4 || firstDiff == 3) {
         // 前 3 段全一致: 显示末两段
-        remote.takeLast(2).joinToString(".") to IpTextSameSubnet
+        remote.takeLast(2).joinToString(".") to ComposeColors.TextPrimary
     } else {
         // 从 firstDiff 段起不一致: 从该段显示到末尾
-        remote.drop(firstDiff).joinToString(".") to IpTextDiffSubnet
+        remote.drop(firstDiff).joinToString(".") to ComposeColors.TextDesc
     }
 }
 

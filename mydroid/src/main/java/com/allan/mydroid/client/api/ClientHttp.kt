@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.InetAddresses
 import android.net.NetworkCapabilities
 import com.au.module_android.Globals
+import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import java.net.Proxy
@@ -17,10 +18,15 @@ object ClientHttp {
         .readTimeout(120000, TimeUnit.MILLISECONDS)
         .writeTimeout(30000, TimeUnit.MILLISECONDS)
         .retryOnConnectionFailure(false)
+        // NanoHTTPD 在空闲 5 秒后关闭连接，客户端提前回收以免下一次请求复用失效连接。
+        .connectionPool(ConnectionPool(5, 4, TimeUnit.SECONDS))
         .build()
 
-    fun forUrl(url: HttpUrl): OkHttpClient {
-        if (!InetAddresses.isNumericAddress(url.host)) return client
+    fun forUrl(url: HttpUrl, retryOnConnectionFailure: Boolean = false): OkHttpClient {
+        val requestClient = if (retryOnConnectionFailure) {
+            client.newBuilder().retryOnConnectionFailure(true).build()
+        } else client
+        if (!InetAddresses.isNumericAddress(url.host)) return requestClient
         val address = InetAddresses.parseNumericAddress(url.host)
         val manager = Globals.app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val active = manager.activeNetwork
@@ -32,8 +38,8 @@ object ClientHttp {
                 manager.getLinkProperties(candidate)?.routes?.any { route ->
                     !route.isDefaultRoute && route.matches(address)
                 } == true
-        } ?: return client
-        return client.newBuilder()
+        } ?: return requestClient
+        return requestClient.newBuilder()
             .socketFactory(network.socketFactory)
             .proxy(Proxy.NO_PROXY)
             .build()

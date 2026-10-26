@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
@@ -26,6 +26,7 @@ import com.allan.mydroid.client.receive.ConnectToHostReceiveScreen
 import com.allan.mydroid.client.receive.ConnectToHostReceiveViewModel
 import com.allan.mydroid.client.send.ConnectToHostSendScreen
 import com.allan.mydroid.client.send.ConnectToHostSendViewModel
+import com.au.module_androiduiex.styles.ComposeColors
 import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androiduiex.ui.ComposeViewFragment
 import kotlinx.coroutines.delay
@@ -86,43 +87,45 @@ class ConnectToHostFragment : ComposeViewFragment() {
 
     @Composable
     override fun ScreenContent() {
-        Box(Modifier.fillMaxSize().background(Color.White).pointerInteropFilter {
-            lastActivity = SystemClock.elapsedRealtime()
-            false
-        }) {
-            when (endpoint.mode) {
-                MyDroidMode.Receiver -> ConnectToHostSendScreen(sendModel, endpoint, stringResource(R.string.connect_to_host_send_title))
-                MyDroidMode.Send -> ConnectToHostReceiveScreen(receiveModel, endpoint, stringResource(R.string.connect_to_host_receive_title))
-                MyDroidMode.TextChat -> ConnectToHostChatScreen(chatModel, endpoint, stringResource(R.string.connect_to_host_chat_title))
-                MyDroidMode.None -> TransferMessageDialog(stringResource(R.string.connect_to_host_mode_none)) {
-                    findNavController().popBackStack()
-                }
-            }
-        }
-        if (showIdle || showExit) {
-            val upload = showExit && endpoint.mode == MyDroidMode.Receiver
-            val message = when {
-                leaving -> R.string.transfer_stopping
-                upload -> R.string.transfer_exit_upload
-                showExit -> R.string.transfer_exit_download
-                else -> R.string.transfer_idle
-            }
-            AlertDialog(
-                onDismissRequest = { if (!leaving) { showIdle = false; showExit = false; lastActivity = SystemClock.elapsedRealtime() } },
-                text = { Text(stringResource(message), style = ComposeTypography.Font14sp) },
-                confirmButton = { TextButton(enabled = !leaving, onClick = {
-                    leaving = true
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        if (upload) sendModel.stopAndAwait()
+        TransferTheme {
+            Box(Modifier.fillMaxSize().background(ComposeColors.BackgroundBg).pointerInteropFilter {
+                lastActivity = SystemClock.elapsedRealtime()
+                false
+            }) {
+                when (endpoint.mode) {
+                    MyDroidMode.Receiver -> ConnectToHostSendScreen(sendModel, endpoint, stringResource(R.string.connect_to_host_send_title))
+                    MyDroidMode.Send -> ConnectToHostReceiveScreen(receiveModel, endpoint, stringResource(R.string.connect_to_host_receive_title))
+                    MyDroidMode.TextChat -> ConnectToHostChatScreen(chatModel, endpoint, stringResource(R.string.connect_to_host_chat_title))
+                    MyDroidMode.None -> TransferMessageDialog(stringResource(R.string.connect_to_host_mode_none)) {
                         findNavController().popBackStack()
                     }
-                }) { Text(stringResource(R.string.transfer_back), style = ComposeTypography.Font14sp) } },
-                dismissButton = { TextButton(enabled = !leaving, onClick = {
-                    showIdle = false
-                    showExit = false
-                    lastActivity = SystemClock.elapsedRealtime()
-                }) { Text(stringResource(R.string.transfer_continue), style = ComposeTypography.Font14sp) } }
-            )
+                }
+            }
+            if (showIdle || showExit) {
+                val upload = showExit && endpoint.mode == MyDroidMode.Receiver
+                val message = when {
+                    leaving -> R.string.transfer_stopping
+                    upload -> R.string.transfer_exit_upload
+                    showExit -> R.string.transfer_exit_download
+                    else -> R.string.transfer_idle
+                }
+                AlertDialog(
+                    onDismissRequest = { if (!leaving) { showIdle = false; showExit = false; lastActivity = SystemClock.elapsedRealtime() } },
+                    text = { Text(stringResource(message), style = ComposeTypography.Font14sp) },
+                    confirmButton = { TextButton(enabled = !leaving, onClick = {
+                        leaving = true
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            if (upload) sendModel.stopAndAwait()
+                            findNavController().popBackStack()
+                        }
+                    }) { Text(stringResource(R.string.transfer_back), style = ComposeTypography.Font14sp, color = LocalContentColor.current) } },
+                    dismissButton = { TextButton(enabled = !leaving, onClick = {
+                        showIdle = false
+                        showExit = false
+                        lastActivity = SystemClock.elapsedRealtime()
+                    }) { Text(stringResource(R.string.transfer_continue), style = ComposeTypography.Font14sp, color = LocalContentColor.current) } }
+                )
+            }
         }
     }
 }

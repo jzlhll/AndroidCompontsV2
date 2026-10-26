@@ -4,6 +4,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.res.painterResource
 import com.allan.mydroid.views.getIcon
 import com.au.module_android.utilsmedia.formatBytes
@@ -15,12 +17,14 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.allan.mydroid.R
 import com.allan.mydroid.client.ConnectToHostHeader
@@ -31,6 +35,8 @@ import com.allan.mydroid.client.api.WsConnectionState
 import com.allan.mydroid.client.beans.SelectedFile
 import com.allan.mydroid.client.beans.UploadState
 import com.au.module_androiduiex.preview.AppPreview
+import com.au.module_androiduiex.styles.ComposeColors
+import com.allan.mydroid.views.compose.MyDroidComposeColors
 import com.au.module_androiduiex.styles.ComposeTypography
 
 /** 发送列表逐项展示准备、上传、校验及结果，重试只处理未成功项。 */
@@ -40,7 +46,7 @@ fun ConnectToHostSendScreen(viewModel: ConnectToHostSendViewModel, endpoint: Hos
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         viewModel.onFilesPicked(uris.map { SelectedFile(it, it.lastPathSegment ?: "", 0) })
     }
-    Column(Modifier.fillMaxSize().navigationBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(ComposeColors.BackgroundBg).navigationBarsPadding()) {
         ConnectToHostHeader(titleText, endpoint.ip, endpoint.httpPort)
         ConnectionStatus(state.connectionState, viewModel::reconnect)
         SendContent(state, { picker.launch("*/*") }, viewModel::startUpload,
@@ -65,16 +71,18 @@ private fun ColumnScope.SendContent(
         BasicText(stringResource(R.string.transfer_preparing), style = ComposeTypography.Font14Desc91,
             modifier = Modifier.padding(horizontal = 16.dp))
     }
-    LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (state.selectedFiles.isEmpty()) item {
             BasicText(stringResource(R.string.select_files_hint), style = ComposeTypography.Font14Desc91)
         }
         items(state.selectedFiles, key = { it.id }) { file ->
-            Column {
-                Row {
-                    Image(painterResource(getIcon(file.name)), null, Modifier.padding(end = 8.dp).size(36.dp))
-                    Column(Modifier.weight(1f)) {
-                        BasicText(file.savedName ?: file.name, style = ComposeTypography.Font16M)
+            Column(Modifier.fillMaxWidth().background(MyDroidComposeColors.NormalBlock, RoundedCornerShape(12.dp))
+                .padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Image(painterResource(getIcon(file.name)), null, Modifier.size(36.dp))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        BasicText(file.savedName ?: file.name, style = ComposeTypography.Font16M, maxLines = 3, overflow = TextOverflow.Ellipsis)
                         BasicText(if (file.size > 0) formatBytes(file.size) else stringResource(R.string.unknown_size),
                             style = ComposeTypography.Font14Desc91)
                         val label = when (file.state) {
@@ -92,7 +100,7 @@ private fun ColumnScope.SendContent(
                         }
                     }
                     TextButton(onClick = { onRemove(file) }, enabled = !state.busy) {
-                        Text(stringResource(R.string.transfer_remove_record), style = ComposeTypography.Font14sp)
+                        Text(stringResource(R.string.transfer_remove_record), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
                     }
                 }
                 if (file.state == UploadState.Uploading) {
@@ -102,7 +110,7 @@ private fun ColumnScope.SendContent(
                 if (file.state == UploadState.Uploading || file.state == UploadState.Merging) {
                     LinearProgressIndicator(progress = { file.progress }, modifier = Modifier.fillMaxWidth())
                 }
-                file.error?.let { BasicText(it, style = ComposeTypography.Font14sp) }
+                file.error?.let { Text(it, style = ComposeTypography.Font14sp, color = ComposeColors.Red) }
             }
         }
     }
@@ -120,18 +128,18 @@ private fun ColumnScope.SendContent(
     }
     Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onPick, enabled = !state.busy, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.select_files_to_send), style = ComposeTypography.Font14sp)
+            Text(stringResource(R.string.select_files_to_send), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
         }
         if (state.uploading) {
             Button(onClick = onCancel, enabled = !state.stopping, modifier = Modifier.weight(1f)) {
                 Text(stringResource(if (state.stopping) R.string.transfer_stopping else R.string.connect_to_host_cancel_upload),
-                    style = ComposeTypography.Font14sp)
+                    style = ComposeTypography.Font14sp, color = LocalContentColor.current)
             }
         } else {
             Button(onClick = onStart, modifier = Modifier.weight(1f),
                 enabled = !state.busy && state.connectionState == WsConnectionState.Connected &&
                     state.selectedFiles.any { it.state != UploadState.Completed }) {
-                Text(stringResource(R.string.connect_to_host_start_upload), style = ComposeTypography.Font14sp)
+                Text(stringResource(R.string.connect_to_host_start_upload), style = ComposeTypography.Font14sp, color = LocalContentColor.current)
             }
         }
     }
