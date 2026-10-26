@@ -1,7 +1,6 @@
 package com.allan.mydroid.beansinner
 
 import androidx.annotation.Keep
-import com.au.module_android.utils.Md5Util
 import com.au.module_nested.recyclerview.IViewTypeBean
 import java.io.File
 
@@ -11,12 +10,8 @@ data class MergedFileInfo(val file: File,
                           val fileSizeInfo:String) : IViewTypeBean {
 
     companion object {
-        /** 读取合并缓存文件，保证 md5 可用于稳定 uuid */
-        fun fromCacheFile(file: File, fileSizeInfo: String): MergedFileInfo {
-            var md5 = Md5Util.getFileMD5(file.absolutePath)
-            if (md5.isEmpty()) {
-                md5 = Md5Util.md5(file.absolutePath)
-            }
+        /** 列表加载只读取元数据，摘要由传输完成时保存的快照提供。 */
+        fun fromCacheFile(file: File, fileSizeInfo: String, md5: String = ""): MergedFileInfo {
             return MergedFileInfo(file, md5, fileSizeInfo)
         }
     }

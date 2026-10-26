@@ -65,7 +65,7 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
 
         val fmt = getString(R.string.not_close_window)
         val leftStr = getString(R.string.storage_remaining)
-        binding.descTitle.text = String.format(fmt, leftStr + getExternalFreeSpace(requireActivity()))
+        binding.descTitle.text = String.format(fmt, leftStr.trim() + " " + getExternalFreeSpace(requireActivity()))
 
         launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { netInfo->
             if (netInfo == null) {

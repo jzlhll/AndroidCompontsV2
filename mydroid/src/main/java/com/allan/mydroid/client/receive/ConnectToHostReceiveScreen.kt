@@ -52,7 +52,11 @@ fun ConnectToHostReceiveScreen(
             ConnectToHostHeader(titleText, endpoint.ip, endpoint.httpPort)
             ConnectionStatus(state.connectionState, viewModel::reconnect)
         }
-        LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(
+            Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             if (endpoint != null) {
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -91,8 +95,10 @@ fun ConnectToHostReceiveScreen(
                 }
             }
             item {
-                Column(Modifier.padding(top = 16.dp)) {
-                    BasicText(stringResource(R.string.transfer_records), style = ComposeTypography.Font16M)
+                Column(Modifier.padding(vertical = 8.dp)) {
+                    if (endpoint != null) {
+                        BasicText(stringResource(R.string.transfer_records), style = ComposeTypography.Font16M)
+                    }
                     BasicText(stringResource(R.string.transfer_summary, state.downloadTasks.size,
                         if (state.downloadTasks.any { it.fileSize <= 0 && it.state != DownloadState.Completed }) {
                             stringResource(R.string.unknown_size)

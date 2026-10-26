@@ -42,7 +42,6 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     private val receiverFlowsObj: GlobalReceiverFlowsObj by inject()
     private val fileListRepository: GlobalFileListRepoObj by inject()
     lateinit var receivedFileListTab: TabLayout.Tab
-    lateinit var exportHistoryTab: TabLayout.Tab
 
     private val mViewModel by unsafeLazy { ViewModelProvider(this)[ReceiveFromH5ViewModel::class.java] }
 
@@ -159,7 +158,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                             HtmlPart(Globals.getString(R.string.keep_recent_records) + "\n\n", colorGray),
                                     HtmlPart(it, colorNormal)
                         )
-                        updateTabsTitle(false)
+                        updateReceiveListTabTitle(false)
                     },
                     onError = {
                         ToastBuilder().setOnTop().setMessage(getString(R.string.something_error)).toast()
@@ -172,7 +171,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                 fileListRepository.fileListStateFlow.collectStatusState(
                     onSuccess = { fileList->
                         mAdapter.submitList(fileList, false)
-                        updateTabsTitle(true)
+                        updateReceiveListTabTitle(true)
                         changeRcvEmptyTextVisible()
                     },
                     onError = {
@@ -185,30 +184,19 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
         mViewModel.dispatch(ReceiveFromH5ViewModel.LoadHistoryAction())
     }
 
-    private fun updateTabsTitle(updateFileList:Boolean) {
-        val fileListTabTv = receivedFileListTab.customView.asOrNull<TextView>()
-        val historyTabTv = exportHistoryTab.customView.asOrNull<TextView>()
-        val isCurrentHistoryTabShown = binding.exportHistoryHost.isVisible
-
-        if ((updateFileList && !isCurrentHistoryTabShown)    //想要更新文件列表tab，并且现在就是文件列表tab。两个都显示文字
-            || (!updateFileList && isCurrentHistoryTabShown) //想要更新历史tab，并且现在就是历史tab。两个都显示文字
-            ) {
-            fileListTabTv?.text = getString(R.string.transfer_list)
-            historyTabTv?.text = getString(R.string.export_history)
-        } else if (updateFileList) { //想要更新文件列表tab，并且现在不是文件列表tab。文件列表tab显示星号
-            fileListTabTv?.text = getString(R.string.transfer_list_2)
-            historyTabTv?.text = getString(R.string.export_history)
-        } else { //想要更新历史tab，并且现在不是历史tab。文件列表tab显示星号
-            fileListTabTv?.text = getString(R.string.transfer_list)
-            historyTabTv?.text = getString(R.string.export_history_2)
+    private fun updateReceiveListTabTitle(updateFileList: Boolean) {
+        val title = if (updateFileList && binding.exportHistoryHost.isVisible) {
+            R.string.transfer_list_2
+        } else {
+            R.string.transfer_list
         }
+        receivedFileListTab.customView.asOrNull<TextView>()?.setText(title)
     }
 
     private fun initTabs() {
         val transferFileList = binding.tabLayout.newTextTab(getString(R.string.transfer_list), true)
         receivedFileListTab = transferFileList
         val exportHistory = binding.tabLayout.newTextTab(getString(R.string.export_history), false)
-        exportHistoryTab = exportHistory
         binding.tabLayout.addTab(transferFileList)
         binding.tabLayout.addTab(exportHistory)
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -245,9 +233,6 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     private fun showExportHistoryTab() {
         binding.receiveRcv.gone()
         binding.exportHistoryHost.visible()
-        exportHistoryTab.customView.asOrNull<TextView>()?.let { tabTv ->
-            tabTv.text = getString(R.string.export_history)
-        }
         changeRcvEmptyTextVisible()
     }
 

@@ -20,6 +20,12 @@ import java.io.InputStream
 import java.io.FilterInputStream
 import java.net.URLEncoder
 import java.util.concurrent.atomic.AtomicBoolean
+import java.io.OutputStream
+import java.security.MessageDigest
+import java.util.UUID
+import com.au.module_okhttp.api.ResultBean
+import com.allan.mydroid.nanohttp.CODE_SUC
+import com.allan.mydroid.nanohttp.okJsonResponse
 
 /**
  * 处理 GET /file_download_uuid/{uuid} 文件下载请求。
@@ -30,14 +36,24 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
     private val uriPermissionChecker: UriPermissionChecker by inject()
 
     override fun tryHandle(method: NanoHTTPD.Method, uri: String, session: IHTTPSession): Response? {
+        if (method == NanoHTTPD.Method.GET && uri.startsWith(STATUS_PREFIX)) {
+            val id = uri.substring(STATUS_PREFIX.length)
+            val result = shareInRepository.downloadTransfersFlow.value[id] ?: return fileNotFoundResponse()
+            return ResultBean(CODE_SUC, "Success", result).okJsonResponse().also {
+                it.addHeader("Cache-Control", "no-store")
+            }
+        }
         if (method == NanoHTTPD.Method.GET && uri.startsWith(URL_PREFIX)) {
-            return fileDownload(uri.substring(URL_PREFIX.length))
+            val transferId = session.parameters["transferId"]?.firstOrNull() ?: UUID.randomUUID().toString()
+            if (!transferId.matches(Regex("[A-Za-z0-9_-]{1,64}"))) return newNotFoundResponse("Invalid download session")
+            return fileDownload(uri.substring(URL_PREFIX.length), transferId)
         }
         return null
     }
 
-    private fun fileDownload(uriUuid: String): Response {
+    private fun fileDownload(uriUuid: String, transferId: String): Response {
         var transferStream: InputStream? = null
+        var registered = false
         try {
             val info = shareInRepository.shareInAndReceiveBeans?.find { it.uriUuid == uriUuid }
                 ?: return fileNotFoundResponse()
@@ -55,9 +71,21 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
             }
             val inputStream = openDownloadInputStream(info)
             aliveTrigger.transferStarted()
-            // 响应交给 NanoHTTPD 后，由框架关闭流并释放传输计数，包括客户端中途断开。
+            val digest = MessageDigest.getInstance("MD5")
+            var readBytes = 0L
+            // 摘要仅覆盖实际发送的字节；下载仍由浏览器原生流式落盘。
             val trackedStream = object : FilterInputStream(inputStream) {
                 private val closed = AtomicBoolean(false)
+                override fun read(): Int {
+                    val value = inputStream.read()
+                    if (value >= 0) { digest.update(value.toByte()); readBytes++ }
+                    return value
+                }
+                override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+                    val count = inputStream.read(buffer, offset, length)
+                    if (count > 0) { digest.update(buffer, offset, count); readBytes += count }
+                    return count
+                }
                 override fun close() {
                     if (!closed.compareAndSet(false, true)) return
                     try {
@@ -68,10 +96,49 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
                 }
             }
             transferStream = trackedStream
-            // 1. 创建响应，指定状态码为 OK，MIME 类型为二进制流（强制下载）
-            val response = NanoHTTPD.newFixedLengthResponse(
-                Response.Status.OK,
-                "application/octet-stream", trackedStream, fileSize)
+            shareInRepository.startDownload(transferId, uriUuid)
+            registered = true
+            val response = object : Response(Response.Status.OK, "application/octet-stream", trackedStream, fileSize) {
+                private val published = AtomicBoolean(false)
+
+                private fun publishResult(success: Boolean) {
+                    if (!published.compareAndSet(false, true)) return
+                    val md5 = if (success) digest.digest().joinToString("") { "%02x".format(it) } else null
+                    shareInRepository.finishDownload(transferId, md5)
+                }
+
+                override fun send(outputStream: OutputStream) {
+                    var failed = false
+                    var returned = false
+                    // NanoHTTPD 内部捕获写入异常，这里保留失败状态，避免断线被误报为完成。
+                    val checkedOutput = object : OutputStream() {
+                        override fun write(value: Int) {
+                            try { outputStream.write(value) }
+                            catch (e: IOException) { failed = true; throw e }
+                        }
+                        override fun write(buffer: ByteArray, offset: Int, length: Int) {
+                            try { outputStream.write(buffer, offset, length) }
+                            catch (e: IOException) { failed = true; throw e }
+                        }
+                        override fun flush() {
+                            try { outputStream.flush() }
+                            catch (e: IOException) { failed = true; throw e }
+                        }
+                    }
+                    try {
+                        super.send(checkedOutput)
+                        returned = true
+                    } finally {
+                        try { trackedStream.close() }
+                        finally { publishResult(returned && !failed && readBytes == fileSize) }
+                    }
+                }
+
+                override fun close() {
+                    try { super.close() }
+                    finally { publishResult(false) }
+                }
+            }
             logdNoFile { "file response1111" }
             // 2. 设置 Content-Disposition 头，这是触发浏览器下载的关键
             val encodedFileName = URLEncoder.encode(filename, "UTF-8")
@@ -86,7 +153,7 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
                         fallbackFileName + "\"; " +
                         "filename*=UTF-8''" + encodedFileName
             )
-            // Avoid browser/proxy caching large binary downloads in memory or disk cache.
+            // 禁止浏览器或代理缓存大文件响应。
             response.addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
             response.addHeader("Pragma", "no-cache")
             response.addHeader("Expires", "0")
@@ -106,6 +173,7 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
             logdNoFile { "file Download error3 ${e.message}" }
             return newInternalErrorResponse("Error reading file 3.")
         } finally {
+            if (transferStream != null && registered) shareInRepository.finishDownload(transferId, null)
             transferStream?.close()
         }
     }
@@ -138,5 +206,6 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
 
     companion object {
         private const val URL_PREFIX = "/file_download_uuid/"
+        private const val STATUS_PREFIX = "/file_download_status/"
     }
 }

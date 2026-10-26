@@ -12,8 +12,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
+import org.json.JSONObject
+import com.au.module_android.Globals
+import com.au.module_cached.AppDataStore
+import com.au.module_cached.AppDataStore.globalDataStore
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 
-/** 文件仓库在 IO 线程串行刷新，按路径、大小和修改时间复用已计算的摘要。 */
+/** 文件仓库只扫描元数据，按路径、大小和修改时间复用传输完成后的摘要快照。 */
 class GlobalFileListRepoObj {
     private val _fileListStateFlow = MutableStateFlow<StatusState<List<MergedFileInfo>>>(StatusState.Loading)
     val fileListStateFlow: StateFlow<StatusState<List<MergedFileInfo>>> = _fileListStateFlow.asStateFlow()
@@ -21,6 +27,17 @@ class GlobalFileListRepoObj {
     private val mutex = Mutex()
     private data class CachedFile(val length: Long, val modified: Long, val info: MergedFileInfo)
     private var cache = mutableMapOf<String, CachedFile>()
+    private var digestSnapshot: JSONObject? = null
+    private val digestKey = stringPreferencesKey("mydroid_received_md5")
+
+    private fun digestSnapshot(): JSONObject {
+        digestSnapshot?.let { return it }
+        val text = AppDataStore.readStringBlocked("mydroid_received_md5", "").orEmpty()
+        val snapshot = try { if (text.isEmpty()) JSONObject() else JSONObject(text) }
+        catch (e: Exception) { JSONObject() }
+        digestSnapshot = snapshot
+        return snapshot
+    }
 
     suspend fun reloadFileList(): List<MergedFileInfo> = withIOThread {
         mutex.withLock {
@@ -34,6 +51,13 @@ class GlobalFileListRepoObj {
         mutex.withLock {
             val length = file.length()
             val info = MergedFileInfo(file, md5, formatSize(length))
+            val snapshot = digestSnapshot()
+            snapshot.put(file.absolutePath, JSONObject().apply {
+                put("length", length)
+                put("modified", file.lastModified())
+                put("md5", md5)
+            })
+            Globals.app.globalDataStore.edit { it[digestKey] = snapshot.toString() }
             cache[file.absolutePath] = CachedFile(length, file.lastModified(), info)
             // 落盘事件不依赖页面订阅，复用合并时已经校验过的摘要。
             _fileListStateFlow.value = StatusState.Success(cache.values.map { it.info }
@@ -55,7 +79,10 @@ class GlobalFileListRepoObj {
                 val info = if (cached != null && cached.length == length && cached.modified == modified) {
                     cached.info
                 } else {
-                    MergedFileInfo.fromCacheFile(it, formatSize(length))
+                    val saved = digestSnapshot().optJSONObject(it.absolutePath)
+                    val md5 = if (saved != null && saved.optLong("length") == length &&
+                        saved.optLong("modified") == modified) saved.optString("md5") else ""
+                    MergedFileInfo.fromCacheFile(it, formatSize(length), md5)
                 }
                 fileList.add(info)
                 nextCache[it.absolutePath] = CachedFile(length, modified, info)

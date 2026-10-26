@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,10 +12,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,8 +33,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -59,6 +63,9 @@ fun ConnectToHostChatScreen(
     var input by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
     val context = LocalContext.current
+    val inputShape = RoundedCornerShape(20.dp)
+    val accentColor = colorResource(R.color.text_chat_accent)
+    val accentTextColor = colorResource(R.color.text_chat_accent_text)
 
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
@@ -67,7 +74,7 @@ fun ConnectToHostChatScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFFAFAFA)),
+        modifier = Modifier.fillMaxSize().background(colorResource(R.color.text_chat_background)),
     ) {
         ConnectToHostHeader(
             titleText = titleText,
@@ -90,32 +97,69 @@ fun ConnectToHostChatScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(colorResource(R.color.text_chat_surface))
                 .navigationBarsPadding()
                 .imePadding()
-                .background(Color.White)
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.Bottom,
         ) {
-            OutlinedTextField(
+            BasicTextField(
                 value = input,
                 onValueChange = { input = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text(text = stringResource(R.string.text_chat_input_hint), style = ComposeTypography.Font14sp) },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 44.dp, max = 120.dp)
+                    .background(colorResource(R.color.text_chat_input_bg), inputShape)
+                    .border(1.dp, colorResource(R.color.text_chat_input_border), inputShape)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                cursorBrush = SolidColor(accentColor),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { if (viewModel.sendText(input)) input = "" }),
-                textStyle = ComposeTypography.Font14sp,
+                textStyle = ComposeTypography.Font16,
                 singleLine = false,
                 maxLines = 4,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = {
-                    if (input.isNotBlank()) {
-                        if (viewModel.sendText(input)) input = ""
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 28.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        if (input.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.text_chat_input_hint),
+                                style = ComposeTypography.Font16,
+                                color = colorResource(R.color.text_chat_input_hint),
+                            )
+                        }
+                        innerTextField()
                     }
                 },
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Button(
+                onClick = {
+                    if (viewModel.sendText(input)) input = ""
+                },
+                modifier = Modifier.width(72.dp).height(44.dp),
                 enabled = input.isNotBlank() && uiState.connectionState is WsConnectionState.Connected,
-            ) { Text(text = stringResource(R.string.send), style = ComposeTypography.Font14sp) }
+                shape = inputShape,
+                contentPadding = PaddingValues(0.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accentColor,
+                    contentColor = accentTextColor,
+                    disabledContainerColor = accentColor.copy(alpha = 0.45f),
+                    disabledContentColor = accentTextColor.copy(alpha = 0.45f),
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.send),
+                    style = ComposeTypography.Font14sp,
+                    color = if (input.isNotBlank() && uiState.connectionState is WsConnectionState.Connected) {
+                        accentTextColor
+                    } else {
+                        accentTextColor.copy(alpha = 0.45f)
+                    },
+                )
+            }
         }
     }
 

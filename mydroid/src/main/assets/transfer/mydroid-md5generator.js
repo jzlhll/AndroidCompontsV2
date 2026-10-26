@@ -1,56 +1,63 @@
-// IIFE（传统非模块化环境）
 (function() {
-    window.streamBasedHashWorker = async function(file, startTs) {
-        return new Promise((resolve, reject) => {
-            const worker = new Worker('worker-mydroid-md5.js');
-            
-            worker.onmessage = (e) => {
-                const t = e.data.type;
-                if (t === 'HASH_RESULT') {
-                    resolve(e.data.hash);
-                    worker.terminate(); // 计算完成后销毁Worker
-                }
+    window.createUploadHasher = async function(signal) {
+        if (!window.Worker) {
+            const spark = new SparkMD5.ArrayBuffer();
+            return {
+                update: async buffer => { spark.append(buffer); },
+                digest: async () => spark.end(),
+                cancel: () => spark.destroy()
             };
-            
-            worker.onerror = (e) => {
-                reject(new Error(`Worker error: ${e.message}`));
-                reader.cancel().catch(() => {});
-                worker.terminate();
-            };
-            const stream = file.stream();
-            const reader = stream.getReader();
-
-            const processChunk = async () => {
-                // 分块发送数据到Worker 创建可读流并分块传输
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                        console.log(file.name + " finish.");
-                        worker.postMessage({ type: 'FINISH' });
-                        reader.releaseLock();
-                        break;
-                    } else if (startTs != window.lastStartTsFlagArr.checkMd5StartTime) {
-                        console.log(file.name + " aborted.");
-                        await reader.cancel();
-                        reader.releaseLock();
-                        worker.terminate(); // 直接终止 Worker
-                        reject('aborted');
-                        break;
-                    } else {
-                        worker.postMessage({ 
-                            type: 'DATA_CHUNK', 
-                            chunk: value.buffer 
-                        }, [value.buffer]);
-                    }
-                }
-            };
-            
-            processChunk().catch(error => {
-                worker.terminate();
-                reader.cancel().catch(() => {});
-                try { reader.releaseLock(); } catch (_) {}
-                reject(error);
+        }
+        const worker = new Worker('worker-mydroid-md5.js?stream-md5=1');
+        let pending = null;
+        let stopped = false;
+        function stop(error = new Error('MD5 canceled')) {
+            if (stopped) return;
+            stopped = true;
+            worker.terminate();
+            signal?.removeEventListener('abort', abort);
+            if (pending) pending.reject(error);
+            pending = null;
+        }
+        const abort = () => stop(new DOMException('MD5 canceled', 'AbortError'));
+        if (signal?.aborted) abort();
+        else signal?.addEventListener('abort', abort, { once: true });
+        worker.onmessage = event => {
+            if (!pending) return;
+            const request = pending;
+            pending = null;
+            if (event.data.type === 'HASH_ERROR') {
+                request.reject(new Error(event.data.message));
+                stop();
+            } else request.resolve(event.data);
+        };
+        worker.onerror = event => stop(new Error(event.message || 'MD5 worker failed'));
+        worker.onmessageerror = () => stop(new Error('Cannot read MD5 worker response'));
+        function request(type, buffer) {
+            if (stopped) return Promise.reject(new Error('MD5 canceled'));
+            if (pending) return Promise.reject(new Error('MD5 request already running'));
+            return new Promise((resolve, reject) => {
+                pending = { resolve, reject };
+                try {
+                    worker.postMessage({ type, buffer }, buffer ? [buffer] : []);
+                } catch (error) { stop(error); }
             });
-        });
+        }
+        try {
+            await request('INIT');
+            return {
+                update: buffer => request('UPDATE', buffer),
+                digest: async () => {
+                    const result = await request('FINAL');
+                    if (!/^[a-f0-9]{32}$/i.test(result.hash)) throw new Error('Invalid MD5 result');
+                    stop();
+                    return result.hash;
+                },
+                cancel: () => stop()
+            };
+        } catch (error) {
+            stop(error);
+            throw error;
+        }
     };
-  })();
+})();

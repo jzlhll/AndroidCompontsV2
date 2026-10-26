@@ -91,11 +91,14 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     private fun showBigIcon(bean: ShareInBean, isVideo: Boolean) {
         if (!hasSetBigImageClick) {
             hasSetBigImageClick = true
-            binding.blurView.onClick {
+            val dismissPreview: (View) -> Unit = {
                 binding.blurView.gone()
                 binding.bigImage.gone()
                 binding.iconPlay.gone()
             }
+            binding.blurView.onClick(dismissPreview)
+            binding.bigImage.onClick(dismissPreview)
+            binding.iconPlay.onClick(dismissPreview)
             binding.bigImage.setImageDrawable(null)
         }
 

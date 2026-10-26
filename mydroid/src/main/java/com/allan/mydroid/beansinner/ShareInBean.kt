@@ -39,15 +39,16 @@ data class ShareInBean(val uriUuid:String,
      */
     @Transient var isLocalReceiver = false
     @Transient var isNoDeleteBtn = false
+    @Transient var completedMd5: String? = null
 
     companion object {
         suspend fun convert(info: MergedFileInfo, from:String) : ShareInBean {
             delay(0.milliseconds)
             val fileSize = info.file.length()
             val fileLen = formatBytes(fileSize)
-            // 文件身份包含名称与内容，保留同内容的不同文件，并使内容变化后的下载可重新入队。
+            // 使用文件元数据稳定标识，不为生成下载身份扫描文件内容。
             val uriUuid = UUID.nameUUIDFromBytes(
-                "local:${info.file.name}:${info.md5}".toByteArray(Charsets.UTF_8)
+                "local:${info.file.name}:${info.file.length()}:${info.file.lastModified()}".toByteArray(Charsets.UTF_8)
             ).toString().replace("-", "")
 
             val mimeType = ExtensionMimeUtil.getMimeTypePath(info.file.absolutePath)

@@ -87,6 +87,9 @@ private fun ColumnScope.SendContent(
                             UploadState.Canceled -> R.string.transfer_canceled
                         }
                         BasicText(stringResource(label), style = ComposeTypography.Font14Desc91)
+                        if (file.state == UploadState.Completed && file.md5 != null) {
+                            BasicText("MD5: ${file.md5}", style = ComposeTypography.Font14Desc91)
+                        }
                     }
                     TextButton(onClick = { onRemove(file) }, enabled = !state.busy) {
                         Text(stringResource(R.string.transfer_remove_record), style = ComposeTypography.Font14sp)

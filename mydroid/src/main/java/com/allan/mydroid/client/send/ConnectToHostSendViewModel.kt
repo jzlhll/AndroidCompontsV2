@@ -100,7 +100,7 @@ class ConnectToHostSendViewModel(private val endpoint: HostEndpoint) : ViewModel
                     if (stopRequested || _uiState.value.connectionState != WsConnectionState.Connected) break
                     var cache: File? = null
                     try {
-                        updateFile(file.id) { it.copy(state = UploadState.Preparing, progress = 0f, error = null, bytesPerSecond = 0) }
+                        updateFile(file.id) { it.copy(state = UploadState.Preparing, progress = 0f, error = null, bytesPerSecond = 0, md5 = null) }
                         val info = withIOThread { file.uri.myParseSuspend() }
                         var uri = file.uri
                         var size = info.fileLength
@@ -131,7 +131,7 @@ class ConnectToHostSendViewModel(private val endpoint: HostEndpoint) : ViewModel
                         if (!info.isFile && modified in 1..9999999999L) modified *= 1000
                         updateFile(file.id) { it.copy(name = info.name, size = size) }
                         var startedAt = 0L
-                        val savedName = chunkUploader.upload(baseUrl, uri, info.name, size, modified,
+                        val result = chunkUploader.upload(baseUrl, uri, info.name, size, modified,
                             onMerging = { updateFile(file.id) { it.copy(state = UploadState.Merging) } },
                             onCleanupFailed = {
                                 _uiState.update { it.copy(error = Globals.getString(R.string.transfer_cleanup_failed)) }
@@ -143,7 +143,7 @@ class ConnectToHostSendViewModel(private val endpoint: HostEndpoint) : ViewModel
                                 val speed = if (elapsed > 0) (sent * 1000.0 / elapsed).toLong() else 0L
                                 updateFile(file.id) { it.copy(state = UploadState.Uploading, progress = sent.toFloat() / total, bytesPerSecond = speed) }
                             })
-                        updateFile(file.id) { it.copy(state = UploadState.Completed, progress = 1f, savedName = savedName) }
+                        updateFile(file.id) { it.copy(state = UploadState.Completed, progress = 1f, savedName = result.fileName, md5 = result.md5) }
                     } catch (e: CancellationException) {
                         updateFile(file.id) { it.copy(state = UploadState.Canceled) }
                         throw e

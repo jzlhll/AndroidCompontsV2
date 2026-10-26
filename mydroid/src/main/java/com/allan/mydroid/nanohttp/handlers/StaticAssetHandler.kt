@@ -61,7 +61,9 @@ class StaticAssetHandler : AbsHttpRequestHandler() {
         return try {
             val text = AppNative.asts(Globals.app, assetFile)
             logdNoFile { "serve Asset File read success $assetFile." }
-            NanoHTTPD.newFixedLengthResponse(Response.Status.OK, mimeType, text)
+            NanoHTTPD.newFixedLengthResponse(Response.Status.OK, mimeType, text).also {
+                it.addHeader("Cache-Control", "no-store")
+            }
         } catch (_: FileNotFoundException) {
             NanoHTTPD.newFixedLengthResponse(
                 Response.Status.INTERNAL_ERROR,

@@ -17,12 +17,25 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.UUID
+import androidx.annotation.Keep
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import com.au.module_android.utilsmedia.formatBytes
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.au.module_cached.AppDataStore
 import com.au.module_gson.fromGson
 import com.au.module_gson.toGsonString
+
+/** 单次下载结果只在发送响应结束后发布，未完成时不包含摘要。 */
+@Keep
+data class DownloadTransfer(
+    val transferId: String,
+    val uriUuid: String,
+    val state: String = "sending",
+    val md5: String = ""
+)
 
 /** 串行维护分享列表及持久化快照，供页面和 HTTP 下载共用。 */
 class GlobalShareInRepoObj(
@@ -33,6 +46,33 @@ class GlobalShareInRepoObj(
     var shareInAndReceiveBeans: List<ShareInBean>? = null
         private set
     private val mutex = Mutex()
+    private val _downloadTransfersFlow = MutableStateFlow<Map<String, DownloadTransfer>>(emptyMap())
+    val downloadTransfersFlow = _downloadTransfersFlow.asStateFlow()
+
+    fun startDownload(transferId: String, uriUuid: String) {
+        _downloadTransfersFlow.update { previous ->
+            val existing = previous[transferId]
+            check(existing == null || (existing.uriUuid == uriUuid && existing.state != "sending")) {
+                "Download session already active"
+            }
+            val next = LinkedHashMap(previous)
+            next.remove(transferId)
+            if (next.size >= 256) {
+                val completed = next.entries.firstOrNull { it.value.state != "sending" }
+                check(completed != null) { "Too many active downloads" }
+                next.remove(completed.key)
+            }
+            next[transferId] = DownloadTransfer(transferId, uriUuid)
+            next
+        }
+    }
+
+    fun finishDownload(transferId: String, md5: String?) {
+        _downloadTransfersFlow.update { previous ->
+            val item = previous[transferId] ?: return@update previous
+            previous + (transferId to item.copy(state = if (md5 == null) "failed" else "completed", md5 = md5.orEmpty()))
+        }
+    }
 
     private val importDir get() = File(Globals.app.filesDir, "share-imports")
 

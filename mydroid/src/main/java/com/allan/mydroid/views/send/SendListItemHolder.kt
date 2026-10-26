@@ -51,11 +51,10 @@ class SendHolder(binding: HolderMydroidSendlistItemBinding,
         val goodName = bean.name
         binding.icon.setImageResource(getIcon(goodName))
         binding.fileNameTv.text = goodName ?: bean.uri.toString()
-        binding.fileSizeAndMD5Tv.text =
-            if(isVideo)
-                bean.fileSizeStr + " | " + convertToVideoDuration(bean.videoDuration)
-            else
-                bean.fileSizeStr
+        val metadata = if (isVideo) bean.fileSizeStr + " | " + convertToVideoDuration(bean.videoDuration)
+            else bean.fileSizeStr
+        binding.fileSizeAndMD5Tv.text = if (!bean.completedMd5.isNullOrEmpty())
+            metadata + "\nMD5: " + bean.completedMd5 else metadata
 
         if(bean.isNoDeleteBtn) binding.deleteBtn.gone() else binding.deleteBtn.visible()
 

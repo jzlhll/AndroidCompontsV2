@@ -20,16 +20,16 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <com.au.module_androidui.widget.CustomFontText
                 android:id="@+id/iconView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
+                style="@style/StyleTextChatMessage"
                 tools:text="🌟" />
 
             <com.au.module_androidui.widget.CustomFontText
                 android:id="@+id/ipHostTv"
-                style="@style/StyleAuTextThinDesc"
+                style="@style/StyleTextChatMetadata"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -37,7 +37,7 @@
 
             <com.au.module_androidui.widget.CustomFontText
                 android:id="@+id/timeTv"
-                style="@style/StyleAuTextThinDesc"
+                style="@style/StyleTextChatMetadata"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
@@ -46,7 +46,7 @@
 
         <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/messageBubbleTv"
-            style="@style/StyleAuTextThin"
+            style="@style/StyleTextChatMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

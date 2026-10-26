@@ -14,7 +14,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.allan.mydroid.R
 import com.allan.mydroid.bt.DiscoveredHost
 import com.au.module_android.log.logDebug
+import com.au.module_androiduiex.styles.ComposeColors
 import com.au.module_androiduiex.styles.ComposeDimens
 import com.au.module_androiduiex.styles.ComposeLineTabLayout
 import com.au.module_androiduiex.styles.ComposeLineTabLayoutStyle
@@ -78,16 +82,14 @@ fun MyDroidAllScreen(
     )
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ComposeColors.BackgroundBg)
+            .navigationBarsPadding(),
     ) {
         MyDroidAllHeader()
         IpText(ip = uiState.ip, initialized = uiState.initialized)
-        androidx.compose.material3.TextButton(
-            onClick = onTransferRecords,
-            modifier = Modifier.align(Alignment.End).padding(horizontal = 16.dp)
-        ) {
-            androidx.compose.material3.Text(stringResource(R.string.transfer_records), style = ComposeTypography.Font14sp)
-        }
+        Spacer(modifier = Modifier.height(18.dp))
         ComposeLineTabLayout(
             tabs = listOf(stringResource(R.string.tab_host), stringResource(R.string.tab_client)),
             selectedIndex = pagerState.currentPage,
@@ -114,6 +116,26 @@ fun MyDroidAllScreen(
                 )
             }
         }
+        Button(
+            onClick = onTransferRecords,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(vertical = 12.dp)
+                .heightIn(min = 48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MyDroidComposeColors.NormalBlock,
+                contentColor = ComposeColors.TextPrimary,
+            ),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.transfer_records),
+                style = ComposeTypography.Font16M,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -125,12 +147,14 @@ private fun IpText(ip: String?, initialized: Boolean) {
     } else {
         ip ?: stringResource(R.string.connect_wifi_or_hotspot)
     }
-    BasicText(
+    Text(
         text = text,
-        style = ComposeTypography.Font16M.copy(textAlign = TextAlign.Center),
+        style = ComposeTypography.Font16M,
+        textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .height(24.dp)
+            .heightIn(min = 24.dp)
+            .padding(horizontal = 16.dp)
             .wrapContentHeight(Alignment.CenterVertically),
     )
 }
@@ -146,9 +170,10 @@ private fun MyDroidAllHeader() {
             .height(ComposeDimens.ToolbarHeight),
         contentAlignment = Alignment.Center,
     ) {
-        BasicText(
+        Text(
             text = stringResource(R.string.app_name),
-            style = ComposeTypography.Font20M.copy(textAlign = TextAlign.Center),
+            style = ComposeTypography.Font20M,
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -210,14 +235,16 @@ private fun LogicButton(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(62.dp)
+                .heightIn(min = 62.dp)
                 .background(backgroundColor, RoundedCornerShape(16.dp))
-                .noBackClickable(onClick = onClick),
+                .noBackClickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 15.dp),
             contentAlignment = Alignment.Center,
         ) {
-            BasicText(
+            Text(
                 text = text,
-                style = ComposeTypography.Font20MWhite.copy(textAlign = TextAlign.Center),
+                style = ComposeTypography.Font20MWhite,
+                textAlign = TextAlign.Center,
             )
         }
     }

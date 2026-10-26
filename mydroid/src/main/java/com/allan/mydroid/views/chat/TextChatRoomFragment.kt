@@ -1,11 +1,10 @@
 package com.allan.mydroid.views.chat
 
-import android.graphics.Color
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
+import androidx.core.view.doOnLayout
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +20,7 @@ import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.state.GlobalClientListFlowsObj
 import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.views.AbsLiveFragment
+import com.au.module_android.Globals
 import com.au.module_android.clipboard.ClipBoardHelp
 import com.au.module_android.utils.ImeHelper
 import com.au.module_android.utils.ViewBackgroundBuilder
@@ -55,7 +55,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
 
     private var selfIp = ""
     private var currentImeOffset = 0
-    private val inputMinHeight by lazy { 40.dp }
+    private val inputMinHeight by lazy { 44.dp }
     private val inputMaxHeight by lazy { 120.dp }
 
     override fun isAutoHideIme(): Boolean {
@@ -99,10 +99,20 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
 
     // 监听输入框发送动作。
     private fun initInputAction() {
+        binding.inputEdit.background = ViewBackgroundBuilder()
+            .setBackground(resources.getColor(R.color.text_chat_input_bg, null))
+            .setStroke(1f.dp, resources.getColor(R.color.text_chat_input_border, null))
+            .setCornerRadius(20f.dp)
+            .build()
+        binding.sendBtn.isEnabled = false
+        binding.sendBtn.alpha = 0.45f
         binding.sendBtn.setOnClickListener {
             sendCurrentText()
         }
-        binding.inputEdit.doAfterTextChanged {
+        binding.inputEdit.doAfterTextChanged { text ->
+            val canSend = !text.isNullOrBlank()
+            binding.sendBtn.isEnabled = canSend
+            binding.sendBtn.alpha = if (canSend) 1f else 0.45f
             updateInputEditHeight()
             updateRecyclerBottomPadding()
         }
@@ -118,6 +128,12 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     private fun observeSelfAddress() {
         launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { networkInfo ->
             selfIp = networkInfo?.ip.orEmpty()
+            binding.hostAddressTv.text = if (selfIp.isEmpty()) {
+                Globals.app.getString(R.string.connect_wifi_or_hotspot)
+            } else {
+                val port = networkInfo?.httpPort
+                if (port == null) selfIp else "$selfIp:$port"
+            }
             messageAdapter.updateSelfIp(selfIp)
         }
     }
@@ -153,7 +169,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
             clientList.forEachIndexed { index, clientInfo ->
                 val item = clientItem(index)
                 item.title.text = clientInfo.clientName
-                item.title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                item.title.setTextAppearance(R.style.StyleTextChatClient)
                 item.icon.layoutParams = item.icon.layoutParams.apply {
                     width = 18.dp
                     height = 18.dp
@@ -167,7 +183,11 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
                 }
                 item.root.visible()
             }
-            updateRecyclerTopPadding()
+            val currentView = binding.root
+            binding.clientsHost.doOnLayout {
+                if (view !== currentView) return@doOnLayout
+                updateRecyclerTopPadding()
+            }
         }
     }
 
@@ -176,8 +196,8 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         val density = resources.displayMetrics.density
         BlurView3Util(binding.clientsBlurView, 16, 12f * density).setBlurWithOverlayNoNoise(
             binding.blurTarget,
-            0xE6FFFFFF.toInt(),
-            Color.WHITE,
+            resources.getColor(R.color.text_chat_clients_overlay, null),
+            resources.getColor(R.color.text_chat_surface, null),
         )
     }
 
@@ -268,17 +288,17 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
         }
     }
 
-    // 给列表预留输入区高度，避免消息被遮挡。
+    // 列表布局已排除输入区和底部安全区，仅补偿键盘位移。
     private fun updateRecyclerBottomPadding() {
         binding.chatRcv.updatePadding(
-            bottom = binding.inputHost.height + binding.root.paddingBottom + currentImeOffset + 12.dp,
+            bottom = currentImeOffset + 12.dp,
         )
     }
 
     // 给列表顶部预留接入客户端区域的高度，避免消息被遮挡。
     private fun updateRecyclerTopPadding() {
         val topExtra = if (binding.clientsHost.visibility == View.VISIBLE) {
-            binding.clientsHost.height + 4.dp
+            binding.clientsHost.height + 8.dp
         } else {
             0
         }
@@ -309,7 +329,7 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
                 binding.toolbar.layoutParams = toolbarLP
             }
             binding.root.updatePadding(bottom = navBarHeight)
-            requireActivity().changeBarsColor(statusBarTextDark = false)
+            requireActivity().changeBarsColor()
         }
     }
 

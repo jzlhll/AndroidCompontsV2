@@ -1,6 +1,5 @@
 package com.allan.mydroid.client.api
 
-import android.net.Uri
 import com.allan.mydroid.api.GET_MODE
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.httpdata.IpPortResult
@@ -12,8 +11,6 @@ import com.au.module_android.utils.withIOThread
 import com.au.module_gson.fromGson
 import com.au.module_gson.fromGsonList
 import com.au.module_okhttp.api.ResultBean
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
@@ -89,19 +86,15 @@ object ClientApi {
      * POST /upload-chunk multipart 上传一个分片。
      * host 端 NanoHTTPD 用 session.parseBody 解析，文件 part name 必须是 "chunk"。
      *
-     * @param offset uri 输入流的起始偏移
-     * @param length 本次分片字节数
+     * 分块由调用方单次顺序读取，摘要与请求体使用同一份字节。
      */
     suspend fun uploadChunk(
         baseUrl: String,
-        uri: Uri,
+        chunk: ByteArray,
         fileName: String,
         chunkIndex: Int,
         totalChunks: Int,
-        md5: String,
-        offset: Long,
-        length: Long,
-        uploadId: String = ""
+        uploadId: String
     ): String = withIOThread {
         val url = "$baseUrl/upload-chunk"
         val multipartBuilder = MultipartBody.Builder()
@@ -109,14 +102,10 @@ object ClientApi {
             .addFormDataPart("fileName", fileName)
             .addFormDataPart("chunkIndex", chunkIndex.toString())
             .addFormDataPart("totalChunks", totalChunks.toString())
-            .addFormDataPart("md5", md5)
+            .addFormDataPart("hashMode", "stream")
             .addFormDataPart("uploadId", uploadId)
 
-        val context = currentCoroutineContext()
-        val chunkBody = UriChunkRequestBody(Globals.app.contentResolver, uri, offset, length) {
-            if (!context.isActive) throw IOException("Upload canceled")
-        }
-        multipartBuilder.addFormDataPart("chunk", fileName, chunkBody)
+        multipartBuilder.addFormDataPart("chunk", fileName, chunk.toRequestBody(null))
 
         val request = Request.Builder().url(url).post(multipartBuilder.build()).build()
         val resp = executeText(request)
@@ -133,9 +122,11 @@ object ClientApi {
         fileName: String,
         totalChunks: Int,
         lastModified: Long,
-        uploadId: String = ""
+        uploadId: String = "",
+        hashMode: String = ""
     ): String = withIOThread {
         val json = JSONObject().apply {
+            put("hashMode", hashMode)
             put("md5", md5)
             put("fileName", fileName)
             put("totalChunks", totalChunks)
@@ -145,12 +136,16 @@ object ClientApi {
         val resp = postJson("$baseUrl/merge-chunks", json)
         val bean = resp.fromGson<ResultBean<Map<String, String>>>() ?: throw IllegalStateException("parse mergeChunks resp failed: $resp")
         ensureSuc(bean.code, bean.msg)
+        if (hashMode == "stream") {
+            check(bean.data?.get("md5").equals(md5, ignoreCase = true)) { "Invalid merged MD5" }
+        }
         bean.data?.get("fileName") ?: fileName
     }
 
     /** POST /abort-upload-chunks JSON。 */
-    suspend fun abortUploadChunks(baseUrl: String, md5: String, fileName: String, uploadId: String = ""): String = withIOThread {
+    suspend fun abortUploadChunks(baseUrl: String, md5: String, fileName: String, uploadId: String = "", hashMode: String = ""): String = withIOThread {
         val json = JSONObject().apply {
+            put("hashMode", hashMode)
             put("md5", md5)
             put("fileName", fileName)
             put("uploadId", uploadId)

@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="text_chat_bubble_self_bg">#2F6B3E</color>
-    <color name="text_chat_bubble_self_text">#F4FFF4</color>
-    <color name="text_chat_bubble_other_bg">#454545</color>
-    <color name="text_chat_bubble_other_text">#FFFFFF</color>
+    <color name="text_chat_bubble_self_bg">#493769</color>
+    <color name="text_chat_bubble_self_text">#F8F2FF</color>
+    <color name="text_chat_bubble_other_bg">#292D3B</color>
+    <color name="text_chat_bubble_other_text">#F0F1F7</color>
     <color name="blur_overlay">#ad000000</color>
+    <color name="text_chat_background">#151720</color>
+    <color name="text_chat_surface">#1E212D</color>
+    <color name="text_chat_text">#F0F1F7</color>
+    <color name="text_chat_text_secondary">#ADB3C6</color>
+    <color name="text_chat_input_bg">#292D3B</color>
+    <color name="text_chat_input_border">#454B60</color>
+    <color name="text_chat_input_hint">#ADB3C6</color>
+    <color name="text_chat_accent">#C4B0F4</color>
+    <color name="text_chat_accent_pressed">#AE94E7</color>
+    <color name="text_chat_accent_text">#25183E</color>
+    <color name="text_chat_clients_overlay">#F21E212D</color>
 </resources>

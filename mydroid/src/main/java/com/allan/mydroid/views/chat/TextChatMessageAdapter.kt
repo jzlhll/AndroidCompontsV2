@@ -1,6 +1,5 @@
 package com.allan.mydroid.views.chat
 
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -111,16 +110,10 @@ class TextChatMessageHolder(
         }
         val timeText = timeFormat.format(Date(bean.timestamp))
         binding.ipHostTv.text = bean.ip
-        binding.ipHostTv.background = ViewBackgroundBuilder()
-            .setBackground(0xFFF0F0F0.toInt())
-            .setCornerRadius(4f.dp)
-            .build()
-        binding.ipHostTv.setPadding(4.dp, 2.dp, 4.dp, 2.dp)
         binding.timeTv.text = timeText
         binding.messageBubbleTv.text = bean.text
-        binding.messageBubbleTv.setTextSize(
-            TypedValue.COMPLEX_UNIT_SP,
-            if (isSelf) 15f else 16f
+        binding.messageBubbleTv.setTextAppearance(
+            if (isSelf) R.style.StyleTextChatSelfMessage else R.style.StyleTextChatMessage
         )
         val context = binding.root.context
         val bubbleColorRes = if (isSelf) {
@@ -128,12 +121,6 @@ class TextChatMessageHolder(
         } else {
             R.color.text_chat_bubble_other_bg
         }
-        val textColorRes = if (isSelf) {
-            R.color.text_chat_bubble_self_text
-        } else {
-            R.color.text_chat_bubble_other_text
-        }
-        binding.messageBubbleTv.setTextColor(ContextCompat.getColor(context, textColorRes))
 
         binding.messageBubbleTv.background = ViewBackgroundBuilder()
             .setBackground(ContextCompat.getColor(context, bubbleColorRes))

@@ -7,4 +7,49 @@
     <style name="SplashTheme" parent="AbsStyleSplashTheme">
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_playstore</item>
     </style>
+
+    <style name="StyleTextChatMetadata" parent="StyleAuTextSmallDesc">
+        <item name="android:textColor">@color/text_chat_text_secondary</item>
+    </style>
+
+    <style name="StyleTextChatClient" parent="StyleAuTextThin">
+        <item name="android:textColor">@color/text_chat_text</item>
+    </style>
+
+    <style name="StyleTextChatMessage" parent="StyleAuTextNormal">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/text_chat_bubble_other_text</item>
+    </style>
+
+    <style name="StyleTextChatSelfMessage" parent="StyleTextChatMessage">
+        <item name="android:textColor">@color/text_chat_bubble_self_text</item>
+    </style>
+
+    <style name="StyleTextChatInput" parent="StyleNoBgInputEditText">
+        <item name="android:textColor">@color/color_text_normal</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">0dp</item>
+        <item name="android:textColorHint">@color/text_chat_input_hint</item>
+        <item name="android:backgroundTint">@null</item>
+    </style>
+
+    <style name="StyleTextChatSend" parent="StyleAuTextThin">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_chat_accent_text</item>
+        <item name="backgroundNormal">@color/text_chat_accent</item>
+        <item name="backgroundPressed">@color/text_chat_accent_pressed</item>
+        <item name="cornerRadius">20dp</item>
+    </style>
+
+    <style name="StyleWebTransferDescription" parent="StyleAuTextThin">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:autoSizeTextType">uniform</item>
+        <item name="android:autoSizeMinTextSize">10sp</item>
+        <item name="android:autoSizeMaxTextSize">14sp</item>
+        <item name="android:autoSizeStepGranularity">1sp</item>
+    </style>
+
+    <style name="StyleWebTransferAction" parent="StyleAuTextThin">
+        <item name="android:textColor">@color/white</item>
+    </style>
 </resources>

@@ -215,8 +215,6 @@
     </style>
 </head>
 
-<script src="mydroid-md5generator.js"></script>
-<script src="spark-md5.js"></script>
 <script src="mydroid-utils.js"></script>
 <script src="mydroid-locales.js"></script>
 <script src="mydroid-websockets.js"></script>
@@ -281,42 +279,96 @@
             document.getElementById('bigTitleColor').style.backgroundColor = color;
         };
 
+        const downloadResults = new Map();
+
         // 接收并显示数据的JS函数
         window.htmlShowFileList = function(uriRealInfoHtmlList) {
             document.getElementById('loading-text').style.display = 'none';
             document.getElementById('file-list-container').style.display = 'table';
             const tbody = document.getElementById('file-list-body');
             tbody.innerHTML = '';
-            const downloadStr = loc["download"];
-            const cancelStr = loc["cancel"];
-
             uriRealInfoHtmlList.forEach(item => {
-                const row = `
-                    <tr>
-                        <td>
-                            <div class="file-name">${item.name || 'noNameFile'}</div>
-                        </td>
-                        <td>${item.fileSizeStr}</td>
-                        <td>
-                            <a id="down-item-${item.uriUuid}" class="download-link" style="display:block;" onclick="startDownload('${item.uriUuid}')">
-                               ${downloadStr}
-                            </a>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
+                const row = document.createElement('tr');
+                const nameCell = document.createElement('td');
+                const name = document.createElement('div');
+                name.className = 'file-name';
+                name.style.overflowWrap = 'anywhere';
+                name.textContent = item.name || 'noNameFile';
+                const result = document.createElement('div');
+                result.id = `result-${item.uriUuid}`;
+                result.style.overflowWrap = 'anywhere';
+                result.style.fontSize = '12px';
+                result.textContent = downloadResults.get(item.uriUuid) || '';
+                nameCell.append(name, result);
+                const sizeCell = document.createElement('td');
+                sizeCell.textContent = item.fileSizeStr;
+                const actionCell = document.createElement('td');
+                const link = document.createElement('a');
+                link.id = `down-item-${item.uriUuid}`;
+                link.className = downloads.has(item.uriUuid) ? 'download-link disabled' : 'download-link';
+                link.textContent = loc['download'];
+                link.onclick = () => startDownload(item.uriUuid);
+                actionCell.appendChild(link);
+                row.append(nameCell, sizeCell, actionCell);
+                tbody.appendChild(row);
             });
-        }
-        
-        function startDownload(uriUuid) {
-            const url = `/file_download_uuid/${encodeURIComponent(uriUuid)}`;
+        };
+
+        const downloads = new Map();
+        window.addEventListener('pagehide', () => {
+            for (const job of downloads.values()) job.abort();
+        });
+
+        async function startDownload(uriUuid) {
+            if (downloads.has(uriUuid)) return;
+            const controller = new AbortController();
+            downloads.set(uriUuid, controller);
+            const showResult = text => {
+                downloadResults.set(uriUuid, text);
+                const target = document.getElementById(`result-${uriUuid}`);
+                if (target) target.textContent = text;
+            };
+            const link = document.getElementById(`down-item-${uriUuid}`);
+            link.classList.add('disabled');
+            showResult(loc['transfer_start']);
+            const transferId = generateUUID();
             const tmpLink = document.createElement('a');
-            tmpLink.href = url;
+            tmpLink.href = `/file_download_uuid/${encodeURIComponent(uriUuid)}?transferId=${encodeURIComponent(transferId)}`;
             tmpLink.style.display = 'none';
             document.body.appendChild(tmpLink);
             tmpLink.click();
-            document.body.removeChild(tmpLink);
-        };
+            tmpLink.remove();
+            try {
+                let failures = 0;
+                while (!controller.signal.aborted) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const response = await fetch(`/file_download_status/${encodeURIComponent(transferId)}`,
+                        { cache: 'no-store', signal: controller.signal });
+                    if (response.status === 404 && failures++ < 15) continue;
+                    if (!response.ok) throw new Error(loc['failure_error_with_code'] + response.status);
+                    const answer = await response.json();
+                    if (answer.code != 0) throw new Error(answer.msg);
+                    failures = 0;
+                    if (answer.data.transferId !== transferId || answer.data.uriUuid !== uriUuid) {
+                        throw new Error('Invalid download session');
+                    }
+                    if (answer.data.state === 'completed') {
+                        if (!/^[a-f0-9]{32}$/i.test(answer.data.md5)) throw new Error(loc['md5_error']);
+                        showResult(`${loc['send_success']} MD5: ${answer.data.md5}`);
+                        break;
+                    }
+                    if (answer.data.state === 'failed') {
+                        showResult(loc['operation_cancelled']);
+                        break;
+                    }
+                }
+            } catch (error) {
+                if (!controller.signal.aborted) showResult(error.message);
+            } finally {
+                downloads.delete(uriUuid);
+                document.getElementById(`down-item-${uriUuid}`)?.classList.remove('disabled');
+            }
+        }
 
         ////////run init functions//////
         startWsConnect();

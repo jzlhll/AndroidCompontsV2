@@ -1,6 +1,7 @@
 package com.allan.mydroid.views.send
 
 import android.os.Bundle
+import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.view.updatePadding
@@ -66,11 +67,14 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
     private fun showBigIcon(bean: ShareInBean, isVideo: Boolean) {
         if (!hasSetBigImageClick) {
             hasSetBigImageClick = true
-            binding.blurView.onClick {
+            val dismissPreview: (View) -> Unit = {
                 binding.blurView.gone()
                 binding.bigImage.gone()
                 binding.iconPlay.gone()
             }
+            binding.blurView.onClick(dismissPreview)
+            binding.bigImage.onClick(dismissPreview)
+            binding.iconPlay.onClick(dismissPreview)
             binding.bigImage.setImageDrawable(null)
         }
 
@@ -112,7 +116,7 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
 
         val fmt = getString(com.allan.mydroid.R.string.not_close_window)
         val leftStr = getString(com.allan.mydroid.R.string.storage_remaining)
-        binding.descTitle.text = String.format(fmt, leftStr + getExternalFreeSpace(requireActivity()))
+        binding.descTitle.text = String.format(fmt, leftStr.trim() + " " + getExternalFreeSpace(requireActivity()))
 
         launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { netInfo->
             if (netInfo == null) {
@@ -128,6 +132,9 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
             }
         }
         common.onCreated()
+        launchRepeatOnStarted(shareInRepository.downloadTransfersFlow) { results ->
+            common.updateDownloads(results)
+        }
     }
 
     private fun clientLiveDataInit() {

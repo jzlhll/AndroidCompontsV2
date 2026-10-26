@@ -1,0 +1,66 @@
+# 网页收发与聊天自测
+
+日期：2026-10-26。手机：Samsung SM_S928U1（R5CXA1EMC8N），应用 com.allan.mydroid；网页端：Google Chrome，直接访问手机局域网地址。
+
+## 小文件结果
+
+| 文件 | 字节数 | MD5 |
+| --- | ---: | --- |
+| screenshot-20261026-101946.png | 156893 | 8e0586db41dd3e7c325a00a411b70c11 |
+| 需要干的事情必须保留0626.txt | 6563 | 915a817a5d87781a6d6c88f1abc05a2e |
+
+- Chrome → 手机：同时选择两个文件并上传，网页均显示发送成功，手机接收列表显示对应文件、大小和 MD5 前缀。
+- 手机本次选择 → Chrome：通过手机系统文件选择器多选两个文件，进入发送页；Chrome 分别下载对应的选中文件条目。下载文件与电脑原文件逐字节一致，字节数和完整 MD5 均一致。
+- 双向聊天：Chrome 发送中文、英文、多行、emoji 和特殊字符，手机正确显示；手机发送回复，Chrome 正确显示。
+- 聊天刷新：Chrome 刷新后恢复已有消息，且可继续发送，手机正确收到。
+
+上述小文件基础流程未复现功能故障；新版本安装后，两个小文件重复上传和网页消息送达亦通过。
+
+## APK 与 ZIP 结果
+
+- ImagechoReframe-release.apk：93769275 字节，MD5 `5d9ac59ecc4f4e8f51875800d71ffe4c`。流式版本 Chrome 上传成功，手机合并校验成功；选择阶段仅显示 89.4 MB，上传至 67% 时未显示 MD5，成功后才显示完整摘要，与原文件一致。
+- APK 手机回传：网页与手机发送列表均在发送完成后显示相同完整 MD5；Chrome 将下载标记为“已阻止不安全的下载”，尚待用户手动处理浏览器提示，因此实际落盘文件的字节数与逐字节一致性尚未验证。未放行该安全提示。
+- 本轮证据：[上传结果](/private/tmp/mydroid-apk-upload-complete.jpg)、[Chrome 下载阻止提示](/private/tmp/mydroid-apk-download-blocked.png)。
+- compressSamples.zip：测试因返回操作中断，未完成；按用户要求停止，不计为传输失败，不继续测试。
+- 取消、断网恢复和手机互传尚未验证。
+
+## 网页进度修正
+
+大文件上传期间，进度条推进但文字仍显示 MD5 耗时，完成后才更新。已在 SendToPhone.html 中补充上传开始及每次进度回调时的列表刷新，使百分比、速度与合并校验状态及时显示；源码已修正，待重新打包安装后实机确认。
+
+## 待修问题
+
+- 手机 File Receive / File Send 顶部提示已在源码中调整为两行，增加左右边距与自适应字号；待重新安装后截图确认。
+
+## Text Chat 配色修正
+
+已在源码中统一浅色与深色模式的页面、标题栏、客户端栏、输入框、发送按钮和消息气泡配色。客户端栏使用随主题变化的模糊覆盖色，修正深色模式白底白字；IP 与时间改用清晰的次级文字颜色并移除浅灰 IP 底色。深色新配色已在重新安装后的手机上确认生效，客户端名称、消息与输入区文字清晰，网页消息送达正常；浅色实机效果尚未验证。
+
+## 流式 MD5 传输
+
+- 选择文件时只展示名称、大小等元数据，不读取内容计算 MD5，不显示 MD5 占位符或计算耗时。
+- 网页上传按上传分块读取一次，同一份字节同时用于网络请求与 Worker 增量 MD5。Worker 使用离线 hash-wasm 4.12.0，初始化失败时回退 SparkMD5；同时只保留一个分块，内存不随文件总大小增长。
+- 新上传协议在分块、合并和取消请求中携带 `hashMode=stream` 与 `uploadId`，传输过程中不要求完整 MD5；所有分块完成后提交完整摘要，手机合并写入时计算并比较摘要，校验成功才发布文件和显示 MD5。取消或合并后的迟到分块会被拒绝。
+- 手机分块发送端同样取消整文件预计算，单次顺序读取并同时发送、计算摘要，确认合并成功后显示 MD5。
+- 手机向网页发送文件时，在 HTTP 发送流中计算 MD5。只有完整响应发送结束且未检测到读写失败时，才向手机列表和网页发布摘要；网页查询独立下载会话的结果。保留浏览器原生流式下载，不将整个文件加载到网页内存。此摘要来自手机发送流，不代表浏览器另行读取已落盘文件完成二次校验。
+- 已接收文件的摘要随大小、修改时间持久化，列表重载只扫描元数据；缺少有效摘要快照的历史文件不再主动扫描内容补算。
+- 新服务端兼容旧客户端携带预计算 MD5 的上传协议；新流式发送端需要配套的新服务端。升级后须刷新网页，避免旧页面脚本与新协议混用。
+- 小文件收发与聊天结果来自流式协议改造前；流式版本已使用 APK 确认上传及完成摘要，回传的落盘校验受 Chrome 下载提示阻碍，取消重试尚未验证。ZIP 传输仍不测试。此前独立预计算的性能测量不作为当前流程的性能结论。
+
+## 手机页面布局优化
+
+已逐页截图检查首页、Download records、File Receive、Receive List、Export History、文件详情与操作弹窗、Send List、File Send、图片预览、Text Chat 及键盘展开状态。
+
+| 页面 | 源码调整 |
+| --- | --- |
+| 首页 | Download records 为 Tab 内容下方的整行底部按钮；IP 和功能按钮高度随内容适应，底部避让导航栏；首页及收发页使用不透明主题背景，防止滑动过渡时透出下层内容。 |
+| 收发文件 | 提示分为两行，增加左右边距并自适应字号；地址可换行；39% / 25% 固定比例占位改为 72 dp，释放文件列表空间。 |
+| 文件列表 | 文件名最多两行显示，移除开头省略；增加列表底部滚动留白，对齐发送页名称和大小。 |
+| 发送选择 | 相册与文件选择入口平分可用宽度，至少 48 dp 高；底部占位适配深色背景。 |
+| 图片预览 | 深色遮罩隔离底层列表，移除图片区域的灰色铺底；预览点击可关闭，播放图标与预览区域居中。 |
+| 聊天 | 精简输入栏上下边距、缩短输入提示；移除重复计入的输入栏及导航栏留白；客户端栏测量完成后预留空间。 |
+| Download records | 移除重复标题，统一列表上下内边距。 |
+
+详情与操作弹窗在当前设备截图中未发现内容遮挡。以上布局调整尚待重新编译安装，再逐页截图确认，不能将修改前截图作为优化后结果。
+
+修改前实机截图：[首页](/private/tmp/mydroid-layout-home-before.png)、[下载记录](/private/tmp/mydroid-layout-records-before.png)、[收文件](/private/tmp/mydroid-layout-receive-before.png)、[文件详情](/private/tmp/mydroid-layout-receive-detail-before.png)、[文件操作](/private/tmp/mydroid-layout-receive-actions-before.png)、[导出历史](/private/tmp/mydroid-layout-export-history-before.png)、[独立接收列表](/private/tmp/mydroid-layout-receive-menu-before.png)、[发送选择](/private/tmp/mydroid-layout-send-selector-before.png)、[发送页面](/private/tmp/mydroid-layout-send-before.png)、[图片预览](/private/tmp/mydroid-layout-preview-before.png)、[聊天](/private/tmp/mydroid-layout-chat-before.png)、[聊天键盘展开](/private/tmp/mydroid-layout-chat-ime-before.png)。

@@ -15,6 +15,7 @@ import kotlinx.coroutines.withContext
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.repository.GlobalShareInRepoObj
+import com.allan.mydroid.repository.DownloadTransfer
 import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -25,6 +26,8 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
     private val mAdapter = SendListAdapter {it, mode->
         onItemClick(it, mode)
     }
+
+    private var downloads: Map<String, DownloadTransfer> = emptyMap()
 
     abstract fun rcv(): RecyclerView
     abstract fun empty(): TextView?
@@ -53,7 +56,26 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
         }
     }
 
+    fun updateDownloads(results: Map<String, DownloadTransfer>) {
+        downloads = results
+        if (!isNoDeleteBtn) return
+        mAdapter.datas.forEachIndexed { index, item ->
+            if (item is ShareInBean) {
+                val latest = results.values.lastOrNull { it.uriUuid == item.uriUuid }
+                val md5 = if (latest?.state == "completed") latest.md5 else null
+                if (item.completedMd5 != md5) {
+                    item.completedMd5 = md5
+                    mAdapter.notifyItemChanged(index)
+                }
+            }
+        }
+    }
+
     fun updateList(sendUriList: List<ShareInBean>) {
+        sendUriList.forEach { bean ->
+            val latest = downloads.values.lastOrNull { it.uriUuid == bean.uriUuid }
+            bean.completedMd5 = if (isNoDeleteBtn && latest?.state == "completed") latest.md5 else null
+        }
         val newList = ArrayList<IMultiViewTypeBean>()
         val shareInList = sendUriList.filter { !it.isLocalReceiver }
         if (shareInList.isNotEmpty()) {

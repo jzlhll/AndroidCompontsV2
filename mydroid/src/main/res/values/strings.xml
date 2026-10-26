@@ -4,11 +4,10 @@
     <string name="next">Next</string>
     <string name="tips">Tips</string>
     <string name="export_history">Export History</string>
-    <string name="export_history_2">Export History*</string>
     <string name="transfer_list">Receive List</string>
     <string name="my_transfer_list">My receive list</string>
     <string name="transfer_list_2">Receive List*</string>
-    <string name="not_close_window">Do not exit or turn off screen: %s</string>
+    <string name="not_close_window">Do not exit or turn off screen\n%s</string>
     <string name="no_received_files">No files received</string>
     <string name="send_list">Send List</string>
     <string name="my_droid_mode_receiver">Send to phone</string>
@@ -89,9 +88,9 @@
     <string name="select_videos">Select Videos</string>
     <string name="select_files">Select Files</string>
     <string name="send">Send</string>
-    <string name="text_chat_room">Text Chat</string>
+    <string name="text_chat_room">Text Chat(host)</string>
     <string name="fragment_my_droid_all_text_chat_room">Webpage-Text Chat</string>
-    <string name="text_chat_input_hint">Type message and send with keyboard</string>
+    <string name="text_chat_input_hint">Type a message</string>
     <string name="text_chat_copy_success">Copied</string>
 
     <string name="port_m">Port: </string>
@@ -117,7 +116,7 @@
     <string name="connect_to_host_mode_none">Host is not ready. Please go back and choose again.</string>
     <string name="connect_to_host_send_title">Send files to host</string>
     <string name="connect_to_host_receive_title">Receive files from host</string>
-    <string name="connect_to_host_chat_title">Text chat</string>
+    <string name="connect_to_host_chat_title">Text Chat(client)</string>
     <string name="connect_to_host_start_upload">Start upload</string>
     <string name="connect_to_host_cancel_upload">Cancel</string>
     <string name="connect_to_host_uploading">Uploading</string>

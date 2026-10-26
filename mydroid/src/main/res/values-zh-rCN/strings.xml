@@ -4,11 +4,10 @@
     <string name="next">下一步</string>
     <string name="tips">提示</string>
     <string name="export_history">"导出历史 "</string>
-    <string name="export_history_2">"导出历史*"</string>
     <string name="transfer_list">"接收列表 "</string>
     <string name="my_transfer_list">"我的接收列表"</string>
     <string name="transfer_list_2">"接收列表*"</string>
-    <string name="not_close_window">不退出，不熄屏 %s</string>
+    <string name="not_close_window">不退出，不熄屏\n%s</string>
     <string name="no_received_files">暂无接收到的文件</string>
     <string name="send_list">发送列表</string>
     <string name="my_droid_mode_receiver">发送给手机</string>
@@ -84,9 +83,9 @@
     <string name="select_videos">选择视频</string>
     <string name="select_files">选择文件</string>
     <string name="send">发送</string>
-    <string name="text_chat_room">文本对话</string>
+    <string name="text_chat_room">文本对话(host)</string>
     <string name="fragment_my_droid_all_text_chat_room">网页-文本对话</string>
-    <string name="text_chat_input_hint">输入文本后使用键盘发送</string>
+    <string name="text_chat_input_hint">输入消息</string>
     <string name="text_chat_copy_success">已复制</string>
 
     <string name="port_m">端口: </string>
@@ -111,7 +110,7 @@
     <string name="connect_to_host_mode_none">主机未就绪，请返回后重新选择。</string>
     <string name="connect_to_host_send_title">发送文件给主机</string>
     <string name="connect_to_host_receive_title">从主机接收文件</string>
-    <string name="connect_to_host_chat_title">文本对话</string>
+    <string name="connect_to_host_chat_title">文本对话(client)</string>
     <string name="connect_to_host_start_upload">开始上传</string>
     <string name="connect_to_host_cancel_upload">取消</string>
     <string name="connect_to_host_uploading">上传中</string>

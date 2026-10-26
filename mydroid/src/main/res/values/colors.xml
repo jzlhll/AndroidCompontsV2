@@ -18,11 +18,23 @@
     <color name="logic_watch_picture">#00838F</color>
     <color name="logic_watch_video">#D84315</color>
 
-    <color name="text_chat_bubble_self_bg">#DCF8C6</color>
-    <color name="text_chat_bubble_self_text">#111111</color>
-    <color name="text_chat_bubble_other_bg">#F0F0F0</color>
-    <color name="text_chat_bubble_other_text">#111111</color>
+    <color name="text_chat_bubble_self_bg">#E7DFF9</color>
+    <color name="text_chat_bubble_self_text">#34234F</color>
+    <color name="text_chat_bubble_other_bg">#FFFFFF</color>
+    <color name="text_chat_bubble_other_text">#242331</color>
 
 
     <color name="blur_overlay">#bbffffff</color>
+    <color name="text_chat_background">#F3F4F8</color>
+    <color name="text_chat_surface">#FFFFFF</color>
+    <color name="text_chat_text">#242331</color>
+    <color name="text_chat_text_secondary">#626779</color>
+    <color name="text_chat_input_bg">#F3F4F8</color>
+    <color name="text_chat_input_border">#DADDE7</color>
+    <color name="text_chat_input_hint">#666B7C</color>
+    <color name="text_chat_accent">#7053C1</color>
+    <color name="text_chat_accent_pressed">#5C42A7</color>
+    <color name="text_chat_accent_text">#FFFFFF</color>
+    <color name="text_chat_clients_overlay">#F2FFFFFF</color>
+    <color name="transfer_preview_overlay">#E6000000</color>
 </resources>

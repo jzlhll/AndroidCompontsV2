@@ -36,7 +36,8 @@ data class SelectedFile(
     val progress: Float = 0f,
     val error: String? = null,
     val savedName: String? = null,
-    val bytesPerSecond: Long = 0
+    val bytesPerSecond: Long = 0,
+    val md5: String? = null
 )
 
 enum class UploadState { Pending, Preparing, Uploading, Merging, Completed, Failed, Canceled }

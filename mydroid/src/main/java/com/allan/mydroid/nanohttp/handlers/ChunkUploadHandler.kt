@@ -17,23 +17,20 @@ import com.allan.mydroid.nanohttp.CODE_FAIL_MERGE_CHUNK
 import com.allan.mydroid.nanohttp.CODE_FAIL_RECEIVER_CHUNK
 import com.allan.mydroid.nanohttp.CODE_SUC
 import com.allan.mydroid.nanohttp.badRequestJsonResponse
-import com.allan.mydroid.nanohttp.jsonResponse
 import com.allan.mydroid.nanohttp.okJsonResponse
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.globals.nanoTempCacheChunksDir
 import com.au.module_android.Globals
 import com.au.module_okhttp.api.ResultBean
-import com.au.module_android.log.ALogJ
-import com.au.module_android.log.logd
-import com.au.module_android.log.logt
-import com.au.module_android.utils.Md5Util.Companion.getFileMD5
+import java.security.MessageDigest
+import java.security.DigestOutputStream
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.IHTTPSession
 import fi.iki.elonen.NanoHTTPD.Response
-import fi.iki.elonen.NanoHTTPD.Response.Status
 import org.json.JSONObject
 import java.io.File
 import com.allan.mydroid.repository.TransferFiles
+import com.au.module_android.log.logdNoFile
 import com.au.module_android.log.logEx
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.repository.GlobalFileListRepoObj
@@ -61,240 +58,153 @@ class ChunkUploadHandler(
             aliveTrigger.transferFinished()
         }
     }
-    /**
-     * key 按来源地址、上传会话、文件名与 MD5 隔离；旧客户端未传会话时保留原协议。
-     * value是chunkInfo组
-     */
+    // 流式协议使用上传会话索引；旧协议仍按完整 MD5 隔离。
     private val fileChunkInfosMap = HashMap<String, ArrayList<ChunkInfoResult>>()
-    /**
-     * 用于加锁上面的操作
-     */
+    private val closedUploads = LinkedHashSet<String>()
     private val cLock = Any()
 
-    private fun addChunkInfo(source: String, chunkInfo: ChunkInfoResult) {
-        synchronized(cLock) {
-            val fileName = chunkInfo.fileName
-            val md5 = chunkInfo.md5
-            val chunkInfoList = fileChunkInfosMap.getOrPut("$source:$fileName-$md5") {
-                ArrayList()
-            }
-            chunkInfoList.removeAll {
-                if (it.chunkIndex == chunkInfo.chunkIndex) {
-                    it.chunkTmpFile.delete()
-                    true
-                } else false
-            }
-            chunkInfoList.add(chunkInfo)
+    private fun uploadKey(session: IHTTPSession, uploadId: String, fileName: String, md5: String, hashMode: String): String {
+        require(fileName.isNotBlank()) { "Invalid file name" }
+        require(hashMode.isEmpty() || hashMode == "stream") { "Invalid hash mode" }
+        if (uploadId.isNotEmpty()) {
+            require(uploadId.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Invalid upload session" }
         }
+        if (hashMode == "stream") {
+            require(uploadId.isNotEmpty()) { "Missing upload session" }
+            return "${session.remoteIpAddress}:stream:$uploadId:$fileName"
+        }
+        require(md5.matches(Regex("[a-fA-F0-9]{32}"))) { "Invalid MD5" }
+        return "${session.remoteIpAddress}:$uploadId:$fileName-${md5.lowercase()}"
     }
 
-    private fun removeChunkInfoList(source: String, fileName: String, md5:String) : ArrayList<ChunkInfoResult>? {
-        synchronized(cLock) {
-            return fileChunkInfosMap.remove("$source:$fileName-$md5")
+    private fun removeChunkInfoList(key: String, closeSession: Boolean): ArrayList<ChunkInfoResult>? = synchronized(cLock) {
+        // 拒绝取消或合并后迟到的分块，防止清理完成后又产生孤立临时文件。
+        if (closeSession) {
+            closedUploads.add(key)
+            while (closedUploads.size > 256) closedUploads.remove(closedUploads.first())
         }
+        fileChunkInfosMap.remove(key)
     }
 
-    fun handleUploadChunk(session: IHTTPSession) : Response {
+    fun handleUploadChunk(session: IHTTPSession): Response {
         var fileName = ""
-        var chunkIndex:Int = -1
+        var chunkIndex = 0
         var totalChunks = 0
-        var md5 = ""
-
+        var key = ""
+        var retainedFile: File? = null
         try {
-            // 1. 获取普通参数
-            val parseBodyFileMap = HashMap<String, String>()
-            session.parseBody(parseBodyFileMap)
-
+            val files = HashMap<String, String>()
+            session.parseBody(files)
             val params = session.parameters
-            fileName = params["fileName"]?.first() ?: ""
-            chunkIndex = params["chunkIndex"]?.first()?.toInt() ?: 0
-            totalChunks = params["totalChunks"]?.first()?.toInt() ?: 0
-            md5 = params["md5"]?.first() ?: ""
-            val source = uploadSource(session, params["uploadId"]?.firstOrNull().orEmpty())
-
-            require(fileName.isNotBlank() && totalChunks > 0 && chunkIndex in 1..totalChunks)
-            require(md5.matches(Regex("[a-fA-F0-9]{32}")))
-            // 2. 获取文件块内容（核心）
-            val tmpFileStr = parseBodyFileMap["chunk"]
-            if (tmpFileStr.isNullOrEmpty()) {
-                val s = Globals.getString(R.string.file_not_received)
-                return ResultBean<ChunkInfoResult>(CODE_FAIL, s, null).badRequestJsonResponse()
+            fileName = params["fileName"]?.firstOrNull().orEmpty()
+            chunkIndex = params["chunkIndex"]?.firstOrNull()?.toInt() ?: 0
+            totalChunks = params["totalChunks"]?.firstOrNull()?.toInt() ?: 0
+            val md5 = params["md5"]?.firstOrNull().orEmpty()
+            val hashMode = params["hashMode"]?.firstOrNull().orEmpty()
+            key = uploadKey(session, params["uploadId"]?.firstOrNull().orEmpty(), fileName, md5, hashMode)
+            require(totalChunks > 0 && chunkIndex in 1..totalChunks) { "Invalid chunk index" }
+            val path = files["chunk"]
+            require(!path.isNullOrEmpty()) { Globals.getString(R.string.file_not_received) }
+            val source = File(path)
+            val target = File(nanoTempCacheChunksDir(), source.name)
+            check(source.renameTo(target)) { "Cannot retain chunk" }
+            retainedFile = target
+            val chunk = ChunkInfoResult(fileName, chunkIndex, totalChunks, if (hashMode == "stream") "" else md5, target)
+            synchronized(cLock) {
+                check(key !in closedUploads) { "Upload session is closed" }
+                val list = fileChunkInfosMap.getOrPut(key) { ArrayList() }
+                check(list.all { it.totalChunks == totalChunks }) { "Chunk count changed" }
+                list.removeAll {
+                    if (it.chunkIndex == chunkIndex) { it.chunkTmpFile.delete(); true } else false
+                }
+                list.add(chunk)
             }
-
-            val tmpFile = File(tmpFileStr)
-            logt{ "chunk: $fileName $md5, $chunkIndex/$totalChunks $tmpFileStr ${tmpFile.length()}" }
-
-            // 3. 将临时文件转存 否则框架立刻clear掉了。
-            val chunkTmpFileStr = nanoTempCacheChunksDir() + File.separatorChar + tmpFile.name
-            val chunkTmpFile = File(chunkTmpFileStr)
-            if (chunkTmpFile.exists()) {
-                chunkTmpFile.delete()
-            }
-            check(tmpFile.renameTo(chunkTmpFile)) { "Cannot retain chunk" }
-
-            val chunkInfo = ChunkInfoResult(fileName, chunkIndex, totalChunks, md5, chunkTmpFile)
-            addChunkInfo(source, chunkInfo)
-
-            receiverFlowsObj.emitProgress(
-                mapOf(
-                    "$fileName-$md5" to ReceivingFileInfo(
-                        fileName,
-                        md5,
-                        chunkIndex,
-                        totalChunks,
-                        PROCESS_CHUNK
-                    )
-                )
-            )
-
-            return ResultBean(
-                CODE_SUC,
-                "$fileName Chunk $chunkIndex/$totalChunks received success.", chunkInfo).okJsonResponse()
+            retainedFile = null
+            logdNoFile { "receive chunk $fileName $chunkIndex/$totalChunks bytes=${target.length()} hashMode=$hashMode" }
+            receiverFlowsObj.emitProgress(mapOf(key to ReceivingFileInfo(
+                fileName, "", chunkIndex, totalChunks, PROCESS_CHUNK
+            )))
+            return ResultBean(CODE_SUC, "Chunk received", chunk).okJsonResponse()
         } catch (e: Exception) {
-            logd { ALogJ.ex(e) }
-            receiverFlowsObj.emitProgress(
-                mapOf(
-                    "$fileName-$md5" to ReceivingFileInfo(
-                        fileName,
-                        md5,
-                        chunkIndex,
-                        totalChunks,
-                        PROCESS_CHUNK_ERROR,
-                        Globals.getString(R.string.chunk_receiver_error)
-                    )
-                )
-            )
-            return ResultBean<ChunkInfoResult>(
-                CODE_FAIL_RECEIVER_CHUNK,
-                "$fileName Chunk $chunkIndex/$totalChunks received failed!",
-                null).okJsonResponse().also { it.addHeader("Connection", "close") }
+            retainedFile?.delete()
+            logEx(throwable = e) { "Receive chunk failed" }
+            receiverFlowsObj.emitProgress(mapOf(key to ReceivingFileInfo(
+                fileName, "", chunkIndex, totalChunks, PROCESS_CHUNK_ERROR,
+                Globals.getString(R.string.chunk_receiver_error)
+            )))
+            return ResultBean<String>(CODE_FAIL_RECEIVER_CHUNK, e.message, null).okJsonResponse().also {
+                it.addHeader("Connection", "close")
+            }
         }
     }
 
     fun handleMergeChunk(session: IHTTPSession): Response {
-        val body = parseRequestBody(session)
-        val params = JSONObject(body)
-        // 3. 提取关键参数
+        val params = JSONObject(parseRequestBody(session))
         val md5 = params.optString("md5")
         val fileName = params.optString("fileName")
         val totalChunks = params.optInt("totalChunks")
         val lastModified = params.optLong("lastModified", System.currentTimeMillis())
-        if (md5.isNullOrEmpty() || fileName.isNullOrEmpty() || totalChunks <= 0) {
-            return ResultBean<ChunkInfoResult>(
-                CODE_FAIL,
-                Globals.getString(R.string.error_merge_chunk_params), null).badRequestJsonResponse()
+        if (!md5.matches(Regex("[a-fA-F0-9]{32}")) || fileName.isBlank() || totalChunks <= 0) {
+            return ResultBean<String>(CODE_FAIL, Globals.getString(R.string.error_merge_chunk_params), null).badRequestJsonResponse()
         }
-        logt { "handle Merge Chunk $fileName , $md5 , totalChunks:$totalChunks" }
-
-        receiverFlowsObj.emitProgress(
-            mapOf(
-                "$fileName-$md5" to ReceivingFileInfo(
-                    fileName,
-                    md5,
-                    totalChunks,
-                    totalChunks,
-                    PROCESS_MERGING
-                )
-            )
-        )
-
-        val chunkInfoList = removeChunkInfoList(uploadSource(session, params.optString("uploadId")), fileName, md5)
-        if (chunkInfoList == null) {
-            val noChunkStr = Globals.getString(R.string.no_chunks)
-
-            receiverFlowsObj.emitProgress(
-                mapOf(
-                    "$fileName-$md5" to ReceivingFileInfo(
-                        fileName,
-                        md5,
-                        totalChunks,
-                        totalChunks,
-                        PROCESS_MERGE_ERROR,
-                        noChunkStr
-                    )
-                )
-            )
-
-            return ResultBean<ChunkInfoResult>(CODE_FAIL_MERGE_CHUNK, noChunkStr, null).jsonResponse(Status.OK)
-        }
-        chunkInfoList.sortBy { it.chunkIndex }
-        if (chunkInfoList.size != totalChunks) {
-            chunkInfoList.forEach { it.chunkTmpFile.delete() }
-            val chunkNumNotMatchStr = Globals.getString(R.string.chunks_number_not_match)
-            receiverFlowsObj.emitProgress(
-                mapOf(
-                    "$fileName-$md5" to ReceivingFileInfo(
-                        fileName,
-                        md5,
-                        totalChunks,
-                        totalChunks,
-                        PROCESS_MERGE_ERROR,
-                        chunkNumNotMatchStr
-                    )
-                )
-            )
-            return ResultBean<ChunkInfoResult>(CODE_FAIL_MERGE_CHUNK, chunkNumNotMatchStr, null).jsonResponse(Status.OK)
+        val key = uploadKey(session, params.optString("uploadId"), fileName, md5, params.optString("hashMode"))
+        receiverFlowsObj.emitProgress(mapOf(key to ReceivingFileInfo(
+            fileName, "", totalChunks, totalChunks, PROCESS_MERGING
+        )))
+        val chunks = removeChunkInfoList(key, params.optString("hashMode") == "stream")
+        if (chunks == null) {
+            val message = Globals.getString(R.string.no_chunks)
+            receiverFlowsObj.emitProgress(mapOf(key to ReceivingFileInfo(
+                fileName, "", totalChunks, totalChunks, PROCESS_MERGE_ERROR, message
+            )))
+            return ResultBean<String>(CODE_FAIL_MERGE_CHUNK, message, null).okJsonResponse()
         }
         var temp: File? = null
         var errorCode = CODE_FAIL_MERGE_CHUNK
         try {
-            if (chunkInfoList.withIndex().any { (index, chunk) ->
-                    chunk.chunkIndex != index + 1 || chunk.totalChunks != totalChunks
-                }) {
-                throw IllegalStateException(Globals.getString(R.string.chunks_number_not_match))
-            }
+            chunks.sortBy { it.chunkIndex }
+            check(chunks.size == totalChunks && chunks.withIndex().all { (index, chunk) ->
+                chunk.chunkIndex == index + 1 && chunk.totalChunks == totalChunks
+            }) { Globals.getString(R.string.chunks_number_not_match) }
+            val digest = MessageDigest.getInstance("MD5")
             val stagingFile = TransferFiles.temporaryFile()
             temp = stagingFile
-            stagingFile.outputStream().use { output ->
-                chunkInfoList.forEach { chunk ->
-                    chunk.chunkTmpFile.inputStream().use { it.copyTo(output) }
-                }
+            // 合并写入时计算完整摘要，避免合并后再次读取整个文件。
+            DigestOutputStream(stagingFile.outputStream().buffered(64 * 1024), digest).use { output ->
+                chunks.forEach { chunk -> chunk.chunkTmpFile.inputStream().use { it.copyTo(output, 64 * 1024) } }
             }
-            if (!getFileMD5(stagingFile.absolutePath).equals(md5, ignoreCase = true)) {
+            val actualMd5 = digest.digest().joinToString("") { "%02x".format(it) }
+            if (!actualMd5.equals(md5, ignoreCase = true)) {
                 errorCode = CODE_FAIL_MD5_CHECK
                 throw IllegalStateException(Globals.getString(R.string.md5_check_failed))
             }
             stagingFile.setLastModified(lastModified)
             val outputFile = TransferFiles.publish(stagingFile, fileName)
-            runBlocking { fileListRepository.addReceivedFile(outputFile, md5.lowercase()) }
+            runBlocking { fileListRepository.addReceivedFile(outputFile, actualMd5) }
             receiverFlowsObj.emitFileMerged(outputFile)
-            receiverFlowsObj.emitProgress(mapOf("$fileName-$md5" to ReceivingFileInfo(
-                fileName, md5, totalChunks, totalChunks, PROCESS_COMPLETED
+            receiverFlowsObj.emitProgress(mapOf(key to ReceivingFileInfo(
+                fileName, actualMd5, totalChunks, totalChunks, PROCESS_COMPLETED
             )))
             return ResultBean(CODE_SUC, Globals.getString(R.string.file_merge_success),
-                mapOf("fileName" to outputFile.name)).okJsonResponse()
+                mapOf("fileName" to outputFile.name, "md5" to actualMd5)).okJsonResponse()
         } catch (e: Exception) {
             logEx(throwable = e) { "Merge chunks failed" }
-            receiverFlowsObj.emitProgress(mapOf("$fileName-$md5" to ReceivingFileInfo(
-                fileName, md5, totalChunks, totalChunks, PROCESS_MERGE_ERROR, e.message
+            receiverFlowsObj.emitProgress(mapOf(key to ReceivingFileInfo(
+                fileName, "", totalChunks, totalChunks, PROCESS_MERGE_ERROR, e.message
             )))
             return ResultBean<String>(errorCode, e.message, null).okJsonResponse()
         } finally {
             temp?.delete()
-            chunkInfoList.forEach { it.chunkTmpFile.delete() }
+            chunks.forEach { it.chunkTmpFile.delete() }
         }
     }
 
     fun handleAbortChunk(session: IHTTPSession): Response {
-        logt { "clear up when abort chunk." }
-        val body = parseRequestBody(session)
-        val params = JSONObject(body)
-        // 3. 提取关键参数
-        val fileName = params.optString("fileName")
-        val md5 = params.optString("md5")
-
-        removeChunkInfoList(uploadSource(session, params.optString("uploadId")), fileName, md5)?.forEach { chunkInfo->
-            chunkInfo.chunkTmpFile.delete() // 删除已合并的分片
-        }
-        return ResultBean<String>(
-            CODE_SUC,
-            Globals.getString(R.string.clear_up), null).jsonResponse(Status.OK)
-    }
-
-    private fun uploadSource(session: IHTTPSession, uploadId: String): String {
-        if (uploadId.isEmpty()) return session.remoteIpAddress
-        require(uploadId.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Invalid upload session" }
-        return "${session.remoteIpAddress}:$uploadId"
+        val params = JSONObject(parseRequestBody(session))
+        val key = uploadKey(session, params.optString("uploadId"), params.optString("fileName"),
+            params.optString("md5"), params.optString("hashMode"))
+        removeChunkInfoList(key, params.optString("hashMode") == "stream")?.forEach { it.chunkTmpFile.delete() }
+        return ResultBean<String>(CODE_SUC, Globals.getString(R.string.clear_up), null).okJsonResponse()
     }
 
     // 辅助方法：将请求体转为字符串
