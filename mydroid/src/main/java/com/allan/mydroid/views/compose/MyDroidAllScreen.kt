@@ -14,8 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,7 +65,6 @@ fun MyDroidAllScreen(
     localIp: String?,
     onStartSearch: () -> Unit,
     onIpClick: (DiscoveredHost) -> Unit,
-    onTransferRecords: () -> Unit,
 ) {
     val pagerState = rememberPagerState { 2 }
     val scope = rememberCoroutineScope()
@@ -115,26 +112,6 @@ fun MyDroidAllScreen(
                     onIpClick = onIpClick,
                 )
             }
-        }
-        Button(
-            onClick = onTransferRecords,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(vertical = 12.dp)
-                .heightIn(min = 48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MyDroidComposeColors.NormalBlock,
-                contentColor = ComposeColors.TextPrimary,
-            ),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.transfer_records),
-                style = ComposeTypography.Font16M,
-                textAlign = TextAlign.Center,
-            )
         }
     }
 }
@@ -480,6 +457,6 @@ private fun ipDisplayTextAndColor(localIp: String?, hostIp: String): Pair<String
 @Composable
 private fun MyDroidAllPreview() {
     com.au.module_androiduiex.preview.AppPreview {
-        MyDroidAllScreen(MyDroidAllUiState(null, true), {}, {}, {}, emptyList(), false, null, {}, {}, {})
+        MyDroidAllScreen(MyDroidAllUiState(null, true), {}, {}, {}, emptyList(), false, null, {}, {})
     }
 }

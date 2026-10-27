@@ -135,8 +135,6 @@
     <string name="transfer_canceled">Canceled</string>
     <string name="transfer_remove_record">Remove record</string>
     <string name="transfer_remote_files">Host files</string>
-    <string name="transfer_records">Download records</string>
-    <string name="transfer_delete_file">Delete local file %1$s? Exported copies will be kept.</string>
     <string name="transfer_connected">Connected</string>
     <string name="transfer_reconnecting">Reconnecting…</string>
     <string name="transfer_mode_changed">Host mode changed. Go back and select the host again.</string>

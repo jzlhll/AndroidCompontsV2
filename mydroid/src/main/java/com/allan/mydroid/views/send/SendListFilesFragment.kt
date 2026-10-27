@@ -16,7 +16,6 @@ import com.allan.mydroid.state.GlobalClientListFlowsObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.allan.mydroid.views.AbsLiveFragment
-import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
 import com.au.module_androidui.ui.base.ImmersiveMode
@@ -33,7 +32,6 @@ import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_android.utilsmedia.getExternalFreeSpace
-import com.au.module_androidcolor.R
 import com.bumptech.glide.request.target.Target
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
@@ -104,9 +102,6 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
-
-        binding.adHost.setColor(Globals.getColor(R.color.color_normal_block0))
-        binding.adHost.startAnimation()
 
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()

@@ -124,7 +124,6 @@ class MyDroidAllFragment : ComposeViewFragment() {
             scanning = scanningState.value,
             localIp = mIp,
             onStartSearch = { bleIpScanner.startScan() },
-            onTransferRecords = { findNavController().navigate(R.id.localTransferRecordsFragment) },
             onIpClick = { host ->
                 if (isSameSubnet(mIp, host.ip)) {
                     fetchModeAndNavigate(host)

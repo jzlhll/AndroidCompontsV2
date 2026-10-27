@@ -21,6 +21,7 @@ import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.au.logsystem.DefaultActivitiesFollowCallback
 import com.au.module_android.Globals
 import com.au.module_android.log.logEx
+import com.au.module_android.log.loge
 import com.au.module_androidui.InitApplication
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
@@ -40,6 +41,7 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.binds
 import org.koin.dsl.module
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -135,6 +137,11 @@ class App : InitApplication() {
 
         //一上来直接强制移除所有临时import的文件。
         Globals.mainScope.launchOnIOThread {
+            // 清理旧版下载记录及 AtomicFile 遗留文件，保留已经接收的实际文件。
+            listOf("client-downloads.json", "client-downloads.json.bak", "client-downloads.json.new").forEach { name ->
+                val file = File(filesDir, name)
+                if (file.exists() && !file.delete()) loge { "Cannot remove obsolete download data: $name" }
+            }
             try {
                 TransferFiles.clearAbandonedFiles()
             } catch (e: Exception) {

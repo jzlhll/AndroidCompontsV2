@@ -49,18 +49,17 @@
 
 ## 手机页面布局优化
 
-已逐页截图检查首页、Download records、File Receive、Receive List、Export History、文件详情与操作弹窗、Send List、File Send、图片预览、Text Chat 及键盘展开状态。
+已逐页截图检查首页、File Receive、Receive List、Export History、文件详情与操作弹窗、Send List、File Send、图片预览、Text Chat 及键盘展开状态。
 
 | 页面 | 源码调整 |
 | --- | --- |
-| 首页 | Download records 为 Tab 内容下方的整行底部按钮；IP 和功能按钮高度随内容适应，底部避让导航栏；首页及收发页使用不透明主题背景，防止滑动过渡时透出下层内容。 |
-| 收发文件 | 提示分为两行，增加左右边距并自适应字号；地址可换行；39% / 25% 固定比例占位改为 72 dp，释放文件列表空间。 |
+| 首页 | IP 和功能按钮高度随内容适应，底部避让导航栏；首页及收发页使用不透明主题背景，防止滑动过渡时透出下层内容。 |
+| 收发文件 | 提示分为两行，增加左右边距并自适应字号；地址可换行；接收列表紧接地址下方，发送列表延伸至页面底部。 |
 | 文件列表 | 文件名最多两行显示，移除开头省略；增加列表底部滚动留白，对齐发送页名称和大小。 |
-| 发送选择 | 相册与文件选择入口平分可用宽度，至少 48 dp 高；底部占位适配深色背景。 |
+| 发送选择 | 相册与文件选择入口平分可用宽度，至少 48 dp 高；文件列表与空态区域延伸至底部免责声明上方。 |
 | 图片预览 | 深色遮罩隔离底层列表，移除图片区域的灰色铺底；预览点击可关闭，播放图标与预览区域居中。 |
 | 聊天 | 精简输入栏上下边距、缩短输入提示；移除重复计入的输入栏及导航栏留白；客户端栏测量完成后预留空间。 |
-| Download records | 移除重复标题，统一列表上下内边距。 |
 
 详情与操作弹窗在当前设备截图中未发现内容遮挡。以上布局调整尚待重新编译安装，再逐页截图确认，不能将修改前截图作为优化后结果。
 
-修改前实机截图：[首页](/private/tmp/mydroid-layout-home-before.png)、[下载记录](/private/tmp/mydroid-layout-records-before.png)、[收文件](/private/tmp/mydroid-layout-receive-before.png)、[文件详情](/private/tmp/mydroid-layout-receive-detail-before.png)、[文件操作](/private/tmp/mydroid-layout-receive-actions-before.png)、[导出历史](/private/tmp/mydroid-layout-export-history-before.png)、[独立接收列表](/private/tmp/mydroid-layout-receive-menu-before.png)、[发送选择](/private/tmp/mydroid-layout-send-selector-before.png)、[发送页面](/private/tmp/mydroid-layout-send-before.png)、[图片预览](/private/tmp/mydroid-layout-preview-before.png)、[聊天](/private/tmp/mydroid-layout-chat-before.png)、[聊天键盘展开](/private/tmp/mydroid-layout-chat-ime-before.png)。
+修改前实机截图：[首页](/private/tmp/mydroid-layout-home-before.png)、[收文件](/private/tmp/mydroid-layout-receive-before.png)、[文件详情](/private/tmp/mydroid-layout-receive-detail-before.png)、[文件操作](/private/tmp/mydroid-layout-receive-actions-before.png)、[导出历史](/private/tmp/mydroid-layout-export-history-before.png)、[独立接收列表](/private/tmp/mydroid-layout-receive-menu-before.png)、[发送选择](/private/tmp/mydroid-layout-send-selector-before.png)、[发送页面](/private/tmp/mydroid-layout-send-before.png)、[图片预览](/private/tmp/mydroid-layout-preview-before.png)、[聊天](/private/tmp/mydroid-layout-chat-before.png)、[聊天键盘展开](/private/tmp/mydroid-layout-chat-ime-before.png)。

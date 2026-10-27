@@ -123,7 +123,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rcv"
         android:layout_marginTop="3dp"
-        app:layout_constraintBottom_toTopOf="@id/adHost"
+        app:layout_constraintBottom_toTopOf="@id/infoText"
         app:layout_constraintTop_toBottomOf="@id/shareInHeaderHost"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -141,20 +141,9 @@
         android:layout_marginVertical="4dp"
         android:layout_marginHorizontal="@dimen/ui_padding_edge"
         app:layout_constraintTop_toBottomOf="@id/shareInHeaderHost"
-        app:layout_constraintBottom_toTopOf="@id/adHost"
+        app:layout_constraintBottom_toTopOf="@id/infoText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <com.au.module_androidui.widget.ShineView
-        android:background="@color/color_normal_block"
-        android:id="@+id/adHost"
-        android:layout_marginVertical="8dp"
-        app:layout_constraintBottom_toTopOf="@id/infoText"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/web_transfer_placeholder_height"
-        android:layout_marginHorizontal="@dimen/ui_padding_edge"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
         android:id="@+id/infoText"

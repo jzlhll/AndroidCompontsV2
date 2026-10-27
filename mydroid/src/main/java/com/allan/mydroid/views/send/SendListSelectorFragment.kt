@@ -238,9 +238,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         initActionButtons()
 
-        binding.adHost.setColor(Globals.getColor(com.au.module_androidcolor.R.color.color_normal_block0))
-        binding.adHost.startAnimation()
-
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }

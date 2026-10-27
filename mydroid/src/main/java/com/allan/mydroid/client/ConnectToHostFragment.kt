@@ -68,7 +68,6 @@ class ConnectToHostFragment : ComposeViewFragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 lastActivity = SystemClock.elapsedRealtime()
-                if (endpoint.mode == MyDroidMode.Send) receiveModel.refreshLocalFiles()
                 var messageCount = if (endpoint.mode == MyDroidMode.TextChat) chatModel.uiState.value.messages.size else 0
                 while (true) {
                     delay(1000.milliseconds)

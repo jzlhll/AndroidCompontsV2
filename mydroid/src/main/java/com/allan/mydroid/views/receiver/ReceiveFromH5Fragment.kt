@@ -12,7 +12,6 @@ import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.state.GlobalClientListFlowsObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.views.AbsLiveFragment
-import com.au.module_android.Globals
 import com.au.module_gson.toGsonString
 import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
@@ -59,9 +58,6 @@ class ReceiveFromH5Fragment : AbsLiveFragment<FragmentReceiveFromH5Binding>() {
         super.onBindingCreated(savedInstanceState)
 
         menuMgr.showMenu()
-
-        binding.adHost.setColor(Globals.getColor(com.au.module_androidcolor.R.color.color_normal_block0))
-        binding.adHost.startAnimation()
 
         val fmt = getString(R.string.not_close_window)
         val leftStr = getString(R.string.storage_remaining)
