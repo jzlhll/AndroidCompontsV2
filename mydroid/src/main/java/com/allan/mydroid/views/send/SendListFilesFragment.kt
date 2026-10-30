@@ -1,7 +1,6 @@
 package com.allan.mydroid.views.send
 
 import android.os.Bundle
-import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.view.updatePadding
@@ -17,7 +16,6 @@ import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.allan.mydroid.views.AbsLiveFragment
 import com.au.module_android.click.onClick
-import com.au.module_android.glide.glideSetAny
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.asOrNull
@@ -32,7 +30,6 @@ import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_android.utilsmedia.getExternalFreeSpace
-import com.bumptech.glide.request.target.Target
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 
@@ -47,47 +44,20 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
             override fun rcv() = binding.rcv
             override fun empty() = null
             override fun onItemClick(bean: ShareInBean?, mode: String) {
-                if (mode == CLICK_MODE_ROOT && bean != null) {
+                if ((mode == CLICK_MODE_ROOT || mode == CLICK_MODE_PREVIEW) && bean != null) {
                     logd { "click on icon $bean" }
 
                     val isImg = ExtensionMimeUtil.isUriImage(bean.mimeType)
                     val isVideo = ExtensionMimeUtil.isUriVideo(bean.mimeType)
                     if (isImg || isVideo) {
-                        showBigIcon(bean, isVideo)
+                        mediaPreview?.show(bean, isVideo)
                     }
                 }
             }
         }
     }
 
-    private var hasSetBigImageClick = false
-
-    private fun showBigIcon(bean: ShareInBean, isVideo: Boolean) {
-        if (!hasSetBigImageClick) {
-            hasSetBigImageClick = true
-            val dismissPreview: (View) -> Unit = {
-                binding.blurView.gone()
-                binding.bigImage.gone()
-                binding.iconPlay.gone()
-            }
-            binding.blurView.onClick(dismissPreview)
-            binding.bigImage.onClick(dismissPreview)
-            binding.iconPlay.onClick(dismissPreview)
-            binding.bigImage.setImageDrawable(null)
-        }
-
-        binding.blurView.visible()
-        binding.bigImage.visible()
-        if (isVideo) {
-            binding.iconPlay.visible()
-        } else {
-            binding.iconPlay.gone()
-        }
-
-        binding.bigImage.glideSetAny(bean.uri) {
-            it.override(Target.SIZE_ORIGINAL)
-        }
-    }
+    private var mediaPreview: SendMediaPreview? = null
 
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.FullImmersive { statusBarsHeight, navBarHeight ->
@@ -95,13 +65,15 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
                 toolbarLP.topMargin = statusBarsHeight
                 binding.toolbar.layoutParams = toolbarLP
             }
-            binding.root.updatePadding(bottom = navBarHeight)
+            binding.pageHost.updatePadding(bottom = navBarHeight)
+            mediaPreview?.updateInsets(statusBarsHeight, navBarHeight)
             requireActivity().changeBarsColor(statusBarTextDark = false)
         }
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
+        mediaPreview = SendMediaPreview(this, binding.mediaPreview, binding.previewBlurTarget)
 
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
@@ -175,7 +147,8 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
 
     override fun onDestroyView() {
         sendClientBindings.clear()
-        hasSetBigImageClick = false
+        mediaPreview?.dismiss()
+        mediaPreview = null
         super.onDestroyView()
     }
 }

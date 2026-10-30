@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone"
+    android:clickable="true"
+    android:focusable="true">
+
+    <eightbitlab.com.blurview.BlurView
+        android:id="@+id/backdropBlurView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:id="@+id/mediaHost"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="32dp">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/previewImg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/videoPlayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:surface_type="texture_view"
+            app:resize_mode="fit"
+            app:buffered_color="@color/transfer_preview_track"
+            app:unplayed_color="@color/transfer_preview_track"
+            app:show_buffering="when_playing"
+            app:show_timeout="0"
+            app:animation_enabled="false"
+            app:hide_on_touch="false"
+            app:show_next_button="false"
+            app:show_previous_button="false" />
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/videoTimeTv"
+            style="@style/StyleWebTransferAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_marginEnd="60dp"
+            android:padding="6dp"
+            android:background="#99000000"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/frameControlsHost"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="72dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <com.au.module_androidui.widget.CustomButton
+                android:id="@+id/backTenFramesBtn"
+                style="@style/StyleButtonPrimary"
+                android:layout_width="72dp"
+                android:layout_height="48dp"
+                android:layout_marginBottom="0dp"
+                android:drawableStart="@drawable/ic_frame_back"
+                android:drawablePadding="4dp"
+                android:drawableTint="@color/primary_btn_text_color"
+                android:text="@string/preview_frame_count_ten"
+                android:contentDescription="@string/preview_back_ten_frames_drag" />
+
+            <com.au.module_androidui.widget.CustomButton
+                android:id="@+id/stepFrameBtn"
+                style="@style/StyleButtonPrimary"
+                android:layout_width="72dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginBottom="0dp"
+                android:drawableStart="@drawable/ic_frame_forward"
+                android:drawablePadding="4dp"
+                android:drawableTint="@color/primary_btn_text_color"
+                android:text="@string/preview_frame_count_one"
+                android:contentDescription="@string/preview_next_frame_drag" />
+
+            <com.au.module_androidui.widget.CustomButton
+                android:id="@+id/nextTenFramesBtn"
+                style="@style/StyleButtonPrimary"
+                android:layout_width="72dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginBottom="0dp"
+                android:drawableStart="@drawable/ic_frame_forward"
+                android:drawablePadding="4dp"
+                android:drawableTint="@color/primary_btn_text_color"
+                android:text="@string/preview_frame_count_ten"
+                android:contentDescription="@string/preview_next_ten_frames_drag" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/closePreviewBtn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:padding="12dp"
+            android:background="#99000000"
+            android:src="@drawable/ic_close_preview"
+            android:contentDescription="@string/preview_close"
+            app:tint="@color/white" />
+    </FrameLayout>
+</FrameLayout>

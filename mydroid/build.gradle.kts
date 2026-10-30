@@ -93,6 +93,8 @@ dependencies {
     implementation(libs.okhttp)
 
     implementation(libs.blurview)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
     implementation(project(":Module-AndroidCommon"))
     implementation(project(":Module-AndroidColor"))
 

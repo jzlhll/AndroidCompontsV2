@@ -1,4 +1,13 @@
 <resources>
+    <string name="preview_close">Close preview</string>
+    <string name="preview_next_frame">Next frame</string>
+    <string name="preview_next_frame_drag">Advance one frame or a small interval; drag to move</string>
+    <string name="preview_next_ten_frames_drag">Advance ten frames or ten small intervals; drag to move</string>
+    <string name="preview_back_ten_frames_drag">Go back ten frames or ten small intervals; drag to move</string>
+    <string name="preview_frame_count_one" translatable="false">1</string>
+    <string name="preview_frame_count_ten" translatable="false">10</string>
+    <string name="preview_video_progress">%1$s / %2$s</string>
+    <string name="preview_video_error">Unable to play this video. The file may be unavailable or the format unsupported.</string>
     <string name="app_name">Pigeon Pass</string>
 
     <string name="next">Next</string>

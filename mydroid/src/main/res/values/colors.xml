@@ -37,4 +37,5 @@
     <color name="text_chat_accent_text">#FFFFFF</color>
     <color name="text_chat_clients_overlay">#F2FFFFFF</color>
     <color name="transfer_preview_overlay">#E6000000</color>
+    <color name="transfer_preview_track">#33FFFFFF</color>
 </resources>

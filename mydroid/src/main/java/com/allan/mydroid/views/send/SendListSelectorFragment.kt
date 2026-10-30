@@ -18,12 +18,9 @@ import com.allan.mydroid.repository.GlobalShareInRepoObj
 import com.allan.mydroid.repository.UriPermissionChecker
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
-import com.au.module_android.glide.glideSetAny
 import com.au.module_android.log.logd
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.changeBarsColor
-import com.au.module_android.utils.gone
-import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import com.au.module_androidui.toast.ToastBuilder
@@ -33,7 +30,6 @@ import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_imagecompressed.multiPickForResult
 import com.au.module_simplepermission.PickerType
 import com.au.module_simplepermission.openMultipleDocsForResult
-import com.bumptech.glide.request.target.Target
 import kotlinx.coroutines.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 import com.au.module_android.log.logEx
@@ -66,12 +62,12 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         }
 
         override fun onItemClick(bean: ShareInBean?, mode:String) {
-            if (mode == CLICK_MODE_ROOT && bean != null) {
+            if ((mode == CLICK_MODE_ROOT || mode == CLICK_MODE_PREVIEW) && bean != null) {
                 logd { "click on icon $bean" }
                 val isImg = ExtensionMimeUtil.isUriImage(bean.mimeType)
                 val isVideo = ExtensionMimeUtil.isUriVideo(bean.mimeType)
                 if (isImg || isVideo) {
-                    showBigIcon(bean, isVideo)
+                    mediaPreview?.show(bean, isVideo)
                 }
             }
         }
@@ -116,34 +112,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
         updateSelectionActions()
     }
 
-    private var hasSetBigImageClick = false
-
-    private fun showBigIcon(bean: ShareInBean, isVideo: Boolean) {
-        if (!hasSetBigImageClick) {
-            hasSetBigImageClick = true
-            val dismissPreview: (View) -> Unit = {
-                binding.blurView.gone()
-                binding.bigImage.gone()
-                binding.iconPlay.gone()
-            }
-            binding.blurView.onClick(dismissPreview)
-            binding.bigImage.onClick(dismissPreview)
-            binding.iconPlay.onClick(dismissPreview)
-            binding.bigImage.setImageDrawable(null)
-        }
-
-        binding.blurView.visible()
-        binding.bigImage.visible()
-        if (isVideo) {
-            binding.iconPlay.visible()
-        } else {
-            binding.iconPlay.gone()
-        }
-
-        binding.bigImage.glideSetAny(bean.uri) {
-            it.override(Target.SIZE_ORIGINAL)
-        }
-    }
+    private var mediaPreview: SendMediaPreview? = null
 
     private val autoImport get() = arguments?.getBoolean(KEY_AUTO_ENTER_SEND_VIEW) == true
 
@@ -236,6 +205,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
+        mediaPreview = SendMediaPreview(this, binding.mediaPreview, binding.previewBlurTarget)
         initActionButtons()
 
         binding.toolbar.setNavigationOnClickListener {
@@ -273,7 +243,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 toolbarLP.topMargin = statusBarsHeight
                 binding.toolbar.layoutParams = toolbarLP
             }
-            binding.root.updatePadding(bottom = navBarHeight)
+            binding.pageHost.updatePadding(bottom = navBarHeight)
+            mediaPreview?.updateInsets(statusBarsHeight, navBarHeight)
             requireActivity().changeBarsColor(statusBarTextDark = false)
         }
     }
@@ -319,7 +290,8 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     override fun onDestroyView() {
-        hasSetBigImageClick = false
+        mediaPreview?.dismiss()
+        mediaPreview = null
         common.updateSelectionMode(false)
         super.onDestroyView()
     }

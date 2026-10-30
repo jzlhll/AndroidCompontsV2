@@ -27,7 +27,8 @@ class SendTitleHolder(binding: HolderMydroidSendlistTitleBinding)
 class SendHolder(binding: HolderMydroidSendlistItemBinding,
                  val rootClick: (ShareInBean?) -> Unit,
                  val iconClick: (ShareInBean?) -> Unit,
-                 val selectionClick: (ShareInBean?) -> Unit)
+                 val selectionClick: (ShareInBean?) -> Unit,
+                 val previewClick: (ShareInBean) -> Unit)
     : BindViewHolder<IMultiViewTypeBean, HolderMydroidSendlistItemBinding>(binding) {
     init {
         binding.selectionCheck.onClick {
@@ -39,6 +40,18 @@ class SendHolder(binding: HolderMydroidSendlistItemBinding,
         binding.root.onClick {
             rootClick(currentData.asOrNull())
         }
+        val longClick = android.view.View.OnLongClickListener {
+            val bean = currentData as? ShareInBean
+            if (bean != null && (ExtensionMimeUtil.isUriImage(bean.mimeType) ||
+                        ExtensionMimeUtil.isUriVideo(bean.mimeType))) {
+                previewClick(bean)
+                true
+            } else {
+                false
+            }
+        }
+        binding.root.setOnLongClickListener(longClick)
+        binding.icon.setOnLongClickListener(longClick)
     }
 
     override fun bindData(bean: IMultiViewTypeBean) {

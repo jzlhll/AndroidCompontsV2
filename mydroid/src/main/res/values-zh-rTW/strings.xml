@@ -1,4 +1,10 @@
 <resources>
+    <string name="preview_close">關閉預覽</string>
+    <string name="preview_next_frame">下一幀</string>
+    <string name="preview_next_frame_drag">前進一幀或一小步，可拖動調整位置</string>
+    <string name="preview_next_ten_frames_drag">前進十幀或十倍小步，可拖動調整位置</string>
+    <string name="preview_back_ten_frames_drag">後退十幀或十倍小步，可拖動調整位置</string>
+    <string name="preview_video_error">無法播放此影片，檔案可能無法存取或格式不受支援。</string>
     <string name="app_name">快鴿傳輸</string>
 
     <string name="next">下一步</string>

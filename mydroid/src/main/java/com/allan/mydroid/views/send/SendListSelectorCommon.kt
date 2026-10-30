@@ -23,7 +23,7 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
     private val shareInRepository: GlobalShareInRepoObj by inject()
 
     private val mAdapter = SendListAdapter {it, mode->
-        if (isSelectionMode && it != null && !it.isLocalReceiver) {
+        if (mode != CLICK_MODE_PREVIEW && isSelectionMode && it != null && !it.isLocalReceiver) {
             if (!selectedIds.add(it.uriUuid)) selectedIds.remove(it.uriUuid)
             refreshSelection()
         } else {

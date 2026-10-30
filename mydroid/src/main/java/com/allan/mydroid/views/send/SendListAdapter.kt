@@ -14,6 +14,7 @@ const val VIEW_TYPE_URI_INFO = 2
 const val CLICK_MODE_ICON = "icon"
 const val CLICK_MODE_SELECT = "select"
 const val CLICK_MODE_ROOT = "root"
+const val CLICK_MODE_PREVIEW = "preview"
 
 class SendListAdapter(val click: (ShareInBean?, mode:String) -> Unit)
         : BindRcvAdapter<IMultiViewTypeBean, BindViewHolder<IMultiViewTypeBean, *>>() {
@@ -31,6 +32,8 @@ class SendListAdapter(val click: (ShareInBean?, mode:String) -> Unit)
                     click(it, CLICK_MODE_ICON)
                 }, selectionClick = {
                     click(it, CLICK_MODE_SELECT)
+                }, previewClick = {
+                    click(it, CLICK_MODE_PREVIEW)
                 })
             }
 
