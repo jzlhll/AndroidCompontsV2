@@ -13,3 +13,6 @@ plugins {
     alias(childMonitorLibs.plugins.ksp) apply false
     alias(childMonitorLibs.plugins.room) apply false
 }
+
+extra["androidSigningRootDir"] = rootDir.parentFile
+apply(from = "../gradle/android-signing.gradle")

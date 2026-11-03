@@ -19,3 +19,6 @@ plugins {
 
     alias(libs.plugins.jetbrains.kotlin.serialization) apply false
 }
+
+ext.androidSigningRootDir = rootDir
+apply from: 'gradle/android-signing.gradle'

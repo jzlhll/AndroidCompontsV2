@@ -1,5 +1,6 @@
 *.iml
 *.jks
+!/gradle/signing/allan.jks
 .kotlin/
 .gradle
 /local.properties

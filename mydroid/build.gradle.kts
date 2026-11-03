@@ -10,17 +10,6 @@ android {
     namespace = "com.allan.mydroid"
     compileSdk = gradle.extra["compileSdk"] as Int
 
-    signingConfigs {
-        create("auRelease") {
-            //sha1   C3:66:E7:5D:0B:8F:59:64:3B:8D:22:3E:E3:EB:E2:DF:C8:8E:EC:CD
-            //sha256 44:70:2D:3F:D6:6A:4A:82:4E:C4:5D:EC:AB:57:4A:75:13:F2:78:A5:FB:72:A0:6B:5A:DE:6E:CD:B1:87:98:74
-            keyAlias = "au"
-            keyPassword = "a12345"
-            storeFile = file("../auReleaseA12345.jks")
-            storePassword = "a12345"
-        }
-    }
-
     defaultConfig {
         applicationId = "com.allan.mydroid"
         minSdk = 29
@@ -41,7 +30,6 @@ android {
                 "proguard-rules.pro"
             )
 
-            signingConfig = signingConfigs.getByName("auRelease")
             resValue("xml", "network_security", "@xml/network_mydroid")
             //apply plugin: 'com.au.plugins.plugin-string-encrypt'
             // 上传bundle包所需的原生调试符号
@@ -57,7 +45,6 @@ android {
             isShrinkResources = false
             resValue("xml", "network_security", "@xml/network_debug")
 //            apply plugin: 'com.au.plugins.plugin-string-encrypt'
-            //signingConfig signingConfigs.auRelease
         }
     }
     compileOptions {

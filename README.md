@@ -18,6 +18,25 @@ Gradle 9.6.0 位于 Kotlin 2.4.20 的完整支持范围内；AGP 9.4 高于 Kotl
 
 参考：[AGP 9.4 兼容表](https://developer.android.com/build/releases/agp-9-4-0-release-notes)、[内置 Kotlin 迁移](https://developer.android.com/build/migrate-to-built-in-kotlin)、[AndroidX 稳定版](https://developer.android.com/jetpack/androidx/versions)、[官方 assets 转换示例](https://github.com/android/gradle-recipes/tree/agp-9.2/transformDirectory)。
 
+### 应用签名
+
+所有 application 模块（`app`、`appMultiMedia`、`appcompose`、`autoClickFloat`、`jobstudy`、`mydroid`、`child-monitor`）的 debug、release 及其他 buildType 统一使用仓库内的 `gradle/signing/allan.jks`，别名为 `allan`。签名规则集中在 `gradle/android-signing.gradle`，新增 application 模块会自动接入；从 `child-monitor` 独立入口构建时也使用相同证书和仓库根目录的密码配置。
+
+证书为 RSA 4096 位、有效期 10000 天，SHA-256 指纹为 `28303664319274f12fc795e4c0e449a6d891d2e22a7791a469351654e168a896`。
+
+在仓库根目录的 `local.properties` 中配置以下两项，分别填写此证书已有的密钥库密码和私钥密码：
+
+```properties
+android.signing.storePassword=<密钥库密码>
+android.signing.keyPassword=<私钥密码>
+```
+
+`local.properties` 不提交 Git。换电脑或配置 CI 时需单独传递并保存这两个密码，保持证书及私钥不变，才能持续覆盖安装。此配置独立于 Maven 发布使用的 `signing.*` 属性。
+
+密钥库密码和私钥密码使用同一个 16 位密码，仅包含避开易混淆字符的大写字母和数字。其他项目可复用 `allan.jks`，配置 JKS 类型、别名 `allan` 及相同密码即可。
+
+现有设备若安装了其他证书签名的同包名应用，首次切换无法覆盖安装；卸载旧应用会删除其本地数据，切换前需先导出所需数据。
+
 大致介绍框架：
 
 ### Module-Android

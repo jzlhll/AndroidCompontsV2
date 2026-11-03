@@ -1,0 +1,36 @@
+// 两个工程入口共用仓库中的证书，所有 application 模块使用同一签名。
+def signingRootDir = rootProject.ext.androidSigningRootDir as File
+def signingPropertiesFile = new File(signingRootDir, 'local.properties')
+def signingProperties = new Properties()
+if (!signingPropertiesFile.isFile()) {
+    throw new GradleException("请在 ${signingPropertiesFile} 配置 Android 签名密码，参见根 README.md 的应用签名说明。")
+}
+signingPropertiesFile.withInputStream { signingProperties.load(it) }
+
+def storePassword = signingProperties.getProperty('android.signing.storePassword')
+def keyPassword = signingProperties.getProperty('android.signing.keyPassword')
+if (!storePassword?.trim() || !keyPassword?.trim()) {
+    throw new GradleException("请在 ${signingPropertiesFile} 配置 android.signing.storePassword 和 android.signing.keyPassword。")
+}
+
+def signingStoreFile = new File(signingRootDir, 'gradle/signing/allan.jks')
+if (!signingStoreFile.isFile()) {
+    throw new GradleException("找不到工程签名证书：${signingStoreFile}")
+}
+
+subprojects { appProject ->
+    appProject.pluginManager.withPlugin('com.android.application') {
+        // 在模块 DSL 完成后统一签名，覆盖 debug 默认使用的本机证书。
+        appProject.extensions.getByName('androidComponents').finalizeDsl { android ->
+            def projectSigning = android.signingConfigs.maybeCreate('projectSigning')
+            projectSigning.storeFile = signingStoreFile
+            projectSigning.storeType = 'JKS'
+            projectSigning.storePassword = storePassword
+            projectSigning.keyAlias = 'allan'
+            projectSigning.keyPassword = keyPassword
+            android.buildTypes.configureEach { buildType ->
+                buildType.signingConfig = projectSigning
+            }
+        }
+    }
+}
