@@ -103,7 +103,9 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
         if (!isNoDeleteBtn) return
         mAdapter.datas.forEachIndexed { index, item ->
             if (item is ShareInBean) {
-                val latest = results.values.lastOrNull { it.uriUuid == item.uriUuid }
+                val latest = results.values.lastOrNull {
+                    it.uriUuid == item.uriUuid && it.importBatchId == item.importBatchId
+                }
                 val md5 = if (latest?.state == "completed") latest.md5 else null
                 if (item.completedMd5 != md5) {
                     item.completedMd5 = md5
@@ -115,14 +117,24 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
 
     fun updateList(sendUriList: List<ShareInBean>) {
         sendUriList.forEach { bean ->
-            val latest = downloads.values.lastOrNull { it.uriUuid == bean.uriUuid }
+            val latest = downloads.values.lastOrNull {
+                it.uriUuid == bean.uriUuid && it.importBatchId == bean.importBatchId
+            }
             bean.completedMd5 = if (isNoDeleteBtn && latest?.state == "completed") latest.md5 else null
         }
         val newList = ArrayList<IMultiViewTypeBean>()
         val shareInList = sendUriList.filter { !it.isLocalReceiver }
         if (shareInList.isNotEmpty()) {
             if (isNoDeleteBtn) newList.add(IconTitle(Globals.getString(R.string.share_in)))
-            newList.addAll(shareInList)
+            var start = 0
+            while (start < shareInList.size) {
+                val batchId = shareInList[start].importBatchId
+                var end = start + 1
+                while (end < shareInList.size && shareInList[end].importBatchId == batchId) end++
+                newList.add(ImportBatchSeparator(end - start, shareInList[start].importedAt))
+                newList.addAll(shareInList.subList(start, end))
+                start = end
+            }
         }
 
         val receiverList = sendUriList.filter { it.isLocalReceiver }

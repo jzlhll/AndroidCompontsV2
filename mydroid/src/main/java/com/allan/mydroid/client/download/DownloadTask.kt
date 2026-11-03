@@ -16,7 +16,8 @@ data class DownloadTask(
     val receivedBytes: Long = 0,
     val error: String? = null,
     val attemptId: String = UUID.randomUUID().toString(),
-    val bytesPerSecond: Long = 0
+    val bytesPerSecond: Long = 0,
+    val importBatchId: String? = null
 ) {
     val hostKey get() = "$ip:$httpPort"
     val active get() = state == DownloadState.Pending || state == DownloadState.Running || state == DownloadState.Canceling

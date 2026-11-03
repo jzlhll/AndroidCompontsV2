@@ -8,8 +8,12 @@ import com.au.module_nested.recyclerview.viewholder.BindViewHolder
 
 class IconTitle(val title:String, override val viewType: Int = VIEW_TYPE_ICON_TEXT) : IMultiViewTypeBean
 
+class ImportBatchSeparator(val count: Int, val importedAt: Long,
+                           override val viewType: Int = VIEW_TYPE_IMPORT_BATCH) : IMultiViewTypeBean
+
 private const val VIEW_TYPE_ICON_TEXT = 1
 const val VIEW_TYPE_URI_INFO = 2
+private const val VIEW_TYPE_IMPORT_BATCH = 3
 
 const val CLICK_MODE_ICON = "icon"
 const val CLICK_MODE_SELECT = "select"
@@ -24,6 +28,8 @@ class SendListAdapter(val click: (ShareInBean?, mode:String) -> Unit)
             VIEW_TYPE_ICON_TEXT -> {
                 SendTitleHolder(create(parent))
             }
+
+            VIEW_TYPE_IMPORT_BATCH -> ImportBatchSeparatorHolder(create(parent))
 
             VIEW_TYPE_URI_INFO -> {
                 SendHolder(create(parent), rootClick = {

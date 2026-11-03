@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="36dp"
+    android:paddingHorizontal="@dimen/ui_padding_edge"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1"
+        android:background="@color/color_line_on_block" />
+
+    <com.au.module_androidui.widget.CustomFontText
+        android:id="@+id/timeTv"
+        style="@style/StyleAuTextSmallDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:maxLines="1" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:background="@color/color_line_on_block" />
+
+    <com.au.module_androidui.widget.CustomFontText
+        android:id="@+id/countTv"
+        style="@style/StyleAuTextSmallDesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:background="@color/color_line_on_block" />
+</LinearLayout>

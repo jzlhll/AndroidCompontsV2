@@ -31,8 +31,12 @@ data class ShareInBean(val uriUuid:String,
                        val name:String? = null,
                        val fileSize:Long?,
                        val fileSizeStr:String,
-                       val videoDuration:Long?, override val viewType: Int = VIEW_TYPE_URI_INFO
-) : IMultiViewTypeBean {
+                       val videoDuration:Long?, override val viewType: Int = VIEW_TYPE_URI_INFO,
+                       override val importBatchId: String? = null,
+                       override val importedAt: Long = 0L,
+                       override val importOrder: Int = 0,
+                       val sourceUriKey: String? = null
+) : IMultiViewTypeBean, ImportBatchItem {
 
     /**
      * 是不是本地接收的文件
@@ -93,7 +97,11 @@ data class ShareInBean(val uriUuid:String,
                 info.name,
                 info.fileSize,
                 info.fileSizeStr,
-                info.videoDuration)
+                info.videoDuration,
+                importBatchId = info.importBatchId,
+                importedAt = info.importedAt,
+                importOrder = info.importOrder,
+                sourceUriKey = info.sourceUriKey)
         }
     }
 

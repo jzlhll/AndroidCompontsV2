@@ -27,7 +27,8 @@ class GlobalDownloadObj {
     fun enqueue(task: DownloadTask) {
         synchronized(lock) {
             val existing = _tasksFlow.value.find { it.hostKey == task.hostKey && it.uriUuid == task.uriUuid }
-            if (existing != null && (existing.active || existing.state == DownloadState.Completed)) return
+            if (existing != null && (existing.active ||
+                    (existing.state == DownloadState.Completed && existing.importBatchId == task.importBatchId))) return
             _tasksFlow.value = _tasksFlow.value.filterNot { it.hostKey == task.hostKey && it.uriUuid == task.uriUuid } + task
         }
         try {

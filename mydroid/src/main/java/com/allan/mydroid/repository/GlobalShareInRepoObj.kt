@@ -5,6 +5,8 @@ import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.ShareInBean
+import com.allan.mydroid.beansinner.LEGACY_IMPORT_BATCH_ID
+import com.allan.mydroid.beansinner.groupImportBatches
 import com.au.module_android.Globals
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.utils.withIOThread
@@ -34,7 +36,8 @@ data class DownloadTransfer(
     val transferId: String,
     val uriUuid: String,
     val state: String = "sending",
-    val md5: String = ""
+    val md5: String = "",
+    val importBatchId: String? = null
 )
 
 /** 串行维护分享列表及持久化快照，供页面和 HTTP 下载共用。 */
@@ -49,7 +52,7 @@ class GlobalShareInRepoObj(
     private val _downloadTransfersFlow = MutableStateFlow<Map<String, DownloadTransfer>>(emptyMap())
     val downloadTransfersFlow = _downloadTransfersFlow.asStateFlow()
 
-    fun startDownload(transferId: String, uriUuid: String) {
+    fun startDownload(transferId: String, uriUuid: String, importBatchId: String?) {
         _downloadTransfersFlow.update { previous ->
             val existing = previous[transferId]
             check(existing == null || (existing.uriUuid == uriUuid && existing.state != "sending")) {
@@ -62,7 +65,7 @@ class GlobalShareInRepoObj(
                 check(completed != null) { "Too many active downloads" }
                 next.remove(completed.key)
             }
-            next[transferId] = DownloadTransfer(transferId, uriUuid)
+            next[transferId] = DownloadTransfer(transferId, uriUuid, importBatchId = importBatchId)
             next
         }
     }
@@ -130,9 +133,23 @@ class GlobalShareInRepoObj(
         mSendUriMap = map
     }
 
+    private suspend fun loadSendUriMap(): HashMap<String, ShareInBean> {
+        val map = sendUriMap
+        val legacy = map.entries.filter { it.value.importBatchId.isNullOrBlank() }.sortedBy { it.key }
+        if (legacy.isEmpty()) return map
+        val next = HashMap(map)
+        // 旧记录没有可靠的导入时间，保留下载标识和 URI，以固定批次一次性迁移并落盘。
+        legacy.forEachIndexed { index, entry ->
+            next[entry.key] = entry.value.copy(importBatchId = LEGACY_IMPORT_BATCH_ID,
+                importedAt = 0L, importOrder = index)
+        }
+        updateSendUriMap(next)
+        return next
+    }
+
     suspend fun deleteUris(uuids: List<String>) = withIOThread {
         mutex.withLock {
-            val next = HashMap(sendUriMap)
+            val next = HashMap(loadSendUriMap())
             val removed = uuids.mapNotNull { next.remove(it) }
             updateSendUriMap(next)
             shareInAndReceiveBeans = shareInAndReceiveBeans?.filterNot { it.uriUuid in uuids }
@@ -147,18 +164,24 @@ class GlobalShareInRepoObj(
 
     suspend fun addShareInUris(uris: List<Uri>, from: String) = withIOThread {
         mutex.withLock {
-            val next = HashMap(sendUriMap)
+            val next = HashMap(loadSendUriMap())
+            val batchId = UUID.randomUUID().toString()
+            val importedAt = System.currentTimeMillis()
             val copiedFiles = mutableListOf<File>()
+            val replacedBeans = mutableListOf<ShareInBean>()
             var committed = false
             try {
-                for (uri in uris.distinct()) {
-                    if (next.values.any { it.uri == uri }) continue
-                    val importKey = if (from == FROM_SHARE_IN) {
-                        UUID.nameUUIDFromBytes("share:$uri".toByteArray(Charsets.UTF_8)).toString().replace("-", "")
-                    } else null
-                    // 副本 URI 与来源不同，保留按来源去重，页面重建后重试也不会重复导入。
-                    if (importKey != null && next.containsKey(importKey)) continue
-                    var bean = ShareInBean.convert(uri, from)
+                for ((index, uri) in uris.distinct().withIndex()) {
+                    val importKey = UUID.nameUUIDFromBytes("share:$uri".toByteArray(Charsets.UTF_8))
+                        .toString().replace("-", "")
+                    // 分享副本的 URI 已改变，同时按原始来源标识匹配，兼容旧记录与跨入口重复导入。
+                    val replaced = next.filter { (key, bean) ->
+                        bean.sourceUriKey == importKey || key == importKey || bean.uri == uri
+                    }
+                    // uriUuid 标识同一来源的逻辑文件，批次标识隔离每次重新导入的下载结果。
+                    val uriUuid = replaced.values.firstOrNull()?.uriUuid ?: importKey
+                    var bean = ShareInBean.convert(uri, from).copy(uriUuid = uriUuid, importBatchId = batchId,
+                        importedAt = importedAt, importOrder = index, sourceUriKey = importKey)
                     if (from == FROM_SHARE_IN) {
                         // 外部分享的读授权随来源任务结束，先保存独立副本再关闭导入页。
                         check(importDir.isDirectory || importDir.mkdirs()) { "Cannot create import directory" }
@@ -176,8 +199,12 @@ class GlobalShareInRepoObj(
                                 }
                             }
                         }
-                        bean = bean.copy(uriUuid = checkNotNull(importKey), uri = Uri.fromFile(target), fileSize = target.length(),
+                        bean = bean.copy(uri = Uri.fromFile(target), fileSize = target.length(),
                             fileSizeStr = formatBytes(target.length()))
+                    }
+                    replaced.forEach { (key, previous) ->
+                        next.remove(key)
+                        replacedBeans.add(previous)
                     }
                     next[bean.uriUuid] = bean
                 }
@@ -185,6 +212,17 @@ class GlobalShareInRepoObj(
                 withContext(NonCancellable) {
                     updateSendUriMap(next)
                     committed = true
+                    shareInAndReceiveBeans = shareInAndReceiveBeans?.let { previous ->
+                        groupImportBatches(next.values.toList()).flatten() + previous.filter { it.isLocalReceiver }
+                    }
+                    // 新批次提交后再清理被替换副本，失败或取消时仍可使用原记录。
+                    val retainedUris = next.values.map { it.uri }.toSet()
+                    replacedBeans.forEach { previous ->
+                        if (previous.uri.scheme == "file" && previous.uri !in retainedUris) {
+                            val file = File(previous.uri.path.orEmpty())
+                            if (file.parentFile == importDir) file.delete()
+                        }
+                    }
                 }
             } finally {
                 if (!committed) copiedFiles.forEach { it.delete() }
@@ -194,12 +232,12 @@ class GlobalShareInRepoObj(
 
     suspend fun loadShareInAndReceiveBeans(): List<ShareInBean> = withIOThread {
         mutex.withLock {
-            val shareInBeans = sendUriMap.values.toList()
+            val shareInBeans = groupImportBatches(loadSendUriMap().values.toList()).flatten()
             val files = fileListRepository.reloadFileList()
             val receivedShareInBeans = files.map {
                 ShareInBean.convert(it, FROM_LOCAL).also { bean -> bean.isLocalReceiver = true }
             }
-            val result = receivedShareInBeans + shareInBeans
+            val result = shareInBeans + receivedShareInBeans
             shareInAndReceiveBeans = result
             result
         }

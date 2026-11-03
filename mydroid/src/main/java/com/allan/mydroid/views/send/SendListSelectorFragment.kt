@@ -79,12 +79,9 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     private fun updateSelectionActions() {
         val deleting = deleteJob?.isActive == true
         binding.selectBtn.isEnabled = !deleting
-        binding.selectBtn.setImageResource(
-            if (common.isSelectionMode) R.drawable.ic_cancel_selection else R.drawable.ic_select_items
-        )
-        binding.selectBtn.setContentDescription(Globals.app.getString(
+        binding.selectBtn.text = Globals.app.getString(
             if (common.isSelectionMode) com.au.module_androidui.R.string.cancel else R.string.select_items
-        ))
+        )
         binding.deleteBtn.visibility = if (common.isSelectionMode) View.VISIBLE else View.GONE
         binding.deleteBtn.isEnabled = common.selectedUriUuids.isNotEmpty() && !deleting
         binding.deleteBtn.alpha = if (binding.deleteBtn.isEnabled) 1f else 0.35f

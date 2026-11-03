@@ -9,6 +9,7 @@ import com.au.module_androidcolor.R
 object ComposeColors {
     val PrimaryBg @Composable @ReadOnlyComposable get() = colorResource(R.color.colorPrimary)
     val BackgroundBg @Composable @ReadOnlyComposable get() = colorResource(R.color.windowBackground)
+    val LineOnBlock @Composable @ReadOnlyComposable get() = colorResource(R.color.color_line_on_block)
 
     val TextPrimary @Composable @ReadOnlyComposable get() = colorResource(R.color.color_text_normal)
     val TextSecondary @Composable @ReadOnlyComposable get() = colorResource(R.color.color_second_btn_text)

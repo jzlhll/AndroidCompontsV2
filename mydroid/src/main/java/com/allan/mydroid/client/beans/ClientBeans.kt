@@ -2,6 +2,7 @@ package com.allan.mydroid.client.beans
 
 import android.net.Uri
 import androidx.annotation.Keep
+import com.allan.mydroid.beansinner.ImportBatchItem
 
 /**
  * host 端 /request-file-list 返回项的精简结构。
@@ -14,8 +15,12 @@ data class RemoteFileBean(
     val fileSizeStr: String = "",
     val uriUuid: String = "",
     val fileSize: Long? = null,
-    val mimeType: String? = null
-)
+    val mimeType: String? = null,
+    val from: String? = null,
+    override val importBatchId: String? = null,
+    override val importedAt: Long = 0L,
+    override val importOrder: Int = 0
+) : ImportBatchItem
 
 /** 聊天消息 UI 项。 */
 data class ChatMessage(

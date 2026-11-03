@@ -96,7 +96,7 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
                 }
             }
             transferStream = trackedStream
-            shareInRepository.startDownload(transferId, uriUuid)
+            shareInRepository.startDownload(transferId, uriUuid, info.importBatchId)
             registered = true
             val response = object : Response(Response.Status.OK, "application/octet-stream", trackedStream, fileSize) {
                 private val published = AtomicBoolean(false)

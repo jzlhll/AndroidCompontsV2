@@ -1,8 +1,10 @@
 package com.allan.mydroid.views.send
 
 import com.allan.mydroid.beansinner.ShareInBean
+import com.allan.mydroid.beansinner.formatImportBatchTime
 import com.allan.mydroid.databinding.HolderMydroidSendlistItemBinding
 import com.allan.mydroid.databinding.HolderMydroidSendlistTitleBinding
+import com.allan.mydroid.databinding.HolderMydroidImportBatchBinding
 import com.allan.mydroid.views.getIcon
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.glideSetAny
@@ -21,6 +23,16 @@ class SendTitleHolder(binding: HolderMydroidSendlistTitleBinding)
         super.bindData(bean)
         if (bean !is IconTitle) return
         binding.title.text = bean.title
+    }
+}
+
+class ImportBatchSeparatorHolder(binding: HolderMydroidImportBatchBinding)
+    : BindViewHolder<IMultiViewTypeBean, HolderMydroidImportBatchBinding>(binding) {
+    override fun bindData(bean: IMultiViewTypeBean) {
+        super.bindData(bean)
+        if (bean !is ImportBatchSeparator) return
+        binding.timeTv.text = formatImportBatchTime(bean.importedAt)
+        binding.countTv.text = bean.count.toString()
     }
 }
 

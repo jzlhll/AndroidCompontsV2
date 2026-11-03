@@ -97,7 +97,7 @@
 
                 <com.au.module_androidui.widget.CustomFontText
                     android:id="@+id/shareInTitleTv"
-                    style="@style/StyleAuTextThin"
+                    style="@style/StyleShareInTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -116,16 +116,16 @@
                     android:visibility="gone"
                     app:tint="@color/logic_send" />
 
-                <androidx.appcompat.widget.AppCompatImageButton
+                <com.au.module_androidui.widget.CustomButton
                     android:id="@+id/selectBtn"
-                    android:layout_width="48dp"
+                    style="@style/StyleShareInSelectButton"
+                    android:layout_width="wrap_content"
                     android:layout_height="48dp"
-                    android:padding="12dp"
-                    android:scaleType="fitCenter"
+                    android:minWidth="48dp"
+                    android:paddingHorizontal="12dp"
+                    android:gravity="center"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_select_items"
-                    android:contentDescription="@string/select_items"
-                    app:tint="@color/logic_send" />
+                    android:text="@string/select_items" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

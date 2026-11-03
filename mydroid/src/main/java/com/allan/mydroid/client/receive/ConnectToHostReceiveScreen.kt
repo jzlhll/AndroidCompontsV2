@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -24,6 +25,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.allan.mydroid.R
+import com.allan.mydroid.beansinner.FROM_LOCAL
+import com.allan.mydroid.beansinner.LEGACY_IMPORT_BATCH_ID
+import com.allan.mydroid.beansinner.groupImportBatches
+import com.allan.mydroid.beansinner.formatImportBatchTime
 import com.allan.mydroid.client.ConnectToHostHeader
 import com.allan.mydroid.client.ConnectionStatus
 import com.allan.mydroid.client.HostEndpoint
@@ -49,7 +54,9 @@ fun ConnectToHostReceiveScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val connected = state.connectionState == WsConnectionState.Connected
-    val displayedFiles = state.files + state.downloadTasks.filter { task ->
+    val importBatches = groupImportBatches(state.files.filter { it.from != FROM_LOCAL })
+    val localFiles = state.files.filter { it.from == FROM_LOCAL }
+    val missingFiles = state.downloadTasks.filter { task ->
         task.active && state.files.none { it.uriUuid == task.uriUuid }
     }.map { task ->
         RemoteFileBean(name = task.name, uriUuid = task.uriUuid, fileSize = task.fileSize,
@@ -81,11 +88,38 @@ fun ConnectToHostReceiveScreen(
                     }
                 }
             }
-            if (displayedFiles.isEmpty() && !state.refreshing) item {
+            if (state.files.isEmpty() && missingFiles.isEmpty() && !state.refreshing) item {
                 BasicText(stringResource(R.string.no_received_files), style = ComposeTypography.Font14Desc91)
             }
-            items(displayedFiles, key = { it.uriUuid }) { bean ->
-                val task = state.downloadTasks.find { it.uriUuid == bean.uriUuid }
+            importBatches.forEach { batch ->
+                item(key = "batch:${batch.first().importBatchId ?: LEGACY_IMPORT_BATCH_ID}") {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(Modifier.weight(1f).height(1.dp).background(ComposeColors.LineOnBlock))
+                        val importedAt = batch.first().importedAt
+                        val time = remember(importedAt) { formatImportBatchTime(importedAt) }
+                        BasicText(time, style = ComposeTypography.Font14Desc91, maxLines = 1)
+                        Box(Modifier.weight(1f).height(1.dp).background(ComposeColors.LineOnBlock))
+                        BasicText(batch.size.toString(), style = ComposeTypography.Font14Desc91)
+                        Box(Modifier.weight(1f).height(1.dp).background(ComposeColors.LineOnBlock))
+                    }
+                }
+                items(batch, key = { it.uriUuid }) { bean ->
+                    val task = state.downloadTasks.find {
+                        it.uriUuid == bean.uriUuid && (it.active || it.importBatchId == bean.importBatchId)
+                    }
+                    RemoteFileRow(bean, connected, task,
+                        onDownload = { viewModel.downloadFile(bean) },
+                        onCancel = { task?.let(viewModel::cancelDownload) })
+                }
+            }
+            if (localFiles.isNotEmpty()) item {
+                BasicText(stringResource(R.string.my_transfer_list).trim(), style = ComposeTypography.Font14Desc91)
+            }
+            items(localFiles + missingFiles, key = { it.uriUuid }) { bean ->
+                val task = state.downloadTasks.find {
+                    it.uriUuid == bean.uriUuid && (it.active || it.importBatchId == bean.importBatchId)
+                }
                 RemoteFileRow(bean, connected, task,
                     onDownload = { viewModel.downloadFile(bean) },
                     onCancel = { task?.let(viewModel::cancelDownload) })
