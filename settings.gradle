@@ -80,6 +80,7 @@ include ':child-monitor'
 project(':child-monitor').projectDir = file('child-monitor/androidApp')
 include ':appMultiMedia'
 include ':appcompose'
+include ':agit'
 //include ':appgallery'
 include ':Module-AuSimplePermission'
 include ':Module-AuGsonMMKV'
