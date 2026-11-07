@@ -16,6 +16,9 @@ import kotlin.math.min
  */
 object SquareImageLoader {
 
+    /** 缩放后的图片及其原图短边，供下游评分使用。 */
+    data class LoadedImage(val bitmap: Bitmap, val originalShortEdge: Int)
+
     /**
      * 使用 ImageDecoder 加载图片，并直接缩放、裁剪为指定边长的正方形。
      *
@@ -28,14 +31,16 @@ object SquareImageLoader {
      * @param uri 图片 Uri
      * @param targetSide 目标正方形边长（像素）
      * @param ignoreSide 如果图片的原始宽或高小于此值，则直接忽略（返回 null）。默认为 null，表示不限制。
-     * @return 裁剪后的 Bitmap，如果发生异常、或尺寸不满足要求则返回 null
+     * @return 裁剪后的图片及原图短边，如果发生异常、或尺寸不满足要求则返回 null
      */
-    fun load(context: Context, uri: Uri, targetSide: Int, ignoreSide: Int? = null): Bitmap? {
+    fun load(context: Context, uri: Uri, targetSide: Int, ignoreSide: Int? = null): LoadedImage? {
         return try {
             val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+            var originalShortEdge = 0
+            val bitmap = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
                 val originW = info.size.width
                 val originH = info.size.height
+                originalShortEdge = min(originW, originH)
 
                 // 0. 尺寸检查：如果指定了 ignoreSide，且任一边长小于该值，则取消加载
                 if (ignoreSide != null && (originW < ignoreSide || originH < ignoreSide)) {
@@ -69,6 +74,7 @@ object SquareImageLoader {
                 decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE // 软件渲染，兼容性更好
                 decoder.isMutableRequired = true // 允许修改
             }
+            LoadedImage(bitmap, originalShortEdge)
         } catch (_: Exception) {
             //e.printStackTrace()
             null

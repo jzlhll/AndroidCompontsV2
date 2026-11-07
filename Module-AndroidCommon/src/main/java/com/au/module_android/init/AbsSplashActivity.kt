@@ -40,12 +40,13 @@ abstract class AbsSplashActivity : AppCompatActivity() {
     @SuppressLint("MissingSuperCall")
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         launcherApp(intent)
     }
 
     abstract fun goActivity(intent: Intent?)
 
-    fun launcherApp(intent: Intent?) {
+    open fun launcherApp(intent: Intent?) {
         //直接从android Studio run起来会初始化多次。
         val cur = System.currentTimeMillis()
         if (cur - lastLauncherApp > 1000L) {
