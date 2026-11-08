@@ -21,8 +21,13 @@ class AndroidGitEnvironment(context: Context) {
 
     init {
         val configDir = File(context.noBackupFilesDir, "jgit").apply { mkdirs() }
-        SystemReader.setInstance(object : SystemReader.Delegate(SystemReader.getInstance()) {
+        val system = SystemReader.getInstance()
+        SystemReader.setInstance(object : SystemReader() {
             override fun getHostname(): String = "android"
+            override fun getenv(variable: String): String? = system.getenv(variable)
+            override fun getProperty(key: String): String? = system.getProperty(key)
+            override fun getCurrentTime(): Long = system.currentTime
+            override fun getTimezone(timestamp: Long): Int = system.getTimezone(timestamp)
             override fun openSystemConfig(parent: Config?, fs: FS): FileBasedConfig = emptyConfig(parent, "system")
             override fun openUserConfig(parent: Config?, fs: FS): FileBasedConfig = emptyConfig(parent, "user")
             override fun openJGitConfig(parent: Config?, fs: FS): FileBasedConfig = emptyConfig(parent, "jgit")

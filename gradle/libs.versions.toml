@@ -25,7 +25,8 @@ nanohttpd = "2.3.1"
 navigationFragmentKtx = "2.10.2"
 navigationCompose = "2.10.2"
 navigation3 = "1.2.1"
-jgit = "6.10.1.202505221210-r"
+# 固定官方 Java 8 兼容修订版，避免旧 Android 缺少 Java 9+ I/O API；包含 CVE-2025-4949 修复。
+jgit = { strictly = "5.13.5.202508271544-r" }
 coroutines = "1.11.0"
 desugarJdkLibs = "2.1.5"
 okhttpBom = "5.5.0"

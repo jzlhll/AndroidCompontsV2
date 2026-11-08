@@ -8,6 +8,8 @@
 
 `AppTheme` 包含 `Black`、`White`、`Dracula`、`Sage`，保存在 `Catalog` 中。`AGitRoot` 收集主题后组合 `AGitTheme`，主题同时更新 Material 3 和系统栏明暗。色板参考 `Notepadmm/src/main/resources/css/` 的 `colors_ember.css`、`colors_mist.css`、`colors_dracula.css`、`colors_sage.css`。状态前景色和底色集中在同一个 `ThemePalette`，四套主题的二十组状态文字/底色对比度最低约为 5.12:1。
 
+`AGitApp.kt` 仅组装主题、目录加载态、导航宿主和全局弹窗。路由键集中在 `NavKeys.kt`，导航状态与表单完成后的跳转由 `AGitNavigationState.kt` 管理，页面路由绑定和响应式抽屉承载放在 `AGitNavHost.kt`。`ProjectDrawer.kt`、`TokenGroupPickerDialog.kt` 和 `TokenRoute.kt` 分别负责抽屉、分组选择及 Token 表单数据加载。
+
 Navigation 3 `1.2.1` 使用 `@Serializable NavKey`、`rememberNavBackStack`、`NavDisplay` 和两个 `NavEntryDecorator` 保存返回栈、Compose 状态及页面 ViewModel。导航参数只传 `projectId`、目录或文件相对路径，Token 不进入参数或 SavedState。业务状态与一次性界面状态分离，重新组合不启动 Git 任务。
 
 页面切换统一使用 220ms 水平推入动画：进入时新页面从右侧滑入，旧页面向左滑出；返回及预测返回时方向相反。整个页面平移，不叠加文字或页面透明度渐变。
@@ -16,12 +18,13 @@ Koin 的 `agitModule` 注册应用级 `CatalogStore`、`TokenVault`、`UserFeedb
 
 ## 数据与 Git
 
-- `CatalogStore` 使用 DataStore 保存 Token 分组、项目、作者、最近选择项目、外部编辑会话和待完成的临时分支推送目标。读取失败不当作空数据覆盖。
+- `CatalogStore` 使用 DataStore 保存 Token 分组、项目、作者、当前分组 `selectedGroupId`、当前项目 `selectedProjectId`、外部编辑会话和待完成的临时分支推送目标。读取失败不当作空数据覆盖。`Catalog.currentGroup` / `currentProject` 统一解析当前上下文；旧数据缺少分组字段时兼容最近项目，显式选中的空分组不回退到其他分组的项目。选择操作取消并等待上一任务，持久化成功后再切换页面；删除分组时一并更新当前分组和项目。
 - `TokenVault` 使用 Android Keystore AES-GCM，分组 ID 作为 AAD；凭据存放在共享目录之外，应用禁用备份。
 - 没有有效作者邮箱时，添加分组使用两步表单：`Next` 仅把 Token 草稿放在 `AppViewModel` 内存中，作者页 `Save` 再通过一次 DataStore 更新保存加密分组和作者。返回第一步可恢复内存草稿；离开流程或 ViewModel 销毁时清空字符数组，进程恢复时要求重新填写 Token。
 - `Author.isConfigured` 仅要求有效邮箱，`Author.displayName` 优先显式姓名、否则完整邮箱；`Author.commitName` 优先显式姓名、否则邮箱 `@` 前的部分，供 JGit `PersonIdent` 使用。
 - `AGitRepository` 以 project ID 分配 Mutex，同一仓库的扫描、Git 写入和文件回写串行执行。阻塞操作进入 IO；ViewModel 状态在主线程更新。
-- `JGitEngine` 内嵌 JGit `6.10.1.202505221210-r`，只使用 GitHub HTTPS 和单一 `origin`。凭据只提供给 `github.com`，不写入 URL 或 Git 配置。禁用 hooks、外部 filter、JMX 注册和系统 Git 探测。
+- Clone 先写入 `filesDir/temp/clones/<projectId>/`，JGit 完成下载、检出并关闭仓库后，原子改名为 `filesDir/shared/<projectId>/`，随后登记 Catalog。失败或取消时，在项目锁内等待引擎和进度回写停止，再以不可取消的清理删除未完成目录。`AppViewModel` 启动后延迟 3 秒调用残留检查，复用相同项目锁，清理 temp 和未登记的正式目录；Catalog 读取失败时不把已有目录视作孤立目录。
+- `JGitEngine` 固定使用官方 Java 8 兼容修订版 JGit `5.13.5.202508271544-r`，只使用 GitHub HTTPS 和单一 `origin`。该修订版包含 CVE-2025-4949 修复，并修正了 `5.13.4` 错误使用 JDK 17 编译的问题。凭据只提供给 `github.com`，不写入 URL 或 Git 配置。禁用 hooks、外部 filter、JMX 注册和系统 Git 探测。
 - commit 重新检查选中文件的指纹，使用 `CommitCommand.setOnly` 隔离未选中的暂存项；新文件先加入索引。重命名使用 JGit 的检测结果组合原、新路径。
 - 更新先 fetch，再检查共同历史、上游、dirty、ahead 和 behind，只执行 `FF_ONLY`。推送先检查并展示仓库、目标及提交；确认后重新 fetch，仅推送明确的单个目标引用。
 - 暂存与文件选择均以整文件为单位；未选中的工作区和暂存项不会隐式进入 commit。Git 操作不执行 stash、rebase、冲突合并、强制推送或自动重试。
@@ -38,15 +41,19 @@ Koin 的 `agitModule` 注册应用级 `CatalogStore`、`TokenVault`、`UserFeedb
 
 `AppViewModel` 持有实际操作 Job 与 `OperationState`；逐字动画、光标、省略号与计时只读取步骤状态，不控制任务时序。快速完成的步骤立即补全命令；执行中屏蔽误关闭及重复发起。只在 clone、独立 fetch 阶段显示取消入口，协程等待阻塞调用离开当前阶段后才报告取消。commit、分支创建、快进与 push 阶段不提供取消。
 
+Clone 页面和执行弹窗的标题固定为 `Clone Repository`。`GitDownloadConnectionFactory` 沿用 JGit 的 JDK 连接和 TLS 会话，仅累计 `git-upload-pack` 响应流实际读取的字节；通过有归属的进度协程限频回写 `OperationStep.receivedBytes`，不把对象数量换算成下载总大小。`MainActivity` 在 STARTED 生命周期收集 Clone 是否运行，运行时设置屏幕常亮，结束或退出前台时清除；字节数更新不重复修改窗口标志。
+
 `SettingsKey → LogsKey → LogFileKey` 在同一 Navigation 3 返回栈内展示日志。`LogsViewModel` 由各个 NavEntry 持有，Koin 注入 `LogRepository` 与 `UserFeedback`；只在进入页面和用户刷新时读取，不注册全局 Activity 监听或文件监听。列表按日期分组、显示文件名和大小，沿用模块的查看/删除/压缩分享行为。内容复用 `FileLog.logParser` 解析，可隐藏元信息、切换换行，并按级别着色。
 
 日志读取先等待 `FileLog.logHandler` 中已入队的写入完成，再在 IO 线程读取快照，不设置 `FileLog.ignoreWrite`。内容按 256KB 分页，从最新一页进入并允许加载更早记录；刷新取消并等待上一任务。压缩分享仅包含用户选中的最多三份 `.log` 文件，输出位于 `cacheDir/shared/logs/`，使用既有 FileProvider 临时只读授权，不扩大共享根目录。
 
-实际异常通过 `safeFailure` 转成英中字符串资源和受控英文错误码。Toast 复用模块 `ToastBuilder`，操作日志复用 `FileLog`。不记录原始异常正文、凭据、文件内容或提交说明。应用级操作状态跨配置变化保存；进程结束后只从磁盘恢复仓库与编辑记录，不恢复或自动重跑旧 Job。
+实际异常通过 `safeFailure` 转成英中字符串资源和受控英文错误码。用户错误编号由 `AGitErrorCode` 集中定义，`appString` 和 `errorStringResource` 统一在正文末尾追加编号；资源只保留可翻译正文。内部英文错误码继续用于业务判断，不与用户编号混用。Toast 复用模块 `ToastBuilder`，操作日志复用 `FileLog`。不记录原始异常正文、凭据、文件内容或提交说明。应用级操作状态跨配置变化保存；进程结束后只从磁盘恢复仓库与编辑记录，不恢复或自动重跑旧 Job。
 
 ## 兼容性边界
 
 最低 Android API 29，沿用根工程的 SDK、AGP、Kotlin 和 Compose BOM，启用 Java API desugaring。JGit 通过独立文件系统适配、私有配置和禁用 JMX 避开桌面依赖路径；不要求系统安装 `git`。
+
+JGit 版本使用严格约束，避免依赖解析重新选择需要较新 Java API 的分支。Android 29–32 缺少 `InputStream.readNBytes` 等方法，现有 desugaring 不补齐这些 I/O API；不能仅根据 Java 字节码目标版本判断兼容性，也不能使用以 JDK 17 编译的 `5.13.4`。`AndroidGitEnvironment` 使用 `5.13.5` 的 `SystemReader` 接口保留私有配置隔离，进度监听使用该版本的五个标准回调。
 
 JGit 的 Android 真机运行、GitHub 私有仓库认证、网络取消及实际推送仍需要设备联调确认。源码/API 检查不能替代这些验证，当前不能把该闭环视为已经通过设备验收。未覆盖 Git LFS、submodule 操作、SSH、其他托管服务和手机端冲突解决。
 

@@ -24,7 +24,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.au.agit.model.*
+import com.au.agit.data.AGitErrorCode
 import com.au.agit.data.Notice
+import com.au.agit.errorStringResource
+import com.au.agit.ui.theme.AGitTheme
+import com.au.agit.ui.components.formatFileSize
+import com.au.module_androiduiex.preview.AppPreview
+import com.au.module_androiduiex.styles.ComposeColors
+import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androidui.toast.ToastBuilder
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
@@ -117,20 +124,20 @@ private fun TerminalStep(step: OperationStep) {
         StepStatus.Skipped -> "−"
         else -> "$"
     }
-    val color = when (step.status) {
-        StepStatus.Success, StepStatus.Running -> Color(0xFF85E0AD)
-        StepStatus.Failed -> Color(0xFFFFBD9D)
-        else -> Color(0xFF8FAA99)
-    }
+    val color = ComposeColors.TextLightDesc
     Column {
-        Text("$prefix $command${if (running && tick % 2 == 0) " ▍" else ""}", color = color, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
+        Text("$prefix $command${if (running && tick % 2 == 0) " ▍" else ""}", color = color, fontFamily = FontFamily.Monospace, style = ComposeTypography.Font14sp)
         if (running) {
             val seconds = (now - (step.startedAt ?: now)) / 1000
-            Text(stringResource(R.string.waiting_result, ".".repeat(tick % 3 + 1), seconds), color = Color(0xFF8FAA99), fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.waiting_result, ".".repeat(tick % 3 + 1), seconds), color = color, fontFamily = FontFamily.Monospace, style = ComposeTypography.Font12sp)
         } else if (step.result != null) {
-            Text(step.result, color = color, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+            Text(step.result, color = color, style = ComposeTypography.Font12sp, modifier = Modifier.padding(top = 4.dp))
         } else if (step.status == StepStatus.Skipped) {
-            Text(stringResource(R.string.not_executed), color = color, style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.not_executed), color = color, style = ComposeTypography.Font12sp)
+        }
+        step.receivedBytes?.let { bytes ->
+            Text(stringResource(R.string.received_size, formatFileSize(bytes)), color = color,
+                fontFamily = FontFamily.Monospace, style = ComposeTypography.Font12sp)
         }
     }
 }
@@ -138,5 +145,28 @@ private fun TerminalStep(step: OperationStep) {
 @Preview
 @Composable
 private fun TerminalStepPreview() {
-    MaterialTheme { Column(Modifier.background(Color(0xFF101914)).padding(24.dp)) { TerminalStep(OperationStep("git fetch origin", StepStatus.Success, stringResource(R.string.fetch_preview))) } }
+    AppPreview {
+        MaterialTheme {
+            Column(Modifier.background(Color(0xFF101914)).padding(24.dp)) {
+                TerminalStep(OperationStep("git fetch origin", StepStatus.Success, stringResource(R.string.fetch_preview)))
+            }
+        }
+    }
+}
+
+@Preview(locale = "en")
+@Preview(locale = "zh-rCN")
+@Composable
+private fun OperationErrorPreview() {
+    AppPreview {
+        AGitTheme(AppTheme.Black) {
+            val error = errorStringResource(AGitErrorCode.ENGINE_UNAVAILABLE)
+            OperationDialog(
+                state = OperationState(null, stringResource(R.string.clone_title),
+                    listOf(OperationStep("git clone https://github.com/owner/repository.git", StepStatus.Failed, error)),
+                    status = OperationStatus.Failed, result = error, kind = "clone"),
+                notice = null, onNoticeConsumed = {}, onCancel = {}, onClose = {}, onPush = {},
+            )
+        }
+    }
 }

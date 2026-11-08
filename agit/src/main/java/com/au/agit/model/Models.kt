@@ -33,7 +33,21 @@ data class Catalog(
     val edits: List<EditSession> = emptyList(),
     val pendingBranches: Map<String, String> = emptyMap(),
     val theme: AppTheme = AppTheme.White,
-)
+    val selectedGroupId: String? = null,
+) {
+    // 旧数据没有 selectedGroupId，优先沿用最近项目所属分组。
+    val currentGroup: TokenGroup?
+        get() = groups.firstOrNull { it.id == selectedGroupId }
+            ?: groups.firstOrNull { group -> projects.any { it.id == selectedProjectId && it.groupId == group.id } }
+            ?: groups.firstOrNull()
+
+    val currentProject: GitProject?
+        get() {
+            val groupId = currentGroup?.id ?: return null
+            return projects.firstOrNull { it.id == selectedProjectId && it.groupId == groupId }
+                ?: projects.firstOrNull { it.groupId == groupId }
+        }
+}
 
 data class FileChange(
     val path: String,

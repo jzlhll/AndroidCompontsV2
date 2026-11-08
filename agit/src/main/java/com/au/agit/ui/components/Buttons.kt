@@ -2,15 +2,22 @@ package com.au.agit.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AGitButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+fun AGitButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    content: @Composable RowScope.() -> Unit,
+) {
     androidx.compose.material3.Button(onClick, modifier.heightIn(min = ButtonDefaults.MinHeight + 6.dp), enabled = enabled,
-        contentPadding = expandedPadding(ButtonDefaults.ContentPadding), content = content)
+        colors = colors, contentPadding = expandedPadding(ButtonDefaults.ContentPadding), content = content)
 }
 
 @Composable
@@ -20,9 +27,15 @@ fun AGitOutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabl
 }
 
 @Composable
-fun AGitTextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+fun AGitTextButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentPadding: PaddingValues = expandedPadding(ButtonDefaults.TextButtonContentPadding),
+    content: @Composable RowScope.() -> Unit,
+) {
     androidx.compose.material3.TextButton(onClick, modifier.heightIn(min = ButtonDefaults.MinHeight + 6.dp), enabled = enabled,
-        contentPadding = expandedPadding(ButtonDefaults.TextButtonContentPadding), content = content)
+        contentPadding = contentPadding, content = content)
 }
 
 @Composable

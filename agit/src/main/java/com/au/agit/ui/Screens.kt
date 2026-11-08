@@ -25,10 +25,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +53,10 @@ import com.au.agit.ui.components.changeBackground
 import com.au.agit.ui.components.formatFileSize
 import com.au.module_android.log.logd
 import com.au.module_android.utilsmedia.getUriFromFile
+import com.au.module_androiduiex.preview.AppPreview
+import com.au.module_androiduiex.styles.ComposeColors
+import com.au.module_androiduiex.styles.ComposeDimens
+import com.au.module_androiduiex.styles.ComposeTypography
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
@@ -80,28 +88,33 @@ fun HomeScreen(
     onProject: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val group = catalog.currentGroup
+    val projects = catalog.projects.filter { it.groupId == group?.id }
     Scaffold(modifier = modifier, topBar = {
-        TopAppBar(title = { Text(stringResource(R.string.app_name)) }, navigationIcon = {
+        TopAppBar(title = { Text(group?.name ?: stringResource(R.string.app_name), style = ComposeTypography.FontToolbarB,
+            color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis) }, navigationIcon = {
             IconButton(onClick = onMenu) { Icon(Icons.Default.Menu, stringResource(R.string.menu)) }
         })
     }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).widthIn(max = 960.dp).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyColumn(Modifier.fillMaxSize().padding(padding).widthIn(max = 960.dp).padding(ComposeDimens.BottomMargin), verticalArrangement = Arrangement.spacedBy(ComposeDimens.PaddingEdge)) {
             item {
-                Text(stringResource(if (catalog.projects.isEmpty()) R.string.home_no_repositories else R.string.home_repositories), style = MaterialTheme.typography.headlineMedium)
-                if (catalog.projects.isEmpty()) {
-                    Text(stringResource(if (catalog.groups.isEmpty()) R.string.home_connect_description else R.string.home_clone_description),
-                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
+                Text(stringResource(if (projects.isEmpty()) R.string.home_no_repositories else R.string.home_repositories),
+                    style = ComposeTypography.Font24M, color = MaterialTheme.colorScheme.onSurface)
+                if (projects.isEmpty()) {
+                    Text(stringResource(if (group == null) R.string.home_connect_description else R.string.home_clone_description),
+                        style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = ComposeDimens.PaddingEdge / 2, bottom = ComposeDimens.PaddingEdge20))
                 }
-                Button(onClick = if (catalog.groups.isEmpty()) onAddToken else onClone) {
-                    Text(stringResource(if (catalog.groups.isEmpty()) R.string.add_token else R.string.add_project))
+                Button(onClick = if (group == null) onAddToken else onClone) {
+                    Text(stringResource(if (group == null) R.string.add_token else R.string.add_project),
+                        style = ComposeTypography.Font14M, color = LocalContentColor.current)
                 }
             }
-            items(catalog.projects, key = { it.id }) { project ->
+            items(projects, key = { it.id }) { project ->
                 OutlinedCard(onClick = { onProject(project.id) }, modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(20.dp)) {
-                        Text(project.name, style = MaterialTheme.typography.titleLarge)
-                        Text(project.url.removePrefix("https://github.com/").removeSuffix(".git"), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(Modifier.padding(ComposeDimens.PaddingEdge20)) {
+                        Text(project.name, style = ComposeTypography.Font20M, color = MaterialTheme.colorScheme.onSurface)
+                        Text(project.url.removePrefix("https://github.com/").removeSuffix(".git"), style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -110,17 +123,71 @@ fun HomeScreen(
 }
 
 @Composable
-fun TokenScreen(group: TokenGroup?, busy: Boolean, needsAuthor: Boolean, onBack: () -> Unit, onSave: (String, String) -> Unit, modifier: Modifier = Modifier, draft: Pair<String, String>? = null) {
+fun TokenScreen(
+    group: TokenGroup?,
+    busy: Boolean,
+    needsAuthor: Boolean,
+    onBack: () -> Unit,
+    onSave: (String, String) -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+    draft: Pair<String, String>? = null,
+    initialToken: String = "",
+) {
     var name by rememberSaveable(group?.id) { mutableStateOf(group?.name ?: draft?.first.orEmpty()) }
     // 凭据不进入 SavedState、导航参数或 Preview。
-    var token by remember(group?.id) { mutableStateOf(draft?.second.orEmpty()) }
+    var token by remember(group?.id, initialToken) { mutableStateOf(if (group == null) draft?.second.orEmpty() else initialToken) }
+    var tokenFocused by remember(group?.id) { mutableStateOf(false) }
+    var confirmingDelete by rememberSaveable(group?.id) { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     PageScaffold(stringResource(if (group == null) R.string.add_token else R.string.edit_token), onBack, modifier) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.token_access_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.token_name)) }, supportingText = { Text(stringResource(R.string.token_name_hint)) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-            OutlinedTextField(token, { token = it }, label = { Text(stringResource(R.string.token_secret)) }, modifier = Modifier.fillMaxWidth(), singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
-            Button(onClick = { onSave(name, token) }, enabled = !busy && name.isNotBlank() && token.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(if (needsAuthor) R.string.next else R.string.save)) }
+        Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(ComposeDimens.BottomMargin), verticalArrangement = Arrangement.spacedBy(ComposeDimens.PaddingEdge)) {
+            Text(stringResource(R.string.token_access_hint), style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(name, { name = it }, enabled = !busy,
+                label = { Text(stringResource(R.string.token_name), style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                supportingText = { Text(stringResource(R.string.token_name_hint), style = ComposeTypography.Font12sp, color = LocalContentColor.current) },
+                modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Column(Modifier.fillMaxWidth()) {
+                OutlinedTextField(token, { token = it }, enabled = !busy,
+                    label = { Text(stringResource(R.string.token_secret), style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { tokenFocused = it.isFocused }, singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
+                // 始终保留清空入口的高度，聚焦变化不改变保存、删除按钮的位置。
+                Box(Modifier.fillMaxWidth().height(48.dp), contentAlignment = Alignment.CenterEnd) {
+                    if (tokenFocused) {
+                        androidx.compose.material3.TextButton(onClick = { token = "" }, enabled = !busy && token.isNotEmpty(),
+                            modifier = Modifier.focusProperties { canFocus = false },
+                            contentPadding = PaddingValues(horizontal = ComposeDimens.PaddingEdge / 2)) {
+                            Text(stringResource(R.string.clear), style = ComposeTypography.Font13sp, color = LocalContentColor.current)
+                        }
+                    }
+                }
+            }
+            Button(onClick = { focusManager.clearFocus(); onSave(name, token) },
+                enabled = !busy && name.isNotBlank() && token.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(if (needsAuthor) R.string.next else R.string.save), style = ComposeTypography.Font14M, color = LocalContentColor.current)
+            }
+            if (group != null) {
+                Button(onClick = { focusManager.clearFocus(); confirmingDelete = true }, enabled = !busy, modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = ComposeColors.Red, contentColor = MaterialTheme.colorScheme.onError)) {
+                    Text(stringResource(R.string.delete), style = ComposeTypography.Font14M, color = LocalContentColor.current)
+                }
+            }
         }
+    }
+    if (confirmingDelete && group != null) {
+        AlertDialog(onDismissRequest = { if (!busy) confirmingDelete = false },
+            title = { Text(stringResource(R.string.delete_group_title), style = ComposeTypography.Font20M, color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text(stringResource(R.string.delete_group_body, group.name), style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            confirmButton = {
+                TextButton(onClick = { confirmingDelete = false; onDelete() }, enabled = !busy) {
+                    Text(stringResource(R.string.delete), style = ComposeTypography.Font14M, color = ComposeColors.Red)
+                }
+            }, dismissButton = {
+                TextButton(onClick = { confirmingDelete = false }, enabled = !busy) {
+                    Text(stringResource(R.string.cancel), style = ComposeTypography.Font14M, color = LocalContentColor.current)
+                }
+            })
     }
 }
 
@@ -131,7 +198,9 @@ fun CloneScreen(group: TokenGroup?, busy: Boolean, onBack: () -> Unit, onClone: 
         Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.clone_description), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(group?.name.orEmpty(), style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(url, { url = it }, label = { Text(stringResource(R.string.repository_url)) }, placeholder = { Text(stringResource(R.string.repository_url_example)) }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
+            OutlinedTextField(url, { url = it },
+                label = { Text(stringResource(R.string.repository_url), style = ComposeTypography.Font14sp, color = LocalContentColor.current) },
+                modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
             Button(onClick = { group?.let { onClone(it.id, url) } }, enabled = !busy && group != null && url.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.clone)) }
         }
     }
@@ -193,7 +262,8 @@ fun RepositoryRoute(
             } catch (error: Exception) { app.failure("external file open", error, key.projectId) }
         }
     }
-    RepositoryScreen(project?.name.orEmpty(), state, activeEdit, onBack, onMenu, onDirectory,
+    RepositoryScreen(catalog.groups.firstOrNull { it.id == project?.groupId }?.name ?: stringResource(R.string.app_name),
+        project?.name.orEmpty(), state, activeEdit, onBack, onMenu, onDirectory,
         onFile = { file ->
             val mime = fileMime(File(file.name))
             if (mime.startsWith("image/") || mime.startsWith("video/")) onMedia(file.path) else openFile = file
@@ -217,6 +287,7 @@ fun RepositoryRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepositoryScreen(
+    groupName: String,
     projectName: String,
     state: RepositoryUiState,
     activeEdit: Boolean,
@@ -233,7 +304,8 @@ fun RepositoryScreen(
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(modifier = modifier, topBar = {
-        TopAppBar(title = { Text(projectName, maxLines = 1) }, navigationIcon = {
+        TopAppBar(title = { Text(groupName, style = ComposeTypography.FontToolbarB, color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1, overflow = TextOverflow.Ellipsis) }, navigationIcon = {
             IconButton(onClick = if (state.directory.isEmpty()) onMenu else onBack) {
                 if (state.directory.isEmpty()) Icon(Icons.Default.Menu, stringResource(R.string.menu)) else Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
             }
@@ -249,6 +321,13 @@ fun RepositoryScreen(
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            Column(Modifier.fillMaxWidth().padding(horizontal = ComposeDimens.PaddingEdge20, vertical = ComposeDimens.PaddingEdge)) {
+                Text(projectName, style = ComposeTypography.Font24M, color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("/" + state.directory, style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = FontFamily.Monospace, modifier = Modifier.padding(top = ComposeDimens.PaddingEdge / 2),
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
             state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp)) }
             state.snapshot?.let { snapshot ->
                 Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
@@ -272,7 +351,6 @@ fun RepositoryScreen(
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.changes)) })
             }
             if (tab == 0) {
-                Text("/" + state.directory, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(16.dp))
                 LazyColumn(Modifier.weight(1f)) {
                     if (state.files.isEmpty() && !state.loading) item { Text(stringResource(R.string.empty_directory), modifier = Modifier.padding(24.dp)) }
                     items(state.files, key = { it.path }) { file ->
@@ -376,10 +454,56 @@ fun fileMime(file: File): String {
 @Preview(showBackground = true, locale = "en")
 @Preview(showBackground = true, locale = "zh-rCN")
 @Composable
-private fun HomePreview() { AGitTheme { HomeScreen(Catalog(), {}, {}, {}, {}) } }
+private fun HomePreview() {
+    AppPreview { AGitTheme(AppTheme.Black) { HomeScreen(Catalog(), {}, {}, {}, {}) } }
+}
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, locale = "en")
+@Preview(showBackground = true, locale = "zh-rCN")
+@Composable
+private fun EmptyGroupHomePreview() {
+    AppPreview {
+        AGitTheme(AppTheme.Black) {
+            HomeScreen(Catalog(
+                groups = listOf(TokenGroup("personal", "Personal", ""), TokenGroup("work", "Work", "")),
+                projects = listOf(GitProject("preview", "personal", "AndroidComponts", "https://github.com/owner/repository")),
+                selectedGroupId = "work",
+            ), {}, {}, {}, {})
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "en")
+@Preview(showBackground = true, locale = "zh-rCN")
+@Composable
+private fun TokenPreview() {
+    AppPreview {
+        AGitTheme(AppTheme.Black) {
+            TokenScreen(TokenGroup("preview", "Personal", ""), false, false, {}, { _, _ -> }, {})
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "en")
+@Preview(showBackground = true, locale = "zh-rCN")
+@Composable
+private fun ClonePreview() {
+    AppPreview {
+        AGitTheme(AppTheme.Black) {
+            CloneScreen(TokenGroup("preview", "Personal", ""), false, {}, { _, _ -> })
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "en")
+@Preview(showBackground = true, locale = "zh-rCN")
 @Composable
 private fun RepositoryPreview() {
-    AGitTheme { RepositoryScreen("AGit", RepositoryUiState(false, snapshot = RepositorySnapshot(branch = "main", ahead = 2, behind = 0)), false, {}, {}, {}, {}, {}, {}, {}, {}, {}) }
+    AppPreview {
+        AGitTheme(AppTheme.Black) {
+            RepositoryScreen("Personal", "AndroidComponts",
+                RepositoryUiState(false, directory = "src/main", snapshot = RepositorySnapshot(branch = "main", ahead = 2, behind = 0)), false,
+                onBack = {}, onMenu = {}, onDirectory = {}, onFile = {}, onRefresh = {}, onCommit = {}, onUpdate = {}, onPush = {}, onFinishEdit = {})
+        }
+    }
 }

@@ -23,6 +23,8 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
 import com.au.agit.R
+import com.au.agit.data.AGitErrorCode
+import com.au.agit.errorStringResource
 import com.au.agit.model.AGitException
 import com.au.module_imagecompressed.loader.ImageLoadConfig
 import com.au.module_imagecompressed.loader.loadCompressUriOrFile
@@ -42,7 +44,7 @@ fun MediaRoute(key: MediaKey, app: AppViewModel, onBack: () -> Unit) {
         Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
             val source = file
             when {
-                failed -> Text(stringResource(R.string.media_error))
+                failed -> Text(errorStringResource(AGitErrorCode.MEDIA_ERROR))
                 source == null -> CircularProgressIndicator()
                 fileMime(source).startsWith("video/") -> VideoPreview(source, onError = { app.failure("video playback", it, key.projectId) })
                 else -> ImagePreview(source, onError = { app.failure("image decode", it, key.projectId) })
@@ -56,7 +58,7 @@ private fun ImagePreview(file: File, onError: (Throwable) -> Unit) {
     val context = LocalContext.current
     var bitmap by remember(file) { mutableStateOf<Bitmap?>(null) }
     var failed by remember(file) { mutableStateOf(false) }
-    val errorMessage = stringResource(R.string.media_error)
+    val errorMessage = errorStringResource(AGitErrorCode.MEDIA_ERROR)
     LaunchedEffect(file) {
         try {
             bitmap = withContext(Dispatchers.IO) {
@@ -96,7 +98,7 @@ private fun VideoPreview(file: File, onError: (Throwable) -> Unit) {
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.weight(1f).fillMaxWidth().background(Color.Black), contentAlignment = Alignment.Center) {
             player?.let { PlayerSurface(player = it, modifier = Modifier.fillMaxSize()) }
-            if (failed) Text(stringResource(R.string.media_error), color = Color.White)
+            if (failed) Text(errorStringResource(AGitErrorCode.MEDIA_ERROR), color = Color.White)
         }
         Button(onClick = { player?.let { if (it.playbackState == Player.STATE_ENDED) it.seekTo(0); if (it.isPlaying) it.pause() else it.play() } }) {
             Text(stringResource(if (playing) R.string.pause else R.string.play))

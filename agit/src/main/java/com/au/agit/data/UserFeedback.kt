@@ -16,6 +16,14 @@ class UserFeedback {
     fun failure(kind: String, error: Throwable, projectId: String? = null, traceId: String = "none") {
         val failure = safeFailure(error)
         loge { "action failed trace=$traceId kind=$kind project=${projectId ?: "none"} code=${failure.code} type=${error.javaClass.simpleName}" }
+        if (error is LinkageError) {
+            // 保留链接错误的类型与调用位置，不输出可能包含凭据或远端响应的异常正文。
+            val stack = generateSequence<Throwable>(error) { it.cause }.take(4).joinToString(" | ") { cause ->
+                val frames = cause.stackTrace.take(12).joinToString(" <- ") { "${it.className}.${it.methodName}:${it.lineNumber}" }
+                "${cause.javaClass.name}: $frames"
+            }
+            loge { "engine linkage failed trace=$traceId userCode=${AGitErrorCode.ENGINE_UNAVAILABLE.code} stack=$stack" }
+        }
         notify(failure.message)
     }
 }

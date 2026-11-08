@@ -9,6 +9,7 @@ data class OperationStep(
     val result: String? = null,
     val startedAt: Long? = null,
     val finishedAt: Long? = null,
+    val receivedBytes: Long? = null,
 )
 
 data class OperationState(
@@ -26,6 +27,7 @@ data class OperationState(
 
 interface OperationReporter {
     suspend fun start(index: Int, command: String, cancellable: Boolean = false)
+    suspend fun progress(index: Int, receivedBytes: Long)
     suspend fun complete(index: Int, result: String)
     suspend fun fail(index: Int, result: String)
     suspend fun skip(index: Int, result: String)

@@ -9,15 +9,22 @@
     <string name="retry">Retry</string>
     <string name="refresh">Refresh</string>
     <string name="menu">Open projects</string>
-    <string name="add_project">Clone repository</string>
+    <string name="add_project" translatable="false">Clone Repository</string>
     <string name="add_token">Add Token group</string>
     <string name="edit_token">Update Token group</string>
     <string name="token_name">Name it</string>
     <string name="token_name_hint">Used only as a local alias.</string>
     <string name="token_secret">Personal access token</string>
+    <string name="clear">Clear</string>
+    <string name="delete">Delete</string>
+    <string name="delete_group_title">Delete Token group?</string>
+    <string name="delete_group_body">Delete “%1$s”, its saved Token, and all repositories in this group from this device? Local changes and unpushed commits will be permanently deleted. GitHub repositories will not be affected. Finish any external editing first.</string>
+    <string name="group_deleted">Token group deleted</string>
     <string name="repository_url">Repository URL</string>
     <string name="clone">Clone</string>
     <string name="select_group">Token group</string>
+    <string name="select">Select</string>
+    <string name="current">Current</string>
     <string name="expand_group">Expand group</string>
     <string name="collapse_group">Collapse group</string>
     <string name="author_title">Commit author</string>
@@ -54,13 +61,14 @@
     <string name="temporary_push">Create branch and push</string>
     <string name="confirm_push">Push %1$d commits</string>
     <string name="waiting_result">Running%1$s %2$ds</string>
+    <string name="received_size">Received %1$s</string>
     <string name="not_executed">Not executed</string>
     <string name="group_saved">Token group saved</string>
     <string name="author_saved">Author identity saved</string>
     <string name="edit_finished">Editing finished</string>
     <string name="copy_replaced">Original replaced</string>
     <string name="both_kept">Both files kept</string>
-    <string name="clone_title">Cloning repository</string>
+    <string name="clone_title" translatable="false">Clone Repository</string>
     <string name="project_added">Repository added</string>
     <string name="commit_done">Commit created</string>
     <string name="update_title">Updating repository</string>
@@ -153,7 +161,6 @@
     <string name="theme_dracula">Dracula</string>
     <string name="theme_sage">Sage</string>
     <string name="selected">Selected</string>
-    <string name="repository_url_example">https://github.com/owner/repository</string>
     <string name="log_empty">No logs yet</string>
     <string name="log_missing">The log file no longer exists</string>
     <string name="log_line_too_long">This log contains a line too large to display. Export the file to inspect it.</string>

@@ -28,6 +28,7 @@ android {
 dependencies {
     implementation(project(":Module-AndroidCommon"))
     implementation(project(":Module-AndroidUi"))
+    implementation(project(":Module-AndroidUiEx"))
     implementation(project(":Module-ImageCompressed"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

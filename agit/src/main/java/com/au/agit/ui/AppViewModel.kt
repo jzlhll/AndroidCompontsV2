@@ -14,8 +14,15 @@ import com.au.module_android.log.loge
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
-data class SavedForm(val id: String = UUID.randomUUID().toString(), val kind: String, val groupId: String? = null, val savedGroupId: String? = null)
+data class SavedForm(
+    val id: String = UUID.randomUUID().toString(),
+    val kind: String,
+    val groupId: String? = null,
+    val savedGroupId: String? = null,
+    val removedProjectIds: Set<String> = emptySet(),
+)
 
 private data class TokenGroupDraft(val name: String, val token: CharArray)
 
@@ -34,9 +41,22 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
     val savedFormFlow = mutableSavedForm.asStateFlow()
     private var operationJob: Job? = null
     private var catalogJob: Job? = null
+    private var selectionJob: Deferred<Boolean>? = null
     private var tokenGroupDraft: TokenGroupDraft? = null
 
-    init { loadCatalog() }
+    init {
+        loadCatalog()
+        viewModelScope.launch {
+            delay(3000.milliseconds)
+            try {
+                repository.cleanupIncompleteClones()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                failure("clone cleanup", error)
+            }
+        }
+    }
 
     fun loadCatalog() {
         if (catalogJob?.isActive == true) return
@@ -53,6 +73,13 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
         val savedId = repository.saveGroup(name, token, id)
         notify(appString(R.string.group_saved))
         mutableSavedForm.value = SavedForm(kind = "token", groupId = id, savedGroupId = savedId)
+    }
+
+    fun deleteGroup(id: String) = quiet("credential group delete") {
+        val removedProjectIds = repository.deleteGroup(id)
+        mutableCatalog.value = repository.store.catalogFlow.first()
+        notify(appString(R.string.group_deleted))
+        mutableSavedForm.value = SavedForm(kind = "token_deleted", groupId = id, removedProjectIds = removedProjectIds)
     }
 
     fun prepareTokenGroup(name: String, token: String): Boolean {
@@ -97,10 +124,25 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
         }
     }
 
-    fun select(projectId: String) {
-        viewModelScope.launch {
-            try { repository.select(projectId); logd { "project selected project=$projectId" } } catch (error: CancellationException) { throw error } catch (error: Exception) { failure("project select", error, projectId) }
-        }
+    fun select(projectId: String) = selectCurrent("project select", projectId) { repository.select(projectId) }
+
+    fun selectGroup(groupId: String) = selectCurrent("group select") { repository.selectGroup(groupId) }
+
+    private fun selectCurrent(kind: String, projectId: String? = null, block: suspend () -> Unit): Deferred<Boolean> {
+        val previous = selectionJob
+        previous?.cancel()
+        return viewModelScope.async {
+            previous?.join()
+            try {
+                block()
+                mutableCatalog.value = repository.store.catalogFlow.first()
+                logd { "selection updated kind=$kind group=${mutableCatalog.value?.currentGroup?.id} project=${mutableCatalog.value?.currentProject?.id}" }
+                true
+            } catch (error: CancellationException) { throw error } catch (error: Exception) {
+                failure(kind, error, projectId)
+                false
+            }
+        }.also { selectionJob = it }
     }
     fun finishEditing(projectId: String) = quiet("external edit finish", projectId) {
         repository.finishEditing(projectId)
@@ -183,6 +225,14 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
                     })
                 }
                 logd { "operation step started trace=$traceId kind=$kind project=${projectId ?: "new"} step=$index command=$command" }
+            }
+            override suspend fun progress(index: Int, receivedBytes: Long) = withContext(Dispatchers.Main.immediate) {
+                val state = mutableOperation.value ?: return@withContext
+                if (state.status != OperationStatus.Running || state.cancelling ||
+                    state.steps.getOrNull(index)?.status != StepStatus.Running || receivedBytes <= 0) return@withContext
+                mutableOperation.value = state.copy(steps = state.steps.mapIndexed { i, step ->
+                    if (i == index) step.copy(receivedBytes = receivedBytes) else step
+                })
             }
             override suspend fun complete(index: Int, result: String) = withContext(Dispatchers.Main.immediate) {
                 mutableOperation.value = mutableOperation.value?.let { state ->

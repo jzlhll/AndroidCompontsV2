@@ -9,6 +9,8 @@ import com.au.agit.git.RepositoryPaths
 import com.au.agit.model.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -16,9 +18,12 @@ import org.eclipse.jgit.api.Git
 import com.au.module_android.utilsmedia.getUriFromFile
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.milliseconds
 
 /** 协调凭据、项目隔离与 Git 事务；同一项目的扫描、写操作和回写共用一把锁。 */
 class AGitRepository(
@@ -31,6 +36,7 @@ class AGitRepository(
     val changesFlow = MutableSharedFlow<String>(extraBufferCapacity = 16)
     private val locks = ConcurrentHashMap<String, Mutex>()
     private val credentialLock = Mutex()
+    private val cloneTempDirectory = File(context.filesDir, "temp/clones")
 
     suspend fun saveGroup(name: String, token: String, existingId: String? = null, author: Author? = null) = withContext(Dispatchers.IO) {
         if (name.isBlank() || token.isBlank() || token.any { it.isWhitespace() }) throw AGitException(appString(R.string.invalid_token), "INVALID_TOKEN")
@@ -38,8 +44,70 @@ class AGitRepository(
         credentialLock.withLock {
             val id = existingId ?: UUID.randomUUID().toString()
             val group = TokenGroup(id, name.trim(), vault.encrypt(id, token.trim()))
-            store.update { catalog -> catalog.copy(groups = catalog.groups.filterNot { it.id == id } + group, author = author ?: catalog.author) }
+            store.update { catalog ->
+                if (existingId != null && catalog.groups.none { it.id == existingId }) throw AGitException(appString(R.string.missing_group), "MISSING_GROUP")
+                catalog.copy(
+                    groups = catalog.groups.filterNot { it.id == id } + group,
+                    author = author ?: catalog.author,
+                    selectedGroupId = catalog.currentGroup?.id ?: id,
+                    selectedProjectId = catalog.currentProject?.id,
+                )
+            }
             id
+        }
+    }
+
+    suspend fun groupToken(groupId: String): String = withContext(Dispatchers.IO) {
+        credentialLock.withLock {
+            val token = tokenForGroup(groupId)
+            try { token.concatToString() } finally { token.fill('\u0000') }
+        }
+    }
+
+    suspend fun deleteGroup(groupId: String): Set<String> = withContext(Dispatchers.IO) {
+        credentialLock.withLock {
+            val catalog = store.catalogFlow.first()
+            if (catalog.groups.none { it.id == groupId }) throw AGitException(appString(R.string.missing_group), "MISSING_GROUP")
+            val projectIds = catalog.projects.filter { it.groupId == groupId }.map { it.id }.sorted().toSet()
+            val acquiredLocks = mutableListOf<Mutex>()
+            try {
+                projectIds.forEach { id ->
+                    val lock = locks.getOrPut(id) { Mutex() }
+                    lock.lock()
+                    acquiredLocks += lock
+                }
+                projectIds.forEach { requireEditingFinished(it) }
+                currentCoroutineContext().ensureActive()
+                // 开始删除后完成索引清理；不跟随符号链接，不触及分组外的仓库或远端。
+                withContext(NonCancellable) {
+                    projectIds.forEach { id ->
+                        val root = paths.root(id).toPath()
+                        if (Files.exists(root, LinkOption.NOFOLLOW_LINKS)) {
+                            Files.walk(root).use { stream ->
+                                stream.sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+                            }
+                        }
+                    }
+                    store.update { current ->
+                        val remainingGroups = current.groups.filterNot { it.id == groupId }
+                        val remainingProjects = current.projects.filterNot { it.id in projectIds }
+                        val selectedGroup = remainingGroups.firstOrNull { it.id == current.currentGroup?.id } ?: remainingGroups.firstOrNull()
+                        val selectedProject = remainingProjects.firstOrNull { it.id == current.currentProject?.id && it.groupId == selectedGroup?.id }
+                            ?: remainingProjects.firstOrNull { it.groupId == selectedGroup?.id }
+                        current.copy(
+                            groups = remainingGroups,
+                            projects = remainingProjects,
+                            selectedGroupId = selectedGroup?.id,
+                            selectedProjectId = selectedProject?.id,
+                            edits = current.edits.filterNot { it.projectId in projectIds },
+                            pendingBranches = current.pendingBranches - projectIds,
+                        )
+                    }
+                }
+            } finally {
+                acquiredLocks.asReversed().forEach { it.unlock() }
+            }
+            projectIds
         }
     }
 
@@ -49,36 +117,101 @@ class AGitRepository(
         store.update { it.copy(author = author) }
     }
 
-    suspend fun select(projectId: String) { store.update { it.copy(selectedProjectId = projectId) } }
+    suspend fun select(projectId: String) {
+        store.update { catalog ->
+            val project = catalog.projects.firstOrNull { it.id == projectId } ?: throw AGitException(appString(R.string.missing_project), "MISSING_PROJECT")
+            if (catalog.groups.none { it.id == project.groupId }) throw AGitException(appString(R.string.missing_group), "MISSING_GROUP")
+            catalog.copy(selectedGroupId = project.groupId, selectedProjectId = projectId)
+        }
+    }
+
+    suspend fun selectGroup(groupId: String) {
+        store.update { catalog ->
+            if (catalog.groups.none { it.id == groupId }) throw AGitException(appString(R.string.missing_group), "MISSING_GROUP")
+            val project = catalog.currentProject?.takeIf { it.groupId == groupId } ?: catalog.projects.firstOrNull { it.groupId == groupId }
+            catalog.copy(selectedGroupId = groupId, selectedProjectId = project?.id)
+        }
+    }
 
     suspend fun clone(groupId: String, input: String, reporter: OperationReporter): GitProject = withContext(Dispatchers.IO) {
         val url = engine.normalizeUrl(input)
         val project = GitProject(UUID.randomUUID().toString(), groupId, url.substringAfterLast('/').removeSuffix(".git"), url)
-        val directoryWasPresent = paths.root(project.id).exists()
-        val token = tokenForGroup(groupId)
-        val job = currentCoroutineContext().job
-        try {
-            reporter.start(0, "git clone $url ${project.id}", cancellable = true)
-            engine.clone(project, token, job)
-            currentCoroutineContext().ensureActive()
-            reporter.start(0, "git clone $url ${project.id}", cancellable = false)
-            withContext(NonCancellable) {
-                store.update { it.copy(projects = it.projects + project, selectedProjectId = project.id) }
+        locks.getOrPut(project.id) { Mutex() }.withLock {
+            val directory = paths.root(project.id).toPath()
+            val temporaryDirectory = File(cloneTempDirectory, project.id).toPath()
+            if (Files.exists(directory, LinkOption.NOFOLLOW_LINKS) || Files.exists(temporaryDirectory, LinkOption.NOFOLLOW_LINKS)) {
+                throw AGitException(appString(R.string.project_exists), "PROJECT_EXISTS")
             }
-            reporter.complete(0, appString(R.string.clone_complete))
-            project
-        } catch (error: Exception) {
-            // 仅清理本次新分配且尚未登记的目录，不触及既有项目。
-            withContext(NonCancellable) {
-                if (!directoryWasPresent && store.catalogFlow.first().projects.none { it.id == project.id }) {
-                    val directory = paths.root(project.id)
-                    if (directory.exists()) Files.walk(directory.toPath()).use { stream ->
-                        stream.sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+            val token = tokenForGroup(groupId)
+            val job = currentCoroutineContext().job
+            try {
+                reporter.start(0, "git clone $url ${project.id}", cancellable = true)
+                val receivedBytesFlow = MutableStateFlow(0L)
+                coroutineScope {
+                    val progressJob = launch {
+                        receivedBytesFlow.collect { bytes ->
+                            if (bytes > 0) reporter.progress(0, bytes)
+                            delay(250.milliseconds)
+                        }
+                    }
+                    try {
+                        engine.clone(project, token, job, temporaryDirectory.toFile()) { receivedBytesFlow.value = it }
+                    } finally {
+                        progressJob.cancelAndJoin()
                     }
                 }
+                if (receivedBytesFlow.value > 0) reporter.progress(0, receivedBytesFlow.value)
+                currentCoroutineContext().ensureActive()
+                reporter.start(0, "git clone $url ${project.id}", cancellable = false)
+                withContext(NonCancellable) {
+                    credentialLock.withLock {
+                        // JGit 已完成下载、检出并关闭仓库，之后才原子改名并登记到正式目录。
+                        Files.createDirectories(directory.parent)
+                        Files.move(temporaryDirectory, directory, StandardCopyOption.ATOMIC_MOVE)
+                        store.update { catalog ->
+                            if (catalog.groups.none { it.id == groupId }) throw AGitException(appString(R.string.missing_group), "MISSING_GROUP")
+                            catalog.copy(projects = catalog.projects + project, selectedGroupId = groupId, selectedProjectId = project.id)
+                        }
+                    }
+                }
+                reporter.complete(0, appString(R.string.clone_complete))
+                project
+            } catch (error: Exception) {
+                // 保持项目锁，等待下载和回写退出后清理，取消期间也必须完成删除。
+                withContext(NonCancellable) {
+                    deleteCloneDirectory(temporaryDirectory)
+                    if (store.catalogFlow.first().projects.none { it.id == project.id }) {
+                        deleteCloneDirectory(directory)
+                    }
+                }
+                throw error
+            } finally { token.fill('\u0000') }
+        }
+    }
+
+    suspend fun cleanupIncompleteClones() = withContext(Dispatchers.IO) {
+        val projectIdPattern = Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+        val projectIds = listOf(cloneTempDirectory, File(context.filesDir, "shared"))
+            .flatMap { it.listFiles()?.toList().orEmpty() }
+            .map { it.name }.filter { it.matches(projectIdPattern) }.distinct()
+        projectIds.forEach { id ->
+            currentCoroutineContext().ensureActive()
+            // 与 Clone 复用项目锁；本次进程里仍在写入的目录必须等待其完成，不能提前删除。
+            locks.getOrPut(id) { Mutex() }.withLock {
+                val registered = store.catalogFlow.first().projects.any { it.id == id }
+                deleteCloneDirectory(File(cloneTempDirectory, id).toPath())
+                if (!registered) {
+                    deleteCloneDirectory(paths.root(id).toPath())
+                }
             }
-            throw error
-        } finally { token.fill('\u0000') }
+        }
+    }
+
+    private fun deleteCloneDirectory(directory: Path) {
+        if (!Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) return
+        Files.walk(directory).use { stream ->
+            stream.sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+        }
     }
 
     suspend fun snapshot(projectId: String): RepositorySnapshot = locked(projectId) { _, git -> snapshotFor(projectId, git) }

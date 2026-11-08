@@ -4,6 +4,7 @@ import com.au.agit.R
 import com.au.agit.appString
 import com.au.agit.model.*
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.MergeCommand
 import org.eclipse.jgit.diff.DiffEntry
@@ -16,10 +17,12 @@ import org.eclipse.jgit.transport.*
 import org.eclipse.jgit.treewalk.CanonicalTreeParser
 import org.eclipse.jgit.treewalk.FileTreeIterator
 import org.eclipse.jgit.util.io.DisabledOutputStream
+import java.io.File
 import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 
 /** 只实现 origin 的普通 Git 操作；所有调用由 AGitRepository 在 IO 线程串行执行。 */
 class JGitEngine(private val environment: AndroidGitEnvironment, private val paths: RepositoryPaths) {
@@ -37,13 +40,20 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
         return "https://github.com/${parts[0]}/$name.git"
     }
 
-    fun clone(project: GitProject, token: CharArray, job: Job) {
-        val directory = paths.root(project.id)
+    fun clone(project: GitProject, token: CharArray, job: Job, directory: File, onReceivedBytes: (Long) -> Unit) {
         if (directory.exists()) throw AGitException(appString(R.string.project_exists), "PROJECT_EXISTS")
         directory.parentFile?.mkdirs()
+        val receivedBytes = AtomicLong()
+        val connectionFactory = GitDownloadConnectionFactory { count ->
+            job.ensureActive()
+            onReceivedBytes(receivedBytes.addAndGet(count))
+        }
         credentials(token) { provider ->
             Git.cloneRepository().setURI(project.url).setDirectory(directory).setFs(environment.fs)
                 .setCloneSubmodules(false).setCredentialsProvider(provider).setTimeout(45)
+                .setTransportConfigCallback { transport ->
+                    if (transport is TransportHttp) transport.httpConnectionFactory = connectionFactory
+                }
                 .setProgressMonitor(monitor(job)).call().use { git -> configure(git.repository) }
         }
     }
@@ -225,7 +235,6 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
         override fun update(completed: Int) = Unit
         override fun endTask() = Unit
         override fun isCancelled(): Boolean = !job.isActive
-        override fun showDuration(enabled: Boolean) = Unit
     }
 
     private fun <T> credentials(token: CharArray, block: (CredentialsProvider) -> T): T {
