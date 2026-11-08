@@ -22,3 +22,4 @@ plugins {
 
 ext.androidSigningRootDir = rootDir
 apply from: 'gradle/android-signing.gradle'
+apply from: 'gradle/android-abis.gradle'

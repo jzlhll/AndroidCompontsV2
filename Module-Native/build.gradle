@@ -64,7 +64,6 @@ android {
                         "-DAPP_KEY=$APP_KEY",
                         "-DENCRYPT_STRING_KEY=$ENCRYPT_STRING_KEY",
                         "-DENCRYPT_ASSETS_KEY=$ENCRYPT_ASSETS_KEY"
-                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
             }
         }
     }

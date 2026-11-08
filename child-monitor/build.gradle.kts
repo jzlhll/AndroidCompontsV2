@@ -16,3 +16,4 @@ plugins {
 
 extra["androidSigningRootDir"] = rootDir.parentFile
 apply(from = "../gradle/android-signing.gradle")
+apply(from = "../gradle/android-abis.gradle")
