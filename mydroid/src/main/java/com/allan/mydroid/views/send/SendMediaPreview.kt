@@ -1,11 +1,11 @@
 package com.allan.mydroid.views.send
 
-import android.graphics.RectF
-import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.view.doOnLayout
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -15,10 +15,10 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
+import androidx.media3.ui.PlayerView
 import com.allan.mydroid.R
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.ViewSendMediaPreviewBinding
@@ -30,6 +30,8 @@ import com.au.module_android.log.logEx
 import com.au.module_android.utils.dp
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
+import com.au.module_gson.mmkv.mmkvGetInt
+import com.au.module_gson.mmkv.mmkvSetAny
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import eightbitlab.com.blurview.BlurTarget
 import eightbitlab.com.blurview.BlurView3Util
@@ -38,13 +40,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Locale
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.time.Duration.Companion.milliseconds
 
-/** 发送列表共用的全屏媒体预览，管理模糊背景、视频播放与可拖动的帧操作按钮组。 */
+/** 发送列表共用的全屏媒体预览，管理模糊背景、视频缩放和可记忆位置的播放及帧操作按钮组。 */
 @androidx.annotation.OptIn(UnstableApi::class)
 class SendMediaPreview(
     fragment: Fragment,
@@ -54,10 +56,11 @@ class SendMediaPreview(
     private val scope = fragment.viewLifecycleOwner.lifecycleScope
     private var player: ExoPlayer? = null
     private var progressJob: Job? = null
-    private var centerControlsVisible = true
-    private val centerControls: View = binding.videoPlayer.findViewById(androidx.media3.ui.R.id.exo_center_controls)
-    private val controlsBackground: View = binding.videoPlayer.findViewById(androidx.media3.ui.R.id.exo_controls_background)
-    private val frameButtons = listOf(binding.backTenFramesBtn, binding.stepFrameBtn, binding.nextTenFramesBtn)
+    private var settingsPopup: PopupMenu? = null
+    private val zoomPercents = listOf(100, 110, 120, 135, 150, 175, 200)
+    private val zoomPreferenceKey = "preview_video_zoom_percent"
+    private var zoomPercent = 100
+    private val playbackSettingsBtn: View = binding.videoPlayer.findViewById(androidx.media3.ui.R.id.exo_settings)
     private val backCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             dismiss()
@@ -69,22 +72,70 @@ class SendMediaPreview(
         fragment.requireActivity().onBackPressedDispatcher.addCallback(fragment.viewLifecycleOwner, backCallback)
         BlurView3Util(binding.backdropBlurView, 0, 20f.dp).setBlurWithOverlayNoNoise(
             blurTarget,
-            0x99000000.toInt(),
-            0xE6000000.toInt(),
+            0x44000000,
+            0x88000000.toInt(),
         )
+        binding.videoPlayer.findViewById<View>(androidx.media3.ui.R.id.exo_controls_background)
+            .setBackgroundColor(0x22000000)
+        val centerControls = binding.videoPlayer.findViewById<ViewGroup>(androidx.media3.ui.R.id.exo_center_controls)
+        (centerControls.parent as ViewGroup).removeView(centerControls)
+        val buttonScale = 0.8f
+        val verticalPadding = (6.dp * buttonScale).roundToInt()
+        centerControls.setPadding(6.dp, verticalPadding, 6.dp, verticalPadding)
+        for (index in 0 until centerControls.childCount) {
+            val button = centerControls.getChildAt(index)
+            button.updateLayoutParams<ViewGroup.LayoutParams> {
+                if (width > 0) width = (width * buttonScale).roundToInt()
+                if (height > 0) height = (height * buttonScale).roundToInt()
+            }
+            button.setPadding(
+                (button.paddingLeft * buttonScale).roundToInt(),
+                (button.paddingTop * buttonScale).roundToInt(),
+                (button.paddingRight * buttonScale).roundToInt(),
+                (button.paddingBottom * buttonScale).roundToInt(),
+            )
+        }
+        binding.playbackControlsHost.addView(
+            centerControls,
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT),
+        )
+        listOf(binding.frameControlsHost, binding.playbackControlsHost).forEach { controls ->
+            BlurView3Util(controls, 12, 12f.dp).setBlurWithOverlayNoNoise(
+                binding.videoBlurTarget,
+                0x44000000,
+                0x88000000.toInt(),
+            )
+        }
         binding.root.onClick(0) {
-            if (player == null) dismiss() else togglePausedControls()
+            if (player == null) dismiss() else toggleControls()
         }
         binding.previewImg.onClick { dismiss() }
         binding.closePreviewBtn.onClick { dismiss() }
-        binding.videoPlayer.onClick(0) { togglePausedControls() }
+        binding.videoPlayer.findViewById<View>(androidx.media3.ui.R.id.exo_time).gone()
+        playbackSettingsBtn.visibility = View.INVISIBLE
+        binding.previewSettingsBtn.onClick { showSettings() }
+        binding.videoPlayer.setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
+            if (player != null) {
+                val controlsVisibility = if (visibility == View.VISIBLE) View.VISIBLE else View.INVISIBLE
+                binding.closePreviewBtn.visibility = controlsVisibility
+                binding.videoTimeTv.visibility = controlsVisibility
+                binding.frameControlsHost.visibility = controlsVisibility
+                binding.playbackControlsHost.visibility = controlsVisibility
+                binding.previewSettingsBtn.visibility = controlsVisibility
+                if (visibility == View.VISIBLE) updateVideoProgress()
+            }
+        })
         binding.stepFrameBtn.onClick(0) { stepFrames(1) }
         binding.nextTenFramesBtn.onClick(0) { stepFrames(10) }
         binding.backTenFramesBtn.onClick(0) { stepFrames(-10) }
-        binding.mediaHost.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            constrainFrameControls()
+        binding.mediaHost.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            // 时间文本刷新也会触发布局，只有区域尺寸变化时才恢复位置，避免覆盖正在拖动的坐标。
+            if (right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop) {
+                restoreControlsPositions()
+            }
         }
-        frameButtons.forEach { initFrameButtonDrag(it) }
+        initControlsDrag(binding.frameControlsHost, "preview_frame_controls")
+        initControlsDrag(binding.playbackControlsHost, "preview_playback_controls")
     }
 
     fun updateInsets(statusBarHeight: Int, navigationBarHeight: Int) {
@@ -97,6 +148,7 @@ class SendMediaPreview(
     fun show(bean: ShareInBean, isVideo: Boolean) {
         dismiss()
         binding.root.visible()
+        binding.closePreviewBtn.visible()
         backCallback.isEnabled = true
         blurTarget.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         binding.closePreviewBtn.requestFocus()
@@ -112,9 +164,18 @@ class SendMediaPreview(
         binding.videoPlayer.visible()
         binding.videoTimeTv.visible()
         binding.frameControlsHost.visible()
+        binding.playbackControlsHost.visible()
+        binding.previewSettingsBtn.visible()
         binding.frameControlsHost.translationX = 0f
         binding.frameControlsHost.translationY = 0f
-        centerControlsVisible = true
+        binding.playbackControlsHost.translationX = 0f
+        binding.playbackControlsHost.translationY = 0f
+        binding.videoPlayer.controllerShowTimeoutMs = 2000
+        zoomPercent = mmkvGetInt(zoomPreferenceKey, 100).let { if (it in zoomPercents) it else 100 }
+        binding.videoPlayer.findViewById<View>(androidx.media3.ui.R.id.exo_content_frame).apply {
+            scaleX = zoomPercent / 100f
+            scaleY = zoomPercent / 100f
+        }
         val videoPlayer = ExoPlayer.Builder(binding.root.context).build()
         player = videoPlayer
         binding.videoPlayer.player = videoPlayer
@@ -129,14 +190,6 @@ class SendMediaPreview(
                 updateVideoProgress()
             }
 
-            override fun onVideoSizeChanged(videoSize: VideoSize) {
-                constrainFrameControls()
-            }
-
-            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-                if (playWhenReady) centerControlsVisible = true
-            }
-
             override fun onPlayerError(error: PlaybackException) {
                 logEx(throwable = error) { "Preview video playback failed" }
                 binding.videoPlayer.setCustomErrorMessage(Globals.app.getString(R.string.preview_video_error))
@@ -148,10 +201,17 @@ class SendMediaPreview(
         videoPlayer.prepare()
         videoPlayer.play()
         binding.videoPlayer.showController()
+        binding.frameControlsHost.doOnLayout { restoreControlsPositions() }
+        binding.playbackControlsHost.doOnLayout { restoreControlsPositions() }
         progressJob = scope.launch {
             while (isActive) {
-                updateVideoProgress()
-                delay(100.milliseconds)
+                if (binding.videoPlayer.isControllerFullyVisible) updateVideoProgress()
+                val updateInterval = if (videoPlayer.isPlaying && binding.videoPlayer.isControllerFullyVisible) {
+                    16.milliseconds
+                } else {
+                    100.milliseconds
+                }
+                delay(updateInterval)
             }
         }
     }
@@ -178,11 +238,49 @@ class SendMediaPreview(
         updateVideoProgress()
     }
 
-    private fun togglePausedControls() {
-        val currentPlayer = player ?: return
-        if (currentPlayer.playWhenReady) return
-        centerControlsVisible = !centerControlsVisible
-        updateVideoProgress()
+    private fun toggleControls() {
+        if (binding.videoPlayer.isControllerFullyVisible) {
+            binding.videoPlayer.hideController()
+        } else {
+            binding.videoPlayer.showController()
+        }
+    }
+
+    private fun showSettings() {
+        if (player == null) return
+        settingsPopup?.dismiss()
+        binding.videoPlayer.controllerShowTimeoutMs = 0
+        var openingPlaybackSettings = false
+        val popup = PopupMenu(binding.root.context, binding.previewSettingsBtn)
+        popup.menu.add(R.string.preview_playback_settings).setOnMenuItemClickListener {
+            openingPlaybackSettings = true
+            binding.videoPlayer.controllerShowTimeoutMs = 2000
+            playbackSettingsBtn.performClick()
+            true
+        }
+        val zoomMenu = popup.menu.addSubMenu(R.string.preview_center_zoom)
+        zoomPercents.forEach { percent ->
+            zoomMenu.add(0, percent, 0, "$percent%").apply {
+                isCheckable = true
+                isChecked = percent == zoomPercent
+                setOnMenuItemClickListener {
+                    zoomPercent = percent
+                    mmkvSetAny(zoomPreferenceKey, percent)
+                    binding.videoPlayer.findViewById<View>(androidx.media3.ui.R.id.exo_content_frame).apply {
+                        scaleX = percent / 100f
+                        scaleY = percent / 100f
+                    }
+                    true
+                }
+            }
+        }
+        zoomMenu.setGroupCheckable(0, true, true)
+        popup.setOnDismissListener {
+            settingsPopup = null
+            if (!openingPlaybackSettings) binding.videoPlayer.controllerShowTimeoutMs = 2000
+        }
+        settingsPopup = popup
+        popup.show()
     }
 
     private fun updateVideoProgress() {
@@ -197,110 +295,85 @@ class SendMediaPreview(
         binding.stepFrameBtn.isEnabled = canStepForward
         binding.nextTenFramesBtn.isEnabled = canStepForward
         binding.backTenFramesBtn.isEnabled = canStep && currentPlayer.currentPosition > 0
-        // 仅隐藏中央播放控件和遮罩，帧操作按钮、时间与进度条保持显示。
-        val visibility = if (currentPlayer.playWhenReady || centerControlsVisible) View.VISIBLE else View.INVISIBLE
-        centerControls.visibility = visibility
-        controlsBackground.visibility = visibility
         binding.videoPlayer.keepScreenOn = currentPlayer.isPlaying
         binding.videoTimeTv.text = Globals.app.getString(
             R.string.preview_video_progress,
-            formatTime(currentPlayer.currentPosition),
-            if (hasDuration) formatTime(duration) else "--:--.---",
+            formatTime(currentPlayer.currentPosition, 2),
+            if (hasDuration) formatTime(duration, 1) else "--:--:--.-",
         )
     }
 
-    private fun formatTime(timeMs: Long): String {
+    private fun formatTime(timeMs: Long, decimalPlaces: Int): String {
         val milliseconds = max(0L, timeMs)
         return String.format(
-            Locale.getDefault(), "%02d:%02d:%02d.%03d",
+            Locale.getDefault(), "%02d:%02d:%02d.%0${decimalPlaces}d",
             milliseconds / 3_600_000,
             milliseconds / 60_000 % 60,
             milliseconds / 1000 % 60,
-            milliseconds % 1000,
+            milliseconds % 1000 / (if (decimalPlaces == 2) 10 else 100),
         )
     }
 
-    private fun initFrameButtonDrag(frameButton: View) {
-        val controls = binding.frameControlsHost
-        val touchSlop = ViewConfiguration.get(binding.root.context).scaledTouchSlop
-        var downX = 0f
-        var downY = 0f
+    private fun initControlsDrag(controls: PreviewControlsLayout, preferenceKey: String) {
         var initialX = 0f
         var initialY = 0f
-        var dragging = false
-        frameButton.setOnTouchListener { button, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    downX = event.rawX
-                    downY = event.rawY
-                    initialX = controls.x
-                    initialY = controls.y
-                    dragging = false
-                    button.isPressed = true
-                    button.parent.requestDisallowInterceptTouchEvent(true)
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val dx = event.rawX - downX
-                    val dy = event.rawY - downY
-                    if (!dragging && (abs(dx) > touchSlop || abs(dy) > touchSlop)) {
-                        dragging = true
-                        button.isPressed = false
-                    }
-                    if (dragging) {
-                        controls.x = initialX + dx
-                        controls.y = initialY + dy
-                        constrainFrameControls()
-                    }
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    button.isPressed = false
-                    button.parent.requestDisallowInterceptTouchEvent(false)
-                    if (!dragging) button.performClick()
-                    true
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    button.isPressed = false
-                    button.parent.requestDisallowInterceptTouchEvent(false)
-                    true
-                }
-                else -> false
-            }
+        controls.onTouchStarted = {
+            binding.videoPlayer.controllerShowTimeoutMs = 0
+            initialX = controls.x
+            initialY = controls.y
+        }
+        controls.onDrag = { dx, dy ->
+            controls.x = initialX + dx
+            controls.y = initialY + dy
+            constrainControls(controls)
+        }
+        controls.onTouchFinished = { dragged ->
+            constrainControls(controls)
+            if (dragged) saveControlsPosition(controls, preferenceKey)
+            binding.videoPlayer.controllerShowTimeoutMs = 2000
         }
     }
 
-    private fun constrainFrameControls() {
-        val controls = binding.frameControlsHost
+    private fun restoreControlsPositions() {
+        if (player == null) return
+        listOf(
+            binding.frameControlsHost to "preview_frame_controls",
+            binding.playbackControlsHost to "preview_playback_controls",
+        ).forEach { (controls, key) ->
+            if (controls.isTouchActive || controls.width == 0 || binding.mediaHost.width == 0) return@forEach
+            val x = mmkvGetInt("${key}_x", -1)
+            val y = mmkvGetInt("${key}_y", -1)
+            if (x in 0..1000 && y in 0..1000) {
+                controls.x = max(0, binding.mediaHost.width - controls.width) * x / 1000f
+                controls.y = max(0, binding.mediaHost.height - controls.height) * y / 1000f
+            }
+            constrainControls(controls)
+        }
+    }
+
+    private fun saveControlsPosition(controls: View, key: String) {
+        val width = binding.mediaHost.width - controls.width
+        val height = binding.mediaHost.height - controls.height
+        mmkvSetAny("${key}_x", if (width > 0) (controls.x / width * 1000).roundToInt() else 0)
+        mmkvSetAny("${key}_y", if (height > 0) (controls.y / height * 1000).roundToInt() else 0)
+    }
+
+    private fun constrainControls(controls: View) {
         val host = binding.mediaHost
         if (controls.width == 0 || host.width == 0 || host.height == 0) return
-        val bounds = RectF(0f, 0f, host.width.toFloat(), host.height.toFloat())
-        val size = player?.videoSize
-        if (size != null && size.width > 0 && size.height > 0) {
-            val ratio = size.width * size.pixelWidthHeightRatio / size.height
-            if (ratio > 0f) {
-                if (host.width.toFloat() / host.height > ratio) {
-                    val width = host.height * ratio
-                    bounds.left = (host.width - width) / 2f
-                    bounds.right = bounds.left + width
-                } else {
-                    val height = host.width / ratio
-                    bounds.top = (host.height - height) / 2f
-                    bounds.bottom = bounds.top + height
-                }
-            }
-        }
-        // 避开顶部关闭按钮和底部播放进度条，窄视频允许按钮组略超出画面。
-        val left = min(bounds.left, max(0f, host.width - controls.width.toFloat()))
-        val right = max(left, bounds.right - controls.width)
-        val top = min(max(bounds.top, 60f.dp), max(0f, host.height - controls.height.toFloat()))
-        val bottom = max(top, min(bounds.bottom, host.height - 96f.dp) - controls.height)
-        controls.x = max(left, min(controls.x, right))
+        // 在整个预览区域内拖动，避开顶部关闭按钮和底部播放进度条。
+        val right = max(0f, host.width - controls.width.toFloat())
+        val top = min(60f.dp, max(0f, host.height - controls.height.toFloat()))
+        val bottom = max(top, host.height - 96f.dp - controls.height)
+        controls.x = max(0f, min(controls.x, right))
         controls.y = max(top, min(controls.y, bottom))
     }
 
     fun dismiss() {
         backCallback.isEnabled = false
+        settingsPopup?.dismiss()
+        settingsPopup = null
+        binding.videoPlayer.hideController()
         progressJob?.cancel()
         progressJob = null
         binding.videoPlayer.player = null
@@ -313,6 +386,8 @@ class SendMediaPreview(
         binding.videoPlayer.gone()
         binding.videoTimeTv.gone()
         binding.frameControlsHost.gone()
+        binding.playbackControlsHost.gone()
+        binding.previewSettingsBtn.gone()
         binding.root.gone()
         blurTarget.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
     }

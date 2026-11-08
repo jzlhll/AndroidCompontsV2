@@ -27,80 +27,112 @@
             android:scaleType="fitCenter"
             android:visibility="gone" />
 
-        <androidx.media3.ui.PlayerView
-            android:id="@+id/videoPlayer"
+        <eightbitlab.com.blurview.BlurTarget
+            android:id="@+id/videoBlurTarget"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            app:surface_type="texture_view"
-            app:resize_mode="fit"
-            app:buffered_color="@color/transfer_preview_track"
-            app:unplayed_color="@color/transfer_preview_track"
-            app:show_buffering="when_playing"
-            app:show_timeout="0"
-            app:animation_enabled="false"
-            app:hide_on_touch="false"
-            app:show_next_button="false"
-            app:show_previous_button="false" />
+            android:layout_height="match_parent">
+            <androidx.media3.ui.PlayerView
+                android:id="@+id/videoPlayer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:surface_type="texture_view"
+                app:resize_mode="fit"
+                app:buffered_color="@color/transfer_preview_track"
+                app:unplayed_color="@color/transfer_preview_track"
+                app:show_buffering="when_playing"
+                app:show_timeout="2000"
+                app:auto_show="false"
+                app:animation_enabled="false"
+                app:hide_on_touch="true"
+                app:show_next_button="false"
+                app:show_previous_button="false" />
+        </eightbitlab.com.blurview.BlurTarget>
 
         <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/videoTimeTv"
             style="@style/StyleWebTransferAction"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|start"
+            android:layout_gravity="bottom|start"
             android:layout_marginEnd="60dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginBottom="12dp"
             android:padding="6dp"
-            android:background="#99000000"
+            android:background="#44000000"
             android:visibility="gone" />
 
-        <LinearLayout
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/previewSettingsBtn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|end"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/exo_styled_controls_settings"
+            android:contentDescription="@string/exo_controls_settings_description"
+            android:visibility="gone"
+            app:tint="@color/white" />
+
+        <com.allan.mydroid.views.send.PreviewControlsLayout
+            android:id="@+id/playbackControlsHost"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <com.allan.mydroid.views.send.PreviewControlsLayout
             android:id="@+id/frameControlsHost"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="top|end"
             android:layout_marginTop="72dp"
-            android:orientation="horizontal"
             android:visibility="gone">
 
-            <com.au.module_androidui.widget.CustomButton
-                android:id="@+id/backTenFramesBtn"
-                style="@style/StyleButtonPrimary"
-                android:layout_width="72dp"
-                android:layout_height="48dp"
-                android:layout_marginBottom="0dp"
-                android:drawableStart="@drawable/ic_frame_back"
-                android:drawablePadding="4dp"
-                android:drawableTint="@color/primary_btn_text_color"
-                android:text="@string/preview_frame_count_ten"
-                android:contentDescription="@string/preview_back_ten_frames_drag" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:orientation="horizontal">
 
-            <com.au.module_androidui.widget.CustomButton
-                android:id="@+id/stepFrameBtn"
-                style="@style/StyleButtonPrimary"
-                android:layout_width="72dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="6dp"
-                android:layout_marginBottom="0dp"
-                android:drawableStart="@drawable/ic_frame_forward"
-                android:drawablePadding="4dp"
-                android:drawableTint="@color/primary_btn_text_color"
-                android:text="@string/preview_frame_count_one"
-                android:contentDescription="@string/preview_next_frame_drag" />
+                <com.au.module_androidui.widget.CustomButton
+                    android:id="@+id/backTenFramesBtn"
+                    style="@style/StylePreviewFrameButton"
+                    android:layout_width="54dp"
+                    android:layout_height="36dp"
+                    android:layout_marginBottom="0dp"
+                    android:drawableStart="@drawable/ic_frame_back"
+                    android:drawablePadding="4dp"
+                    android:drawableTint="@color/white"
+                    android:text="@string/preview_frame_count_ten"
+                    android:contentDescription="@string/preview_back_ten_frames_drag" />
 
-            <com.au.module_androidui.widget.CustomButton
-                android:id="@+id/nextTenFramesBtn"
-                style="@style/StyleButtonPrimary"
-                android:layout_width="72dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="6dp"
-                android:layout_marginBottom="0dp"
-                android:drawableStart="@drawable/ic_frame_forward"
-                android:drawablePadding="4dp"
-                android:drawableTint="@color/primary_btn_text_color"
-                android:text="@string/preview_frame_count_ten"
-                android:contentDescription="@string/preview_next_ten_frames_drag" />
-        </LinearLayout>
+                <com.au.module_androidui.widget.CustomButton
+                    android:id="@+id/stepFrameBtn"
+                    style="@style/StylePreviewFrameButton"
+                    android:layout_width="54dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginBottom="0dp"
+                    android:drawableStart="@drawable/ic_frame_forward"
+                    android:drawablePadding="4dp"
+                    android:drawableTint="@color/white"
+                    android:text="@string/preview_frame_count_one"
+                    android:contentDescription="@string/preview_next_frame_drag" />
+
+                <com.au.module_androidui.widget.CustomButton
+                    android:id="@+id/nextTenFramesBtn"
+                    style="@style/StylePreviewFrameButton"
+                    android:layout_width="54dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginBottom="0dp"
+                    android:drawableStart="@drawable/ic_frame_forward"
+                    android:drawablePadding="4dp"
+                    android:drawableTint="@color/white"
+                    android:text="@string/preview_frame_count_ten"
+                    android:contentDescription="@string/preview_next_ten_frames_drag" />
+            </LinearLayout>
+        </com.allan.mydroid.views.send.PreviewControlsLayout>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/closePreviewBtn"
