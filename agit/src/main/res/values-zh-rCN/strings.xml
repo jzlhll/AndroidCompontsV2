@@ -17,10 +17,9 @@
     <string name="clear">清空</string>
     <string name="delete">删除</string>
     <string name="delete_group_title">删除 Token 分组？</string>
-    <string name="delete_group_body">确定删除“%1$s”、已保存的 Token 及该分组下的全部本地仓库？本地修改和未推送提交将永久删除，不影响 GitHub 远端仓库。请先结束外部编辑。</string>
+    <string name="delete_group_body">确定删除“%1$s”、已保存的 Token 及该分组下的全部本地仓库 &lt;b&gt;[%2$s]&lt;/b&gt;？本地修改和未推送提交将永久删除，不影响 GitHub 远端仓库。请先结束外部编辑。</string>
     <string name="group_deleted">Token 分组已删除</string>
     <string name="repository_url">仓库地址</string>
-    <string name="clone">克隆</string>
     <string name="select_group">Token 分组</string>
     <string name="select">选择</string>
     <string name="current">当前</string>
@@ -88,7 +87,7 @@
     <string name="unexpected_failed">操作失败</string>
     <string name="invalid_token">请填写本地别名和有效的 Token</string>
     <string name="invalid_author">请填写有效的作者邮箱</string>
-    <string name="clone_complete">克隆完成</string>
+    <string name="clone_complete">clone 完成</string>
     <string name="missing_directory">目录不存在</string>
     <string name="unreadable_directory">无法读取目录</string>
     <string name="missing_file">文件不存在</string>
@@ -185,8 +184,22 @@
     <string name="home_repositories">你的仓库</string>
     <string name="home_no_repositories">还没有仓库</string>
     <string name="home_connect_description">添加 Token 分组，连接 GitHub。</string>
-    <string name="home_clone_description">将 GitHub 仓库克隆到本机。</string>
+    <string name="home_clone_description">将 GitHub 仓库 clone 到本机。</string>
     <string name="token_access_hint">填写有仓库访问权限的 Token。</string>
-    <string name="clone_description">克隆已有的 GitHub 仓库。</string>
+    <string name="clone_description">将 GitHub 项目保存到本机。</string>
+    <string name="no_git">无Git</string>
+    <string name="clone_full_description">保留完整提交历史。</string>
+    <string name="clone_depth_description">保留有限提交历史。</string>
+    <string name="clone_download_description">仅下载源码快照。</string>
+    <string name="download">下载</string>
+    <string name="download_complete">源码已下载</string>
+    <string name="increase_depth">增加 depth</string>
+    <string name="decrease_depth">减少 depth</string>
+    <string name="depth_value">历史深度：%1$d</string>
+    <string name="invalid_depth">depth 必须大于 0</string>
+    <string name="archive_download_failed">源码归档下载失败，请检查网络和仓库访问权限。</string>
+    <string name="invalid_archive">源码归档无效或已损坏，无法解压。</string>
+    <string name="no_git_read_only">此项目无 Git 仓库，仅支持查看</string>
+    <string name="shallow_history_incomplete">历史深度不足，无法确认与远端分支的提交关系。</string>
     <string name="author_identity_hint">设置提交记录中的作者身份。</string>
 </resources>

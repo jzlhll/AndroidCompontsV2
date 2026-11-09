@@ -49,12 +49,14 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
             onReceivedBytes(receivedBytes.addAndGet(count))
         }
         credentials(token) { provider ->
-            Git.cloneRepository().setURI(project.url).setDirectory(directory).setFs(environment.fs)
-                .setCloneSubmodules(false).setCredentialsProvider(provider).setTimeout(45)
+            val command = Git.cloneRepository().setURI(project.url).setDirectory(directory).setFs(environment.fs)
+                .setCloneSubmodules(false).setCredentialsProvider(provider).setTimeout(180)
                 .setTransportConfigCallback { transport ->
                     if (transport is TransportHttp) transport.httpConnectionFactory = connectionFactory
                 }
-                .setProgressMonitor(monitor(job)).call().use { git -> configure(git.repository) }
+                .setProgressMonitor(monitor(job))
+            if (project.cloneMode == CloneMode.Depth) command.setDepth(project.depth!!)
+            command.call().use { git -> configure(git.repository) }
         }
     }
 
@@ -116,7 +118,9 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
                 walk.revFilter = RevFilter.MERGE_BASE
                 walk.markStart(walk.parseCommit(head))
                 walk.markStart(walk.parseCommit(remote))
-                if (walk.next() == null) problem = appString(R.string.unrelated_history)
+                if (walk.next() == null) problem = appString(
+                    if (repo.objectDatabase.shallowCommits.isNotEmpty()) R.string.shallow_history_incomplete else R.string.unrelated_history
+                )
             }
             if (problem == null) {
                 commits = git.log().addRange(remote, head).call().map { CommitSummary(it.name, it.shortMessage) }
@@ -234,6 +238,7 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
         override fun beginTask(title: String?, totalWork: Int) = Unit
         override fun update(completed: Int) = Unit
         override fun endTask() = Unit
+        override fun showDuration(enabled: Boolean) = Unit
         override fun isCancelled(): Boolean = !job.isActive
     }
 

@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.au.agit.R
 import com.au.agit.appString
+import com.au.agit.model.AGitException
 import com.au.agit.model.Catalog
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -33,7 +34,6 @@ fun AGitNavHost(
     catalog: Catalog,
     navigation: AGitNavigationState,
     actionBusy: Boolean,
-    savedForm: SavedForm?,
     modifier: Modifier = Modifier,
 ) {
     val content: @Composable () -> Unit = {
@@ -81,9 +81,15 @@ fun AGitNavHost(
                     } else CloneScreen(catalog.groups.firstOrNull { it.id == key.groupId }, actionBusy, onBack = navigation::back, onClone = model::clone)
                 }
                 entry<AuthorKey> { key ->
-                    if (key.tokenGroupSetup && model.tokenGroupInput() == null && savedForm?.kind != "token_author") {
-                        LaunchedEffect(key) { model.notify(appString(R.string.token_reenter)); navigation.back() }
-                    } else AuthorScreen(catalog.author, actionBusy, onBack = navigation::back,
+                    val isCurrent = navigation.backStack.lastOrNull() == key
+                    LaunchedEffect(key, isCurrent) {
+                        // 退场页面仍参与动画组合；只在实际栈顶检查恢复所需的草稿。
+                        if (!key.tokenGroupSetup || !isCurrent || navigation.backStack.lastOrNull() != key) return@LaunchedEffect
+                        if (model.hasTokenGroupDraft() || model.savedFormFlow.value?.kind == "token_author") return@LaunchedEffect
+                        model.failure("credential setup restore", AGitException(appString(R.string.token_reenter), "TOKEN_DRAFT_MISSING"))
+                        navigation.back()
+                    }
+                    AuthorScreen(catalog.author, actionBusy, onBack = navigation::back,
                         onSave = if (key.tokenGroupSetup) model::saveTokenGroupWithAuthor else model::saveAuthor)
                 }
                 entry<LogsKey> {

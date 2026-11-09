@@ -34,5 +34,6 @@ fun TokenRoute(
                 if (model.prepareTokenGroup(name, token)) onAuthorSetup()
             } else model.saveGroup(name, token, key.groupId)
         }, onDelete = { key.groupId?.let(model::deleteGroup) }, modifier = modifier, initialToken = initialToken,
-        draft = if (key.groupId == null) model.tokenGroupInput() else null)
+        draft = if (key.groupId == null) model.tokenGroupInput() else null,
+        projectNames = catalog.projects.filter { it.groupId == key.groupId }.map { it.name })
 }

@@ -9,7 +9,7 @@ android {
     compileSdk = gradle.extra["compileSdk"] as Int
     defaultConfig {
         applicationId = "com.au.agit"
-        minSdk = gradle.extra["minSdk"] as Int
+        minSdk = 33
         targetSdk = gradle.extra["targetSdk"] as Int
         versionCode = 1
         versionName = "0.1.0"
