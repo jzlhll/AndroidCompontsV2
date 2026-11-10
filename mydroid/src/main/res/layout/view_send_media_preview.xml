@@ -20,13 +20,6 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="32dp">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/previewImg"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitCenter"
-            android:visibility="gone" />
-
         <eightbitlab.com.blurview.BlurTarget
             android:id="@+id/videoBlurTarget"
             android:layout_width="match_parent"

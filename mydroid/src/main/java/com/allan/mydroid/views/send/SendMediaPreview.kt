@@ -1,8 +1,10 @@
 package com.allan.mydroid.views.send
 
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.doOnLayout
@@ -25,14 +27,22 @@ import com.allan.mydroid.databinding.ViewSendMediaPreviewBinding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.glide.clearByGlide
-import com.au.module_android.glide.glideSetAny
 import com.au.module_android.log.logEx
+import com.au.module_android.log.loge
 import com.au.module_android.utils.dp
+import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
+import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.widget.FullScreenBitmapPreviewView
 import com.au.module_gson.mmkv.mmkvGetInt
 import com.au.module_gson.mmkv.mmkvSetAny
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import eightbitlab.com.blurview.BlurTarget
 import eightbitlab.com.blurview.BlurView3Util
 import kotlinx.coroutines.Job
@@ -46,14 +56,17 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.time.Duration.Companion.milliseconds
 
-/** 发送列表共用的全屏媒体预览，管理模糊背景、视频缩放和可记忆位置的播放及帧操作按钮组。 */
+/** 发送列表共用的媒体预览，图片使用顶层 Bitmap 预览，视频管理模糊背景、缩放及可记忆位置的播放和帧操作按钮组。 */
 @androidx.annotation.OptIn(UnstableApi::class)
 class SendMediaPreview(
     fragment: Fragment,
     private val binding: ViewSendMediaPreviewBinding,
     private val blurTarget: BlurTarget,
 ) : DefaultLifecycleObserver {
+    private val activity = fragment.requireActivity()
     private val scope = fragment.viewLifecycleOwner.lifecycleScope
+    private var imagePreview: FullScreenBitmapPreviewView? = null
+    private var imageSource: ImageView? = null
     private var player: ExoPlayer? = null
     private var progressJob: Job? = null
     private var settingsPopup: PopupMenu? = null
@@ -109,7 +122,6 @@ class SendMediaPreview(
         binding.root.onClick(0) {
             if (player == null) dismiss() else toggleControls()
         }
-        binding.previewImg.onClick { dismiss() }
         binding.closePreviewBtn.onClick { dismiss() }
         binding.videoPlayer.findViewById<View>(androidx.media3.ui.R.id.exo_time).gone()
         playbackSettingsBtn.visibility = View.INVISIBLE
@@ -147,20 +159,72 @@ class SendMediaPreview(
 
     fun show(bean: ShareInBean, isVideo: Boolean) {
         dismiss()
-        binding.root.visible()
-        binding.closePreviewBtn.visible()
         backCallback.isEnabled = true
         blurTarget.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-        binding.closePreviewBtn.requestFocus()
         if (!isVideo) {
-            binding.previewImg.visible()
-            // 按预览区域解码，避免全尺寸大图占用过多内存。
-            binding.previewImg.glideSetAny(bean.uri) {
-                it.fitCenter().diskCacheStrategy(DiskCacheStrategy.NONE)
+            val sourceImg = ImageView(activity).apply {
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                contentDescription = bean.name
+            }
+            val preview = FullScreenBitmapPreviewView(activity, onHidden = {
+                imagePreview = null
+                imageSource?.clearByGlide()
+                imageSource = null
+                backCallback.isEnabled = false
+                blurTarget.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+            })
+            imageSource = sourceImg
+            imagePreview = preview
+            preview.show(sourceImg) { ready ->
+                val (width, height) = activity.getScreenFullSize()
+                // 按窗口尺寸解码，避免离屏绘制时生成全尺寸大图。
+                Glide.with(sourceImg)
+                    .load(bean.uri)
+                    .override(width, height)
+                    .fitCenter()
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .dontAnimate()
+                    .listener(object : RequestListener<Drawable> {
+                        override fun onLoadFailed(
+                            e: GlideException?,
+                            model: Any?,
+                            target: Target<Drawable>,
+                            isFirstResource: Boolean,
+                        ): Boolean {
+                            sourceImg.post {
+                                if (imageSource === sourceImg) {
+                                    if (e != null) {
+                                        logEx(throwable = e) { "Load image preview failed" }
+                                    } else {
+                                        loge { "Load image preview failed" }
+                                    }
+                                    dismiss()
+                                    ToastBuilder().setOnTopLater()
+                                        .setMessage(Globals.app.getString(R.string.something_error)).toast()
+                                }
+                            }
+                            return false
+                        }
+
+                        override fun onResourceReady(
+                            resource: Drawable,
+                            model: Any,
+                            target: Target<Drawable>?,
+                            dataSource: DataSource,
+                            isFirstResource: Boolean,
+                        ): Boolean {
+                            ready()
+                            return false
+                        }
+                    })
+                    .into(sourceImg)
             }
             return
         }
 
+        binding.root.visible()
+        binding.closePreviewBtn.visible()
+        binding.closePreviewBtn.requestFocus()
         binding.videoPlayer.visible()
         binding.videoTimeTv.visible()
         binding.frameControlsHost.visible()
@@ -370,6 +434,10 @@ class SendMediaPreview(
     }
 
     fun dismiss() {
+        imagePreview?.hide()
+        imagePreview = null
+        imageSource?.clearByGlide()
+        imageSource = null
         backCallback.isEnabled = false
         settingsPopup?.dismiss()
         settingsPopup = null
@@ -380,9 +448,6 @@ class SendMediaPreview(
         player?.release()
         player = null
         binding.videoPlayer.keepScreenOn = false
-        binding.previewImg.clearByGlide()
-        binding.previewImg.setImageDrawable(null)
-        binding.previewImg.gone()
         binding.videoPlayer.gone()
         binding.videoTimeTv.gone()
         binding.frameControlsHost.gone()

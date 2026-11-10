@@ -16,12 +16,22 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * 通用全屏 Bitmap 预览 View。
+ * 通用全屏 Bitmap 预览 View，直接挂载到 Activity 的 android.R.id.content 顶层内容容器。
+ *
+ * show 会将没有父容器的源 View 临时加入自身；调用方加载完图片并调用 ready 后，
+ * 将源 View 离屏绘制为 Bitmap，再移除源 View，以 Bitmap 提供缩放、拖动和单击关闭。
+ * 源 View 的图片加载请求仍由调用方负责清理。
+ *
+ * 默认在 Bitmap 展示后通过 myHideSystemUI 隐藏系统栏，hide 默认通过 myShowSystemUI 恢复；
+ * hideSystemUi 为 false 时不处理系统栏，hide 的 restoreSystemUi 为 false 时跳过恢复。
+ * 关闭时移除顶层预览并回收 Bitmap，随后通知 onHidden。
+ * 调用方需在返回键和页面生命周期结束时调用 hide，避免预览继续覆盖其他页面。
  */
 @SuppressLint("ViewConstructor")
 class FullScreenBitmapPreviewView(
     private val activity: Activity,
     private val hideSystemUi: Boolean = true,
+    private val onHidden: (() -> Unit)? = null,
 ) : FrameLayout(activity) {
     private val previewImg = ImageView(activity).apply {
         scaleType = ImageView.ScaleType.FIT_CENTER
@@ -96,6 +106,7 @@ class FullScreenBitmapPreviewView(
      * 隐藏全屏预览。
      */
     fun hide(restoreSystemUi: Boolean = true) {
+        val wasAttached = parent != null
         previewRequestId++
         touchHelper.resetTarget(null)
         previewImg.setImageDrawable(null)
@@ -105,6 +116,9 @@ class FullScreenBitmapPreviewView(
         (parent as? ViewGroup)?.removeView(this)
         if (restoreSystemUi && hideSystemUi) {
             activity.myShowSystemUI()
+        }
+        if (wasAttached) {
+            onHidden?.invoke()
         }
     }
 
