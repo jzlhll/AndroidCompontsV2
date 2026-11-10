@@ -57,8 +57,6 @@ include ':Module-AndroidColor'
 include ':Module-AndroidUi'
 include ':Module-AndroidUiEx'
 include ':Module-Okhttp'
-include ':module-ktor-base'
-include ':module-ktor-android'
 
 include ':Module-Nested'
 //include ':jsbridge'

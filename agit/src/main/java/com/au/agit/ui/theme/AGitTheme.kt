@@ -7,7 +7,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.core.view.WindowCompat
 import com.au.agit.model.AppTheme
 import com.au.agit.model.ChangeType
@@ -15,15 +14,9 @@ import com.au.agit.model.ChangeType
 data class StatusColors(val foreground: Color, val background: Color)
 
 /** 以 Notepadmm 的 Ember、Mist、Dracula、Sage 为基础，状态色保持固定语义。 */
-data class ThemePalette(val scheme: ColorScheme, val statuses: Map<ChangeType, StatusColors>, val noGit: StatusColors)
+data class ThemePalette(val scheme: ColorScheme, val statuses: Map<ChangeType, StatusColors>)
 
 private fun status(foreground: Long, background: Long) = StatusColors(Color(foreground), Color(background))
-
-private fun grayColor(value: Long): Color {
-    val source = Color(value)
-    val gray = source.red * 0.2126f + source.green * 0.7152f + source.blue * 0.0722f
-    return Color(gray, gray, gray, source.alpha)
-}
 
 private fun palette(
     dark: Boolean,
@@ -38,8 +31,6 @@ private fun palette(
     statuses: Map<ChangeType, StatusColors>,
 ): ThemePalette {
     val base = if (dark) darkColorScheme() else lightColorScheme()
-    val noGitBackground = grayColor(selected)
-    val noGitForeground = grayColor(foreground).copy(alpha = 0.75f).compositeOver(noGitBackground)
     return ThemePalette(base.copy(
         primary = Color(primary), onPrimary = Color(onPrimary), primaryContainer = Color(selected), onPrimaryContainer = Color(foreground),
         secondary = Color(muted), onSecondary = Color(background), secondaryContainer = Color(selected), onSecondaryContainer = Color(foreground),
@@ -54,7 +45,7 @@ private fun palette(
         errorContainer = statuses.getValue(ChangeType.Deleted).background, onErrorContainer = statuses.getValue(ChangeType.Deleted).foreground,
         inverseSurface = if (dark) Color(0xFFE6E4E0) else Color(0xFF282A2D),
         inverseOnSurface = if (dark) Color(0xFF282A2D) else Color(0xFFF6F6F3), inversePrimary = Color(primary),
-    ), statuses, StatusColors(noGitForeground, noGitBackground))
+    ), statuses)
 }
 
 val BlackPalette = palette(true, 0xFFE0A458, 0xFF1C1204, 0xFF14110E, 0xFF201A14, 0xFFE8DCC8, 0xFFB0A48E, 0xFF332B21, 0xFF3A2C18, mapOf(

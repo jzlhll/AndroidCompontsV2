@@ -32,7 +32,6 @@ import com.au.agit.model.GitProject
 import com.au.agit.model.TokenGroup
 import com.au.agit.model.AppTheme
 import com.au.agit.ui.theme.AGitTheme
-import com.au.agit.ui.theme.LocalThemePalette
 import com.au.module_androiduiex.preview.AppPreview
 import com.au.module_androiduiex.styles.ComposeDimens
 import com.au.module_androiduiex.styles.ComposeTypography
@@ -92,14 +91,8 @@ fun ProjectDrawer(
                         }
                     }
                     if (expanded) projects.forEach { project ->
-                        NavigationDrawerItem(label = {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(project.name, modifier = Modifier.weight(1f, fill = false), maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                    style = ComposeTypography.Font14sp, color = LocalContentColor.current)
-                                if (!project.hasGit) Icon(painterResource(R.drawable.ic_no_git), stringResource(R.string.no_git),
-                                    modifier = Modifier.size(16.dp), tint = LocalThemePalette.current.noGit.foreground)
-                            }
-                        }, selected = selected == project.id,
+                        NavigationDrawerItem(label = { Text(project.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            style = ComposeTypography.Font14sp, color = LocalContentColor.current) }, selected = selected == project.id,
                             badge = { DrawerSelectionButton(selected == project.id, onClick = { onSelect(project.id) }) },
                             onClick = { onSelect(project.id) }, modifier = Modifier.padding(start = 40.dp, end = 12.dp))
                     }

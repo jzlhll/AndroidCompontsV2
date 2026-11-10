@@ -6,7 +6,6 @@ import com.au.agit.ui.components.AGitTextButton as TextButton
 import com.au.agit.ui.components.AGitIconButton as IconButton
 import android.content.ClipData
 import android.content.Intent
-import android.text.TextUtils
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,8 +30,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,7 +47,6 @@ import com.au.agit.appString
 import com.au.agit.model.*
 import com.au.agit.ui.theme.AGitTheme
 import com.au.agit.ui.components.FileStatusBadge
-import com.au.agit.ui.components.NoGitBadge
 import com.au.agit.ui.components.FileTypeIcon
 import com.au.agit.ui.components.changeColor
 import com.au.agit.ui.components.changeBackground
@@ -137,7 +133,6 @@ fun TokenScreen(
     modifier: Modifier = Modifier,
     draft: Pair<String, String>? = null,
     initialToken: String = "",
-    projectNames: List<String> = emptyList(),
 ) {
     var name by rememberSaveable(group?.id) { mutableStateOf(group?.name ?: draft?.first.orEmpty()) }
     // 凭据不进入 SavedState、导航参数或 Preview。
@@ -181,13 +176,9 @@ fun TokenScreen(
         }
     }
     if (confirmingDelete && group != null) {
-        val projects = projectNames.joinToString(", ").ifEmpty { stringResource(R.string.home_no_repositories) }
-        val message = AnnotatedString.fromHtml(stringResource(R.string.delete_group_body,
-            TextUtils.htmlEncode(group.name), TextUtils.htmlEncode(projects)))
         AlertDialog(onDismissRequest = { if (!busy) confirmingDelete = false },
             title = { Text(stringResource(R.string.delete_group_title), style = ComposeTypography.Font20M, color = MaterialTheme.colorScheme.onSurface) },
-            text = { Text(message, modifier = Modifier.verticalScroll(rememberScrollState()),
-                style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            text = { Text(stringResource(R.string.delete_group_body, group.name), style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 TextButton(onClick = { confirmingDelete = false; onDelete() }, enabled = !busy) {
                     Text(stringResource(R.string.delete), style = ComposeTypography.Font14M, color = ComposeColors.Red)
@@ -197,6 +188,21 @@ fun TokenScreen(
                     Text(stringResource(R.string.cancel), style = ComposeTypography.Font14M, color = LocalContentColor.current)
                 }
             })
+    }
+}
+
+@Composable
+fun CloneScreen(group: TokenGroup?, busy: Boolean, onBack: () -> Unit, onClone: (String, String) -> Unit, modifier: Modifier = Modifier) {
+    var url by rememberSaveable { mutableStateOf("") }
+    PageScaffold(stringResource(R.string.add_project), onBack, modifier) { padding ->
+        Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.clone_description), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(group?.name.orEmpty(), style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(url, { url = it },
+                label = { Text(stringResource(R.string.repository_url), style = ComposeTypography.Font14sp, color = LocalContentColor.current) },
+                modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
+            Button(onClick = { group?.let { onClone(it.id, url) } }, enabled = !busy && group != null && url.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.clone)) }
+        }
     }
 }
 
@@ -228,7 +234,7 @@ fun RepositoryRoute(
 ) {
     val state by model.stateFlow.collectAsStateWithLifecycle()
     val project = catalog.projects.firstOrNull { it.id == key.projectId }
-    val activeEdit = project?.hasGit != false && catalog.edits.any { it.projectId == key.projectId && it.active }
+    val activeEdit = catalog.edits.any { it.projectId == key.projectId && it.active }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var openFile by remember { mutableStateOf<RepositoryFile?>(null) }
@@ -260,14 +266,10 @@ fun RepositoryRoute(
         project?.name.orEmpty(), state, activeEdit, onBack, onMenu, onDirectory,
         onFile = { file ->
             val mime = fileMime(File(file.name))
-            when {
-                mime.startsWith("image/") || mime.startsWith("video/") -> onMedia(file.path)
-                project?.hasGit == false -> openExternal(file, false)
-                else -> openFile = file
-            }
+            if (mime.startsWith("image/") || mime.startsWith("video/")) onMedia(file.path) else openFile = file
         }, onRefresh = { model.refresh(key.directory) }, onCommit = onCommit,
         onUpdate = { app.update(key.projectId) }, onPush = { app.preparePush(key.projectId) },
-        onFinishEdit = { app.finishEditing(key.projectId) }, hasGit = project?.hasGit != false)
+        onFinishEdit = { app.finishEditing(key.projectId) })
     openFile?.let { file ->
         AlertDialog(onDismissRequest = { openFile = null }, title = { Text(file.name) },
             text = { Text(file.path, fontFamily = FontFamily.Monospace) },
@@ -299,7 +301,6 @@ fun RepositoryScreen(
     onPush: () -> Unit,
     onFinishEdit: () -> Unit,
     modifier: Modifier = Modifier,
-    hasGit: Boolean = true,
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(modifier = modifier, topBar = {
@@ -310,7 +311,7 @@ fun RepositoryScreen(
             }
         }, actions = { IconButton(onClick = onRefresh, enabled = !state.loading) { Icon(Icons.Default.Refresh, stringResource(R.string.refresh)) } })
     }, bottomBar = {
-        if (hasGit) Surface(tonalElevation = 3.dp) {
+        Surface(tonalElevation = 3.dp) {
             Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onUpdate, enabled = !state.loading, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.update)) }
                 Button(onClick = onCommit, enabled = !state.loading && state.snapshot?.dirty == true && !activeEdit, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.commit)) }
@@ -321,11 +322,8 @@ fun RepositoryScreen(
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
             Column(Modifier.fillMaxWidth().padding(horizontal = ComposeDimens.PaddingEdge20, vertical = ComposeDimens.PaddingEdge)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(projectName, style = ComposeTypography.Font24M, color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f, fill = false), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    if (!hasGit) NoGitBadge()
-                }
+                Text(projectName, style = ComposeTypography.Font24M, color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text("/" + state.directory, style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontFamily = FontFamily.Monospace, modifier = Modifier.padding(top = ComposeDimens.PaddingEdge / 2),
                     maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -348,11 +346,11 @@ fun RepositoryScreen(
                     TextButton(onClick = onFinishEdit) { Text(stringResource(R.string.finish_edit)) }
                 }
             }
-            PrimaryTabRow(selectedTabIndex = if (hasGit) tab else 0) {
+            PrimaryTabRow(selectedTabIndex = tab) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.files)) })
-                if (hasGit) Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.changes)) })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.changes)) })
             }
-            if (!hasGit || tab == 0) {
+            if (tab == 0) {
                 LazyColumn(Modifier.weight(1f)) {
                     if (state.files.isEmpty() && !state.loading) item { Text(stringResource(R.string.empty_directory), modifier = Modifier.padding(24.dp)) }
                     items(state.files, key = { it.path }) { file ->
@@ -482,6 +480,17 @@ private fun TokenPreview() {
     AppPreview {
         AGitTheme(AppTheme.Black) {
             TokenScreen(TokenGroup("preview", "Personal", ""), false, false, {}, { _, _ -> }, {})
+        }
+    }
+}
+
+@Preview(showBackground = true, locale = "en")
+@Preview(showBackground = true, locale = "zh-rCN")
+@Composable
+private fun ClonePreview() {
+    AppPreview {
+        AGitTheme(AppTheme.Black) {
+            CloneScreen(TokenGroup("preview", "Personal", ""), false, {}, { _, _ -> })
         }
     }
 }

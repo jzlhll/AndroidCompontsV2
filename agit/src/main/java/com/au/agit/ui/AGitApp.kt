@@ -51,7 +51,7 @@ fun AGitApp(model: AppViewModel = koinViewModel()) {
                 }
             }
         } else {
-            AGitNavHost(model, currentCatalog, navigation, actionBusy)
+            AGitNavHost(model, currentCatalog, navigation, actionBusy, savedForm)
         }
         if (operation == null) NoticeHost(notice, model::acknowledgeNotice)
         if (navigation.choosingTokenGroup && currentCatalog != null) {

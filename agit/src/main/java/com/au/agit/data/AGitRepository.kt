@@ -5,7 +5,6 @@ import com.au.agit.appString
 import android.content.Context
 import android.content.Intent
 import com.au.agit.git.JGitEngine
-import com.au.agit.git.GitHubArchiveDownloader
 import com.au.agit.git.RepositoryPaths
 import com.au.agit.model.*
 import kotlinx.coroutines.*
@@ -134,27 +133,19 @@ class AGitRepository(
         }
     }
 
-    suspend fun clone(groupId: String, input: String, mode: CloneMode, depth: Int, reporter: OperationReporter): GitProject = withContext(Dispatchers.IO) {
-        if (mode == CloneMode.Depth && depth <= 0) throw AGitException(appString(R.string.invalid_depth), "INVALID_DEPTH")
+    suspend fun clone(groupId: String, input: String, reporter: OperationReporter): GitProject = withContext(Dispatchers.IO) {
         val url = engine.normalizeUrl(input)
-        val project = GitProject(UUID.randomUUID().toString(), groupId, url.substringAfterLast('/').removeSuffix(".git"), url,
-            mode, if (mode == CloneMode.Depth) depth else null)
-        val command = when (mode) {
-            CloneMode.Full -> "git clone $url ${project.id}"
-            CloneMode.Depth -> "git clone --depth $depth $url ${project.id}"
-            CloneMode.Download -> "download source $url ${project.id}"
-        }
+        val project = GitProject(UUID.randomUUID().toString(), groupId, url.substringAfterLast('/').removeSuffix(".git"), url)
         locks.getOrPut(project.id) { Mutex() }.withLock {
             val directory = paths.root(project.id).toPath()
             val temporaryDirectory = File(cloneTempDirectory, project.id).toPath()
-            val contentDirectory = temporaryDirectory.resolve("content")
             if (Files.exists(directory, LinkOption.NOFOLLOW_LINKS) || Files.exists(temporaryDirectory, LinkOption.NOFOLLOW_LINKS)) {
                 throw AGitException(appString(R.string.project_exists), "PROJECT_EXISTS")
             }
             val token = tokenForGroup(groupId)
             val job = currentCoroutineContext().job
             try {
-                reporter.start(0, command, cancellable = true)
+                reporter.start(0, "git clone $url ${project.id}", cancellable = true)
                 val receivedBytesFlow = MutableStateFlow(0L)
                 coroutineScope {
                     val progressJob = launch {
@@ -164,31 +155,26 @@ class AGitRepository(
                         }
                     }
                     try {
-                        if (project.hasGit) {
-                            engine.clone(project, token, job, contentDirectory.toFile()) { receivedBytesFlow.value = it }
-                        } else {
-                            GitHubArchiveDownloader().download(project, token, job, contentDirectory.toFile()) { receivedBytesFlow.value = it }
-                        }
+                        engine.clone(project, token, job, temporaryDirectory.toFile()) { receivedBytesFlow.value = it }
                     } finally {
                         progressJob.cancelAndJoin()
                     }
                 }
                 if (receivedBytesFlow.value > 0) reporter.progress(0, receivedBytesFlow.value)
                 currentCoroutineContext().ensureActive()
-                reporter.start(0, command, cancellable = false)
+                reporter.start(0, "git clone $url ${project.id}", cancellable = false)
                 withContext(NonCancellable) {
                     credentialLock.withLock {
-                        // 下载、检出或解压完成且文件已关闭，之后才原子改名并登记到正式目录。
+                        // JGit 已完成下载、检出并关闭仓库，之后才原子改名并登记到正式目录。
                         Files.createDirectories(directory.parent)
-                        Files.move(contentDirectory, directory, StandardCopyOption.ATOMIC_MOVE)
-                        deleteCloneDirectory(temporaryDirectory)
+                        Files.move(temporaryDirectory, directory, StandardCopyOption.ATOMIC_MOVE)
                         store.update { catalog ->
                             if (catalog.groups.none { it.id == groupId }) throw AGitException(appString(R.string.missing_group), "MISSING_GROUP")
                             catalog.copy(projects = catalog.projects + project, selectedGroupId = groupId, selectedProjectId = project.id)
                         }
                     }
                 }
-                reporter.complete(0, appString(if (project.hasGit) R.string.clone_complete else R.string.download_complete))
+                reporter.complete(0, appString(R.string.clone_complete))
                 project
             } catch (error: Exception) {
                 // 保持项目锁，等待下载和回写退出后清理，取消期间也必须完成删除。
@@ -230,9 +216,9 @@ class AGitRepository(
 
     suspend fun snapshot(projectId: String): RepositorySnapshot = locked(projectId) { _, git -> snapshotFor(projectId, git) }
 
-    suspend fun files(projectId: String, directory: String): List<RepositoryFile> = lockedProject(projectId) {
+    suspend fun files(projectId: String, directory: String): List<RepositoryFile> = locked(projectId) { _, _ ->
         val root = paths.resolve(projectId, directory, allowRoot = true)
-        if (!root.exists()) return@lockedProject emptyList()
+        if (!root.exists()) return@locked emptyList()
         if (!root.isDirectory) throw AGitException(appString(R.string.missing_directory), "MISSING_DIRECTORY")
         root.listFiles()?.filter { it.name != ".git" }?.map { file ->
             val path = if (directory.isEmpty()) file.name else "$directory/${file.name}"
@@ -241,7 +227,7 @@ class AGitRepository(
             ?: throw AGitException(appString(R.string.unreadable_directory), "UNREADABLE_DIRECTORY")
     }
 
-    suspend fun file(projectId: String, path: String): File = lockedProject(projectId) {
+    suspend fun file(projectId: String, path: String): File = locked(projectId) { _, _ ->
         paths.resolve(projectId, path).also { if (!it.isFile) throw AGitException(appString(R.string.missing_file), "MISSING_FILE") }
     }
 
@@ -452,18 +438,10 @@ class AGitRepository(
         return try { vault.decrypt(group.id, group.encryptedToken) } catch (_: Exception) { throw AGitException(appString(R.string.decrypt_failed), "DECRYPT_FAILED") }
     }
 
-    private suspend fun <T> lockedProject(projectId: String, block: suspend (GitProject) -> T): T = withContext(Dispatchers.IO) {
+    private suspend fun <T> locked(projectId: String, block: suspend (GitProject, Git) -> T): T = withContext(Dispatchers.IO) {
         locks.getOrPut(projectId) { Mutex() }.withLock {
             val project = store.catalogFlow.first().projects.firstOrNull { it.id == projectId } ?: throw AGitException(appString(R.string.missing_project), "MISSING_PROJECT")
-            if (!Files.isDirectory(paths.root(projectId).toPath(), LinkOption.NOFOLLOW_LINKS)) {
-                throw AGitException(appString(R.string.repo_missing), "REPO_MISSING")
-            }
-            block(project)
+            engine.open(project) { git -> block(project, git) }
         }
-    }
-
-    private suspend fun <T> locked(projectId: String, block: suspend (GitProject, Git) -> T): T = lockedProject(projectId) { project ->
-        if (!project.hasGit) throw AGitException(appString(R.string.no_git_read_only), "NO_GIT_READ_ONLY")
-        engine.open(project) { git -> block(project, git) }
     }
 }

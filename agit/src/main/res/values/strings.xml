@@ -18,10 +18,10 @@
     <string name="clear">Clear</string>
     <string name="delete">Delete</string>
     <string name="delete_group_title">Delete Token group?</string>
-    <string name="delete_group_body">Delete “%1$s”, its saved Token, and all repositories in this group &lt;b&gt;[%2$s]&lt;/b&gt; from this device? Local changes and unpushed commits will be permanently deleted. GitHub repositories will not be affected. Finish any external editing first.</string>
+    <string name="delete_group_body">Delete “%1$s”, its saved Token, and all repositories in this group from this device? Local changes and unpushed commits will be permanently deleted. GitHub repositories will not be affected. Finish any external editing first.</string>
     <string name="group_deleted">Token group deleted</string>
     <string name="repository_url">Repository URL</string>
-    <string name="clone" translatable="false">Clone</string>
+    <string name="clone">Clone</string>
     <string name="select_group">Token group</string>
     <string name="select">Select</string>
     <string name="current">Current</string>
@@ -189,22 +189,6 @@
     <string name="home_connect_description">Add a Token group to connect GitHub.</string>
     <string name="home_clone_description">Clone a GitHub repository to this device.</string>
     <string name="token_access_hint">Use a Token with access to your repositories.</string>
-    <string name="clone_description">Save a GitHub project to this device.</string>
-    <string name="clone_full" translatable="false">full</string>
-    <string name="clone_depth" translatable="false">depth</string>
-    <string name="no_git">No Git</string>
-    <string name="clone_full_description">Keep the complete commit history.</string>
-    <string name="clone_depth_description">Keep a limited commit history.</string>
-    <string name="clone_download_description">Download a source snapshot only.</string>
-    <string name="download">Download</string>
-    <string name="download_complete">Source downloaded</string>
-    <string name="increase_depth">Increase depth</string>
-    <string name="decrease_depth">Decrease depth</string>
-    <string name="depth_value">History depth: %1$d</string>
-    <string name="invalid_depth">Depth must be greater than zero</string>
-    <string name="archive_download_failed">Could not download the source archive. Check your connection and repository access.</string>
-    <string name="invalid_archive">The source archive is invalid or damaged and cannot be extracted</string>
-    <string name="no_git_read_only">This project has no Git repository and can only be viewed</string>
-    <string name="shallow_history_incomplete">The history depth is insufficient to determine the relationship with the remote branch.</string>
+    <string name="clone_description">Clone an existing GitHub repository.</string>
     <string name="author_identity_hint">Set the identity shown on your commits.</string>
 </resources>

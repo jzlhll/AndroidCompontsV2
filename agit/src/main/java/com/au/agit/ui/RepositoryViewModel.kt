@@ -2,8 +2,6 @@ package com.au.agit.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.au.agit.R
-import com.au.agit.appString
 import com.au.agit.data.AGitRepository
 import com.au.agit.data.safeFailure
 import com.au.agit.data.UserFeedback
@@ -41,12 +39,10 @@ class RepositoryViewModel(
             previous?.join()
             mutableState.value = mutableState.value.copy(loading = true, directory = directory, error = null)
             try {
-                val project = repository.store.catalogFlow.first().projects.firstOrNull { it.id == projectId }
-                    ?: throw AGitException(appString(R.string.missing_project), "MISSING_PROJECT")
-                val snapshot = if (project.hasGit) repository.snapshot(projectId) else null
+                val snapshot = repository.snapshot(projectId)
                 val files = repository.files(projectId, directory).toMutableList()
                 val prefix = if (directory.isEmpty()) "" else "$directory/"
-                snapshot?.changes.orEmpty().flatMap { it.paths }.filter { it.startsWith(prefix) }.forEach { path ->
+                snapshot.changes.flatMap { it.paths }.filter { it.startsWith(prefix) }.forEach { path ->
                     val remaining = path.removePrefix(prefix)
                     val name = remaining.substringBefore('/')
                     val entryPath = prefix + name
@@ -55,11 +51,11 @@ class RepositoryViewModel(
                     }
                 }
                 files.sortWith(compareByDescending<RepositoryFile> { it.directory }.thenBy { it.name.lowercase() })
-                val candidates = if (project.hasGit) repository.candidates(projectId) else emptyList()
-                val fingerprints = if (project.hasGit) repository.fingerprints(projectId, snapshot?.changes.orEmpty().flatMap { it.paths }.toSet()) else emptyMap()
+                val candidates = repository.candidates(projectId)
+                val fingerprints = repository.fingerprints(projectId, snapshot.changes.flatMap { it.paths }.toSet())
                 ensureActive()
                 mutableState.value = RepositoryUiState(false, directory, snapshot, files, candidates, fingerprints)
-                logd { "repository scan completed project=$projectId hasGit=${project.hasGit} changes=${snapshot?.changes?.size ?: 0} ahead=${snapshot?.ahead} behind=${snapshot?.behind}" }
+                logd { "repository scan completed project=$projectId changes=${snapshot.changes.size} ahead=${snapshot.ahead} behind=${snapshot.behind}" }
             } catch (error: CancellationException) { throw error } catch (error: Exception) { failed(error) } catch (error: LinkageError) { failed(error) }
         }
     }

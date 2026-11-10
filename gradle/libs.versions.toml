@@ -25,13 +25,11 @@ nanohttpd = "2.3.1"
 navigationFragmentKtx = "2.10.2"
 navigationCompose = "2.10.2"
 navigation3 = "1.2.1"
-# AGit 最低 Android 13，使用 Java 11 兼容版本，包含浅克隆支持和 CVE-2025-4949 修复。
-jgit = { strictly = "6.10.1.202505221210-r" }
+# 固定官方 Java 8 兼容修订版，避免旧 Android 缺少 Java 9+ I/O API；包含 CVE-2025-4949 修复。
+jgit = { strictly = "5.13.5.202508271544-r" }
 coroutines = "1.11.0"
 desugarJdkLibs = "2.1.5"
-okhttpBom = "5.5.1"
-ktor = "3.6.1"
-slf4j = "2.0.19"
+okhttpBom = "5.5.0"
 poiOoxml = "5.5.1"
 recyclerview = "1.4.0"
 refreshHeaderTwoLevel = "3.0.0-alpha"
@@ -104,10 +102,6 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleLivedataKtx" }
 jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
-slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
