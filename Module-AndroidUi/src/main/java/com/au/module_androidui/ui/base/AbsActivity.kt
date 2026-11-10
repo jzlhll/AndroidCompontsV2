@@ -10,6 +10,8 @@ import android.view.View
 import android.widget.EditText
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.doOnAttach
 import com.au.module_android.BuildConfig
 import com.au.module_android.DarkModeAndLocalesConst
 import com.au.module_android.log.logdNoFile
@@ -17,7 +19,7 @@ import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.utils.*
 import com.au.module_androidui.ui.KEY_ENTER_ANIM
 import com.au.module_androidui.ui.KEY_EXIT_ANIM
-import com.au.module_androidui.ui.immersive
+import com.au.module_androidui.ui.applyWindowInsets
 
 @Deprecated(" 基础框架的一环，请使用BindingActivity或者ViewActivity")
 open class AbsActivity : AppCompatActivity(), IFullWindow {
@@ -45,10 +47,7 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
         ToutiaoScreenAdapter.attach(this)
-        enableEdgeToEdgeFix() 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            this.window.isNavigationBarContrastEnforced = false
-        }
+        enableEdgeToEdgeFix()
         super.onCreate(savedInstanceState)
 
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
@@ -58,10 +57,21 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
         }
 
         mCurrentUiMode = resources.configuration.uiMode
+        installWindowInsetsListener()
     }
 
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.PaddingBars
+    }
+
+    // 所有框架 Activity 统一在 android.R.id.content 接收 Insets。
+    // 此容器的 listener 和系统栏 padding 由基类管理，业务在自己的 View 上处理剩余 Insets。
+    private fun installWindowInsetsListener() {
+        val host = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(host) { view, insets ->
+            immersiveMode().applyWindowInsets(view, insets)
+        }
+        host.doOnAttach { ViewCompat.requestApplyInsets(it) }
     }
 
     override fun setRequestedOrientation(requestedOrientation: Int) {
@@ -164,26 +174,6 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU) {
             //todo check
             if(exitAnim != 0) overridePendingTransition(0, exitAnim)
-        }
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        onWindowFocusChangedInner(hasFocus)
-    }
-
-    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
-        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
-        onWindowFocusChangedInner(true)
-    }
-
-    /**
-     * 如果你想自己控制immersive请使用它
-     */
-    @CallSuper
-    protected open fun onWindowFocusChangedInner(hasFocus: Boolean) {
-        if (hasFocus) {
-            immersive(this, findViewById(android.R.id.content))
         }
     }
 

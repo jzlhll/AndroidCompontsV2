@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import com.au.module_android.BuildConfig
 import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.currentStatusBarAndNavBarHeight
 import com.au.module_android.utils.serializableExtraCompat
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_androidui.ui.base.AbsFragment
@@ -135,13 +134,9 @@ open class FragmentShellActivity : ViewActivity() {
         return v
     }
 
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        AndroidBug5497Workaround.assistActivity(this)
-//    }
-
-    //默认沉浸式，Fragment默认不处理
     final override fun immersiveMode(): ImmersiveMode {
+        // Fragment View 创建后会请求重新分发 Insets，之前不执行依赖 binding 的回调。
+        if (mFragment?.view == null) return ImmersiveMode.FullImmersive()
         return mFragment?.asOrNull<AbsFragment>()?.immersiveMode() ?: ImmersiveMode.PaddingBars
     }
 
@@ -154,25 +149,5 @@ open class FragmentShellActivity : ViewActivity() {
 
     final override fun isAutoHideIme(): Boolean {
         return mIsAutoHideIme
-    }
-
-    final override fun onWindowFocusChangedInner(hasFocus: Boolean) {
-        if (hasFocus) {
-            when (val immersiveMode = immersiveMode()) {
-                is ImmersiveMode.PaddingBars,
-                ImmersiveMode.PaddingStatusBar,
-                ImmersiveMode.PaddingNavigationBar -> {
-                    //普通三种将直接处理activity的界面
-                    super.onWindowFocusChangedInner(true)
-                }
-                is ImmersiveMode.FullImmersive -> {
-                    //如果是全屏沉浸式，则将处理交给fragment的代码去执行
-                    val pair = currentStatusBarAndNavBarHeight()
-                    val statusBarHeight = pair?.first ?: 0
-                    val navBarHeight = pair?.second ?: 0
-                    immersiveMode.barsHeightCallback?.invoke(statusBarHeight, navBarHeight)
-                }
-            }
-        }
     }
 }

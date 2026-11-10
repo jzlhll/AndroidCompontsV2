@@ -4,12 +4,11 @@ import android.app.Activity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 import com.au.module_android.Globals
-import com.au.module_android.utils.currentStatusBarAndNavBarHeight
-import com.au.module_androidui.ui.base.IFullWindow
 import com.au.module_androidui.ui.base.ImmersiveMode
 import java.lang.reflect.ParameterizedType
 
@@ -143,23 +142,20 @@ fun finishAbsFragment(clz: Class<out Fragment>) {
     }
 }
 
-fun IFullWindow.immersive(activity: Activity, root: View) {
-    val pair = activity.currentStatusBarAndNavBarHeight()
-    val statusBarsHeight = pair?.first ?: 0
-    val bottomBarHeight = pair?.second ?: 0
-
-    when (val immersiveMode = immersiveMode()) {
-        is ImmersiveMode.PaddingBars -> {
-            root.updatePadding(top = statusBarsHeight, bottom = bottomBarHeight)
-        }
-        is ImmersiveMode.PaddingStatusBar -> {
-            root.updatePadding(top = statusBarsHeight)
-        }
-        is ImmersiveMode.PaddingNavigationBar -> {
-            root.updatePadding(bottom = bottomBarHeight)
-        }
-        is ImmersiveMode.FullImmersive -> {
-            immersiveMode.barsHeightCallback?.invoke(statusBarsHeight, bottomBarHeight)
-        }
+/**
+ * 在 android.R.id.content 上应用系统栏避让，并向内容分发剩余 Insets。
+ */
+fun ImmersiveMode.applyWindowInsets(root: View, insets: WindowInsetsCompat): WindowInsetsCompat {
+    val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+    if (this is ImmersiveMode.FullImmersive) {
+        root.updatePadding(left = 0, top = 0, right = 0, bottom = 0)
+        barsHeightCallback?.invoke(bars.top, bars.bottom)
+        return insets
     }
+
+    val top = if (isPaddingStatusBar()) bars.top else 0
+    val bottom = if (isPaddingNavigationBar()) bars.bottom else 0
+    root.updatePadding(left = bars.left, top = top, right = bars.right, bottom = bottom)
+    // 只扣除容器已经避让的区域，IME 等剩余 Insets 继续交给内容处理。
+    return insets.inset(bars.left, top, bars.right, bottom)
 }

@@ -5,7 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
-import androidx.core.view.updatePadding
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
@@ -48,7 +48,8 @@ class MyDroidActivity : BindingActivity<ActivityMyDroidBinding>() {
     private val fragmentLifecycleCallbacks = object : FragmentManager.FragmentLifecycleCallbacks() {
         override fun onFragmentResumed(fm: FragmentManager, fragment: Fragment) {
             if (fragment == fm.primaryNavigationFragment) {
-                applyCurrentPageWindowPolicy()
+                changeBarsColor()
+                ViewCompat.requestApplyInsets(findViewById<View>(android.R.id.content))
             }
         }
     }
@@ -137,12 +138,6 @@ class MyDroidActivity : BindingActivity<ActivityMyDroidBinding>() {
             ?.let { it as? AbsFragment }
             ?.isAutoHideIme()
             ?: false
-    }
-
-    private fun applyCurrentPageWindowPolicy() {
-        findViewById<View>(android.R.id.content).updatePadding(0, 0, 0, 0)
-        changeBarsColor()
-        onWindowFocusChangedInner(true)
     }
 
     private fun updateKeepScreenOn(destinationId: Int) {

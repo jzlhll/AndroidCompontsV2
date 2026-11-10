@@ -6,14 +6,10 @@ package com.au.module_androidui.ui.base
  */
 interface IFullWindow {
     /**
-     * 是否在默认的实现中，沉浸式状态，是否延伸到statusBar和navigationBar下。
-     * 由于android15要求默认状态栏和导航栏是透明的，
-     * 所以对于一般的应用需要将状态栏和导航栏padding出来。所以这里默认都是true。
-     *
-     * 对于activity，我们架构设计为使用FragmentShellActivity承载Fragment显示。
-     * 因此，默认都有activity（从基类AbsActivity开始）都是完全沉浸式 FullImmersive。
-     *
-     * 对于Fragment，默认 ImmersiveMode.PaddingBars，让它padding掉头和尾。
+     * 声明页面的系统栏避让策略，Window 始终使用 Edge-to-Edge。
+     * AbsActivity 统一在 android.R.id.content 通过 Insets 分发应用该策略。
+     * FragmentShellActivity 使用宿主页 Fragment 的策略，嵌套 Fragment 不单独应用默认避让。
+     * 默认 PaddingBars；FullImmersive 页面及 Compose 自行处理安全区域。
      */
     fun immersiveMode() : ImmersiveMode
 }

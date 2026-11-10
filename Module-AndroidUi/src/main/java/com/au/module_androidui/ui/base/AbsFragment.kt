@@ -108,9 +108,4 @@ open class AbsFragment : Fragment(), IFullWindow {
     }
 
     override fun immersiveMode() : ImmersiveMode = ImmersiveMode.PaddingBars
-
-    @Deprecated("这个禁用，因为我们自己的框架")
-    final override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean) {
-        super.onMultiWindowModeChanged(isInMultiWindowMode)
-    }
 }

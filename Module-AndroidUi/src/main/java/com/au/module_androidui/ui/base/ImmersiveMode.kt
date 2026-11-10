@@ -10,17 +10,19 @@ sealed class ImmersiveMode {
     object PaddingBars : ImmersiveMode()
 
     /**
-     * 布局底部padding掉statusBar的距离
+     * 避让顶部系统栏。
      */
     object PaddingStatusBar : ImmersiveMode()
 
     /**
-     * 布局底部padding掉navBar的距离
+     * 避让底部系统栏。
      */
     object PaddingNavigationBar : ImmersiveMode()
 
     /**
-     * 不padding，就是完全沉浸式。需要自行处理顶部和底部的距离问题
+     * 容器不增加 padding，完整 Insets 继续向页面分发，Compose 也在页面内处理。
+     * 回调提供顶部和底部安全间距，在 View 创建后、绘制前同步执行；重复分发时应幂等更新。
+     * 此时 View 不一定已经完成测量，依赖宽高的计算应使用布局回调。
      */
     class FullImmersive(val barsHeightCallback:((statusBarHeight:Int, navBarHeight:Int)->Unit)?=null) : ImmersiveMode()
 

@@ -29,11 +29,9 @@ fun ComponentActivity.enableEdgeToEdgeFix(
     navigationBarStyle: SystemBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
 ) {
     enableEdgeToEdge(statusBarStyle, navigationBarStyle)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        window.isStatusBarContrastEnforced = false
-        //与edgeToEdge不同，它的源码是判断 nightMode == UiModeManager.MODE_NIGHT_AUTO
-        window.isNavigationBarContrastEnforced = false
-    }
+    window.isStatusBarContrastEnforced = false
+    //与edgeToEdge不同，它的源码是判断 nightMode == UiModeManager.MODE_NIGHT_AUTO
+    window.isNavigationBarContrastEnforced = false
 }
 
 /**
@@ -203,15 +201,9 @@ fun Activity.getScreenFullSize() : Pair<Int, Int> {
 
 /**
  * 必须在activity已经完全渲染之后，可以通过
- * 第一种办法：
- * ViewCompat.setOnApplyWindowInsetsListener(decorView) { _, insets ->
- *         val navHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
- *         val statusHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
- * 第二种办法：
- * View.post中调用本函数。
  *
- * 第三种办法：
- * 在onWindowFocusChanged中调用本函数。
+ * 读取当前 Window 已分发的系统栏 Insets 快照，尚未分发时返回 null。
+ * 首次布局及后续变化应通过 Insets listener 处理，无需等待页面绘制或窗口获得焦点。
  */
 fun Activity.currentStatusBarAndNavBarHeight() : Pair<Int, Int>? {
     val insets = ViewCompat.getRootWindowInsets(window.decorView) ?: return null
