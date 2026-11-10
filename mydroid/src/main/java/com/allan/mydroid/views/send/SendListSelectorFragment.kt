@@ -202,7 +202,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        mediaPreview = SendMediaPreview(this, binding.mediaPreview, binding.previewBlurTarget)
+        mediaPreview = SendMediaPreview(this, binding.previewBlurTarget)
         initActionButtons()
 
         binding.toolbar.setNavigationOnClickListener {
@@ -241,7 +241,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 binding.toolbar.layoutParams = toolbarLP
             }
             binding.pageHost.updatePadding(bottom = navBarHeight)
-            mediaPreview?.updateInsets(statusBarsHeight, navBarHeight)
             requireActivity().changeBarsColor(statusBarTextDark = false)
         }
     }

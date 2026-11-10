@@ -179,9 +179,4 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </eightbitlab.com.blurview.BlurTarget>
 
-    <include
-        android:id="@+id/mediaPreview"
-        layout="@layout/view_send_media_preview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 </FrameLayout>

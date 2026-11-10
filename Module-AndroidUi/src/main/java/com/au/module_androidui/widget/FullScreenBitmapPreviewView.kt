@@ -1,43 +1,36 @@
 package com.au.module_androidui.widget
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.util.AttributeSet
 import android.view.*
-import android.widget.FrameLayout
 import android.widget.ImageView
-import com.au.module_android.utils.myHideSystemUI
-import com.au.module_android.utils.myShowSystemUI
 import com.au.module_android.utils.renderToBitmap
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 /**
- * 通用全屏 Bitmap 预览 View，直接挂载到 Activity 的 android.R.id.content 顶层内容容器。
+ * 全屏 Bitmap 预览，顶层挂载和系统栏切换由 AbsFullScreenPreviewView 统一管理。
  *
  * show 会将没有父容器的源 View 临时加入自身；调用方加载完图片并调用 ready 后，
  * 将源 View 离屏绘制为 Bitmap，再移除源 View，以 Bitmap 提供缩放、拖动和单击关闭。
  * 源 View 的图片加载请求仍由调用方负责清理。
  *
- * 默认在 Bitmap 展示后通过 myHideSystemUI 隐藏系统栏，hide 默认通过 myShowSystemUI 恢复；
- * hideSystemUi 为 false 时不处理系统栏，hide 的 restoreSystemUi 为 false 时跳过恢复。
- * 关闭时移除顶层预览并回收 Bitmap，随后通知 onHidden。
- * 调用方需在返回键和页面生命周期结束时调用 hide，避免预览继续覆盖其他页面。
+ * Bitmap 准备完成后才显示预览并隐藏系统栏，onHide 负责取消待完成的截图并回收 Bitmap。
  */
-@SuppressLint("ViewConstructor")
-class FullScreenBitmapPreviewView(
-    private val activity: Activity,
-    private val hideSystemUi: Boolean = true,
-    private val onHidden: (() -> Unit)? = null,
-) : FrameLayout(activity) {
-    private val previewImg = ImageView(activity).apply {
+class FullScreenBitmapPreviewView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+) : AbsFullScreenPreviewView(context, attrs, defStyleAttr) {
+    private val previewImg = ImageView(context).apply {
         scaleType = ImageView.ScaleType.FIT_CENTER
         visibility = INVISIBLE
     }
-    private val touchHelper = FullScreenPreviewTouchHelper(activity, ::hide)
+    private val touchHelper = FullScreenPreviewTouchHelper(context)
     private var sourceView: View? = null
     private var previewBitmap: Bitmap? = null
     private var previewRequestId = 0L
@@ -65,25 +58,17 @@ class FullScreenBitmapPreviewView(
      * @param view 用于离屏截图的源 View。
      * @param onImageReady 调用方在源 View 图片准备完成后调用 ready。
      */
-    fun show(view: View, onImageReady: (() -> Unit) -> Unit) {
-        val contentHost = activity.findViewById<FrameLayout>(android.R.id.content) ?: return
+    fun show(activity: Activity, view: View, onImageReady: (() -> Unit) -> Unit) {
+        if (!attachToContent(activity)) return
         val requestId = ++previewRequestId
         clearPreviewBitmap()
         clearSourceView()
         previewImg.setImageDrawable(null)
         previewImg.visibility = INVISIBLE
         touchHelper.resetTarget(previewImg)
+        touchHelper.onSingleClick = { hide(activity) }
         visibility = INVISIBLE
 
-        if (parent == null) {
-            contentHost.addView(
-                this,
-                LayoutParams(
-                    LayoutParams.MATCH_PARENT,
-                    LayoutParams.MATCH_PARENT,
-                ),
-            )
-        }
         sourceView = view
         view.visibility = INVISIBLE
         addView(
@@ -97,32 +82,22 @@ class FullScreenBitmapPreviewView(
 
         onImageReady {
             post {
-                showSourceBitmapIfCurrent(requestId, view)
+                showSourceBitmapIfCurrent(activity, requestId, view)
             }
         }
     }
 
-    /**
-     * 隐藏全屏预览。
-     */
-    fun hide(restoreSystemUi: Boolean = true) {
-        val wasAttached = parent != null
+    override fun onHide() {
         previewRequestId++
         touchHelper.resetTarget(null)
+        touchHelper.onSingleClick = null
         previewImg.setImageDrawable(null)
         previewImg.visibility = INVISIBLE
         clearPreviewBitmap()
         clearSourceView()
-        (parent as? ViewGroup)?.removeView(this)
-        if (restoreSystemUi && hideSystemUi) {
-            activity.myShowSystemUI()
-        }
-        if (wasAttached) {
-            onHidden?.invoke()
-        }
     }
 
-    private fun showSourceBitmapIfCurrent(requestId: Long, view: View) {
+    private fun showSourceBitmapIfCurrent(activity: Activity, requestId: Long, view: View) {
         if (requestId != previewRequestId || sourceView !== view) {
             return
         }
@@ -136,10 +111,7 @@ class FullScreenBitmapPreviewView(
         previewBitmap = bitmap
         previewImg.setImageBitmap(bitmap)
         previewImg.visibility = VISIBLE
-        if (hideSystemUi) {
-            activity.myHideSystemUI()
-        }
-        visibility = VISIBLE
+        showPreview(activity)
         previewImg.post {
             if (parent != null) {
                 touchHelper.resetTarget(previewImg)
@@ -159,10 +131,8 @@ class FullScreenBitmapPreviewView(
         previewBitmap = null
     }
 
-    private class FullScreenPreviewTouchHelper(
-        context: Context,
-        private val onSingleClick: () -> Unit,
-    ) : OnTouchListener {
+    private class FullScreenPreviewTouchHelper(context: Context) : OnTouchListener {
+        var onSingleClick: (() -> Unit)? = null
         private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
         private val scaleGestureDetector = ScaleGestureDetector(context, ScaleListener())
         private var target: View? = null
@@ -240,7 +210,7 @@ class FullScreenBitmapPreviewView(
 
                 MotionEvent.ACTION_UP -> {
                     if (!isDragging && !hasMultiPointer) {
-                        onSingleClick()
+                        onSingleClick?.invoke()
                     }
                     clearTouchState()
                     return true

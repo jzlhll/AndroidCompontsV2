@@ -66,14 +66,13 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
                 binding.toolbar.layoutParams = toolbarLP
             }
             binding.pageHost.updatePadding(bottom = navBarHeight)
-            mediaPreview?.updateInsets(statusBarsHeight, navBarHeight)
             requireActivity().changeBarsColor(statusBarTextDark = false)
         }
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
-        mediaPreview = SendMediaPreview(this, binding.mediaPreview, binding.previewBlurTarget)
+        mediaPreview = SendMediaPreview(this, binding.previewBlurTarget)
 
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()

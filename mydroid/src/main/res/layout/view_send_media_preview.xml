@@ -3,14 +3,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/black"
     android:visibility="gone"
     android:clickable="true"
     android:focusable="true">
 
-    <eightbitlab.com.blurview.BlurView
-        android:id="@+id/backdropBlurView"
+    <eightbitlab.com.blurview.BlurTarget
+        android:id="@+id/videoBlurTarget"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/videoPlayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:surface_type="texture_view"
+            app:resize_mode="fit"
+            app:buffered_color="@color/transfer_preview_track"
+            app:unplayed_color="@color/transfer_preview_track"
+            app:show_buffering="when_playing"
+            app:show_timeout="2000"
+            app:auto_show="false"
+            app:animation_enabled="false"
+            app:hide_on_touch="true"
+            app:show_next_button="false"
+            app:show_previous_button="false" />
+    </eightbitlab.com.blurview.BlurTarget>
 
     <FrameLayout
         android:id="@+id/mediaHost"
@@ -19,28 +37,6 @@
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="32dp">
-
-        <eightbitlab.com.blurview.BlurTarget
-            android:id="@+id/videoBlurTarget"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <androidx.media3.ui.PlayerView
-                android:id="@+id/videoPlayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone"
-                app:surface_type="texture_view"
-                app:resize_mode="fit"
-                app:buffered_color="@color/transfer_preview_track"
-                app:unplayed_color="@color/transfer_preview_track"
-                app:show_buffering="when_playing"
-                app:show_timeout="2000"
-                app:auto_show="false"
-                app:animation_enabled="false"
-                app:hide_on_touch="true"
-                app:show_next_button="false"
-                app:show_previous_button="false" />
-        </eightbitlab.com.blurview.BlurTarget>
 
         <com.au.module_androidui.widget.CustomFontText
             android:id="@+id/videoTimeTv"
@@ -52,7 +48,6 @@
             android:layout_marginStart="12dp"
             android:layout_marginBottom="12dp"
             android:padding="6dp"
-            android:background="#44000000"
             android:visibility="gone" />
 
         <androidx.appcompat.widget.AppCompatImageButton
@@ -90,39 +85,30 @@
                 <com.au.module_androidui.widget.CustomButton
                     android:id="@+id/backTenFramesBtn"
                     style="@style/StylePreviewFrameButton"
-                    android:layout_width="54dp"
-                    android:layout_height="36dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:layout_marginBottom="0dp"
-                    android:drawableStart="@drawable/ic_frame_back"
-                    android:drawablePadding="4dp"
-                    android:drawableTint="@color/white"
-                    android:text="@string/preview_frame_count_ten"
+                    android:foreground="@drawable/ic_frame_back"
                     android:contentDescription="@string/preview_back_ten_frames_drag" />
 
                 <com.au.module_androidui.widget.CustomButton
                     android:id="@+id/stepFrameBtn"
                     style="@style/StylePreviewFrameButton"
-                    android:layout_width="54dp"
-                    android:layout_height="36dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:layout_marginStart="6dp"
                     android:layout_marginBottom="0dp"
-                    android:drawableStart="@drawable/ic_frame_forward"
-                    android:drawablePadding="4dp"
-                    android:drawableTint="@color/white"
-                    android:text="@string/preview_frame_count_one"
+                    android:foreground="@drawable/ic_frame_forward"
                     android:contentDescription="@string/preview_next_frame_drag" />
 
                 <com.au.module_androidui.widget.CustomButton
                     android:id="@+id/nextTenFramesBtn"
                     style="@style/StylePreviewFrameButton"
-                    android:layout_width="54dp"
-                    android:layout_height="36dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:layout_marginStart="6dp"
                     android:layout_marginBottom="0dp"
-                    android:drawableStart="@drawable/ic_frame_forward"
-                    android:drawablePadding="4dp"
-                    android:drawableTint="@color/white"
-                    android:text="@string/preview_frame_count_ten"
+                    android:foreground="@drawable/ic_frame_forward_ten"
                     android:contentDescription="@string/preview_next_ten_frames_drag" />
             </LinearLayout>
         </com.allan.mydroid.views.send.PreviewControlsLayout>
@@ -133,7 +119,7 @@
             android:layout_height="48dp"
             android:layout_gravity="top|end"
             android:padding="12dp"
-            android:background="#99000000"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close_preview"
             android:contentDescription="@string/preview_close"
             app:tint="@color/white" />
