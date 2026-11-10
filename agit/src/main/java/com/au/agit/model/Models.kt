@@ -6,7 +6,19 @@ import kotlinx.serialization.Serializable
 data class TokenGroup(val id: String, val name: String, val encryptedToken: String)
 
 @Serializable
-data class GitProject(val id: String, val groupId: String, val name: String, val url: String)
+enum class CloneMode { Full, Depth, Download }
+
+@Serializable
+data class GitProject(
+    val id: String,
+    val groupId: String,
+    val name: String,
+    val url: String,
+    val cloneMode: CloneMode = CloneMode.Full,
+    val depth: Int? = null,
+) {
+    val hasGit: Boolean get() = cloneMode != CloneMode.Download
+}
 
 @Serializable
 data class Author(val name: String = "", val email: String = "") {

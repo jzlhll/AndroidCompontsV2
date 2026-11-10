@@ -94,6 +94,8 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
 
     fun tokenGroupInput(): Pair<String, String>? = tokenGroupDraft?.let { it.name to it.token.concatToString() }
 
+    fun hasTokenGroupDraft(): Boolean = tokenGroupDraft != null
+
     fun clearTokenGroupDraft() {
         tokenGroupDraft?.token?.fill('\u0000')
         tokenGroupDraft = null
@@ -153,9 +155,10 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
         notify(if (overwrite) appString(R.string.copy_replaced) else appString(R.string.both_kept))
     }
 
-    fun clone(groupId: String, url: String) = operation("clone", null, appString(R.string.clone_title), listOf("git clone")) { reporter ->
-        repository.clone(groupId, url, reporter)
-        appString(R.string.project_added)
+    fun clone(groupId: String, url: String, mode: CloneMode, depth: Int) = operation("clone", null, appString(R.string.clone_title),
+        listOf(if (mode == CloneMode.Download) "download source" else "git clone")) { reporter ->
+        repository.clone(groupId, url, mode, depth, reporter)
+        appString(if (mode == CloneMode.Download) R.string.download_complete else R.string.project_added)
     }
 
     fun commit(projectId: String, selected: Set<String>, expected: Map<String, String>, message: String) =

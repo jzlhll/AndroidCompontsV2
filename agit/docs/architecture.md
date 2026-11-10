@@ -20,11 +20,14 @@ Koin 的 `agitModule` 注册应用级 `CatalogStore`、`TokenVault`、`UserFeedb
 
 - `CatalogStore` 使用 DataStore 保存 Token 分组、项目、作者、当前分组 `selectedGroupId`、当前项目 `selectedProjectId`、外部编辑会话和待完成的临时分支推送目标。读取失败不当作空数据覆盖。`Catalog.currentGroup` / `currentProject` 统一解析当前上下文；旧数据缺少分组字段时兼容最近项目，显式选中的空分组不回退到其他分组的项目。选择操作取消并等待上一任务，持久化成功后再切换页面；删除分组时一并更新当前分组和项目。
 - `TokenVault` 使用 Android Keystore AES-GCM，分组 ID 作为 AAD；凭据存放在共享目录之外，应用禁用备份。
-- 没有有效作者邮箱时，添加分组使用两步表单：`Next` 仅把 Token 草稿放在 `AppViewModel` 内存中，作者页 `Save` 再通过一次 DataStore 更新保存加密分组和作者。返回第一步可恢复内存草稿；离开流程或 ViewModel 销毁时清空字符数组，进程恢复时要求重新填写 Token。
+- 没有有效作者邮箱时，添加分组使用两步表单：`Next` 仅把 Token 草稿放在 `AppViewModel` 内存中，作者页 `Save` 再通过一次 DataStore 更新保存加密分组和作者。返回第一步可恢复内存草稿；离开流程或 ViewModel 销毁时清空字符数组，进程恢复时要求重新填写 Token。草稿恢复检查仅在对应 `AuthorKey` 实际位于栈顶时执行，并读取 ViewModel 最新草稿和保存完成态；退场动画中的作者页不触发提示或回退。
 - `Author.isConfigured` 仅要求有效邮箱，`Author.displayName` 优先显式姓名、否则完整邮箱；`Author.commitName` 优先显式姓名、否则邮箱 `@` 前的部分，供 JGit `PersonIdent` 使用。
 - `AGitRepository` 以 project ID 分配 Mutex，同一仓库的扫描、Git 写入和文件回写串行执行。阻塞操作进入 IO；ViewModel 状态在主线程更新。
-- Clone 先写入 `filesDir/temp/clones/<projectId>/`，JGit 完成下载、检出并关闭仓库后，原子改名为 `filesDir/shared/<projectId>/`，随后登记 Catalog。失败或取消时，在项目锁内等待引擎和进度回写停止，再以不可取消的清理删除未完成目录。`AppViewModel` 启动后延迟 3 秒调用残留检查，复用相同项目锁，清理 temp 和未登记的正式目录；Catalog 读取失败时不把已有目录视作孤立目录。
-- `JGitEngine` 固定使用官方 Java 8 兼容修订版 JGit `5.13.5.202508271544-r`，只使用 GitHub HTTPS 和单一 `origin`。该修订版包含 CVE-2025-4949 修复，并修正了 `5.13.4` 错误使用 JDK 17 编译的问题。凭据只提供给 `github.com`，不写入 URL 或 Git 配置。禁用 hooks、外部 filter、JMX 注册和系统 Git 探测。
+- `GitProject.cloneMode` 保存 `Full`、`Depth` 或 `Download`，`depth` 仅保存浅 clone 的初始深度；旧项目默认 `Full`。`hasGit` 由模式推导，不依赖文件系统猜测。
+- 三种模式先写入 `filesDir/temp/clones/<projectId>/content/`，完成下载、检出或解压并关闭资源后，原子改名为 `filesDir/shared/<projectId>/`，清理临时归档后登记 Catalog。失败或取消时，在项目锁内等待引擎和进度回写停止，再以不可取消的清理删除未完成目录。`AppViewModel` 启动后延迟 3 秒调用残留检查，复用相同项目锁，清理 temp 和未登记的正式目录；Catalog 读取失败时不把已有目录视作孤立目录。
+- `JGitEngine` 固定使用 Java 11 兼容的 JGit `6.10.1.202505221210-r`，包含浅 clone 支持和 CVE-2025-4949 修复，只使用 GitHub HTTPS 和单一 `origin`。clone 传输超时为 180 秒；`Depth` 模式调用 `setDepth`，后续 fetch 保留已有浅边界。缺少共同祖先且仓库仍有浅边界时，明确提示历史深度不足。Git 凭据只提供给 `github.com`，不写入 URL 或 Git 配置。禁用 hooks、外部 filter、JMX 注册和系统 Git 探测。
+- `GitHubArchiveDownloader` 通过 GitHub REST ZIP 归档接口获取默认分支，Token 仅发送到 `api.github.com`，重定向限于 API 与 `codeload.github.com` 的 HTTPS 地址。先写入临时 ZIP，再校验路径和文件 CRC，去掉统一的归档顶层目录后解压；拒绝路径穿越和 `.git` 条目，不创建符号链接。取消时关闭当前连接，并等待下载和解压退出。
+- `AGitRepository.lockedProject` 为文件读取提供共用项目锁；`locked` 只允许 Git 项目并负责打开 JGit。无Git 项目的刷新跳过 snapshot、候选副本和指纹扫描；文本仅以 `ACTION_VIEW` 和读取授权交给外部应用，不开启编辑会话。
 - commit 重新检查选中文件的指纹，使用 `CommitCommand.setOnly` 隔离未选中的暂存项；新文件先加入索引。重命名使用 JGit 的检测结果组合原、新路径。
 - 更新先 fetch，再检查共同历史、上游、dirty、ahead 和 behind，只执行 `FF_ONLY`。推送先检查并展示仓库、目标及提交；确认后重新 fetch，仅推送明确的单个目标引用。
 - 暂存与文件选择均以整文件为单位；未选中的工作区和暂存项不会隐式进入 commit。Git 操作不执行 stash、rebase、冲突合并、强制推送或自动重试。
@@ -51,9 +54,9 @@ Clone 页面和执行弹窗的标题固定为 `Clone Repository`。`GitDownloadC
 
 ## 兼容性边界
 
-最低 Android API 29，沿用根工程的 SDK、AGP、Kotlin 和 Compose BOM，启用 Java API desugaring。JGit 通过独立文件系统适配、私有配置和禁用 JMX 避开桌面依赖路径；不要求系统安装 `git`。
+仅 `agit` 将最低版本设为 Android 13（API 33），其他模块的最低版本沿用根工程设置。沿用根工程的 compile / target SDK、AGP、Kotlin 和 Compose BOM，保留 Java API desugaring。JGit 通过独立文件系统适配、私有配置和禁用 JMX 避开桌面依赖路径；不要求系统安装 `git`。
 
-JGit 版本使用严格约束，避免依赖解析重新选择需要较新 Java API 的分支。Android 29–32 缺少 `InputStream.readNBytes` 等方法，现有 desugaring 不补齐这些 I/O API；不能仅根据 Java 字节码目标版本判断兼容性，也不能使用以 JDK 17 编译的 `5.13.4`。`AndroidGitEnvironment` 使用 `5.13.5` 的 `SystemReader` 接口保留私有配置隔离，进度监听使用该版本的五个标准回调。
+Android 13 原生提供 `InputStream.readNBytes` 和 `transferTo`，覆盖当前 JGit 的相关 I/O 调用。JGit 版本使用严格约束，不自动迁移到需要更新 Java API 的主版本。`AndroidGitEnvironment` 保留私有配置隔离，进度监听实现 `showDuration` 在内的完整接口。
 
 JGit 的 Android 真机运行、GitHub 私有仓库认证、网络取消及实际推送仍需要设备联调确认。源码/API 检查不能替代这些验证，当前不能把该闭环视为已经通过设备验收。未覆盖 Git LFS、submodule 操作、SSH、其他托管服务和手机端冲突解决。
 

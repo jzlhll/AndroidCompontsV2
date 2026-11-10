@@ -47,6 +47,10 @@ enum class AGitErrorCode(
     FORBIDDEN_PATH("E0211", com.au.agit.R.string.forbidden_path),
     SYMLINK_UNSUPPORTED("E0212", com.au.agit.R.string.symlink_unsupported),
     PATH_ESCAPE("E0213", com.au.agit.R.string.path_escape),
+    INVALID_DEPTH("E0214", com.au.agit.R.string.invalid_depth),
+    ARCHIVE_DOWNLOAD_FAILED("E0215", com.au.agit.R.string.archive_download_failed),
+    INVALID_ARCHIVE("E0216", com.au.agit.R.string.invalid_archive),
+    NO_GIT_READ_ONLY("E0217", com.au.agit.R.string.no_git_read_only),
 
     // E0300–E0399：本地文件、外部应用及编辑回写。
     MISSING_DIRECTORY("E0300", com.au.agit.R.string.missing_directory),
@@ -81,6 +85,7 @@ enum class AGitErrorCode(
     BRANCH_SWITCH_FAILED("E0418", com.au.agit.R.string.branch_switch_failed),
     PUSH_UNCERTAIN("E0419", com.au.agit.R.string.push_uncertain, com.au.agit.R.string.push_unknown),
     PUSH_REJECTED("E0420", com.au.agit.R.string.push_rejected),
+    SHALLOW_HISTORY_INCOMPLETE("E0421", com.au.agit.R.string.shallow_history_incomplete),
 
     // E0500–E0599：日志文件读取、导出及图片和视频预览。
     LOG_MISSING("E0500", com.au.agit.R.string.log_missing),
