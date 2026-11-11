@@ -18,4 +18,5 @@ object MyDroidComposeColors {
 
     /** 三个功能按钮的文字颜色。 */
     val LogicBtnText = Color.White
+    val ImagePreviewBackground = Color.Black
 }

@@ -4,12 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -38,10 +41,46 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
+
+/**
+ * 在指定显示尺寸内绘制图片的沉浸式模糊背景，默认模糊半径为 24dp。
+ * [imageContent] 负责加载并铺满背景，使用传入的低分辨率请求尺寸和变换，避免另行解码高清背景。
+ */
+@Composable
+fun ComposeImmersiveImageBackground(
+    width: Dp,
+    height: Dp,
+    modifier: Modifier = Modifier,
+    blurRadius: Dp = 24.dp,
+    imageContent: @Composable (requestWidth: Dp, requestHeight: Dp, transformation: BitmapTransformation) -> Unit,
+) {
+    val arrayPool = Glide.get(LocalContext.current).arrayPool
+    val blurRadiusPx = with(LocalDensity.current) { blurRadius.roundToPx() }
+    val transformation = remember(blurRadiusPx, arrayPool) {
+        ImageBackgroundBlurTransformation(blurRadiusPx, arrayPool)
+    }
+    Box(modifier = modifier.size(width, height).clipToBounds()) {
+        key(transformation) {
+            imageContent(
+                width / IMAGE_BACKGROUND_BLUR_DOWNSAMPLE,
+                height / IMAGE_BACKGROUND_BLUR_DOWNSAMPLE,
+                transformation,
+            )
+        }
+    }
+}
 
 /** 对应 XML StyleShadowWhiteBlock 的 Compose 阴影白底块。 */
 @Composable
@@ -284,11 +323,10 @@ fun Modifier.composeStaticBackdropSample(
     }
 }
 
-/** 保存 Compose 背景采样层与模糊渲染层。 */
+/** 共享 Compose 背景采样层及其窗口坐标。 */
 @Stable
 class ComposeBackdropBlurState internal constructor(
     internal val sourceLayer: GraphicsLayer,
-    internal val blurredLayer: GraphicsLayer,
 ) {
     internal var sourcePositionInWindow by mutableStateOf(Offset.Zero)
 }
@@ -296,9 +334,8 @@ class ComposeBackdropBlurState internal constructor(
 @Composable
 fun rememberComposeBackdropBlurState(): ComposeBackdropBlurState {
     val sourceLayer = rememberGraphicsLayer()
-    val blurredLayer = rememberGraphicsLayer()
-    return remember(sourceLayer, blurredLayer) {
-        ComposeBackdropBlurState(sourceLayer, blurredLayer)
+    return remember(sourceLayer) {
+        ComposeBackdropBlurState(sourceLayer)
     }
 }
 
@@ -309,9 +346,6 @@ fun Modifier.composeBackdropBlurSource(state: ComposeBackdropBlurState): Modifie
     }.drawWithContent {
         state.sourceLayer.record {
             this@drawWithContent.drawContent()
-        }
-        state.blurredLayer.record(size = state.sourceLayer.size) {
-            drawLayer(state.sourceLayer)
         }
         drawLayer(state.sourceLayer)
     }
@@ -332,6 +366,7 @@ fun ComposeBackdropBlurWhiteBlock(
     strokeColor: Color = Color.White,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val blurredLayer = rememberGraphicsLayer()
     val blurRadiusPx = with(LocalDensity.current) { backgroundBlurRadius.toPx() }
     val blurEffect = remember(blurRadiusPx) {
         BlurEffect(blurRadiusPx, blurRadiusPx, TileMode.Clamp)
@@ -340,7 +375,7 @@ fun ComposeBackdropBlurWhiteBlock(
     var targetPositionInWindow by remember { mutableStateOf(Offset.Zero) }
 
     SideEffect {
-        state.blurredLayer.renderEffect = if (blurEffect.isSupported()) blurEffect else null
+        blurredLayer.renderEffect = if (blurEffect.isSupported()) blurEffect else null
     }
 
     Box(
@@ -359,12 +394,29 @@ fun ComposeBackdropBlurWhiteBlock(
                 }
                 .drawWithCache {
                     val sourceOffset = state.sourcePositionInWindow - targetPositionInWindow
+                    val samplePadding = ceil(blurRadiusPx * 2f)
                     onDrawBehind {
-                        if (state.blurredLayer.size.width > 0 && state.blurredLayer.size.height > 0) {
+                        // 仅模糊浮层附近的背景，保留卷积边缘，并按 source 边界维持 Clamp 行为。
+                        val sampleLeft = max(0, floor(-sourceOffset.x - samplePadding).toInt())
+                        val sampleTop = max(0, floor(-sourceOffset.y - samplePadding).toInt())
+                        val sampleRight = min(
+                            state.sourceLayer.size.width,
+                            ceil(-sourceOffset.x + size.width + samplePadding).toInt(),
+                        )
+                        val sampleBottom = min(
+                            state.sourceLayer.size.height,
+                            ceil(-sourceOffset.y + size.height + samplePadding).toInt(),
+                        )
+                        if (sampleRight > sampleLeft && sampleBottom > sampleTop) {
+                            blurredLayer.record(size = IntSize(sampleRight - sampleLeft, sampleBottom - sampleTop)) {
+                                withTransform({ translate(-sampleLeft.toFloat(), -sampleTop.toFloat()) }) {
+                                    drawLayer(state.sourceLayer)
+                                }
+                            }
                             withTransform({
-                                translate(sourceOffset.x, sourceOffset.y)
+                                translate(sourceOffset.x + sampleLeft, sourceOffset.y + sampleTop)
                             }) {
-                                drawLayer(state.blurredLayer)
+                                drawLayer(blurredLayer)
                             }
                         }
                         drawRect(backgroundColor)

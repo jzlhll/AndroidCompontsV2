@@ -71,20 +71,44 @@ class SendVideoPreviewView @JvmOverloads constructor(
         binding.videoPlayer.findViewById<View>(androidx.media3.ui.R.id.exo_bottom_bar).background = null
         val playerControls = controlsBackground.parent as ViewGroup
         val progressBar = playerControls.findViewById<View>(androidx.media3.ui.R.id.exo_progress)
-        val progressBlurView = BlurView(context)
+        val scrubberSize = resources.getDimensionPixelSize(
+            androidx.media3.ui.R.dimen.exo_styled_progress_dragged_thumb_size,
+        )
+        val progressVisualHeight = (scrubberSize + 1) / 2 * 2
+        binding.videoTimeTv.setPadding(progressVisualHeight / 2, 0, progressVisualHeight / 2, 0)
+        val progressBlurView = BlurView(context).apply {
+            setPadding(0, 6.dp, 0, 6.dp)
+        }
+        (binding.videoTimeTv.parent as ViewGroup).removeView(binding.videoTimeTv)
+        progressBlurView.addView(
+            binding.videoTimeTv,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM,
+            ),
+        )
         playerControls.addView(
             progressBlurView,
             playerControls.indexOfChild(progressBar),
-            FrameLayout.LayoutParams(0, 0, Gravity.TOP or Gravity.LEFT),
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.LEFT,
+            ),
         )
-        progressBar.addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
-            val width = right - left
-            val height = bottom - top
-            val leftMargin = left - playerControls.paddingLeft
-            val topMargin = top - playerControls.paddingTop
+        val updateProgressBounds = {
+            val width = progressBar.width
+            val height = progressVisualHeight + binding.videoTimeTv.measuredHeight +
+                progressBlurView.paddingTop + progressBlurView.paddingBottom
+            val leftMargin = progressBar.left - playerControls.paddingLeft
+            val topMargin = progressBar.bottom - progressVisualHeight -
+                playerControls.paddingTop - progressBlurView.paddingTop
             val params = progressBlurView.layoutParams as FrameLayout.LayoutParams
-            if (params.width != width || params.height != height ||
-                params.leftMargin != leftMargin || params.topMargin != topMargin) {
+            val boundsChanged = params.width != width || params.height != height ||
+                params.leftMargin != leftMargin || params.topMargin != topMargin
+            // 原生 TimeBar 保留完整触摸区域，背景只包住底部可见的进度及文字，上下各留 6dp。
+            if (width > 0 && progressBar.height > 0 && boundsChanged) {
                 progressBlurView.updateLayoutParams<FrameLayout.LayoutParams> {
                     this.width = width
                     this.height = height
@@ -93,16 +117,19 @@ class SendVideoPreviewView @JvmOverloads constructor(
                 }
             }
         }
+        progressBar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateProgressBounds() }
+        binding.videoTimeTv.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateProgressBounds() }
         val centerControls = binding.videoPlayer.findViewById<ViewGroup>(androidx.media3.ui.R.id.exo_center_controls)
         (centerControls.parent as ViewGroup).removeView(centerControls)
-        val buttonScale = 0.8f
-        val verticalPadding = (6.dp * buttonScale).roundToInt()
-        centerControls.setPadding(6.dp, verticalPadding, 6.dp, verticalPadding)
+        val buttonSize = 36.dp
+        centerControls.setPadding(0, 0, 0, 0)
         for (index in 0 until centerControls.childCount) {
             val button = centerControls.getChildAt(index)
+            val originalHeight = button.layoutParams.height
+            val buttonScale = if (originalHeight > 0) buttonSize.toFloat() / originalHeight else 1f
             button.updateLayoutParams<ViewGroup.LayoutParams> {
-                if (width > 0) width = (width * buttonScale).roundToInt()
-                if (height > 0) height = (height * buttonScale).roundToInt()
+                width = buttonSize
+                height = buttonSize
             }
             button.setPadding(
                 (button.paddingLeft * buttonScale).roundToInt(),
@@ -111,7 +138,7 @@ class SendVideoPreviewView @JvmOverloads constructor(
                 (button.paddingBottom * buttonScale).roundToInt(),
             )
         }
-        binding.playbackControlsHost.addView(
+        binding.playbackButtonsHost.addView(
             centerControls,
             FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT),
         )
@@ -148,6 +175,8 @@ class SendVideoPreviewView @JvmOverloads constructor(
                 restoreControlsPositions()
             }
         }
+        binding.frameControlsHost.dragHandle = binding.frameDragHandleImg
+        binding.playbackControlsHost.dragHandle = binding.playbackDragHandleImg
         initControlsDrag(binding.frameControlsHost, "preview_frame_controls")
         initControlsDrag(binding.playbackControlsHost, "preview_playback_controls")
         // 控制层与视频取样层分离，避免进度条及其模糊背景被重复采样。

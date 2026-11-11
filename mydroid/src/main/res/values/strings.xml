@@ -3,9 +3,10 @@
     <string name="preview_playback_settings">Playback settings</string>
     <string name="preview_center_zoom">Centered zoom</string>
     <string name="preview_next_frame">Next frame</string>
-    <string name="preview_next_frame_drag">Advance one frame or a small interval; long press and drag to move</string>
-    <string name="preview_next_ten_frames_drag">Advance ten frames or ten small intervals; long press and drag to move</string>
-    <string name="preview_back_ten_frames_drag">Go back ten frames or ten small intervals; long press and drag to move</string>
+    <string name="preview_next_frame_drag">Advance one frame or a small interval</string>
+    <string name="preview_next_ten_frames_drag">Advance ten frames or ten small intervals</string>
+    <string name="preview_back_ten_frames_drag">Go back ten frames or ten small intervals</string>
+    <string name="preview_drag_controls">Long press and drag to move controls</string>
     <string name="preview_video_progress">%1$s / %2$s</string>
     <string name="preview_video_error">Unable to play this video. The file may be unavailable or the format unsupported.</string>
     <string name="app_name">Pigeon Pass</string>

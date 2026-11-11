@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -35,9 +37,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.load.DecodeFormat
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val MinPreviewScale = 1f
 private const val MaxPreviewScale = 4f
@@ -107,6 +113,7 @@ fun ComposeImagePreview(
  * [previewKey] 变化时会重置预览状态，[imageContent] 需按传入的宽高绘制图片。
  * [fitWidth] 为 true 时图片始终按可用宽度等比展示，超出可用高度的部分允许溢出。
  * 图片到达内部区域边缘后会消费完当前拖拽；下一次从边缘向外拖拽时不消费事件，供父容器接管。
+ * [onSingleTap] 在双击判定结束后回调，缩放、多指触控和拖拽不会触发。
  */
 @Composable
 fun ComposeImagePreviewContainer(
@@ -133,9 +140,13 @@ fun ComposeImagePreviewContainer(
     onExpandDragEnd: ((Offset, velocityY: Float) -> Unit)? = null,
     onExpandDragCancel: (() -> Unit)? = null,
     onImageBoundsChanged: ((Rect) -> Unit)? = null,
+    onSingleTap: (() -> Unit)? = null,
     imageContent: @Composable (width: Dp, height: Dp) -> Unit,
 ) {
     var lastTapUpTime by remember(previewKey) { mutableLongStateOf(0L) }
+    val tapScope = rememberCoroutineScope()
+    var singleTapJob by remember(previewKey) { mutableStateOf<Job?>(null) }
+    val currentOnSingleTap by rememberUpdatedState(onSingleTap)
     val currentOnDismissDragStart by rememberUpdatedState(onDismissDragStart)
     val currentOnDismissDrag by rememberUpdatedState(onDismissDrag)
     val currentOnDismissDragEnd by rememberUpdatedState(onDismissDragEnd)
@@ -150,8 +161,13 @@ fun ComposeImagePreviewContainer(
     val currentGesturesEnabled by rememberUpdatedState(gesturesEnabled)
     val currentPreviewState by rememberUpdatedState(previewState)
 
+    DisposableEffect(previewKey) {
+        onDispose { singleTapJob?.cancel() }
+    }
+
     LaunchedEffect(gesturesEnabled) {
         if (!gesturesEnabled) {
+            singleTapJob?.cancel()
             previewState.imageScale = MinPreviewScale
             previewState.imageOffset = Offset.Zero
             lastTapUpTime = 0L
@@ -224,6 +240,7 @@ fun ComposeImagePreviewContainer(
         val gestureModifier = Modifier.pointerInput(previewKey) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
+                singleTapJob?.cancel()
                 if (!currentGesturesEnabled) return@awaitEachGesture
                 val gestureImageWidthPx = currentImageWidthPx
                 val gestureImageHeightPx = currentImageHeightPx
@@ -399,6 +416,14 @@ fun ComposeImagePreviewContainer(
                             lastTapUpTime = 0L
                         } else if (upTime - down.uptimeMillis <= viewConfiguration.longPressTimeoutMillis) {
                             lastTapUpTime = upTime
+                            if (currentOnSingleTap != null) {
+                                // 等待双击判定，缩放复位和后续拖拽不触发单击。
+                                val timeout = viewConfiguration.doubleTapTimeoutMillis
+                                singleTapJob = tapScope.launch {
+                                    delay(timeout.milliseconds)
+                                    if (currentGesturesEnabled) currentOnSingleTap?.invoke()
+                                }
+                            }
                         }
                     } else {
                         lastTapUpTime = 0L
