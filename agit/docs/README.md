@@ -32,7 +32,7 @@ AGit 是一个简单的 Android Git 客户端。第一版只接入 GitHub，通�
 
 界面、异常提示、Toast 和操作结果使用 `strings.xml`：`values` 为英语，`values-zh-rCN` 为简体中文；系统应用语言列表只声明英语和简中。操作日志固定使用英文。
 
-外观提供黑色、白色、Dracula、护眼绿四套主题，参考 `Notepadmm` 的 Ember、Mist、Dracula 和 Sage 色板。在抽屉“外观”中选择后立即应用并持久化。状态保持绿 `A`、蓝 `M`、红 `D`、紫 `R`、橙 `U` 的语义，按各主题背景调整文字与底色；不由系统动态取色改变状态含义。
+外观提供黑色、白色、Dracula、护眼绿和 Alucard 五套主题，参考 `Notepadmm` 的 Ember、Mist、Dracula、Sage 和 Alucard 色板。在抽屉“外观”中选择后立即应用并持久化；单选按钮与主题名称间距为 8dp。状态保持绿 `A`、蓝 `M`、红 `D`、紫 `R`、橙 `U` 的语义，按各主题背景调整文字与底色；不由系统动态取色改变状态含义。
 
 ### 耗时操作弹窗与动画
 

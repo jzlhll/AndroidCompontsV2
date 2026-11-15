@@ -6,7 +6,7 @@
 
 系统 Splash 保留到本地主题读取完成且实际主题的 Compose 首屏已成功组合。主题未就绪时不组合白色回退页面；启动页、过渡窗口使用一致的深色品牌背景，错误页面同样可以结束启动等待，不因配置读取失败停留在 Splash。
 
-`AppTheme` 包含 `Black`、`White`、`Dracula`、`Sage`，保存在 `Catalog` 中。`AGitRoot` 收集主题后组合 `AGitTheme`，主题同时更新 Material 3 和系统栏明暗。色板参考 `Notepadmm/src/main/resources/css/` 的 `colors_ember.css`、`colors_mist.css`、`colors_dracula.css`、`colors_sage.css`。状态前景色和底色集中在同一个 `ThemePalette`，四套主题的二十组状态文字/底色对比度最低约为 5.12:1。
+`AppTheme` 包含 `Black`、`White`、`Dracula`、`Sage`、`Alucard`，保存在 `Catalog` 中。`AGitRoot` 收集主题后组合 `AGitTheme`，主题同时更新 Material 3 和系统栏明暗。色板参考 `Notepadmm/src/main/resources/css/` 的 `colors_ember.css`、`colors_mist.css`、`colors_dracula.css`、`colors_sage.css`、`colors_alucard.css`。状态前景色和底色集中在同一个 `ThemePalette`，五套主题的二十五组状态文字/底色对比度最低约为 4.69:1。`ThemeScreen` 使用单选卡片展示主题，`RadioButton` 与名称间距为 8dp，保留 Git 状态配色预览。
 
 `AGitApp.kt` 仅组装主题、目录加载态、导航宿主和全局弹窗。路由键集中在 `NavKeys.kt`，导航状态与表单完成后的跳转由 `AGitNavigationState.kt` 管理，页面路由绑定和响应式抽屉承载放在 `AGitNavHost.kt`。`ProjectDrawer.kt`、`TokenGroupPickerDialog.kt` 和 `TokenRoute.kt` 分别负责抽屉、分组选择及 Token 表单数据加载。
 

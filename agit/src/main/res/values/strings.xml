@@ -160,6 +160,7 @@
     <string name="theme_white">White</string>
     <string name="theme_dracula">Dracula</string>
     <string name="theme_sage">Sage</string>
+    <string name="theme_alucard">Alucard</string>
     <string name="selected">Selected</string>
     <string name="log_empty">No logs yet</string>
     <string name="log_missing">The log file no longer exists</string>

@@ -33,19 +33,21 @@ import com.au.module_androiduiex.styles.ComposeButton as Button
 
 data class NodeGuide(val documentId: String, val kind: NodeGuideKind)
 
+private data class GuideCard(val bounds: IntRect, val hasImages: Boolean)
+
 /** 记录目标编号或卡片的真实窗口位置，仅在气泡布局和绘制阶段读取。 */
 class NodeGuideAnchor {
     var bounds: IntRect? by mutableStateOf(null)
     private var viewport: IntRect? = null
-    private val cards = mutableMapOf<Int, IntRect>()
+    private val cards = mutableMapOf<Int, GuideCard>()
 
     fun updateViewport(value: IntRect) {
         viewport = value
         updateCardTarget()
     }
 
-    fun updateCard(index: Int, value: IntRect) {
-        cards[index] = value
+    fun updateCard(index: Int, value: IntRect, hasImages: Boolean) {
+        cards[index] = GuideCard(value, hasImages)
         updateCardTarget()
     }
 
@@ -56,10 +58,12 @@ class NodeGuideAnchor {
 
     private fun updateCardTarget() {
         val viewport = viewport ?: return
-        val visible = cards.filterValues { it.overlaps(viewport) }
-        val target = visible[2] ?: visible.filterKeys { it >= 2 }.minByOrNull { it.key }?.value
-            ?: visible.minByOrNull { it.key }?.value
-        bounds = target?.intersect(viewport)
+        val visible = cards.filterValues { it.bounds.overlaps(viewport) }
+        val images = visible.filterValues { it.hasImages }
+        val preferred = if (images.isNotEmpty()) images else visible
+        val target = preferred[2] ?: preferred.filterKeys { it >= 2 }.minByOrNull { it.key }?.value
+            ?: preferred.minByOrNull { it.key }?.value
+        bounds = target?.bounds?.intersect(viewport)
     }
 }
 

@@ -380,7 +380,9 @@ private fun NodeCard(
         } else emptyList()
     }) {
         Box(Modifier.fillMaxWidth().then(if (image == null) Modifier.height(72.dp) else Modifier.aspectRatio(4f / 3f))
-            .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) { guideAnchor.updateCard(guideIndex, it.boundsInWindow) } else Modifier)
+            .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) {
+                guideAnchor.updateCard(guideIndex, it.boundsInWindow, hasImages = content.images.isNotEmpty())
+            } else Modifier)
             .border(if (highlighted) 2.dp else 0.dp, if (highlighted) MaterialTheme.colorScheme.primary else Color.Transparent, shape)) {
             if (multiImage) {
                 Box(Modifier.matchParentSize().padding(start = 8.dp, top = 8.dp).background(colors.foreground.copy(alpha = 0.3f), shape))

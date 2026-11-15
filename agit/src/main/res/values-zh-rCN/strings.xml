@@ -158,6 +158,7 @@
     <string name="theme_white">白色</string>
     <string name="theme_dracula">Dracula</string>
     <string name="theme_sage">护眼绿</string>
+    <string name="theme_alucard">Alucard</string>
     <string name="selected">已选择</string>
     <string name="log_empty">暂无日志</string>
     <string name="log_missing">日志文件已不存在</string>
