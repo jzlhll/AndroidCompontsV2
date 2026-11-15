@@ -90,7 +90,7 @@ fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boole
         val insets = WindowInsets.safeDrawing
         val bubbleColor = scheme.surfaceContainerHigh
         Layout(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.1f))
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f))
                 .semantics { paneTitle = "节点操作提示" }
                 .drawWithCache {
                     val path = Path()
@@ -126,7 +126,7 @@ fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boole
             content = {
                 Surface(color = bubbleColor, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, scheme.outlineVariant)) {
                     Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
-                        Text(if (kind == NodeGuideKind.Menu) "点击左侧的「03」，可以弹出节点操作菜单。" else "点击卡片，可以显示更多操作。", color = scheme.onSurface, style = ComposeTypography.Font14sp)
+                        Text(if (kind == NodeGuideKind.Menu) "单击左侧的节点，可以弹出操作菜单。" else "点击卡片，可以显示更多操作。", color = scheme.onSurface, style = ComposeTypography.Font14sp)
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = onAcknowledge, enabled = !saving, modifier = Modifier.align(androidx.compose.ui.Alignment.End)) {
                             Text("知道了")
