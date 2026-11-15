@@ -158,7 +158,7 @@ object FileLog {
 
     /**时间戳转日期*/
     private fun longTimeToStr(time: Long): String {
-        return timestampFmt.format(time).toString()
+        return synchronized(timestampFmt) { timestampFmt.format(time).toString() }
     }
 
     fun write(log: String?) {

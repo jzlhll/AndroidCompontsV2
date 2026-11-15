@@ -5,47 +5,30 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.dp
+import com.au.module_androiduiex.styles.ComposeButton
+import com.au.module_androiduiex.styles.ComposeOutlinedButton
+import com.au.module_androiduiex.styles.ComposeTextButton
+import com.au.module_androiduiex.styles.ComposeIconButton
+import com.au.module_androiduiex.styles.expandedComposeButtonPadding
 
 @Composable
-fun AGitButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    colors: ButtonColors = ButtonDefaults.buttonColors(),
-    content: @Composable RowScope.() -> Unit,
-) {
-    androidx.compose.material3.Button(onClick, modifier.heightIn(min = ButtonDefaults.MinHeight + 6.dp), enabled = enabled,
-        colors = colors, contentPadding = expandedPadding(ButtonDefaults.ContentPadding), content = content)
+fun AGitButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
+    colors: ButtonColors = ButtonDefaults.buttonColors(), content: @Composable RowScope.() -> Unit) {
+    ComposeButton(onClick, modifier, enabled, colors, content)
 }
 
 @Composable
 fun AGitOutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
-    androidx.compose.material3.OutlinedButton(onClick, modifier.heightIn(min = ButtonDefaults.MinHeight + 6.dp), enabled = enabled,
-        contentPadding = expandedPadding(ButtonDefaults.ContentPadding), content = content)
+    ComposeOutlinedButton(onClick, modifier, enabled, content)
 }
 
 @Composable
-fun AGitTextButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    contentPadding: PaddingValues = expandedPadding(ButtonDefaults.TextButtonContentPadding),
-    content: @Composable RowScope.() -> Unit,
-) {
-    androidx.compose.material3.TextButton(onClick, modifier.heightIn(min = ButtonDefaults.MinHeight + 6.dp), enabled = enabled,
-        contentPadding = contentPadding, content = content)
+fun AGitTextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
+    contentPadding: PaddingValues = expandedComposeButtonPadding(ButtonDefaults.TextButtonContentPadding), content: @Composable RowScope.() -> Unit) {
+    ComposeTextButton(onClick, modifier, enabled, contentPadding, content)
 }
 
 @Composable
 fun AGitIconButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable () -> Unit) {
-    androidx.compose.material3.IconButton(onClick, modifier.heightIn(min = 54.dp), enabled = enabled, content = content)
-}
-
-@Composable
-private fun expandedPadding(padding: PaddingValues): PaddingValues {
-    val direction = LocalLayoutDirection.current
-    return PaddingValues(start = padding.calculateStartPadding(direction), top = padding.calculateTopPadding() + 3.dp,
-        end = padding.calculateEndPadding(direction), bottom = padding.calculateBottomPadding() + 3.dp)
+    ComposeIconButton(onClick, modifier, enabled, content)
 }

@@ -235,6 +235,12 @@ object AppDataStore {
         }
     }
 
+    /** 在调用方协程内完成写入，显式 store 不依赖 Globals 初始化。 */
+    suspend fun saveStringSuspend(key: String, value: String?, dataStore: DataStore<Preferences>) {
+        val prefKey = stringPreferencesKey(key)
+        dataStore.edit { if (value == null) it.remove(prefKey) else it[prefKey] = value }
+    }
+
     @Deprecated("use readString instead")
     fun readStringBlocked(key:String, defaultValue: String?, dataStore: DataStore<Preferences> = Globals.app.globalDataStore) : String? {
         return runBlocking { readString(key, defaultValue, dataStore) }
