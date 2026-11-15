@@ -19,7 +19,8 @@ data class EditorState(
     val loading: Boolean = false,
     val loaded: Boolean = true,
     val title: String = "",
-    val kind: String = "text",
+    val kind: String = "body",
+    val fixed: Boolean = false,
     val body: String = "",
     val images: List<ImageDraft> = emptyList(),
     val dirty: Boolean = false,
@@ -32,7 +33,7 @@ data class EditorState(
 
 /** 保存当前目的地的编辑草稿，配置变化时保留尚未提交的内容。 */
 class EditorViewModel(private val repository: DocumentRepository, val route: EditRoute) : ViewModel() {
-    private val mutableStateFlow = MutableStateFlow(EditorState(loaded = route.nodeId == null))
+    private val mutableStateFlow = MutableStateFlow(EditorState(loaded = route.nodeId == null, kind = route.kind))
     val stateFlow = mutableStateFlow.asStateFlow()
     private var originalDraft = mutableStateFlow.value
     private val draftSession = repository.openDraftSession()
@@ -53,9 +54,11 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
         mutableStateFlow.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             try {
-                val node = repository.content(documentId).nodes.firstOrNull { it.node.id == nodeId } ?: error("节点已删除")
-                originalDraft = EditorState(title = node.node.title, kind = node.node.kind, body = node.node.bodyMarkdown,
-                    images = node.images.map { ImageDraft(existing = it, name = it.name) }, savedImageCount = node.images.size)
+                val nodes = repository.content(documentId).nodes
+                val index = nodes.indexOfFirst { it.node.id == nodeId }
+                val node = nodes.getOrNull(index) ?: error("节点已删除")
+                originalDraft = EditorState(title = node.node.title, kind = node.node.kind, fixed = index < 2, body = node.node.bodyMarkdown,
+                    images = node.images.map { ImageDraft(existing = it) }, savedImageCount = node.images.size)
                 mutableStateFlow.value = originalDraft
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
@@ -91,13 +94,13 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
 
     private fun prepareImages(uris: List<String>, replacementId: String? = null) {
         val draft = stateFlow.value
-        if (uris.isEmpty() || route.documentId == null || route.chapter || draft.kind == "introduction" || !draft.loaded || draft.loading || draft.busy || draft.savedId != null) return
+        if (uris.isEmpty() || route.documentId == null || draft.kind != "body" || !draft.loaded || draft.loading || draft.busy || draft.savedId != null) return
         mutableStateFlow.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             try {
                 val prepared = repository.prepareImages(draftSession, uris)
                 val images = if (replacementId == null) draft.images + prepared.map { ImageDraft(prepared = it) }
-                else draft.images.map { if (it.id == replacementId) ImageDraft(prepared = prepared.single(), name = it.name) else it }
+                else draft.images.map { if (it.id == replacementId) ImageDraft(prepared = prepared.single()) else it }
                 mutableStateFlow.value = changed(draft.copy(busy = false, images = images, error = null))
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
@@ -107,10 +110,6 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
         }
     }
 
-    fun imageName(index: Int, name: String) {
-        updateDraft { it.copy(images = it.images.mapIndexed { i, image -> if (i == index) image.copy(name = name) else image }) }
-    }
-
     fun save() {
         val draft = stateFlow.value
         if (draft.busy || draft.loading || !draft.loaded || draft.savedId != null || (route.nodeId != null && !draft.dirty)) return
@@ -118,7 +117,7 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
         viewModelScope.launch {
             try {
                 val result = if (route.documentId == null) repository.create(draft.title, draft.body)
-                else repository.saveNode(route.documentId, route.nodeId, route.anchorId, route.after, route.chapter,
+                else repository.saveNode(route.documentId, route.nodeId, route.anchorId, draft.kind,
                     draft.title, draft.body, draft.images)
                 mutableStateFlow.update { it.copy(busy = false, dirty = false, savedId = result.value, mirrorFailed = result.mirrorFailed) }
             } catch (e: CancellationException) { throw e }
@@ -133,7 +132,7 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
         val documentId = route.documentId ?: return
         val nodeId = route.nodeId ?: return
         val draft = stateFlow.value
-        if (!draft.loaded || draft.loading || draft.busy || draft.savedId != null) return
+        if (!draft.loaded || draft.fixed || draft.loading || draft.busy || draft.savedId != null) return
         mutableStateFlow.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             try {

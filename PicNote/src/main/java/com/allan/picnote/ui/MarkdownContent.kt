@@ -3,7 +3,10 @@ package com.allan.picnote.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import com.allan.picnote.data.entity.NodeContent
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import org.commonmark.node.*
 import org.commonmark.parser.Parser
@@ -25,10 +28,21 @@ fun markdownPlainText(node: Node): String = buildString {
 }.trimEnd('\n')
 
 @Composable
-fun rememberCompactMarkdown(markdown: String): String {
-    val text by produceState("", markdown) {
-        value = ""
-        value = withContext(Dispatchers.Default) { markdownPlainText(Parser.builder().build().parse(markdown)) }
+fun rememberNodePreviews(nodes: List<NodeContent>): Map<String, String> {
+    val previews by produceState<Map<String, String>>(emptyMap(), nodes) {
+        val previous = value
+        value = withContext(Dispatchers.Default) {
+            val parser = Parser.builder().build()
+            buildMap {
+                nodes.forEach { content ->
+                    currentCoroutineContext().ensureActive()
+                    val markdown = content.node.bodyMarkdown
+                    if (markdown.isNotBlank() && !containsKey(markdown)) {
+                        put(markdown, previous[markdown] ?: markdownPlainText(parser.parse(markdown)))
+                    }
+                }
+            }
+        }
     }
-    return text
+    return previews
 }

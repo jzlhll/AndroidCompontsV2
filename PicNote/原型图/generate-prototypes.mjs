@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// 使用独立矢量源生成图笺 / PicNote 原型，图片为本地绘制的示例素材。
+// 使用独立矢量源生成竹节笔记 / Bambootes 原型，图片为本地绘制的示例素材。
 const require = createRequire(import.meta.url);
 const moduleRoot = process.env.PICNOTE_RENDER_MODULE_ROOT;
 const { Resvg } = require(moduleRoot ? join(moduleRoot, '@resvg/resvg-js') : '@resvg/resvg-js');
@@ -198,7 +198,7 @@ const render = (source, scale) => new Resvg(source, {
   font: { loadSystemFonts: true, defaultFontFamily: 'Hiragino Sans GB' },
 }).render().asPng();
 
-let board = text(24, 45, '图笺 PicNote  /  图片与 Markdown', 26, C.ink, 600) + text(24, 77, '标题与可选首段 · 72dp 纯文节点 · 章节前后插入', 16, C.muted);
+let board = text(24, 45, '竹节笔记 Bambootes  /  图片与 Markdown', 26, C.ink, 600) + text(24, 77, '标题与可选首段 · 72dp 纯文节点 · 章节前后插入', 16, C.muted);
 screens.forEach((screen, i) => {
   const content = phone(screen, i);
   writeFileSync(join(output, `${screen[0]}.png`), render(svg(content, 480, 970), 2));
@@ -206,7 +206,7 @@ screens.forEach((screen, i) => {
 });
 writeFileSync(join(output, '00-原型总览.png'), render(svg(board, 1536, 3100), 1));
 
-let detailBoard = text(24, 45, '图笺 PicNote  /  纯文、章节与新建', 26, C.ink, 600) + text(24, 77, '72dp 纯文卡 · 标题与可选首段 · 章节前后插入', 16, C.muted);
+let detailBoard = text(24, 45, '竹节笔记 Bambootes  /  纯文、章节与新建', 26, C.ink, 600) + text(24, 77, '72dp 纯文卡 · 标题与可选首段 · 章节前后插入', 16, C.muted);
 [0, 4, 5].forEach((screenIndex, i) => {
   detailBoard += `<g transform="translate(${24 + i * 504} 104)">${phone(screens[screenIndex], `detail-${i}`)}</g>`;
 });

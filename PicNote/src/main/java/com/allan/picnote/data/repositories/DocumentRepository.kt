@@ -6,6 +6,7 @@ import android.content.res.Resources
 import android.provider.MediaStore
 import androidx.room.withTransaction
 import com.allan.picnote.data.PicNoteDatabase
+import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.WelcomeDocumentTemplate
 import com.allan.picnote.data.entity.*
 import com.allan.picnote.data.markdown
@@ -33,7 +34,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 data class Saved<T>(val value: T, val mirrorFailed: Boolean = false)
-data class ImageDraft(val existing: NodeImageEntity? = null, val prepared: PreparedImage? = null, val name: String = "", val id: String = existing?.id ?: UUID.randomUUID().toString())
+data class ImageDraft(val existing: NodeImageEntity? = null, val prepared: PreparedImage? = null, val id: String = existing?.id ?: UUID.randomUUID().toString())
 data class HomeDocuments(val documents: List<DocumentSummary>, val content: DocumentContent?)
 
 /** 串行维护文档结构、WebP 副本、源 URI 映射与可重建的 Markdown 镜像。 */
@@ -42,6 +43,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
     private val mutex = Mutex()
     private val root = File(context.filesDir, "documents")
     private val draftRoot = File(context.filesDir, "image_drafts")
+    private val exportRoot = File(context.cacheDir, "shared/exports")
     private val activeDrafts = ConcurrentHashMap.newKeySet<String>()
     private val preparation = ImagePreparation(context)
     private val preferences = context.getSharedPreferences("picnote", Context.MODE_PRIVATE)
@@ -125,7 +127,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
             val template = context.assets.open("$assetDirectory/document.json").bufferedReader(Charsets.UTF_8).use {
                 Json.decodeFromString<WelcomeDocumentTemplate>(it.readText())
             }
-            val id = "welcome"
+            val id = WelcomeDocumentId
             val imageNodeId = "$id-image"
             val directory = File(root, "$id/media")
             val image = File(directory, template.imageFileName)
@@ -140,13 +142,14 @@ class DocumentRepository(private val context: Context, private val database: Pic
                     database.withTransaction {
                         dao.putDocument(DocumentEntity(id, template.title, System.currentTimeMillis()))
                         dao.putNodes(listOf(
-                            NodeEntity("$id-introduction", id, 1024, "introduction", template.introduction),
-                            NodeEntity(imageNodeId, id, 2048, "image"),
-                            NodeEntity("$id-instruction", id, 3072, "text", template.instruction),
-                            NodeEntity("$id-todo", id, 4096, "chapter", title = template.todoTitle),
+                            NodeEntity("$id-title", id, 1024, "title", title = template.title),
+                            NodeEntity("$id-introduction", id, 2048, "introduction", template.introduction),
+                            NodeEntity(imageNodeId, id, 3072, "body"),
+                            NodeEntity("$id-instruction", id, 4096, "body", template.instruction),
+                            NodeEntity("$id-todo", id, 5120, "chapter", title = template.todoTitle),
                         ))
                         dao.putImages(listOf(NodeImageEntity("$id-launcher", imageNodeId, id, 0, template.imageFileName,
-                            template.imageSha256, template.imageWidth, template.imageHeight, template.imageName)))
+                            template.imageSha256, template.imageWidth, template.imageHeight)))
                     }
                     committed = true
                     check(preferences.edit().putBoolean("welcome_initialized", true).putString("last_document", id).commit()) {
@@ -168,7 +171,10 @@ class DocumentRepository(private val context: Context, private val database: Pic
             withContext(NonCancellable) {
                 database.withTransaction {
                     dao.putDocument(DocumentEntity(id, title.trim(), System.currentTimeMillis()))
-                    if (firstBody.isNotBlank()) dao.putNodes(listOf(NodeEntity(UUID.randomUUID().toString(), id, 1024, "introduction", firstBody)))
+                    dao.putNodes(listOf(
+                        NodeEntity(UUID.randomUUID().toString(), id, 1024, "title", title = title.trim()),
+                        NodeEntity(UUID.randomUUID().toString(), id, 2048, "introduction", firstBody),
+                    ))
                 }
                 preferences.edit().putString("last_document", id).apply()
                 Saved(id, !writeMirror(id))
@@ -178,6 +184,9 @@ class DocumentRepository(private val context: Context, private val database: Pic
 
     suspend fun rename(id: String, title: String): Saved<Unit> = mutate(id) {
         require(title.trim().isNotEmpty()) { "请填写标题" }
+        val titleNode = dao.nodes(id).first()
+        require(titleNode.kind == "title") { "文档标题节点无效" }
+        dao.updateNode(titleNode.id, "title", "", title.trim())
         dao.renameDocument(id, title.trim(), System.currentTimeMillis())
     }
 
@@ -189,17 +198,22 @@ class DocumentRepository(private val context: Context, private val database: Pic
     }
 
     suspend fun deleteNode(documentId: String, nodeId: String): Saved<Unit> = mutate(documentId) {
-        require(dao.nodes(documentId).any { it.id == nodeId }) { "节点已删除" }
+        val index = dao.nodes(documentId).indexOfFirst { it.id == nodeId }
+        require(index >= 0) { "节点已删除" }
+        require(index >= 2) { "标题和主引言不能删除" }
         dao.deleteNode(nodeId)
     }
 
     suspend fun move(documentId: String, nodeId: String, beforeId: String?): Saved<Unit> = mutate(documentId) {
         val nodes = dao.nodes(documentId).toMutableList()
-        val node = nodes.firstOrNull { it.id == nodeId } ?: error("节点已删除")
+        val sourceIndex = nodes.indexOfFirst { it.id == nodeId }
+        require(sourceIndex >= 0) { "节点已删除" }
+        require(sourceIndex >= 2) { "标题和主引言不能移动" }
+        val node = nodes[sourceIndex]
         if (beforeId == nodeId) return@mutate
         nodes.remove(node)
         val index = if (beforeId == null) nodes.size else nodes.indexOfFirst { it.id == beforeId }
-        require(index >= 0) { "排序位置已失效，请重试" }
+        require(index >= 2) { "不能移动到标题或主引言之前" }
         nodes.add(index, node)
         placeKey(documentId, nodes.map { it.id }, index)
     }
@@ -219,12 +233,28 @@ class DocumentRepository(private val context: Context, private val database: Pic
         else dao.setSortKey(order[index], key)
     }
 
+    suspend fun mergeNodes(documentId: String, firstId: String, secondId: String): Saved<String> = mutate(documentId) {
+        require(firstId != secondId) { "请选择两个不同的正文节点" }
+        val content = snapshot(documentId)
+        val selected = content.nodes.filter { it.node.id == firstId || it.node.id == secondId }
+        require(selected.size == 2 && selected.all { it.node.kind == "body" }) { "合并节点已变化，请重新选择两个正文节点" }
+        // 以当前文档顺序为准，先转移引用，再删除较后节点，避免级联删除图片。
+        val earlier = selected[0]
+        val later = selected[1]
+        val body = selected.map { it.node.bodyMarkdown }.filter { it.isNotBlank() }.joinToString("\n")
+        dao.updateNode(earlier.node.id, "body", body, "")
+        dao.putImages((earlier.images + later.images).mapIndexed { index, image ->
+            image.copy(nodeId = earlier.node.id, sortIndex = index)
+        })
+        dao.deleteNode(later.node.id)
+        earlier.node.id
+    }
+
     suspend fun saveNode(
         documentId: String,
         nodeId: String?,
         anchorId: String?,
-        after: Boolean,
-        chapter: Boolean,
+        kind: String,
         title: String,
         body: String,
         images: List<ImageDraft>,
@@ -232,11 +262,18 @@ class DocumentRepository(private val context: Context, private val database: Pic
         mutex.withLock {
             val sourceVersions = dao.scanStates().associate { it.volume to it.version }
             val original = snapshot(documentId)
-            if (nodeId != null) require(original.nodes.any { it.node.id == nodeId }) { "节点已删除，请返回重试" }
-            val introduction = original.nodes.firstOrNull { it.node.id == nodeId }?.node?.kind == "introduction"
-            require(!introduction || (!chapter && images.isEmpty())) { "引言不能添加图片或改为章节" }
-            if (anchorId != null) require(original.nodes.any { it.node.id == anchorId }) { "插入位置已失效，请重新选择" }
-            require(!chapter || title.trim().isNotEmpty()) { "请填写章节标题" }
+            val currentIndex = original.nodes.indexOfFirst { it.node.id == nodeId }
+            val current = original.nodes.getOrNull(currentIndex)
+            if (nodeId != null) require(current != null) { "节点已删除，请返回重试" }
+            val savedKind = current?.node?.kind ?: kind
+            require(savedKind in listOf("title", "introduction", "chapter", "body")) { "节点类型无效" }
+            require(nodeId != null || savedKind != "title") { "文档只能有一个标题" }
+            require(current == null || savedKind == kind) { "不能更改节点类型" }
+            require(savedKind == "body" || images.isEmpty()) { "此节点不能添加图片" }
+            val anchorIndex = if (anchorId == null) original.nodes.size else original.nodes.indexOfFirst { it.node.id == anchorId }
+            if (nodeId == null) require(anchorIndex >= 2) { "不能插入到标题或主引言之前" }
+            require(savedKind !in listOf("title", "chapter") || title.trim().isNotEmpty()) { "请填写标题" }
+            require(savedKind != "introduction" || currentIndex == 1 || body.isNotBlank()) { "请填写引言" }
             val createdFiles = mutableListOf<File>()
             var committed = false
             try {
@@ -245,21 +282,20 @@ class DocumentRepository(private val context: Context, private val database: Pic
                 val savedImages = mutableListOf<NodeImageEntity>()
                 val mappings = mutableListOf<SourceImageEntity>()
                 val consumedUris = mutableSetOf<String>()
-                if (!chapter) images.forEach { draft ->
+                images.forEach { draft ->
                     currentCoroutineContext().ensureActive()
                     val existing = draft.existing
                     if (existing != null) {
-                        val current = original.nodes.firstOrNull { it.node.id == nodeId }?.images?.firstOrNull { it.id == existing.id }
-                            ?: error("图片已失效")
-                        require(current.hash !in byHash) { "这张图片已存在于当前文档，原节点尚未修改。" }
-                        val image = current.copy(sortIndex = savedImages.size, name = draft.name)
-                        savedImages += image
-                        byHash[image.hash] = image
+                        val image = current?.images?.firstOrNull { it.id == existing.id } ?: error("图片已失效")
+                        require(image.hash !in byHash) { "这张图片已存在于当前文档，原节点尚未修改。" }
+                        val saved = image.copy(sortIndex = savedImages.size)
+                        savedImages += saved
+                        byHash[saved.hash] = saved
                     } else {
                         val prepared = draft.prepared ?: error("图片尚未准备完成，请重新选择")
                         val duplicate = byHash[prepared.hash]
                         require(nodeId == null || duplicate == null) { "这张图片已存在于当前文档，请选择其他图片。原节点尚未修改。" }
-                        val image = duplicate ?: copyPreparedImage(documentId, id, prepared, draft.name, savedImages.size, createdFiles, sourceVersions)
+                        val image = duplicate ?: copyPreparedImage(documentId, id, prepared, savedImages.size, createdFiles, sourceVersions)
                         if (duplicate == null) {
                             savedImages += image
                             byHash[image.hash] = image
@@ -268,24 +304,27 @@ class DocumentRepository(private val context: Context, private val database: Pic
                         sourceUri(prepared, sourceVersions)?.let { consumedUris += it }
                     }
                 }
-                require(chapter || body.isNotBlank() || savedImages.isNotEmpty()) { "请填写文字或添加尚未导入的图片" }
+                require(savedKind != "body" || body.isNotBlank() || savedImages.isNotEmpty()) { "请填写文字或添加尚未导入的图片" }
                 currentCoroutineContext().ensureActive()
                 withContext(NonCancellable) {
                     database.withTransaction {
                         require(dao.document(documentId) != null) { "文档已删除" }
                         val currentNodes = dao.nodes(documentId)
-                        if (anchorId != null) require(currentNodes.any { it.id == anchorId }) { "插入位置已失效，请重新选择" }
-                        val kind = when { introduction -> "introduction"; chapter -> "chapter"; savedImages.isEmpty() -> "text"; else -> "image" }
                         val validSources = validSourceUris(consumedUris + savedImages.mapNotNull { it.sourceUri }, sourceVersions)
+                        val savedTitle = if (savedKind == "title" || savedKind == "chapter") title.trim() else ""
+                        val savedBody = if (savedKind == "body" || savedKind == "introduction") body else ""
                         if (nodeId == null) {
-                            dao.putNodes(listOf(NodeEntity(id, documentId, 0, kind, body, title.trim())))
+                            val index = if (anchorId == null) currentNodes.size else currentNodes.indexOfFirst { it.id == anchorId }
+                            require(index >= 2) { "插入位置已失效，请重新选择" }
+                            dao.putNodes(listOf(NodeEntity(id, documentId, 0, savedKind, savedBody, savedTitle)))
                             val order = currentNodes.map { it.id }.toMutableList()
-                            val index = if (anchorId == null) order.size else order.indexOf(anchorId) + if (after) 1 else 0
                             order.add(index, id)
                             placeKey(documentId, order, index)
                         } else {
-                            dao.updateNode(id, kind, body, title.trim())
+                            require(currentNodes.any { it.id == nodeId && it.kind == savedKind }) { "节点已变化，请返回重试" }
+                            dao.updateNode(id, savedKind, savedBody, savedTitle)
                             dao.deleteImages(id)
+                            if (savedKind == "title") dao.renameDocument(documentId, savedTitle, System.currentTimeMillis())
                         }
                         dao.putImages(savedImages.map { if (it.sourceUri != null && it.sourceUri !in validSources) it.copy(sourceUri = null) else it })
                         dao.putSourceImages(mappings)
@@ -322,11 +361,11 @@ class DocumentRepository(private val context: Context, private val database: Pic
                         currentCoroutineContext().ensureActive()
                         val nodeId = UUID.randomUUID().toString()
                         val duplicate = byHash[source.hash]
-                        val image = duplicate ?: copyPreparedImage(documentId, nodeId, source, "", 0, createdFiles, sourceVersions)
+                        val image = duplicate ?: copyPreparedImage(documentId, nodeId, source, 0, createdFiles, sourceVersions)
                         mappings += SourceImageEntity(source.sourceUri, documentId, image.fileName)
                         sourceUri(source, sourceVersions)?.let { consumedUris += it }
                         if (duplicate == null) {
-                            nodes += NodeEntity(nodeId, documentId, 0, "image")
+                            nodes += NodeEntity(nodeId, documentId, 0, "body")
                             images += image
                             byHash[image.hash] = image
                         }
@@ -374,7 +413,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
         }.toSet()
     }
 
-    private suspend fun copyPreparedImage(documentId: String, nodeId: String, image: PreparedImage, name: String, index: Int,
+    private suspend fun copyPreparedImage(documentId: String, nodeId: String, image: PreparedImage, index: Int,
         createdFiles: MutableList<File>, versions: Map<String, String>): NodeImageEntity {
         require(image.file.isFile && image.file.canRead()) { "图片草稿不可读，请重新选择" }
         val directory = File(root, "$documentId/media").apply { check(isDirectory || mkdirs()) { "无法创建图片目录" } }
@@ -400,7 +439,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
             } finally { temporary.delete() }
         }
         return NodeImageEntity(UUID.randomUUID().toString(), nodeId, documentId, index, fileName, image.hash,
-            image.width, image.height, name, sourceUri(image, versions))
+            image.width, image.height, sourceUri(image, versions))
     }
 
     private suspend fun <T> mutate(id: String, block: suspend () -> T): Saved<T> = withContext(Dispatchers.IO) {
@@ -445,9 +484,9 @@ class DocumentRepository(private val context: Context, private val database: Pic
     suspend fun export(id: String): File = withContext(Dispatchers.IO) {
         mutex.withLock {
             val content = snapshot(id)
-            val directory = File(context.cacheDir, "exports").apply { mkdirs() }
-            val output = File(directory, "picnote-${UUID.randomUUID()}.zip")
-            val temporary = File(directory, ".${output.name}.tmp")
+            check(exportRoot.isDirectory || exportRoot.mkdirs()) { "无法创建文档导出目录" }
+            val output = File(exportRoot, "picnote-${UUID.randomUUID()}.zip")
+            val temporary = File(exportRoot, ".${output.name}.tmp")
             try {
                 ZipOutputStream(FileOutputStream(temporary)).use { zip ->
                     zip.putNextEntry(ZipEntry("document.md"))
@@ -483,7 +522,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
             }
             draftRoot.listFiles()?.filter { it.name !in activeDrafts }?.forEach { it.deleteRecursively() }
             val expiry = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
-            File(context.cacheDir, "exports").listFiles()?.filter { it.name.endsWith(".tmp") || it.lastModified() < expiry }?.forEach { it.delete() }
+            exportRoot.listFiles()?.filter { it.name.endsWith(".tmp") || it.lastModified() < expiry }?.forEach { it.delete() }
             val failures = mutableSetOf<String>()
             summaries.forEach { document ->
                 val mirror = File(root, "${document.id}/doc.md")

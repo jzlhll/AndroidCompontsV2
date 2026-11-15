@@ -83,11 +83,11 @@ function phone(x, label, body) {
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1500" viewBox="0 0 1080 1500">
   <rect width="1080" height="1500" fill="#E9EEEA"/>
   <g font-family="Hiragino Sans GB, PingFang SC, sans-serif">
-    ${text(64, 64, '图笺 · 首次使用文档', 34, C.ink, 600)}
+    ${text(64, 64, '竹节笔记 · 首次使用文档', 34, C.ink, 600)}
     ${text(64, 100, '首次进入即有内容；四个可编辑节点组成同一篇教程。', 18, C.muted)}
     ${phone(64, '节点页', nodes())}
     ${phone(596, '文档页（完整内容示意，可滚动）', document())}
-    ${text(64, 1468, '系统中文使用“图笺”配图，其他语言使用“PicNote”配图；后续内容留在 TODO 章节。', 16, C.muted)}
+    ${text(64, 1468, '系统中文使用“竹节笔记”配图，其他语言使用“Bambootes”配图；后续内容留在 TODO 章节。', 16, C.muted)}
   </g>
 </svg>`;
 const renderer = new Resvg(svg, { font: { loadSystemFonts: true }, fitTo: { mode: 'original' } });

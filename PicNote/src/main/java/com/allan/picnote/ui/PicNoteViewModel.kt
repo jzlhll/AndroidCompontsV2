@@ -9,7 +9,6 @@ import com.allan.picnote.logEx
 import com.allan.picnote.logd
 import com.allan.picnote.data.PermissionHistory
 import com.allan.picnote.data.entity.*
-import com.allan.picnote.data.markdown
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.data.repositories.Saved
 import com.allan.picnote.media.*
@@ -40,7 +39,6 @@ data class HomeState(
     val busy: Boolean = false,
     val message: String? = null,
     val mirrorFailed: Boolean = false,
-    val markdownToCopy: String? = null,
     val exportedFile: File? = null,
     val permissionHistory: PermissionHistory? = null,
     val permissionHistoryLoading: Boolean = true,
@@ -180,7 +178,7 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
             var added = 0
             val access = photoAccess(app)
             logd("event=image_check_start $fields access=$access")
-            mutableStateFlow.update { it.copy(access = access, scanning = access == PhotoAccess.Full, scanError = null,
+            mutableStateFlow.update { it.copy(access = access, scanning = true, scanError = null,
                 pending = if (access == PhotoAccess.Full) it.pending else emptyList()) }
             try {
                 if (access == PhotoAccess.Full) {
@@ -283,6 +281,15 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         }
     }
 
+    fun mergeNodes(firstId: String, secondId: String) {
+        val id = stateFlow.value.content?.document?.id ?: return
+        operation {
+            val result = repository.mergeNodes(id, firstId, secondId)
+            reload(id)
+            saved(id, result)
+        }
+    }
+
     fun importImages(documentId: String, uris: List<String>, candidateUris: List<String> = emptyList()) = operation(waitForLoading = true) {
         val result = repository.importImages(documentId, uris, candidateUris)
         reload(documentId)
@@ -306,14 +313,6 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         mutableStateFlow.update { it.copy(pending = pending) }
     }
 
-    fun copyMarkdown() {
-        val id = stateFlow.value.content?.document?.id ?: return
-        operation {
-            val markdown = repository.content(id).markdown()
-            mutableStateFlow.update { it.copy(markdownToCopy = markdown) }
-        }
-    }
-
     fun export() {
         val id = stateFlow.value.content?.document?.id ?: return
         operation {
@@ -333,7 +332,6 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
 
     fun showMessage(message: String) { mutableStateFlow.update { it.copy(message = message) } }
     fun clearMessage() { mutableStateFlow.update { it.copy(message = null) } }
-    fun consumedCopy() { mutableStateFlow.update { it.copy(markdownToCopy = null) } }
     fun consumedExport() { mutableStateFlow.update { it.copy(exportedFile = null) } }
     fun mirrorResult(documentId: String, failed: Boolean) {
         if (failed) mirrorFailures.add(documentId) else mirrorFailures.remove(documentId)

@@ -1,12 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 108 108">
-  <title>PicNote</title>
-  <rect width="108" height="108" fill="#FFFFFF"/>
-  <g transform="translate(13.4 12.5) scale(0.065)">
-    <path fill="none" stroke="#0078D4" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" d="M864,300 C864,277 846,258 824,258 H386 C333,258 291,301 291,354 V816 C291,851 307,875 334,882"/>
-    <path fill="none" stroke="#293545" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" d="M455,355 H875 C922,355 960,393 960,442 V930 C960,978 922,1017 875,1017 H455 C407,1017 369,978 369,930 V442 C369,394 407,355 455,355 Z"/>
-    <path fill="none" stroke="#293545" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" d="M460,675 L596,544 Q608,532 620,544 L722,642 L776,608 Q787,600 798,609 L867,671"/>
-    <path fill="#0078D4" d="M739,490 A42,42 0,1 0,823 490 A42,42 0,1 0,739 490 Z"/>
-    <path fill="none" stroke="#293545" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" d="M482,784 H847"/>
-    <path fill="none" stroke="#293545" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" d="M482,883 H847"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes</title>
+  <desc>纯白背景上的竹绿竹节笔，竹叶与笔尖构成统一标志。</desc>
+  <rect width="512" height="512" fill="#FFFFFF"/>
+  <g transform="rotate(30 256 256)" fill="#257956">
+    <path d="M234 154V134a22 22 0 0 1 44 0v20Z"/>
+    <path d="M234 166h44v66h-44Z"/>
+    <rect x="228" y="152" width="56" height="9" rx="4.5"/>
+    <path d="M234 244h44v66h-44Z"/>
+    <rect x="228" y="230" width="56" height="9" rx="4.5"/>
+    <rect x="228" y="308" width="56" height="9" rx="4.5"/>
+    <path d="M234 324h44l-5 30-17 35-17-35Z"/>
+    <path d="M279 209c4-30 20-50 48-61-2 30-17 51-48 61Z"/>
+    <path d="M280 211c19-12 40-10 60 5-22 9-43 8-60-5Z"/>
+  </g>
+  <g transform="rotate(30 256 256)" fill="#FFFFFF">
+    <circle cx="256" cy="339" r="4.5"/>
+    <path d="M253.8 339h4.4v43h-4.4Z"/>
   </g>
 </svg>

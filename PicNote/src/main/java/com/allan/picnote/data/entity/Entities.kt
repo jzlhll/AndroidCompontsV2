@@ -41,7 +41,6 @@ data class NodeImageEntity(
     val hash: String,
     val width: Int,
     val height: Int,
-    val name: String = "",
     @ColumnInfo(name = "source_uri") val sourceUri: String? = null,
 )
 

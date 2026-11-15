@@ -1,0 +1,340 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1040" viewBox="0 0 1680 1040">
+  <title>竹节笔记 / Bambootes · 三款图标候选</title>
+  <rect width="1680" height="1040" fill="#F2F3EC"/>
+  <g font-family="Hiragino Sans GB, PingFang SC, sans-serif">
+    <text x="60" y="67" font-size="17" font-weight="500" fill="#68806C" font-family="Avenir Next, sans-serif">B A M B O O T E S</text>
+    <text x="60" y="131" font-size="48" font-weight="600" fill="#193B2D" >竹节笔记</text>
+    <text x="285" y="131" font-size="35" font-weight="400" fill="#68806C" font-family="Avenir Next, sans-serif">/ Bambootes</text>
+    <text x="60" y="176" font-size="20" font-weight="400" fill="#718075" >以竹为形，把灵感一节一节记下来。</text>
+    <text x="1620" y="131" font-size="18" font-weight="400" fill="#718075" text-anchor="end">图标设计 · 3 个方向</text>
+    <g transform="translate(60 214)">
+    <rect width="500" height="756" rx="30" fill="#FFFFFF"/>
+    <rect x="22" y="22" width="456" height="364" rx="20" fill="#E6F0E7"/>
+    <text x="46" y="65" font-size="20" font-weight="600" fill="#166048" font-family="Avenir Next, sans-serif">01</text>
+    <svg x="114" y="68" width="272" height="272" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 01 竹节笔</title>
+  <desc>翠绿底色上的米白竹节笔，竹叶与笔尖构成统一标志。</desc>
+  <defs>
+    <linearGradient id="pen-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#238B64"/>
+      <stop offset="1" stop-color="#0E5844"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#pen-background)"/>
+  <g transform="rotate(30 256 256)" fill="#FBF6DF">
+    <path d="M234 154V134a22 22 0 0 1 44 0v20Z"/>
+    <path d="M234 166h44v66h-44Z"/>
+    <rect x="228" y="152" width="56" height="9" rx="4.5"/>
+    <path d="M234 244h44v66h-44Z"/>
+    <rect x="228" y="230" width="56" height="9" rx="4.5"/>
+    <rect x="228" y="308" width="56" height="9" rx="4.5"/>
+    <path d="M234 324h44l-5 30-17 35-17-35Z"/>
+    <path d="M279 209c4-30 20-50 48-61-2 30-17 51-48 61Z"/>
+    <path d="M280 211c19-12 40-10 60 5-22 9-43 8-60-5Z"/>
+  </g>
+  <g transform="rotate(30 256 256)" fill="#146548">
+    <circle cx="256" cy="339" r="4.5"/>
+    <path d="M253.8 339h4.4v43h-4.4Z"/>
+  </g>
+</svg>
+    <text x="38" y="444" font-size="30" font-weight="600" fill="#193B2D" >竹节笔</text>
+    <text x="38" y="482" font-size="17" font-weight="400" fill="#778378" >书写 · 简洁 · 鲜明</text>
+    <text x="38" y="523" font-size="17" font-weight="400" fill="#56675B" >把竹节化作笔杆，竹叶点出自然气息。</text>
+    <path d="M38 558H462" stroke="#E9ECE5"/>
+    <svg x="38" y="588" width="64" height="64" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 01 竹节笔</title>
+  <desc>翠绿底色上的米白竹节笔，竹叶与笔尖构成统一标志。</desc>
+  <defs>
+    <linearGradient id="pen-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#238B64"/>
+      <stop offset="1" stop-color="#0E5844"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#pen-background)"/>
+  <g transform="rotate(30 256 256)" fill="#FBF6DF">
+    <path d="M234 154V134a22 22 0 0 1 44 0v20Z"/>
+    <path d="M234 166h44v66h-44Z"/>
+    <rect x="228" y="152" width="56" height="9" rx="4.5"/>
+    <path d="M234 244h44v66h-44Z"/>
+    <rect x="228" y="230" width="56" height="9" rx="4.5"/>
+    <rect x="228" y="308" width="56" height="9" rx="4.5"/>
+    <path d="M234 324h44l-5 30-17 35-17-35Z"/>
+    <path d="M279 209c4-30 20-50 48-61-2 30-17 51-48 61Z"/>
+    <path d="M280 211c19-12 40-10 60 5-22 9-43 8-60-5Z"/>
+  </g>
+  <g transform="rotate(30 256 256)" fill="#146548">
+    <circle cx="256" cy="339" r="4.5"/>
+    <path d="M253.8 339h4.4v43h-4.4Z"/>
+  </g>
+</svg>
+    <text x="119" y="615" font-size="19" font-weight="500" fill="#193B2D" >竹节笔记</text>
+    <text x="119" y="643" font-size="16" font-weight="400" fill="#718075" font-family="Avenir Next, sans-serif">Bambootes</text>
+    <svg x="358" y="608" width="40" height="40" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 01 竹节笔</title>
+  <desc>翠绿底色上的米白竹节笔，竹叶与笔尖构成统一标志。</desc>
+  <defs>
+    <linearGradient id="pen-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#238B64"/>
+      <stop offset="1" stop-color="#0E5844"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#pen-background)"/>
+  <g transform="rotate(30 256 256)" fill="#FBF6DF">
+    <path d="M234 154V134a22 22 0 0 1 44 0v20Z"/>
+    <path d="M234 166h44v66h-44Z"/>
+    <rect x="228" y="152" width="56" height="9" rx="4.5"/>
+    <path d="M234 244h44v66h-44Z"/>
+    <rect x="228" y="230" width="56" height="9" rx="4.5"/>
+    <rect x="228" y="308" width="56" height="9" rx="4.5"/>
+    <path d="M234 324h44l-5 30-17 35-17-35Z"/>
+    <path d="M279 209c4-30 20-50 48-61-2 30-17 51-48 61Z"/>
+    <path d="M280 211c19-12 40-10 60 5-22 9-43 8-60-5Z"/>
+  </g>
+  <g transform="rotate(30 256 256)" fill="#146548">
+    <circle cx="256" cy="339" r="4.5"/>
+    <path d="M253.8 339h4.4v43h-4.4Z"/>
+  </g>
+</svg>
+    <svg x="422" y="624" width="24" height="24" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 01 竹节笔</title>
+  <desc>翠绿底色上的米白竹节笔，竹叶与笔尖构成统一标志。</desc>
+  <defs>
+    <linearGradient id="pen-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#238B64"/>
+      <stop offset="1" stop-color="#0E5844"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#pen-background)"/>
+  <g transform="rotate(30 256 256)" fill="#FBF6DF">
+    <path d="M234 154V134a22 22 0 0 1 44 0v20Z"/>
+    <path d="M234 166h44v66h-44Z"/>
+    <rect x="228" y="152" width="56" height="9" rx="4.5"/>
+    <path d="M234 244h44v66h-44Z"/>
+    <rect x="228" y="230" width="56" height="9" rx="4.5"/>
+    <rect x="228" y="308" width="56" height="9" rx="4.5"/>
+    <path d="M234 324h44l-5 30-17 35-17-35Z"/>
+    <path d="M279 209c4-30 20-50 48-61-2 30-17 51-48 61Z"/>
+    <path d="M280 211c19-12 40-10 60 5-22 9-43 8-60-5Z"/>
+  </g>
+  <g transform="rotate(30 256 256)" fill="#146548">
+    <circle cx="256" cy="339" r="4.5"/>
+    <path d="M253.8 339h4.4v43h-4.4Z"/>
+  </g>
+</svg>
+    <text x="38" y="710" font-size="14" font-weight="400" fill="#8A958C" >桌面预览</text>
+    <text x="351" y="710" font-size="13" font-weight="400" fill="#8A958C" font-family="Avenir Next, sans-serif">40 px</text>
+    <text x="414" y="710" font-size="13" font-weight="400" fill="#8A958C" font-family="Avenir Next, sans-serif">24 px</text>
+  </g><g transform="translate(590 214)">
+    <rect width="500" height="756" rx="30" fill="#FFFFFF"/>
+    <rect x="22" y="22" width="456" height="364" rx="20" fill="#EEEDE3"/>
+    <text x="46" y="65" font-size="20" font-weight="600" fill="#255E47" font-family="Avenir Next, sans-serif">02</text>
+    <svg x="114" y="68" width="272" height="272" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 02 竹叶书页</title>
+  <desc>暖白纸张、竹节书脊与竹叶，表达图文笔记和自然生长。</desc>
+  <rect width="512" height="512" rx="112" fill="#F3F0E5"/>
+  <path d="M173 127h141l48 48v184a24 24 0 0 1-24 24H173a24 24 0 0 1-24-24V151a24 24 0 0 1 24-24Z" fill="#FFFEF8" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M314 128v33a14 14 0 0 0 14 14h33" fill="#DDE7D5" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M175 123h19v264h-21a29 29 0 0 1-29-29V152a29 29 0 0 1 31-29Z" fill="#255E47"/>
+  <rect x="142" y="204" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <rect x="142" y="294" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <path d="M239 267c18-42 43-64 71-72" fill="none" stroke="#497854" stroke-width="6" stroke-linecap="round"/>
+  <path d="M262 230c-7-28-1-48 17-62 8 26 4 47-17 62Z" fill="#255E47"/>
+  <path d="M268 225c15-27 35-37 61-35-10 24-30 37-61 35Z" fill="#497854"/>
+  <path d="M249 250c-5-18-14-29-30-34-2 19 8 31 30 34Z" fill="#7E9B67"/>
+  <path d="M232 298h89M232 326h63" fill="none" stroke="#7E9B67" stroke-width="9" stroke-linecap="round"/>
+</svg>
+    <text x="38" y="444" font-size="30" font-weight="600" fill="#193B2D" >竹叶书页</text>
+    <text x="38" y="482" font-size="17" font-weight="400" fill="#778378" >图文 · 清雅 · 亲切</text>
+    <text x="38" y="523" font-size="17" font-weight="400" fill="#56675B" >竹节成为书脊，竹叶长在留白的纸页上。</text>
+    <path d="M38 558H462" stroke="#E9ECE5"/>
+    <svg x="38" y="588" width="64" height="64" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 02 竹叶书页</title>
+  <desc>暖白纸张、竹节书脊与竹叶，表达图文笔记和自然生长。</desc>
+  <rect width="512" height="512" rx="112" fill="#F3F0E5"/>
+  <path d="M173 127h141l48 48v184a24 24 0 0 1-24 24H173a24 24 0 0 1-24-24V151a24 24 0 0 1 24-24Z" fill="#FFFEF8" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M314 128v33a14 14 0 0 0 14 14h33" fill="#DDE7D5" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M175 123h19v264h-21a29 29 0 0 1-29-29V152a29 29 0 0 1 31-29Z" fill="#255E47"/>
+  <rect x="142" y="204" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <rect x="142" y="294" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <path d="M239 267c18-42 43-64 71-72" fill="none" stroke="#497854" stroke-width="6" stroke-linecap="round"/>
+  <path d="M262 230c-7-28-1-48 17-62 8 26 4 47-17 62Z" fill="#255E47"/>
+  <path d="M268 225c15-27 35-37 61-35-10 24-30 37-61 35Z" fill="#497854"/>
+  <path d="M249 250c-5-18-14-29-30-34-2 19 8 31 30 34Z" fill="#7E9B67"/>
+  <path d="M232 298h89M232 326h63" fill="none" stroke="#7E9B67" stroke-width="9" stroke-linecap="round"/>
+</svg>
+    <text x="119" y="615" font-size="19" font-weight="500" fill="#193B2D" >竹节笔记</text>
+    <text x="119" y="643" font-size="16" font-weight="400" fill="#718075" font-family="Avenir Next, sans-serif">Bambootes</text>
+    <svg x="358" y="608" width="40" height="40" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 02 竹叶书页</title>
+  <desc>暖白纸张、竹节书脊与竹叶，表达图文笔记和自然生长。</desc>
+  <rect width="512" height="512" rx="112" fill="#F3F0E5"/>
+  <path d="M173 127h141l48 48v184a24 24 0 0 1-24 24H173a24 24 0 0 1-24-24V151a24 24 0 0 1 24-24Z" fill="#FFFEF8" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M314 128v33a14 14 0 0 0 14 14h33" fill="#DDE7D5" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M175 123h19v264h-21a29 29 0 0 1-29-29V152a29 29 0 0 1 31-29Z" fill="#255E47"/>
+  <rect x="142" y="204" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <rect x="142" y="294" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <path d="M239 267c18-42 43-64 71-72" fill="none" stroke="#497854" stroke-width="6" stroke-linecap="round"/>
+  <path d="M262 230c-7-28-1-48 17-62 8 26 4 47-17 62Z" fill="#255E47"/>
+  <path d="M268 225c15-27 35-37 61-35-10 24-30 37-61 35Z" fill="#497854"/>
+  <path d="M249 250c-5-18-14-29-30-34-2 19 8 31 30 34Z" fill="#7E9B67"/>
+  <path d="M232 298h89M232 326h63" fill="none" stroke="#7E9B67" stroke-width="9" stroke-linecap="round"/>
+</svg>
+    <svg x="422" y="624" width="24" height="24" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 02 竹叶书页</title>
+  <desc>暖白纸张、竹节书脊与竹叶，表达图文笔记和自然生长。</desc>
+  <rect width="512" height="512" rx="112" fill="#F3F0E5"/>
+  <path d="M173 127h141l48 48v184a24 24 0 0 1-24 24H173a24 24 0 0 1-24-24V151a24 24 0 0 1 24-24Z" fill="#FFFEF8" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M314 128v33a14 14 0 0 0 14 14h33" fill="#DDE7D5" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M175 123h19v264h-21a29 29 0 0 1-29-29V152a29 29 0 0 1 31-29Z" fill="#255E47"/>
+  <rect x="142" y="204" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <rect x="142" y="294" width="55" height="8" rx="4" fill="#F3F0E5"/>
+  <path d="M239 267c18-42 43-64 71-72" fill="none" stroke="#497854" stroke-width="6" stroke-linecap="round"/>
+  <path d="M262 230c-7-28-1-48 17-62 8 26 4 47-17 62Z" fill="#255E47"/>
+  <path d="M268 225c15-27 35-37 61-35-10 24-30 37-61 35Z" fill="#497854"/>
+  <path d="M249 250c-5-18-14-29-30-34-2 19 8 31 30 34Z" fill="#7E9B67"/>
+  <path d="M232 298h89M232 326h63" fill="none" stroke="#7E9B67" stroke-width="9" stroke-linecap="round"/>
+</svg>
+    <text x="38" y="710" font-size="14" font-weight="400" fill="#8A958C" >桌面预览</text>
+    <text x="351" y="710" font-size="13" font-weight="400" fill="#8A958C" font-family="Avenir Next, sans-serif">40 px</text>
+    <text x="414" y="710" font-size="13" font-weight="400" fill="#8A958C" font-family="Avenir Next, sans-serif">24 px</text>
+  </g><g transform="translate(1120 214)">
+    <rect width="500" height="756" rx="30" fill="#FFFFFF"/>
+    <rect x="22" y="22" width="456" height="364" rx="20" fill="#F7EBD1"/>
+    <text x="46" y="65" font-size="20" font-weight="600" fill="#5D4A25" font-family="Avenir Next, sans-serif">03</text>
+    <svg x="114" y="68" width="272" height="272" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 03 竹简节点</title>
+  <desc>三枚竹节组成展开的竹简，以竹节和连线呼应可编排的笔记节点。</desc>
+  <defs>
+    <linearGradient id="slips-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4D58F"/>
+      <stop offset="1" stop-color="#E6B968"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#slips-background)"/>
+  <g fill="#204D3C">
+    <g transform="rotate(-11 256 295)">
+      <rect x="159" y="161" width="48" height="207" rx="18"/>
+      <rect x="154" y="219" width="58" height="10" rx="5"/>
+      <rect x="154" y="299" width="58" height="10" rx="5"/>
+    </g>
+    <rect x="232" y="121" width="48" height="263" rx="18"/>
+    <rect x="227" y="200" width="58" height="10" rx="5"/>
+    <rect x="227" y="294" width="58" height="10" rx="5"/>
+    <g transform="rotate(11 256 295)">
+      <rect x="305" y="161" width="48" height="207" rx="18"/>
+      <rect x="300" y="219" width="58" height="10" rx="5"/>
+      <rect x="300" y="299" width="58" height="10" rx="5"/>
+    </g>
+  </g>
+  <g fill="none" stroke="#EDC77F" stroke-width="5" stroke-linecap="round">
+    <path d="m154 232 47-9M236 214h40M311 223l47 9"/>
+    <path d="m169 310 47-9M236 308h40M296 301l47 9"/>
+  </g>
+  <path d="M280 162c12-23 32-34 57-33-10 23-29 35-57 33Z" fill="#204D3C"/>
+</svg>
+    <text x="38" y="444" font-size="30" font-weight="600" fill="#193B2D" >竹简节点</text>
+    <text x="38" y="482" font-size="17" font-weight="400" fill="#778378" >竹简 · 节点 · 秩序</text>
+    <text x="38" y="523" font-size="17" font-weight="400" fill="#56675B" >三段竹简并列，呼应逐节整理的笔记。</text>
+    <path d="M38 558H462" stroke="#E9ECE5"/>
+    <svg x="38" y="588" width="64" height="64" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 03 竹简节点</title>
+  <desc>三枚竹节组成展开的竹简，以竹节和连线呼应可编排的笔记节点。</desc>
+  <defs>
+    <linearGradient id="slips-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4D58F"/>
+      <stop offset="1" stop-color="#E6B968"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#slips-background)"/>
+  <g fill="#204D3C">
+    <g transform="rotate(-11 256 295)">
+      <rect x="159" y="161" width="48" height="207" rx="18"/>
+      <rect x="154" y="219" width="58" height="10" rx="5"/>
+      <rect x="154" y="299" width="58" height="10" rx="5"/>
+    </g>
+    <rect x="232" y="121" width="48" height="263" rx="18"/>
+    <rect x="227" y="200" width="58" height="10" rx="5"/>
+    <rect x="227" y="294" width="58" height="10" rx="5"/>
+    <g transform="rotate(11 256 295)">
+      <rect x="305" y="161" width="48" height="207" rx="18"/>
+      <rect x="300" y="219" width="58" height="10" rx="5"/>
+      <rect x="300" y="299" width="58" height="10" rx="5"/>
+    </g>
+  </g>
+  <g fill="none" stroke="#EDC77F" stroke-width="5" stroke-linecap="round">
+    <path d="m154 232 47-9M236 214h40M311 223l47 9"/>
+    <path d="m169 310 47-9M236 308h40M296 301l47 9"/>
+  </g>
+  <path d="M280 162c12-23 32-34 57-33-10 23-29 35-57 33Z" fill="#204D3C"/>
+</svg>
+    <text x="119" y="615" font-size="19" font-weight="500" fill="#193B2D" >竹节笔记</text>
+    <text x="119" y="643" font-size="16" font-weight="400" fill="#718075" font-family="Avenir Next, sans-serif">Bambootes</text>
+    <svg x="358" y="608" width="40" height="40" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 03 竹简节点</title>
+  <desc>三枚竹节组成展开的竹简，以竹节和连线呼应可编排的笔记节点。</desc>
+  <defs>
+    <linearGradient id="slips-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4D58F"/>
+      <stop offset="1" stop-color="#E6B968"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#slips-background)"/>
+  <g fill="#204D3C">
+    <g transform="rotate(-11 256 295)">
+      <rect x="159" y="161" width="48" height="207" rx="18"/>
+      <rect x="154" y="219" width="58" height="10" rx="5"/>
+      <rect x="154" y="299" width="58" height="10" rx="5"/>
+    </g>
+    <rect x="232" y="121" width="48" height="263" rx="18"/>
+    <rect x="227" y="200" width="58" height="10" rx="5"/>
+    <rect x="227" y="294" width="58" height="10" rx="5"/>
+    <g transform="rotate(11 256 295)">
+      <rect x="305" y="161" width="48" height="207" rx="18"/>
+      <rect x="300" y="219" width="58" height="10" rx="5"/>
+      <rect x="300" y="299" width="58" height="10" rx="5"/>
+    </g>
+  </g>
+  <g fill="none" stroke="#EDC77F" stroke-width="5" stroke-linecap="round">
+    <path d="m154 232 47-9M236 214h40M311 223l47 9"/>
+    <path d="m169 310 47-9M236 308h40M296 301l47 9"/>
+  </g>
+  <path d="M280 162c12-23 32-34 57-33-10 23-29 35-57 33Z" fill="#204D3C"/>
+</svg>
+    <svg x="422" y="624" width="24" height="24" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 03 竹简节点</title>
+  <desc>三枚竹节组成展开的竹简，以竹节和连线呼应可编排的笔记节点。</desc>
+  <defs>
+    <linearGradient id="slips-background" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4D58F"/>
+      <stop offset="1" stop-color="#E6B968"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#slips-background)"/>
+  <g fill="#204D3C">
+    <g transform="rotate(-11 256 295)">
+      <rect x="159" y="161" width="48" height="207" rx="18"/>
+      <rect x="154" y="219" width="58" height="10" rx="5"/>
+      <rect x="154" y="299" width="58" height="10" rx="5"/>
+    </g>
+    <rect x="232" y="121" width="48" height="263" rx="18"/>
+    <rect x="227" y="200" width="58" height="10" rx="5"/>
+    <rect x="227" y="294" width="58" height="10" rx="5"/>
+    <g transform="rotate(11 256 295)">
+      <rect x="305" y="161" width="48" height="207" rx="18"/>
+      <rect x="300" y="219" width="58" height="10" rx="5"/>
+      <rect x="300" y="299" width="58" height="10" rx="5"/>
+    </g>
+  </g>
+  <g fill="none" stroke="#EDC77F" stroke-width="5" stroke-linecap="round">
+    <path d="m154 232 47-9M236 214h40M311 223l47 9"/>
+    <path d="m169 310 47-9M236 308h40M296 301l47 9"/>
+  </g>
+  <path d="M280 162c12-23 32-34 57-33-10 23-29 35-57 33Z" fill="#204D3C"/>
+</svg>
+    <text x="38" y="710" font-size="14" font-weight="400" fill="#8A958C" >桌面预览</text>
+    <text x="351" y="710" font-size="13" font-weight="400" fill="#8A958C" font-family="Avenir Next, sans-serif">40 px</text>
+    <text x="414" y="710" font-size="13" font-weight="400" fill="#8A958C" font-family="Avenir Next, sans-serif">24 px</text>
+  </g>
+    <text x="60" y="1010" font-size="14" font-weight="400" fill="#8A958C" >SVG 矢量源  /  独立 PNG  /  桌面与小尺寸对比</text>
+  </g>
+</svg>

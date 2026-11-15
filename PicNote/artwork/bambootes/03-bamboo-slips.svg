@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 03 竹简节点</title>
+  <desc>纯白背景上的三枚深绿竹节组成展开的竹简，呼应可编排的笔记节点。</desc>
+  <rect width="512" height="512" fill="#FFFFFF"/>
+  <g fill="#204D3C">
+    <g transform="rotate(-11 256 295)">
+      <rect x="159" y="161" width="48" height="207" rx="18"/>
+      <rect x="154" y="219" width="58" height="10" rx="5"/>
+      <rect x="154" y="299" width="58" height="10" rx="5"/>
+    </g>
+    <rect x="232" y="121" width="48" height="263" rx="18"/>
+    <rect x="227" y="200" width="58" height="10" rx="5"/>
+    <rect x="227" y="294" width="58" height="10" rx="5"/>
+    <g transform="rotate(11 256 295)">
+      <rect x="305" y="161" width="48" height="207" rx="18"/>
+      <rect x="300" y="219" width="58" height="10" rx="5"/>
+      <rect x="300" y="299" width="58" height="10" rx="5"/>
+    </g>
+  </g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round">
+    <path d="m154 232 47-9M236 214h40M311 223l47 9"/>
+    <path d="m169 310 47-9M236 308h40M296 301l47 9"/>
+  </g>
+  <path d="M280 162c12-23 32-34 57-33-10 23-29 35-57 33Z" fill="#204D3C"/>
+</svg>

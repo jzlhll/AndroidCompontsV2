@@ -25,14 +25,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- 整体替换传递依赖的同类 Provider，仅保留 PicNote 的导出目录。 -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            tools:node="replace"
-            android:authorities="${applicationId}.exports"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/export_paths" />
-        </provider>
     </application>
 </manifest>

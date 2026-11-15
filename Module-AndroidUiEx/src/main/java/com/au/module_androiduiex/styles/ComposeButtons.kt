@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 
 /*
  * agit 与 PicNote 共用的 Material3 按钮样式，统一最小高度与内容留白。
- * 默认颜色跟随当前 MaterialTheme，可配合 ComposeAppTheme 的四套颜色方案使用，
+ * 默认颜色跟随当前 MaterialTheme，可配合 ComposeAppTheme 的颜色方案使用，
  * 也可放在其他 MaterialTheme 下；按钮本身不选择或切换颜色方案。
  * 圆角、交互反馈与禁用态继续使用 Material3 的默认行为。
  */

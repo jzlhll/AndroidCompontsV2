@@ -17,7 +17,7 @@ interface PicNoteDao {
     @Query("SELECT id, document_id, sort_key, kind, body_markdown, title FROM nodes WHERE document_id = :id ORDER BY sort_key, id")
     suspend fun nodes(id: String): List<NodeEntity>
 
-    @Query("SELECT id, node_id, document_id, sort_index, file_name, hash, width, height, name, source_uri FROM node_images WHERE document_id = :id ORDER BY sort_index")
+    @Query("SELECT id, node_id, document_id, sort_index, file_name, hash, width, height, source_uri FROM node_images WHERE document_id = :id ORDER BY sort_index")
     suspend fun images(id: String): List<NodeImageEntity>
 
     @Query("SELECT file_name FROM node_images WHERE document_id = :id")

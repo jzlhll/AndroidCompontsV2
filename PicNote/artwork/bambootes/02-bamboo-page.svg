@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512">
+  <title>竹节笔记 / Bambootes · 02 竹叶书页</title>
+  <desc>纯白背景上的竹节书脊与竹叶书页，表达图文笔记和自然生长。</desc>
+  <rect width="512" height="512" fill="#FFFFFF"/>
+  <path d="M173 127h141l48 48v184a24 24 0 0 1-24 24H173a24 24 0 0 1-24-24V151a24 24 0 0 1 24-24Z" fill="#FFFFFF" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M314 128v33a14 14 0 0 0 14 14h33" fill="#DDE7D5" stroke="#255E47" stroke-width="9" stroke-linejoin="round"/>
+  <path d="M175 123h19v264h-21a29 29 0 0 1-29-29V152a29 29 0 0 1 31-29Z" fill="#255E47"/>
+  <rect x="142" y="204" width="55" height="8" rx="4" fill="#FFFFFF"/>
+  <rect x="142" y="294" width="55" height="8" rx="4" fill="#FFFFFF"/>
+  <path d="M239 267c18-42 43-64 71-72" fill="none" stroke="#497854" stroke-width="6" stroke-linecap="round"/>
+  <path d="M262 230c-7-28-1-48 17-62 8 26 4 47-17 62Z" fill="#255E47"/>
+  <path d="M268 225c15-27 35-37 61-35-10 24-30 37-61 35Z" fill="#497854"/>
+  <path d="M249 250c-5-18-14-29-30-34-2 19 8 31 30 34Z" fill="#7E9B67"/>
+  <path d="M232 298h89M232 326h63" fill="none" stroke="#7E9B67" stroke-width="9" stroke-linecap="round"/>
+</svg>

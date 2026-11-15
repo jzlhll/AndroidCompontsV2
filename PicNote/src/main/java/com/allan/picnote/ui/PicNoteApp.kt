@@ -1,8 +1,6 @@
 package com.allan.picnote.ui
 
 import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -17,10 +15,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -30,11 +29,12 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.allan.picnote.PicNoteApplication
+import com.allan.picnote.R
 import com.allan.picnote.logEx
 import com.allan.picnote.ui.theme.PicNoteTheme
+import com.au.module_android.Globals
+import com.au.module_android.utilsmedia.getUriFromFile
 import com.au.module_androiduiex.picker.rememberComposePhotoPicker
-import com.au.module_androiduiex.styles.composeBackdropBlurSource
-import com.au.module_androiduiex.styles.rememberComposeBackdropBlurState
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 
@@ -46,8 +46,7 @@ data class EditRoute(
     val documentId: String? = null,
     val nodeId: String? = null,
     val anchorId: String? = null,
-    val after: Boolean = true,
-    val chapter: Boolean = false,
+    val kind: String = "body",
 ) : NavKey
 
 private val PageSlideAnimationSpec = tween<IntOffset>(durationMillis = 220, easing = FastOutSlowInEasing)
@@ -59,9 +58,9 @@ fun PicNoteApp(app: PicNoteApplication) {
     LaunchedEffect(app, home) { app.foregroundEntries.collect { home.checkOnForeground(it) } }
     val theme = state.theme ?: return
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val backStack = rememberNavBackStack(HomeRoute)
-    val backdrop = rememberComposeBackdropBlurState()
-    val overlayStrategy = remember { EditorOverlaySceneStrategy() }
     val homeActive = backStack.lastOrNull() == HomeRoute
     val openEditor: (EditRoute) -> Unit = { route ->
         if (backStack.lastOrNull() == HomeRoute && !home.stateFlow.value.loading && !home.stateFlow.value.busy) backStack.add(route)
@@ -70,6 +69,15 @@ fun PicNoteApp(app: PicNoteApplication) {
     var pickerDocumentId by rememberSaveable { mutableStateOf<String?>(null) }
     var actionAfterCreate by rememberSaveable { mutableStateOf<String?>(null) }
     var candidatesAfterCreate by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    val navigateBack: () -> Unit = {
+        if (backStack.size > 1) {
+            focusManager.clearFocus(force = true)
+            keyboard?.hide()
+            actionAfterCreate = null
+            candidatesAfterCreate = emptyList()
+            backStack.removeLastOrNull()
+        }
+    }
     val picker = rememberComposePhotoPicker { uris ->
         val documentId = pickerDocumentId
         pickerDocumentId = null
@@ -93,27 +101,15 @@ fun PicNoteApp(app: PicNoteApplication) {
             home.clearMessage()
         }
     }
-    LaunchedEffect(state.markdownToCopy) {
-        state.markdownToCopy?.let { markdown ->
-            try {
-                (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Markdown", markdown))
-                home.showMessage("已复制 Markdown")
-            } catch (e: CancellationException) { throw e }
-            catch (e: Exception) {
-                logEx(throwable = e, message = "Copy Markdown failed")
-                home.showMessage("复制失败，请重试或导出文档")
-            } finally { home.consumedCopy() }
-        }
-    }
     LaunchedEffect(state.exportedFile) {
         state.exportedFile?.let { file ->
             home.consumedExport()
             try {
-                val uri = FileProvider.getUriForFile(context, "${context.packageName}.exports", file)
+                val uri = checkNotNull(getUriFromFile(context, file)) { "无法生成文档分享链接" }
                 val send = Intent(Intent.ACTION_SEND).apply {
                     type = "application/zip"
                     putExtra(Intent.EXTRA_STREAM, uri)
-                    clipData = ClipData.newRawUri("PicNote", uri)
+                    clipData = ClipData.newRawUri(Globals.app.getString(R.string.app_name), uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 context.startActivity(Intent.createChooser(send, "导出文档"))
@@ -128,14 +124,7 @@ fun PicNoteApp(app: PicNoteApplication) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             NavDisplay(
                 backStack = backStack,
-                onBack = {
-                    if (backStack.size > 1) {
-                        actionAfterCreate = null
-                        candidatesAfterCreate = emptyList()
-                        backStack.removeLastOrNull()
-                    }
-                },
-                sceneStrategies = listOf(overlayStrategy),
+                onBack = navigateBack,
                 transitionSpec = {
                     slideInHorizontally(PageSlideAnimationSpec, initialOffsetX = { it }) togetherWith
                         slideOutHorizontally(PageSlideAnimationSpec, targetOffsetX = { -it })
@@ -151,7 +140,7 @@ fun PicNoteApp(app: PicNoteApplication) {
                 entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
                 entryProvider = entryProvider {
                     entry<HomeRoute> {
-                        Box(Modifier.fillMaxSize().composeBackdropBlurSource(backdrop)
+                        Box(Modifier.fillMaxSize()
                             .focusProperties { canFocus = homeActive }
                             .then(if (!homeActive) Modifier.clearAndSetSemantics { } else Modifier)) {
                         HomeScreen(
@@ -180,21 +169,18 @@ fun PicNoteApp(app: PicNoteApplication) {
                         )
                         }
                     }
-                    entry<EditRoute>(metadata = { route -> if (route.documentId != null) mapOf(EditorOverlayMetadataKey to true) else emptyMap() }) { route ->
+                    entry<EditRoute> { route ->
                         val editor: EditorViewModel = viewModel(factory = EditorViewModel.Factory(home.repository, route))
                         EditorScreen(
                             viewModel = editor,
                             repository = home.repository,
-                            backdrop = backdrop,
                             onBack = {
-                                if (backStack.lastOrNull() == route) {
-                                    actionAfterCreate = null
-                                    candidatesAfterCreate = emptyList()
-                                    backStack.removeLastOrNull()
-                                }
+                                if (backStack.lastOrNull() == route) navigateBack()
                             },
                             onSaved = { id, mirrorFailed ->
                                 if (backStack.lastOrNull() == route) {
+                                    focusManager.clearFocus(force = true)
+                                    keyboard?.hide()
                                     home.mirrorResult(route.documentId ?: id, mirrorFailed)
                                     home.reloadDocument(route.documentId ?: id)
                                     backStack.removeLastOrNull()

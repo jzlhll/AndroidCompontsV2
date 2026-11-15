@@ -7,6 +7,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -18,27 +19,37 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.allan.picnote.data.entity.DocumentSummary
+import com.allan.picnote.R
+import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.logEx
 import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.photoAccess
 import com.allan.picnote.media.photoPermissions
 import com.allan.picnote.ui.components.CreateDocumentButton
 import com.au.module_androiduiex.styles.ComposeTheme
+import com.au.module_androiduiex.styles.ComposeLineTabLayout
+import com.au.module_androiduiex.styles.ComposeLineTabLayoutStyle
+import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androiduiex.styles.ComposeButton as Button
 import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
 import com.au.module_androiduiex.styles.ComposeIconButton as IconButton
@@ -114,12 +125,19 @@ fun HomeScreen(
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     var ribbon by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    var addMenu by remember { mutableStateOf(false) }
     var appearanceDialog by rememberSaveable { mutableStateOf(false) }
-    val document = state.content?.document
-    val imported = state.content?.nodes.orEmpty().flatMap { it.images }.mapNotNull { it.sourceUri }.toSet()
-    LaunchedEffect(state.pending, imported) { selected = selected.filter { id -> state.pending.any { it.uri == id } && id !in imported } }
-    val beginRename: (DocumentSummary) -> Unit = { renameId = it.id; renameTitle = it.title }
+    val content = state.content
+    val document = content?.document
+    val showMediaActions = document?.id != WelcomeDocumentId
+    val latestPending = state.pending.firstOrNull()
+    val showLoading = state.loading || state.busy || state.scanning
+    val imported = remember(state.content) { state.content?.nodes.orEmpty().flatMap { it.images }.mapNotNull { it.sourceUri }.toSet() }
+    val dateFormatter = remember { SimpleDateFormat("MM-dd HH:mm", Locale.CHINA) }
+    LaunchedEffect(state.pending, imported) {
+        selected = selected.filter { id -> state.pending.any { it.uri == id } && id !in imported }
+        if (state.pending.isEmpty()) ribbon = false
+    }
+    val beginRename: (String, String) -> Unit = { id, title -> renameId = id; renameTitle = title }
 
     ModalNavigationDrawer(
         modifier = modifier,
@@ -128,28 +146,31 @@ fun HomeScreen(
         drawerContent = {
             ModalDrawerSheet(Modifier.fillMaxWidth(0.86f)) {
                 Column(Modifier.fillMaxHeight()) {
-                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().height(84.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("我的文档", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
                     CreateDocumentButton("＋ 新建", onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
                 }
-                LazyColumn(Modifier.weight(1f)) {
-                    items(state.documents, key = { it.id }) { item ->
+                LazyColumn(Modifier.weight(1f).selectableGroup()) {
+                    items(state.documents, key = { it.id }, contentType = { "document" }) { item ->
                         var menu by remember { mutableStateOf(false) }
+                        val updatedAt = remember(item.updatedAt, dateFormatter) { dateFormatter.format(Date(item.updatedAt)) }
                         Row(
                             Modifier.fillMaxWidth().background(if (item.id == document?.id) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)
+                                .semantics { this.selected = item.id == document?.id }
                                 .clickable(enabled = ready) { viewModel.reloadDocument(item.id); scope.launch { drawer.close() } }.padding(start = 20.dp, top = 12.dp, bottom = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(item.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("${item.nodeCount} 个节点 · ${SimpleDateFormat("MM-dd HH:mm", Locale.CHINA).format(Date(item.updatedAt))}",
+                                Text("${item.nodeCount} 个节点 · $updatedAt",
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Box {
-                                IconButton(onClick = { menu = true }, enabled = ready) { Text("⋯") }
+                                IconButton(onClick = { menu = true }, enabled = ready,
+                                    modifier = Modifier.semantics { contentDescription = "文档「${item.title}」的操作" }) { Text("⋯") }
                                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(text = { Text("重命名") }, onClick = { menu = false; beginRename(item) })
-                                    DropdownMenuItem(text = { Text("删除文档") }, onClick = { menu = false; deleteId = item.id })
+                                    DropdownMenuItem(text = { Text("重命名") }, onClick = { menu = false; beginRename(item.id, item.title) })
+                                    DropdownMenuItem(text = { Text("删除文档", color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; deleteId = item.id })
                                 }
                             }
                         }
@@ -165,29 +186,69 @@ fun HomeScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(document?.title ?: "图笺", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    navigationIcon = { IconButton(onClick = { scope.launch { drawer.open() } }, enabled = active) { Text("☰") } },
+                    expandedHeight = 84.dp,
+                    title = { Text(document?.title ?: stringResource(R.string.app_name), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawer.open() } }, enabled = active,
+                            modifier = Modifier.semantics { contentDescription = "打开文档列表" }) { Text("☰") }
+                    },
                     actions = {
                         Box {
-                            IconButton(onClick = { more = true }, enabled = document != null && ready) { Text("⋯") }
+                            IconButton(onClick = { more = true }, enabled = document != null && ready,
+                                modifier = Modifier.semantics { contentDescription = "文档操作" }) { Text("⋯") }
                             DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
-                                DropdownMenuItem(text = { Text("重命名") }, onClick = {
-                                    more = false
-                                    state.documents.firstOrNull { it.id == document?.id }?.let(beginRename)
-                                })
-                                DropdownMenuItem(text = { Text("复制 Markdown") }, onClick = { more = false; viewModel.copyMarkdown() })
-                                DropdownMenuItem(text = { Text("导出文档") }, onClick = { more = false; viewModel.export() })
+                                if (document != null) {
+                                    DropdownMenuItem(text = { Text("重命名", style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                                        onClick = { more = false; beginRename(document.id, document.title) }, enabled = ready)
+                                    DropdownMenuItem(text = { Text("导出文档", style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                                        onClick = { more = false; viewModel.export() }, enabled = ready)
+                                    DropdownMenuItem(text = { Text("删除文档", style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.error) },
+                                        onClick = { more = false; deleteId = document.id }, enabled = ready)
+                                }
                             }
                         }
                     },
                 )
             },
+            floatingActionButtonPosition = FabPosition.Center,
+            floatingActionButton = {
+                if (showMediaActions) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) {
+                            latestPending?.let { latest ->
+                                Surface(
+                                    onClick = { ribbon = !ribbon }, enabled = ready,
+                                    modifier = Modifier.height(56.dp), shape = RoundedCornerShape(16.dp),
+                                    color = if (ribbon) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                ) {
+                                    Row(Modifier.padding(4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        LocalImage(latest.uri, "最新图片：${latest.name}", Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)), crop = true)
+                                        Text("新增${state.pending.size}", Modifier.weight(1f, fill = false).padding(end = 8.dp),
+                                            style = ComposeTypography.Font14M, color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                        FloatingActionButton(
+                            onClick = { if (ready) onPickImages() },
+                            modifier = Modifier.semantics { contentDescription = "打开相册添加图片"; if (!ready) disabled() },
+                            containerColor = if (ready) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (ready) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(24.dp))
+                        }
+                    }
+                }
+            },
             bottomBar = {
-                Surface(tonalElevation = 2.dp) {
-                    Column(Modifier.navigationBarsPadding()) {
-                        if (ribbon && state.pending.isNotEmpty()) {
+                if (showMediaActions && ribbon && state.pending.isNotEmpty()) {
+                    Surface(tonalElevation = 2.dp) {
+                        Column(Modifier.navigationBarsPadding()) {
                             LazyRow(Modifier.fillMaxWidth().padding(top = 12.dp), contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(state.pending, key = { it.uri }) { candidate ->
+                                items(state.pending, key = { it.uri }, contentType = { "candidate" }) { candidate ->
                                     val disabled = candidate.uri in imported || !ready
                                     Column(Modifier.width(104.dp).clickable(enabled = !disabled) {
                                         selected = if (candidate.uri in selected) selected - candidate.uri else selected + candidate.uri
@@ -205,49 +266,50 @@ fun HomeScreen(
                                 Button(onClick = { onCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) { Text("添加 ${selected.size} 张") }
                             }
                         }
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = { if (state.pending.isEmpty()) onPickImages() else ribbon = !ribbon }, enabled = ready) {
-                                Text(if (state.pending.isEmpty()) "相册" else "新图片 ${state.pending.size}")
-                            }
-                            Button(onClick = onPickImages, enabled = ready) { Text("＋ 添加图片") }
-                        }
                     }
                 }
             },
         ) { padding ->
             Column(Modifier.fillMaxSize().padding(padding)) {
-                PermissionBanner(state, onPermission = requestPermission, active = active)
-                if ((state.busy || state.loading) && !state.scanning) LinearProgressIndicator(Modifier.fillMaxWidth())
-                if (state.mirrorFailed) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("已保存，文档镜像更新失败", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = viewModel::retryMirror, enabled = ready) { Text("重试") }
-                }
-                if (document == null) {
-                    Spacer(Modifier.weight(1f).fillMaxWidth())
-                } else documentStates.SaveableStateProvider(document.id) {
+                documentStates.SaveableStateProvider(document?.id ?: "empty") {
                     val pager = rememberPagerState(pageCount = { 2 })
                     val nodeScroll = rememberLazyListState()
                     val documentScroll = rememberLazyListState()
-                    TabRow(selectedTabIndex = pager.currentPage) {
-                        listOf("节点", "文档").forEachIndexed { index, title ->
-                            Tab(selected = pager.currentPage == index, onClick = { scope.launch { pager.animateScrollToPage(index) } }, text = { Text(title) })
-                        }
+                    Box(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                        ComposeLineTabLayout(
+                            tabs = listOf("节点", "文档"), selectedIndex = pager.currentPage,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                            style = ComposeLineTabLayoutStyle(
+                                height = 48.dp, startPadding = 0.dp, itemHorizontalPadding = 0.dp,
+                                selectedTextStyle = ComposeTypography.Font16M, unselectedTextStyle = ComposeTypography.Font16,
+                                distributeEvenly = true, indicatorWidth = 51.dp,
+                            ),
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineColor = MaterialTheme.colorScheme.outlineVariant,
+                            indicatorColor = MaterialTheme.colorScheme.primary,
+                            onTabClick = { index -> if (content != null) scope.launch { pager.animateScrollToPage(index) } },
+                        )
+                        if (showLoading) CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center).size(24.dp), strokeWidth = 2.dp,
+                        )
+                    }
+                    PermissionBanner(state, onPermission = requestPermission, active = active)
+                    if (state.mirrorFailed) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("已保存，文档镜像更新失败", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                        TextButton(onClick = viewModel::retryMirror, enabled = ready) { Text("重试") }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) {
-                        HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
-                            if (page == 0) NodeList(
-                                content = state.content!!, repository = viewModel.repository, listState = nodeScroll, enabled = ready, active = active && pager.currentPage == 0,
-                                onEdit = { node -> onEdit(EditRoute(document.id, node.node.id, chapter = node.node.kind == "chapter")) },
-                                onInsert = { anchor, after, chapter -> onEdit(EditRoute(document.id, anchorId = anchor, after = after, chapter = chapter)) },
-                                onMove = viewModel::move, onDelete = viewModel::deleteNode,
-                                onEmptyAdd = { addMenu = true },
-                            ) else DocumentPreview(state.content!!, viewModel.repository, documentScroll, active = active)
-                        }
-                        Box(Modifier.align(Alignment.Center)) {
-                            DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false }) {
-                                DropdownMenuItem(text = { Text("纯文字 / 图文节点") }, onClick = { addMenu = false; onEdit(EditRoute(document.id)) })
-                                DropdownMenuItem(text = { Text("章节") }, onClick = { addMenu = false; onEdit(EditRoute(document.id, chapter = true)) })
-                                DropdownMenuItem(text = { Text("图片") }, onClick = { addMenu = false; onPickImages() })
+                        if (content != null) {
+                            HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), beyondViewportPageCount = 1, key = { it }) { page ->
+                                if (page == 0) NodeList(
+                                    content = content, repository = viewModel.repository, listState = nodeScroll, enabled = ready, active = active && pager.currentPage == 0,
+                                    onEdit = { node -> onEdit(EditRoute(content.document.id, node.node.id, kind = node.node.kind)) },
+                                    onInsert = { anchor, kind -> onEdit(EditRoute(content.document.id, anchorId = anchor, kind = kind)) },
+                                    onMove = viewModel::move, onDelete = viewModel::deleteNode, onMerge = viewModel::mergeNodes,
+                                    bottomContentPadding = if (showMediaActions) 96.dp else 24.dp,
+                                ) else DocumentPreview(content, viewModel.repository, documentScroll, onMessage = viewModel::showMessage,
+                                    active = active && pager.currentPage == 1, bottomContentPadding = if (showMediaActions) 96.dp else 24.dp)
                             }
                         }
                     }
@@ -269,9 +331,9 @@ fun HomeScreen(
         dismissButton = { TextButton(onClick = { renameId = null }) { Text("取消") } },
     )
     if (active && deleteId != null) AlertDialog(
-        onDismissRequest = { deleteId = null }, title = { Text("删除文档") },
+        onDismissRequest = { deleteId = null }, title = { Text("删除文档", color = MaterialTheme.colorScheme.error) },
         text = { Text("将删除「${state.documents.firstOrNull { it.id == deleteId }?.title.orEmpty()}」的所有节点、文字和本地图片副本，无法恢复。") },
-        confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text("删除") } },
+        confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text("删除", color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { deleteId = null }) { Text("取消") } },
     )
     if (active && appearanceDialog) AlertDialog(
@@ -280,9 +342,10 @@ fun HomeScreen(
             Column(Modifier.selectableGroup()) {
                 ComposeTheme.entries.forEach { theme ->
                     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(selected = state.theme == theme, enabled = !state.themeSaving, role = Role.RadioButton,
-                        onClick = { viewModel.setTheme(theme); appearanceDialog = false }).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        onClick = { viewModel.setTheme(theme); appearanceDialog = false }).padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = state.theme == theme, onClick = null, enabled = !state.themeSaving)
-                        Text(theme.name)
+                        Text(theme.name, style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -293,9 +356,7 @@ fun HomeScreen(
 
 @Composable
 private fun PermissionBanner(state: HomeState, onPermission: () -> Unit, active: Boolean) {
-    val summary = state.scanSummary
-    val hasChanges = state.access == PhotoAccess.Full && summary != null && summary.added > 0
-    if (state.access == PhotoAccess.Full && state.scanError == null && !state.scanning && !hasChanges) return
+    if (state.access == PhotoAccess.Full && state.scanError == null) return
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         if (state.access != PhotoAccess.Full) Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (state.access == PhotoAccess.Partial) "图片权限：部分图片" else "图片权限：未授权",
@@ -306,11 +367,6 @@ private fun PermissionBanner(state: HomeState, onPermission: () -> Unit, active:
                 Text("›", style = MaterialTheme.typography.titleLarge)
             }
         }
-        when {
-            state.scanning -> LinearProgressIndicator(Modifier.fillMaxWidth())
-            state.scanError != null -> Text(state.scanError, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            hasChanges && summary != null -> Text("新增 ${summary.added} 张图片",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        if (state.scanError != null) Text(state.scanError, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

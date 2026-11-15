@@ -5,6 +5,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,6 +36,7 @@ data class ComposeLineTabLayoutStyle(
     val selectedTextStyle: TextStyle,
     val unselectedTextStyle: TextStyle,
     val distributeEvenly: Boolean = false,
+    val indicatorWidth: Dp? = null,
 )
 
 /** 常规下划线 TabLayout 的默认样式。 */
@@ -73,11 +77,10 @@ fun ComposeLineTabLayout(
                 .background(lineColor),
         )
         Row(
-            modifier = if (style.distributeEvenly) {
-                Modifier.fillMaxSize().padding(horizontal = style.startPadding)
-            } else {
-                Modifier.fillMaxSize().horizontalScroll(scrollState).padding(start = style.startPadding)
-            },
+            modifier = Modifier.fillMaxSize().selectableGroup().then(
+                if (style.distributeEvenly) Modifier.padding(horizontal = style.startPadding)
+                else Modifier.horizontalScroll(scrollState).padding(start = style.startPadding),
+            ),
         ) {
             tabs.forEachIndexed { index, title ->
                 ComposeLineTabItem(
@@ -115,7 +118,7 @@ private fun ComposeLineTabItem(
         modifier = modifier
             .height(style.height)
             .widthIn(min = style.itemMinWidth)
-            .noBackClickable(onClick = onClick)
+            .selectable(selected = selected, interactionSource = null, indication = null, role = Role.Tab, onClick = onClick)
             .padding(horizontal = style.itemHorizontalPadding),
         contentAlignment = Alignment.Center,
     ) {
@@ -128,14 +131,14 @@ private fun ComposeLineTabItem(
             text = title,
             style = textStyle,
             onTextLayout = {
-                textWidth = with(density) { it.size.width.toDp() }
+                if (style.indicatorWidth == null) textWidth = with(density) { it.size.width.toDp() }
             },
         )
         if (selected) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .width(textWidth)
+                    .width(style.indicatorWidth ?: textWidth)
                     .height(style.indicatorHeight)
                     .background(indicatorColor, RoundedCornerShape(1.dp)),
             )

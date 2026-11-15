@@ -7,7 +7,7 @@ import com.allan.picnote.data.entity.*
 
 @Database(
     entities = [DocumentEntity::class, NodeEntity::class, NodeImageEntity::class, SourceImageEntity::class, MediaSnapshotEntity::class, MediaScanStateEntity::class, MediaChangeEntity::class, PendingMediaEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class PicNoteDatabase : RoomDatabase() {
