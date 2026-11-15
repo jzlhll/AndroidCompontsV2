@@ -38,6 +38,7 @@ import com.allan.picnote.logEx
 import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.photoAccess
 import com.allan.picnote.media.photoPermissions
+import com.allan.picnote.ui.components.CreateDocumentButton
 import com.au.module_androiduiex.styles.ComposeTheme
 import com.au.module_androiduiex.styles.ComposeButton as Button
 import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
@@ -134,12 +135,12 @@ fun HomeScreen(
                     } else Column(Modifier.weight(1f).fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                         Text("空空如也", fontSize = 32.sp, style = MaterialTheme.typography.headlineLarge)
                         Spacer(Modifier.height(12.dp))
-                        TextButton(onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready) { Text("+新建") }
+                        CreateDocumentButton("+新建", onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
                     }
                 } else {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("我的文档", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                    TextButton(onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready) { Text("＋ 新建") }
+                    CreateDocumentButton("＋ 新建", onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
                 }
                 LazyColumn(Modifier.weight(1f)) {
                     items(state.documents, key = { it.id }) { item ->
@@ -234,7 +235,7 @@ fun HomeScreen(
                 }
                 if (document == null) {
                     Column(Modifier.weight(1f).fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        Button(onClick = onCreate, enabled = ready) { Text("新建文档") }
+                        CreateDocumentButton("新建文档", onClick = onCreate, enabled = ready)
                     }
                 } else documentStates.SaveableStateProvider(document.id) {
                     val pager = rememberPagerState(pageCount = { 2 })

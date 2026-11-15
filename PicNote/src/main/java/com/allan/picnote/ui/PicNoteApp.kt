@@ -10,7 +10,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.LocalActivity
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -25,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.core.content.FileProvider
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -36,9 +34,9 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.allan.picnote.PicNoteApplication
 import com.allan.picnote.logEx
+import com.allan.picnote.ui.theme.PicNoteTheme
 import com.au.module_androiduiex.styles.composeBackdropBlurSource
 import com.au.module_androiduiex.styles.rememberComposeBackdropBlurState
-import com.au.module_androiduiex.styles.ComposeAppTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 
@@ -62,15 +60,6 @@ fun PicNoteApp(app: PicNoteApplication) {
     val state by home.stateFlow.collectAsStateWithLifecycle()
     LaunchedEffect(app, home) { app.foregroundEntries.collect { home.checkOnForeground(it) } }
     val theme = state.theme ?: return
-    val activity = LocalActivity.current
-    SideEffect {
-        activity?.window?.let { window ->
-            WindowCompat.getInsetsController(window, window.decorView).apply {
-                isAppearanceLightStatusBars = !theme.dark
-                isAppearanceLightNavigationBars = !theme.dark
-            }
-        }
-    }
     val context = LocalContext.current
     val backStack = rememberNavBackStack(HomeRoute)
     val backdrop = rememberComposeBackdropBlurState()
@@ -131,7 +120,7 @@ fun PicNoteApp(app: PicNoteApplication) {
             }
         }
     }
-    ComposeAppTheme(theme) {
+    PicNoteTheme(theme) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             NavDisplay(
                 backStack = backStack,
