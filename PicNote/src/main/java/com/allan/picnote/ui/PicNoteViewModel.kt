@@ -8,11 +8,14 @@ import com.allan.picnote.PicNoteApplication
 import com.allan.picnote.logEx
 import com.allan.picnote.logd
 import com.allan.picnote.data.PermissionHistory
+import com.allan.picnote.data.WelcomeDocumentId
+import com.allan.picnote.data.NodeGuideKind
 import com.allan.picnote.data.entity.*
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.data.repositories.Saved
 import com.allan.picnote.media.*
 import com.au.module_androiduiex.styles.ComposeTheme
+import com.au.module_android.utils.withIOThread
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -48,6 +51,8 @@ data class HomeState(
     val permissionRequestPending: Boolean = false,
     val theme: ComposeTheme? = null,
     val themeSaving: Boolean = false,
+    val nodeGuide: NodeGuide? = null,
+    val nodeGuideSaving: Boolean = false,
 )
 
 /** 连接首页操作与本地存储，真实前台检查按次排队，写操作先等待旧检查退出。 */
@@ -94,6 +99,52 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
             } finally {
                 if (coroutineContext.isActive) startNextForegroundCheck()
             }
+        }
+    }
+
+    private fun checkNodeGuideOnStartup() {
+        viewModelScope.launch {
+            try {
+                if (!withIOThread { app.nodeGuidePreferences.hasUnfinishedGuide() }) return@launch
+                reloadJob?.join()
+                val opened = stateFlow.value.content
+                val loaded = !stateFlow.value.loading
+                val guide = withIOThread {
+                    val eligible = loaded && opened != null && opened.document.id != WelcomeDocumentId && opened.nodes.size >= 4
+                    app.nodeGuidePreferences.guideForStartup(eligible)?.let { kind -> NodeGuide(checkNotNull(opened).document.id, kind) }
+                }
+                if (guide != null) {
+                    val current = stateFlow.value.content
+                    if (current?.document?.id == guide.documentId && current.nodes.size >= 4) {
+                        mutableStateFlow.update { it.copy(nodeGuide = guide) }
+                    }
+                }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) { logEx(throwable = e, message = "Read node guide failed") }
+        }
+    }
+
+    fun recordNodeClick(kind: NodeGuideKind) {
+        viewModelScope.launch {
+            try { app.nodeGuidePreferences.recordClick(kind) }
+            catch (e: CancellationException) { throw e }
+            catch (e: Exception) { logEx(throwable = e, message = "Save node click failed kind=$kind") }
+        }
+    }
+
+    fun acknowledgeNodeGuide() {
+        val guide = stateFlow.value.nodeGuide ?: return
+        if (stateFlow.value.nodeGuideSaving) return
+        mutableStateFlow.update { it.copy(nodeGuideSaving = true) }
+        viewModelScope.launch {
+            try {
+                app.nodeGuidePreferences.acknowledgeGuide(guide.kind)
+                mutableStateFlow.update { it.copy(nodeGuide = null) }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                logEx(throwable = e, message = "Save node guide acknowledgement failed kind=${guide.kind}")
+                mutableStateFlow.update { it.copy(message = "保存引导状态失败，请重试") }
+            } finally { mutableStateFlow.update { it.copy(nodeGuideSaving = false) } }
         }
     }
 
@@ -163,6 +214,7 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
     }
 
     fun checkOnForeground(ordinal: Int) {
+        if (ordinal == 1) checkNodeGuideOnStartup()
         pendingForegroundChecks.addLast(ordinal)
         logd("event=image_check_queued startupId=${app.startupId} pid=${app.processId} foregroundOrdinal=$ordinal busy=${stateFlow.value.busy} loading=${stateFlow.value.loading}")
         startNextForegroundCheck()
@@ -248,7 +300,10 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         val data = repository.home(id)
         val pending = app.scanner.pending()
         mutableStateFlow.update { it.copy(loading = false, documents = data.documents, content = data.content,
-            mirrorFailed = data.content?.document?.id in mirrorFailures, pending = pending) }
+            mirrorFailed = data.content?.document?.id in mirrorFailures, pending = pending,
+            nodeGuide = it.nodeGuide?.takeIf { guide ->
+                data.content?.document?.id == guide.documentId && data.content.nodes.size >= 4
+            }) }
     }
 
     fun rename(id: String, title: String) = operation {
@@ -285,6 +340,15 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         val id = stateFlow.value.content?.document?.id ?: return
         operation {
             val result = repository.mergeNodes(id, firstId, secondId)
+            reload(id)
+            saved(id, result)
+        }
+    }
+
+    fun moveImage(nodeId: String, imageId: String, direction: Int) {
+        val id = stateFlow.value.content?.document?.id ?: return
+        operation {
+            val result = repository.moveImage(id, nodeId, imageId, direction)
             reload(id)
             saved(id, result)
         }

@@ -250,6 +250,16 @@ class DocumentRepository(private val context: Context, private val database: Pic
         earlier.node.id
     }
 
+    suspend fun moveImage(documentId: String, nodeId: String, imageId: String, direction: Int): Saved<Unit> = mutate(documentId) {
+        require(direction == -1 || direction == 1) { "图片移动方向无效" }
+        val node = snapshot(documentId).nodes.firstOrNull { it.node.id == nodeId } ?: error("节点已删除")
+        val index = node.images.indexOfFirst { it.id == imageId }
+        require(index >= 0) { "图片已删除" }
+        val adjacent = node.images.getOrNull(index + direction) ?: error("图片已在边界位置")
+        val image = node.images[index]
+        dao.putImages(listOf(image.copy(sortIndex = adjacent.sortIndex), adjacent.copy(sortIndex = image.sortIndex)))
+    }
+
     suspend fun saveNode(
         documentId: String,
         nodeId: String?,

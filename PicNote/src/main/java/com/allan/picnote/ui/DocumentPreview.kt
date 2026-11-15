@@ -3,6 +3,7 @@ package com.allan.picnote.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Bitmap
 import android.graphics.ColorFilter
 import android.graphics.Paint
 import android.graphics.Path
@@ -35,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -45,7 +45,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.util.TypedValue
 import coil3.compose.AsyncImage
+import coil3.SingletonImageLoader
+import coil3.decode.DataSource
 import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.request.allowRgb565
+import coil3.request.bitmapConfig
+import com.allan.picnote.media.ScrollThumbnail
 import com.allan.picnote.data.entity.DocumentContent
 import com.allan.picnote.data.entity.NodeImageEntity
 import com.allan.picnote.data.markdownNodes
@@ -93,22 +99,65 @@ import java.util.UUID
 import kotlin.math.ceil
 
 @Composable
-fun LocalImage(model: Any?, description: String, modifier: Modifier = Modifier, crop: Boolean = false, cacheKey: String? = null, onSize: ((Int, Int) -> Unit)? = null) {
-    val request = if (cacheKey == null) model else {
-        val context = LocalContext.current
-        remember(context, model, cacheKey) { ImageRequest.Builder(context).data(model).memoryCacheKey(cacheKey).build() }
+fun LocalImage(model: Any?, description: String, modifier: Modifier = Modifier, crop: Boolean = false, cacheKey: String? = null, onSize: ((Int, Int) -> Unit)? = null, onResult: (() -> Unit)? = null) {
+    val context = LocalContext.current
+    val imageLoader = SingletonImageLoader.get(context)
+    val file = remember(model) {
+        when (model) {
+            is File -> model
+            is Uri -> if (model.scheme == "file") model.path?.let { File(it) } else null
+            else -> null
+        }
     }
+    val baseKey = if (file != null) "${file.absolutePath}:${cacheKey.orEmpty()}" else cacheKey ?: model.toString()
+    val fullKey = "$baseKey:rgb565"
+    val thumbnailKey = "${file?.absolutePath ?: baseKey}:scroll-20-min32-rgb565-v1"
+    val request = remember(context, model, fullKey) {
+        ImageRequest.Builder(context)
+            .data(model)
+            .memoryCacheKey(fullKey)
+            .placeholderMemoryCacheKey(fullKey)
+            .bitmapConfig(Bitmap.Config.RGB_565)
+            .allowRgb565(true)
+            .allowHardware(false)
+            .build()
+    }
+    val thumbnailRequest = remember(context, file, thumbnailKey) {
+        file?.let {
+            ImageRequest.Builder(context)
+                .data(ScrollThumbnail(it, thumbnailKey, cacheOnly = true))
+                .memoryCacheKey(thumbnailKey)
+                .bitmapConfig(Bitmap.Config.RGB_565)
+                .allowRgb565(true)
+                .allowHardware(false)
+                .build()
+        }
+    }
+    var fullReady by remember(model, cacheKey) { mutableStateOf(false) }
+    var prepareThumbnail by remember(model, cacheKey) { mutableStateOf(false) }
     var failed by remember(model, cacheKey) { mutableStateOf(false) }
+    if (file != null && thumbnailRequest != null && prepareThumbnail) {
+        LaunchedEffect(imageLoader, file, thumbnailRequest, thumbnailKey) {
+            imageLoader.execute(thumbnailRequest.newBuilder().data(ScrollThumbnail(file, thumbnailKey)).build())
+        }
+    }
     Box(modifier) {
-        AsyncImage(
-            model = request, contentDescription = description, modifier = Modifier.fillMaxSize(),
+        // 主图请求始终继续，缓存小图只在主图完成前占位，不能覆盖已显示的清晰图。
+        if (!fullReady && thumbnailRequest != null) AsyncImage(
+            model = thumbnailRequest, imageLoader = imageLoader, contentDescription = null, modifier = Modifier.fillMaxSize(),
             contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
-            placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceVariant),
+        )
+        AsyncImage(
+            model = request, imageLoader = imageLoader, contentDescription = description, modifier = Modifier.fillMaxSize(),
+            contentScale = if (crop) ContentScale.Crop else ContentScale.Fit,
             onLoading = { failed = false },
-            onError = { failed = true },
+            onError = { failed = true; onResult?.invoke() },
             onSuccess = { result ->
                 failed = false
+                fullReady = true
+                if (result.result.dataSource != DataSource.MEMORY_CACHE) prepareThumbnail = true
                 onSize?.invoke(result.result.image.width, result.result.image.height)
+                onResult?.invoke()
             },
         )
         if (failed) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -121,11 +170,18 @@ private sealed interface DocumentBlock {
     val key: String
     val nodeId: String
 
+    data class ChapterLabel(
+        override val key: String,
+        override val nodeId: String,
+        val number: String,
+    ) : DocumentBlock
+
     data class FormattedText(
         override val key: String,
         override val nodeId: String,
         val text: Spanned,
         val quoted: Boolean,
+        val introduction: Boolean,
         val heading: Boolean,
         val textSizeSp: Int,
     ) : DocumentBlock
@@ -237,10 +293,16 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                 val images = content.nodes.flatMap { it.images }.associateBy { destinations.process("media/${it.fileName}") }
                 val reducer = MarkwonReducer.directChildren()
                 val blocks = buildList {
+                    var chapterNumber = 0
                     reducer.reduce(document).forEach { container ->
                         currentCoroutineContext().ensureActive()
                         check(container is DocumentNodeBlock) { "Document node boundary was lost" }
                         val section = sections[container.index]
+                        if (section.kind == "chapter") {
+                            chapterNumber += 1
+                            add(DocumentBlock.ChapterLabel("${section.nodeId}:chapter-divider", section.nodeId,
+                                chapterNumber.toString().padStart(2, '0')))
+                        }
                         val textSizeSp = if (section.kind == "body" && !section.hasImages) 18 else 16
                         reducer.reduce(container).forEachIndexed { index, node ->
                             currentCoroutineContext().ensureActive()
@@ -251,7 +313,8 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                                 add(DocumentBlock.Picture(key, section.nodeId, destination,
                                     markdownPlainText(child).ifBlank { "图片" }, images[destination]))
                             } else add(DocumentBlock.FormattedText(key, section.nodeId, markwon.render(node),
-                                quoted = node is BlockQuote, heading = node is Heading, textSizeSp = textSizeSp))
+                                quoted = node is BlockQuote, introduction = section.kind == "introduction",
+                                heading = node is Heading, textSizeSp = textSizeSp))
                         }
                     }
                 }
@@ -269,6 +332,7 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
     else LazyColumn(modifier.fillMaxSize(), state = scroll, contentPadding = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = bottomContentPadding)) {
         itemsIndexed(document.blocks, key = { _, block -> block.key }, contentType = { _, block ->
             when (block) {
+                is DocumentBlock.ChapterLabel -> "chapter-divider"
                 is DocumentBlock.Picture -> "picture"
                 is DocumentBlock.FormattedText -> if (block.quoted) "quote" else "text"
             }
@@ -281,9 +345,13 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
             }
             val headingPadding = if (block is DocumentBlock.FormattedText && block.heading) 6.dp else 0.dp
             val blockModifier = Modifier.fillMaxWidth().padding(top = gap + headingPadding, bottom = headingPadding)
-            if (block is DocumentBlock.FormattedText) {
+            if (block is DocumentBlock.ChapterLabel) {
+                ChapterDivider(block.number, blockModifier)
+            }
+            else if (block is DocumentBlock.FormattedText) {
                 val textModifier = if (block.quoted) blockModifier.clip(RoundedCornerShape(8.dp))
-                    .background(quoteColors.background).padding(horizontal = 24.dp, vertical = 8.dp) else blockModifier
+                    .background(quoteColors.background).heightIn(min = if (block.introduction) 42.dp else 0.dp)
+                    .padding(horizontal = 24.dp, vertical = 8.dp) else blockModifier
                 MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() }, textModifier)
             }
             else if (block is DocumentBlock.Picture) {

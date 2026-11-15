@@ -42,6 +42,7 @@ fun EditorScreen(
     val titleNode = state.kind == "title"
     val chapter = state.kind == "chapter"
     val introduction = state.kind == "introduction"
+    val imageScroll = rememberLazyListState()
     var discard by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(false) }
     var nodeMenu by remember { mutableStateOf(false) }
@@ -107,7 +108,7 @@ fun EditorScreen(
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(),
-            state = rememberLazyListState(),
+            state = imageScroll,
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             if (state.loading || state.busy) item(key = "progress") { LinearProgressIndicator(Modifier.fillMaxWidth()) }

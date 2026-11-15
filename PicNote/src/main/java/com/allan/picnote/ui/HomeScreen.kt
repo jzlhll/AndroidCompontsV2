@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -41,6 +42,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.R
 import com.allan.picnote.data.WelcomeDocumentId
+import com.allan.picnote.data.NodeGuideKind
 import com.allan.picnote.logEx
 import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.photoAccess
@@ -100,9 +102,9 @@ fun HomeScreen(
         }
         onPauseOrDispose { }
     }
-    LaunchedEffect(state.permissionHistory, state.permissionHistoryLoading, state.permissionHistoryFailed, active) {
+    LaunchedEffect(state.permissionHistory, state.permissionHistoryLoading, state.permissionHistoryFailed, state.nodeGuide, active) {
         val history = state.permissionHistory
-        if (active && !state.permissionHistoryLoading && !state.permissionHistoryFailed && history != null && !history.explanationSeen && !history.requested
+        if (active && state.nodeGuide == null && !state.permissionHistoryLoading && !state.permissionHistoryFailed && history != null && !history.explanationSeen && !history.requested
             && photoAccess(context) != PhotoAccess.Full) viewModel.showPermissionPrompt()
     }
     val requestPermission = {
@@ -128,6 +130,9 @@ fun HomeScreen(
     var appearanceDialog by rememberSaveable { mutableStateOf(false) }
     val content = state.content
     val document = content?.document
+    val guide = state.nodeGuide
+    val guideAnchor = remember(guide) { guide?.let { NodeGuideAnchor() } }
+    val guideNodeId = if (guide?.kind == NodeGuideKind.Menu) content?.nodes?.getOrNull(2)?.node?.id else null
     val showMediaActions = document?.id != WelcomeDocumentId
     val latestPending = state.pending.firstOrNull()
     val showLoading = state.loading || state.busy || state.scanning
@@ -146,7 +151,7 @@ fun HomeScreen(
         drawerContent = {
             ModalDrawerSheet(Modifier.fillMaxWidth(0.86f)) {
                 Column(Modifier.fillMaxHeight()) {
-                Row(Modifier.fillMaxWidth().height(84.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("我的文档", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
                     CreateDocumentButton("＋ 新建", onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
                 }
@@ -155,7 +160,7 @@ fun HomeScreen(
                         var menu by remember { mutableStateOf(false) }
                         val updatedAt = remember(item.updatedAt, dateFormatter) { dateFormatter.format(Date(item.updatedAt)) }
                         Row(
-                            Modifier.fillMaxWidth().background(if (item.id == document?.id) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)
+                            Modifier.fillMaxWidth().background(if (item.id == document?.id) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                                 .semantics { this.selected = item.id == document?.id }
                                 .clickable(enabled = ready) { viewModel.reloadDocument(item.id); scope.launch { drawer.close() } }.padding(start = 20.dp, top = 12.dp, bottom = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -186,7 +191,7 @@ fun HomeScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    expandedHeight = 84.dp,
+                    expandedHeight = 64.dp,
                     title = { Text(document?.title ?: stringResource(R.string.app_name), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawer.open() } }, enabled = active,
@@ -275,6 +280,15 @@ fun HomeScreen(
                     val pager = rememberPagerState(pageCount = { 2 })
                     val nodeScroll = rememberLazyListState()
                     val documentScroll = rememberLazyListState()
+                    LaunchedEffect(guide, active) {
+                        if (active && guide != null && content != null && guide.documentId == content.document.id) {
+                            drawer.close()
+                            pager.scrollToPage(0)
+                            if (guide.kind == NodeGuideKind.Menu) {
+                                nodeScroll.scrollToItem(2)
+                            }
+                        }
+                    }
                     Box(Modifier.fillMaxWidth().padding(top = 12.dp)) {
                         ComposeLineTabLayout(
                             tabs = listOf("节点", "文档"), selectedIndex = pager.currentPage,
@@ -301,13 +315,18 @@ fun HomeScreen(
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         if (content != null) {
-                            HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), beyondViewportPageCount = 1, key = { it }) { page ->
+                            HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), userScrollEnabled = false, beyondViewportPageCount = 1, key = { it }) { page ->
                                 if (page == 0) NodeList(
                                     content = content, repository = viewModel.repository, listState = nodeScroll, enabled = ready, active = active && pager.currentPage == 0,
                                     onEdit = { node -> onEdit(EditRoute(content.document.id, node.node.id, kind = node.node.kind)) },
                                     onInsert = { anchor, kind -> onEdit(EditRoute(content.document.id, anchorId = anchor, kind = kind)) },
                                     onMove = viewModel::move, onDelete = viewModel::deleteNode, onMerge = viewModel::mergeNodes,
+                                    onMoveImage = viewModel::moveImage,
+                                    onNodeMenuOpened = { viewModel.recordNodeClick(NodeGuideKind.Menu) },
+                                    onNodeCardClicked = { viewModel.recordNodeClick(NodeGuideKind.Card) },
                                     bottomContentPadding = if (showMediaActions) 96.dp else 24.dp,
+                                    guideNodeId = guideNodeId, guideKind = guide?.kind,
+                                    guideAnchor = if (guide != null && pager.currentPage == 0) guideAnchor else null,
                                 ) else DocumentPreview(content, viewModel.repository, documentScroll, onMessage = viewModel::showMessage,
                                     active = active && pager.currentPage == 1, bottomContentPadding = if (showMediaActions) 96.dp else 24.dp)
                             }
@@ -317,7 +336,10 @@ fun HomeScreen(
             }
         }
     }
-    if (active && state.permissionPromptVisible) AlertDialog(
+    if (active && guide != null && guideAnchor != null && guide.documentId == document?.id) NodeGuideOverlay(
+        anchor = guideAnchor, kind = guide.kind, saving = state.nodeGuideSaving, onAcknowledge = viewModel::acknowledgeNodeGuide,
+    )
+    if (active && guide == null && state.permissionPromptVisible) AlertDialog(
         onDismissRequest = viewModel::dismissPermissionPrompt,
         title = { Text("授予图片访问权限") },
         text = { Text("授权访问全部图片后，每次进入会自动提醒新增图片，方便您的使用。\n如果不授权，则可以每次手动选择添加图片。") },

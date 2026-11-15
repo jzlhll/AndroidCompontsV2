@@ -7,8 +7,20 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import com.au.module_android.Globals
 import com.au.module_android.click.acceptClick
+
+/** Compose 点击复用 View.onClick 的全局防抖规则。 */
+fun Modifier.onClick(
+    enabled: Boolean = true,
+    onClickLabel: String? = null,
+    role: Role? = null,
+    paddingTime: Long = Globals.globalPaddingClickTime,
+    onClick: () -> Unit,
+): Modifier = clickable(enabled = enabled, onClickLabel = onClickLabel, role = role) {
+    if (acceptClick(paddingTime)) onClick()
+}
 
 /** 无 ripple 背景的点击。 */
 @Composable
