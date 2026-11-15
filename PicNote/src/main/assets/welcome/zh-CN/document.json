@@ -1,0 +1,11 @@
+{
+  "title": "如何使用[图笺] ？",
+  "introduction": "这是一篇关于如何使用图笺的入门文档。你可以把手机里的截图、照片和随手记录的文字整理在一起，按自己的思路调整顺序，形成一篇清晰的图文笔记。本篇先从找到并打开图笺开始，后续将逐步补充添加图片、编辑节点和导出文档的方法，帮助你留下值得保存的内容。",
+  "imageName": "手机桌面上的图笺",
+  "imageFileName": "launcher.webp",
+  "instruction": "点击程序打开程序。",
+  "todoTitle": "TODO",
+  "imageWidth": 512,
+  "imageHeight": 640,
+  "imageSha256": "5b03f3231a5d405b893d7aaf887dddd2dbe255f6200a634c03078685c4817e01"
+}

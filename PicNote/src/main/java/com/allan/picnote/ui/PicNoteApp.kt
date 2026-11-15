@@ -9,9 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.material3.*
@@ -35,6 +32,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.allan.picnote.PicNoteApplication
 import com.allan.picnote.logEx
 import com.allan.picnote.ui.theme.PicNoteTheme
+import com.au.module_androiduiex.picker.rememberComposePhotoPicker
 import com.au.module_androiduiex.styles.composeBackdropBlurSource
 import com.au.module_androiduiex.styles.rememberComposeBackdropBlurState
 import kotlinx.coroutines.CancellationException
@@ -72,7 +70,7 @@ fun PicNoteApp(app: PicNoteApplication) {
     var pickerDocumentId by rememberSaveable { mutableStateOf<String?>(null) }
     var actionAfterCreate by rememberSaveable { mutableStateOf<String?>(null) }
     var candidatesAfterCreate by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
+    val picker = rememberComposePhotoPicker { uris ->
         val documentId = pickerDocumentId
         pickerDocumentId = null
         if (documentId != null && uris.isNotEmpty()) home.importImages(documentId, uris.map { it.toString() })
@@ -80,7 +78,13 @@ fun PicNoteApp(app: PicNoteApplication) {
     val openPicker: (String) -> Unit = { id ->
         if (pickerDocumentId == null && backStack.lastOrNull() == HomeRoute) {
             pickerDocumentId = id
-            picker.launch(PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly).setOrderedSelection(true).build())
+            try { picker.launch() }
+            catch (e: CancellationException) { pickerDocumentId = null; throw e }
+            catch (e: Exception) {
+                pickerDocumentId = null
+                logEx(throwable = e, message = "Launch home image picker failed")
+                home.showMessage("无法打开系统相册，请重试")
+            }
         }
     }
     LaunchedEffect(state.message) {

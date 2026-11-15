@@ -17,10 +17,11 @@ import kotlin.math.min
 class DynamicPickMultiVisualMedia(currentMaxItems:Int) : ActivityResultContracts.PickMultipleVisualMedia(2) //随便给一个，只是为了父类不报错。
 {
     private var mCurrentMax = currentMaxItems
+
+    init { require(currentMaxItems > 1) { "Max items must be higher than 1" } }
+
     fun setCurrentMaxItems(max:Int) {
-        if (max == 1) {
-            throw RuntimeException("max must > 1.")
-        }
+        require(max > 1) { "Max items must be higher than 1" }
         mCurrentMax = max
     }
 

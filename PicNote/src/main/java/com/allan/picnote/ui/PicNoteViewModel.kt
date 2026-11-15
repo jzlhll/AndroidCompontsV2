@@ -85,6 +85,7 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         }
         reloadJob = viewModelScope.launch {
             try {
+                repository.initializeWelcome()?.let { if (it.mirrorFailed) mirrorFailures.add(it.value) }
                 mirrorFailures.addAll(repository.cleanup())
                 reload()
             } catch (e: CancellationException) {

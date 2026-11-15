@@ -2,15 +2,18 @@ package com.allan.picnote.data.repositories
 
 import android.content.Context
 import android.content.ContentUris
+import android.content.res.Resources
 import android.provider.MediaStore
 import androidx.room.withTransaction
 import com.allan.picnote.data.PicNoteDatabase
+import com.allan.picnote.data.WelcomeDocumentTemplate
 import com.allan.picnote.data.entity.*
 import com.allan.picnote.data.markdown
 import com.allan.picnote.logEx
 import com.allan.picnote.loge
 import com.allan.picnote.media.ImagePreparation
 import com.allan.picnote.media.PreparedImage
+import com.au.module_android.utils.withIOThread
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -19,6 +22,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
@@ -106,6 +110,54 @@ class DocumentRepository(private val context: Context, private val database: Pic
         val document = dao.document(id) ?: error("文档已删除，请重新选择")
         val images = dao.images(id).groupBy { it.nodeId }
         return DocumentContent(document, dao.nodes(id).map { NodeContent(it, images[it.id].orEmpty()) })
+    }
+
+    suspend fun initializeWelcome(): Saved<String>? = withIOThread {
+        mutex.withLock {
+            if (preferences.getBoolean("welcome_initialized", false)) return@withLock null
+            // 已有文档的安装不补插教程，用户删除教程后也不再重建。
+            if (dao.documents().isNotEmpty()) {
+                check(preferences.edit().putBoolean("welcome_initialized", true).commit()) { "无法保存教程初始化状态" }
+                return@withLock null
+            }
+            val language = if (Resources.getSystem().configuration.locales[0].language == "zh") "zh-CN" else "en"
+            val assetDirectory = "welcome/$language"
+            val template = context.assets.open("$assetDirectory/document.json").bufferedReader(Charsets.UTF_8).use {
+                Json.decodeFromString<WelcomeDocumentTemplate>(it.readText())
+            }
+            val id = "welcome"
+            val imageNodeId = "$id-image"
+            val directory = File(root, "$id/media")
+            val image = File(directory, template.imageFileName)
+            var committed = false
+            try {
+                check(directory.isDirectory || directory.mkdirs()) { "无法创建教程图片目录" }
+                context.assets.open("$assetDirectory/${template.imageFileName}").use { input ->
+                    FileOutputStream(image).use { output -> input.copyTo(output); output.fd.sync() }
+                }
+                currentCoroutineContext().ensureActive()
+                withContext(NonCancellable) {
+                    database.withTransaction {
+                        dao.putDocument(DocumentEntity(id, template.title, System.currentTimeMillis()))
+                        dao.putNodes(listOf(
+                            NodeEntity("$id-introduction", id, 1024, "introduction", template.introduction),
+                            NodeEntity(imageNodeId, id, 2048, "image"),
+                            NodeEntity("$id-instruction", id, 3072, "text", template.instruction),
+                            NodeEntity("$id-todo", id, 4096, "chapter", title = template.todoTitle),
+                        ))
+                        dao.putImages(listOf(NodeImageEntity("$id-launcher", imageNodeId, id, 0, template.imageFileName,
+                            template.imageSha256, template.imageWidth, template.imageHeight, template.imageName)))
+                    }
+                    committed = true
+                    check(preferences.edit().putBoolean("welcome_initialized", true).putString("last_document", id).commit()) {
+                        "无法保存教程初始化状态"
+                    }
+                    Saved(id, !writeMirror(id))
+                }
+            } finally {
+                if (!committed) File(root, id).deleteRecursively()
+            }
+        }
     }
 
     suspend fun create(title: String, firstBody: String): Saved<String> = withContext(Dispatchers.IO) {

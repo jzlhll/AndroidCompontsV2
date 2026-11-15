@@ -7,42 +7,32 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 
-/**
- * 如果小于等于1就会无法弹出。因此，还得包裹一层。
- * 支持 >= 1
- */
-class CompatMultiPickVisualMedia(max:Int) : ActivityResultContract<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>() //随便给一个，只是为了父类不报错。
-{
-    private var pickMedia = ActivityResultContracts.PickVisualMedia()
-    private var multiPickMedia = DynamicPickMultiVisualMedia(max) //later: 如果是1的话，其实不太对的。但是并没什么影响，不会被引用。暂时如此。
-
+/** 单选与动态多选共用入口，不申请图库权限。 */
+class CompatMultiPickVisualMedia(max: Int) : ActivityResultContract<PickVisualMediaRequest, List<@JvmSuppressWildcards Uri>>() {
+    private val pickMedia = ActivityResultContracts.PickVisualMedia()
     private var currentMax = max
+    private var launchedMax = max
+    private val multiPickMedia by lazy { DynamicPickMultiVisualMedia(currentMax) }
 
-    fun setCurrentMaxItems(max:Int) {
+    init { require(max > 0) { "Max items must be positive" } }
+
+    fun setCurrentMaxItems(max: Int) {
+        require(max > 0) { "Max items must be positive" }
         currentMax = max
-        if (max > 1) {
-            multiPickMedia.setCurrentMaxItems(max)
-        }
+        if (max > 1) multiPickMedia.setCurrentMaxItems(max)
     }
 
     override fun createIntent(context: Context, input: PickVisualMediaRequest): Intent {
-        return if (currentMax == 1) pickMedia.createIntent(context, input) else multiPickMedia.createIntent(context, input)
+        launchedMax = if (currentMax < input.maxItems) currentMax else input.maxItems
+        require(launchedMax > 0) { "Max items must be positive" }
+        return if (launchedMax == 1) pickMedia.createIntent(context, input) else multiPickMedia.createIntent(context, input)
     }
 
     override fun parseResult(resultCode: Int, intent: Intent?): List<Uri> {
-        if(currentMax == 1) {
-            val uri = pickMedia.parseResult(resultCode, intent)
-            return if (uri != null) {
-                listOf(uri)
-            } else {
-                emptyList()
-            }
-        } else {
-            return multiPickMedia.parseResult(resultCode, intent)
-        }
+        val result = if (launchedMax == 1) listOfNotNull(pickMedia.parseResult(resultCode, intent))
+            else multiPickMedia.parseResult(resultCode, intent)
+        return result.take(launchedMax)
     }
 
-    override fun getSynchronousResult(context: Context, input: PickVisualMediaRequest): SynchronousResult<List<Uri>>? {
-        return null //later: 2个都是null。统一为null。
-    }
+    override fun getSynchronousResult(context: Context, input: PickVisualMediaRequest): SynchronousResult<List<Uri>>? = null
 }

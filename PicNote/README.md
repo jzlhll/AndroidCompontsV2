@@ -6,9 +6,11 @@
 
 主界面只有 `节点 / 文档` 两个 Tab。内容由用户维护，Markdown 由本地规则组织；整个流程不接入大模型，不设置解析、对话轮次或记忆系统。
 
-首次添加素材前填写必填标题与可选引言。节点页包含 4:3 图片卡、固定 72dp 的纯文和章节卡；左侧圆点菜单可在当前节点前后插入普通节点或新章节。节点编辑采用背景模糊的应用内浮层，整个面板左右各留 24dp；普通页面的导航与进退动画参照 agit。
+首次进入直接打开“如何使用[图笺] ？”教程，根据系统语言选择中文或英文内容和三列三行的小尺寸桌面配图。“＋新建”打开独立页面，填写必填标题与可选引言，点击“创建”成功后才生成文档；返回或取消不创建。节点页包含 4:3 图片卡、固定 72dp 的纯文和章节卡；左侧圆点菜单可在当前节点前后插入普通节点或新章节。节点编辑采用背景模糊的应用内浮层，整个面板左右各留 24dp。
 
-与 agit 共用 Black、White、Dracula、Sage 颜色方案及按钮样式，默认 Sage，可从文档抽屉底部切换并保存。抽屉无文档时隐藏顶部栏，居中显示 32sp 的“空空如也”及“+新建”。
+与 agit 共用 Black、White、Dracula、Sage 颜色方案及按钮样式，默认 Sage，可从文档抽屉底部切换并保存。抽屉始终显示“我的文档”和“＋新建”；教程只初始化一次，删除后不自动补回。
+
+`PicNoteApplication` 继承 `CommonInitApplication`，接入公共初始化、日志、异常处理和前后台通知。业务导航保持单 `ComponentActivity` + Navigation 3；图片选择复用公共模块提供的纯 Compose 入口，不依赖 Fragment。
 
 图片检查仅由应用进入前台触发，顶栏不提供刷新入口。公共日志按 `startupId` 和 `foreground_enter` 序号记录进入次数，窗口焦点与多窗口回调另行记录，便于核对窗口模式。可选引言以灰字、24dp 缩进显示，Markdown 导出为 `>` 引用。
 
@@ -17,10 +19,11 @@
 | [01-总体思路.md](01-总体思路.md) | 产品定位、对象与核心流程 |
 | [02-文档与本地存储.md](02-文档与本地存储.md) | 节点到 Markdown 的映射、保存与导出 |
 | [03-程序界面设计.md](03-程序界面设计.md) | 两个 Tab、节点图片与备注编辑、Markdown 阅读预览 |
+| [04-首次使用文档.md](04-首次使用文档.md) | 内置教程、中英文配图与首次初始化 |
 | [原型图/README.md](原型图/README.md) | 原型索引与生成方法 |
 
-![00-原型总览.png](原型图/00-原型总览.png)
+![11-首次使用文档.webp](原型图/11-首次使用文档.webp)
 
-初版范围以三份文档为准；原型中的归档、设置等未纳入入口不实现。
+初版范围以四份文档为准；原型中的归档、设置等未纳入入口不实现。
 
 应用模块为 `:picnote`，应用 ID 为 `com.allan.picnote`，从仓库根工程打开。入口为 [MainActivity.kt](src/main/java/com/allan/picnote/MainActivity.kt) 与 [PicNoteApp.kt](src/main/java/com/allan/picnote/ui/PicNoteApp.kt)；文档保存见 [DocumentRepository.kt](src/main/java/com/allan/picnote/data/repositories/DocumentRepository.kt)，图片差异检查见 [MediaScanner.kt](src/main/java/com/allan/picnote/media/MediaScanner.kt)。

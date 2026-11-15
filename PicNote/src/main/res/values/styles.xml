@@ -4,4 +4,5 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
+    <style name="Theme.PicNote.Crash" parent="Theme.AppCompat.Light.NoActionBar" />
 </resources>

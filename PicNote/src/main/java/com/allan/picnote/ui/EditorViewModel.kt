@@ -78,6 +78,10 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
 
     fun setTitle(value: String) { updateDraft { it.copy(title = value) } }
     fun setBody(value: String) { updateDraft { it.copy(body = value) } }
+    fun imagePickerFailed(e: Exception) {
+        logEx(throwable = e, message = "Launch editor image picker failed")
+        mutableStateFlow.update { it.copy(error = "无法打开系统相册，请重试") }
+    }
     fun addImages(uris: List<String>) { prepareImages(uris) }
     fun removeImage(index: Int) { updateDraft { it.copy(images = it.images.filterIndexed { i, _ -> i != index }) } }
     fun replaceImage(index: Int, uri: String) {

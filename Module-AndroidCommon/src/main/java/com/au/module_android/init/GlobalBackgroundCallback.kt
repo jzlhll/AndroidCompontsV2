@@ -2,7 +2,6 @@ package com.au.module_android.init
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.au.module_android.Globals.activityList
 import java.util.concurrent.CopyOnWriteArrayList
 
 object GlobalBackgroundCallback : DefaultLifecycleObserver {
@@ -40,18 +39,16 @@ object GlobalBackgroundCallback : DefaultLifecycleObserver {
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        if (isInBackground) {
-            isInBackground = false
-        }
+        if (!isInBackground) return
+        isInBackground = false
         notifyListener()
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        //ProcessLifecycleOwner.get().lifecycle监听的结果，onStop就代表进入了后台。如果应用还活着就会回调。
-        isInBackground = activityList.isNotEmpty()
-        if (isInBackground) {
-            notifyListener()
-        }
+        // 进程生命周期已经代表可见性，不再依赖可能已清空的 Activity 列表。
+        if (isInBackground) return
+        isInBackground = true
+        notifyListener()
     }
 
     private fun notifyListener() {

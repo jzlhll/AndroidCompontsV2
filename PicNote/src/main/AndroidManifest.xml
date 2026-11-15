@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.PicNote">
-        <activity android:name="com.au.module_android.crash.CrashActivity" tools:node="remove" />
+        <activity android:name="com.au.module_android.crash.CrashActivity" android:theme="@style/Theme.PicNote.Crash" />
         <activity android:name="com.au.module_androidui.ui.FragmentShellActivity" tools:node="remove" />
         <activity android:name="com.au.module_androidui.ui.FragmentShellTranslucentActivity" tools:node="remove" />
         <activity android:name="com.au.module_androidui.ui.FragmentShellOrientationActivity" tools:node="remove" />

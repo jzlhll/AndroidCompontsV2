@@ -1,0 +1,11 @@
+{
+  "title": "How to use [PicNote]?",
+  "introduction": "This is a short guide to using PicNote. It shows how screenshots, photos, and your own words can become a clear visual note, with each piece kept in an editable node. Start by finding the PicNote icon on your phone and opening the app. Later chapters will explain how to add images, edit text, arrange nodes, and export your document. This first example is already saved on your device, so you can explore the node list and document view at your own pace. You can rename, edit, or delete it just like any other document. Everything stays available locally while you learn.",
+  "imageName": "PicNote on the phone home screen",
+  "imageFileName": "launcher.webp",
+  "imageWidth": 512,
+  "imageHeight": 640,
+  "imageSha256": "6eca0336f2ef680231ba45940c8f2ec07f6e326c02e99b8c7e2f441aec413a44",
+  "instruction": "Tap the app icon to open PicNote.",
+  "todoTitle": "TODO"
+}

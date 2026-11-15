@@ -30,7 +30,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.data.entity.DocumentSummary
@@ -129,15 +128,6 @@ fun HomeScreen(
         drawerContent = {
             ModalDrawerSheet(Modifier.fillMaxWidth(0.86f)) {
                 Column(Modifier.fillMaxHeight()) {
-                if (state.documents.isEmpty()) {
-                    if (state.loading) Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        LinearProgressIndicator(Modifier.fillMaxWidth().padding(32.dp))
-                    } else Column(Modifier.weight(1f).fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        Text("空空如也", fontSize = 32.sp, style = MaterialTheme.typography.headlineLarge)
-                        Spacer(Modifier.height(12.dp))
-                        CreateDocumentButton("+新建", onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
-                    }
-                } else {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("我的文档", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
                     CreateDocumentButton("＋ 新建", onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
@@ -164,7 +154,6 @@ fun HomeScreen(
                             }
                         }
                     }
-                }
                 }
                 HorizontalDivider()
                 TextButton(onClick = { appearanceDialog = true }, enabled = active && !state.themeSaving,
@@ -234,9 +223,7 @@ fun HomeScreen(
                     TextButton(onClick = viewModel::retryMirror, enabled = ready) { Text("重试") }
                 }
                 if (document == null) {
-                    Column(Modifier.weight(1f).fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        CreateDocumentButton("新建文档", onClick = onCreate, enabled = ready)
-                    }
+                    Spacer(Modifier.weight(1f).fillMaxWidth())
                 } else documentStates.SaveableStateProvider(document.id) {
                     val pager = rememberPagerState(pageCount = { 2 })
                     val nodeScroll = rememberLazyListState()
@@ -271,7 +258,7 @@ fun HomeScreen(
     if (active && state.permissionPromptVisible) AlertDialog(
         onDismissRequest = viewModel::dismissPermissionPrompt,
         title = { Text("授予图片访问权限") },
-        text = { Text("授权访问全部图片后，每次进入会检查图片变化。也可不授权，使用系统相册手动选图。") },
+        text = { Text("授权访问全部图片后，每次进入会自动提醒新增图片，方便您的使用。\n如果不授权，则可以每次手动选择添加图片。") },
         confirmButton = { TextButton(onClick = viewModel::requestImagePermission, enabled = !state.permissionPromptSaving) { Text("授予权限") } },
         dismissButton = { TextButton(onClick = viewModel::dismissPermissionPrompt, enabled = !state.permissionPromptSaving) { Text("暂不授权") } },
     )

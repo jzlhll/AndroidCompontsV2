@@ -1,8 +1,5 @@
 package com.allan.picnote.ui
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -11,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +30,9 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.allan.picnote.data.repositories.DocumentRepository
+import com.au.module_androiduiex.picker.rememberComposePhotoPicker
 import com.au.module_androiduiex.styles.ComposeBackdropBlurState
+import kotlinx.coroutines.CancellationException
 import com.au.module_androiduiex.styles.ComposeBackdropBlurWhiteBlock
 import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
 import com.au.module_androiduiex.styles.ComposeIconButton as IconButton
@@ -55,17 +56,20 @@ fun EditorScreen(
     var deleting by rememberSaveable { mutableStateOf(false) }
     var nodeMenu by remember { mutableStateOf(false) }
     var replaceImageId by rememberSaveable { mutableStateOf<String?>(null) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
+    val picker = rememberComposePhotoPicker { uris ->
         if (uris.isNotEmpty()) viewModel.addImages(uris.map { it.toString() })
     }
-    val replacer = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+    val replacer = rememberComposePhotoPicker { uris ->
         val id = replaceImageId
         replaceImageId = null
         val index = viewModel.stateFlow.value.images.indexOfFirst { it.id == id }
+        val uri = uris.firstOrNull()
         if (uri != null && index >= 0) viewModel.replaceImage(index, uri.toString())
     }
     val addImages = {
-        picker.launch(PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly).setOrderedSelection(true).build())
+        try { picker.launch() }
+        catch (e: CancellationException) { throw e }
+        catch (e: Exception) { viewModel.imagePickerFailed(e) }
     }
     val leave = { focusManager.clearFocus(force = true); keyboard?.hide(); onBack() }
     val close = { if (!state.busy && state.savedId == null) { if (state.dirty) discard = true else leave() } }
@@ -96,7 +100,11 @@ fun EditorScreen(
                 windowInsets = if (creatingDocument) TopAppBarDefaults.windowInsets else WindowInsets(0, 0, 0, 0),
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
                 title = { Text(when { creatingDocument -> "新建文档"; introduction -> "编辑引言"; route.chapter -> if (route.nodeId == null) "创建章节" else "编辑章节"; else -> "节点编辑" }, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { TextButton(onClick = close, enabled = !state.busy && state.savedId == null) { Text("关闭") } },
+                navigationIcon = {
+                    IconButton(onClick = close, enabled = !state.busy && state.savedId == null) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
                 actions = {
                     if (!creatingDocument && (!route.chapter || route.nodeId != null)) Box {
                         IconButton(onClick = { nodeMenu = true }, enabled = editable) { Text("⋯") }
@@ -105,7 +113,7 @@ fun EditorScreen(
                             if (route.nodeId != null) DropdownMenuItem(text = { Text("删除节点") }, onClick = { nodeMenu = false; deleting = true })
                         }
                     }
-                    TextButton(onClick = save, enabled = valid && editable) { Text(if (creatingDocument) "创建文档" else "保存") }
+                    TextButton(onClick = save, enabled = valid && editable) { Text(if (creatingDocument) "创建" else "保存") }
                 },
             )
         },
@@ -141,8 +149,12 @@ fun EditorScreen(
                             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                                 DropdownMenuItem(text = { Text("替换图片") }, onClick = {
                                     menu = false
-                                    replaceImageId = draft.id
-                                    replacer.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                    if (replaceImageId == null) {
+                                        replaceImageId = draft.id
+                                        try { replacer.launch(maxItems = 1) }
+                                        catch (e: CancellationException) { replaceImageId = null; throw e }
+                                        catch (e: Exception) { replaceImageId = null; viewModel.imagePickerFailed(e) }
+                                    }
                                 })
                                 DropdownMenuItem(text = { Text("移除图片") }, onClick = {
                                     menu = false
