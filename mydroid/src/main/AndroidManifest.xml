@@ -55,7 +55,7 @@
 
         <activity
             android:name="com.allan.mydroid.views.ShareImportActivity"
-            android:theme="@style/TranslucentActivityTheme"
+            android:theme="@style/SplashTheme"
             android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>

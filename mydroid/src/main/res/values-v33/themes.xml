@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="SplashTheme" parent="AbsStyleSplashTheme">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_playstore</item>
+        <item name="android:windowSplashScreenBehavior">icon_preferred</item>
+    </style>
+</resources>
