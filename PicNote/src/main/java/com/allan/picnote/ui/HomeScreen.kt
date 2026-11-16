@@ -2,6 +2,7 @@ package com.allan.picnote.ui
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,8 +37,10 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.R
@@ -48,6 +51,7 @@ import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.photoAccess
 import com.allan.picnote.media.photoPermissions
 import com.allan.picnote.ui.components.CreateDocumentButton
+import com.au.module_android.Globals
 import com.au.module_androiduiex.styles.ComposeTheme
 import com.au.module_androiduiex.styles.ComposeLineTabLayout
 import com.au.module_androiduiex.styles.ComposeLineTabLayoutStyle
@@ -57,9 +61,8 @@ import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
 import com.au.module_androiduiex.styles.ComposeIconButton as IconButton
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
-import java.text.SimpleDateFormat
+import java.text.DateFormat
 import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +83,7 @@ fun HomeScreen(
             context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
         } catch (e: Exception) {
             logEx(throwable = e, message = "Open image permission settings failed")
-            viewModel.showMessage("无法打开系统设置，请从应用信息中开启图片权限")
+            viewModel.showMessage(Globals.app.getString(R.string.error_open_settings))
         }
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -96,7 +99,7 @@ fun HomeScreen(
                 } catch (e: CancellationException) { throw e }
                 catch (e: Exception) {
                     logEx(throwable = e, message = "Launch image permission request failed")
-                    viewModel.showMessage("无法发起图片权限申请，请重试或进入系统设置")
+                    viewModel.showMessage(Globals.app.getString(R.string.error_request_photo_permission))
                 }
             }
         }
@@ -128,6 +131,7 @@ fun HomeScreen(
     var ribbon by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var appearanceDialog by rememberSaveable { mutableStateOf(false) }
+    var settingsDialog by rememberSaveable { mutableStateOf(false) }
     val content = state.content
     val document = content?.document
     val guide = state.nodeGuide
@@ -137,7 +141,11 @@ fun HomeScreen(
     val latestPending = state.pending.firstOrNull()
     val showLoading = state.loading || state.busy || state.scanning
     val imported = remember(state.content) { state.content?.nodes.orEmpty().flatMap { it.images }.mapNotNull { it.sourceUri }.toSet() }
-    val dateFormatter = remember { SimpleDateFormat("MM-dd HH:mm", Locale.CHINA) }
+    val locale = context.resources.configuration.locales[0]
+    val dateFormatter = remember(locale) { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale) }
+    val openDocumentListDescription = stringResource(R.string.open_document_list)
+    val documentActionsDescription = stringResource(R.string.document_actions)
+    val openPickerDescription = stringResource(R.string.open_picker_add_images)
     LaunchedEffect(state.pending, imported) {
         selected = selected.filter { id -> state.pending.any { it.uri == id } && id !in imported }
         if (state.pending.isEmpty()) ribbon = false
@@ -152,13 +160,14 @@ fun HomeScreen(
             ModalDrawerSheet(Modifier.fillMaxWidth(0.86f)) {
                 Column(Modifier.fillMaxHeight()) {
                 Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("我的文档", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                    CreateDocumentButton("＋ 新建", onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
+                    Text(stringResource(R.string.my_documents), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                    CreateDocumentButton(stringResource(R.string.new_document_button), onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
                 }
                 LazyColumn(Modifier.weight(1f).selectableGroup()) {
                     items(state.documents, key = { it.id }, contentType = { "document" }) { item ->
                         var menu by remember { mutableStateOf(false) }
                         val updatedAt = remember(item.updatedAt, dateFormatter) { dateFormatter.format(Date(item.updatedAt)) }
+                        val itemActionsDescription = stringResource(R.string.document_item_actions, item.title)
                         Row(
                             Modifier.fillMaxWidth().background(if (item.id == document?.id) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                                 .semantics { this.selected = item.id == document?.id }
@@ -167,15 +176,15 @@ fun HomeScreen(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(item.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("${item.nodeCount} 个节点 · $updatedAt",
+                                Text(stringResource(R.string.document_summary, item.nodeCount, updatedAt),
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Box {
                                 IconButton(onClick = { menu = true }, enabled = ready,
-                                    modifier = Modifier.semantics { contentDescription = "文档「${item.title}」的操作" }) { Text("⋯") }
+                                    modifier = Modifier.semantics { contentDescription = itemActionsDescription }) { Text("⋯") }
                                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(text = { Text("重命名") }, onClick = { menu = false; beginRename(item.id, item.title) })
-                                    DropdownMenuItem(text = { Text("删除文档", color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; deleteId = item.id })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { menu = false; beginRename(item.id, item.title) })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.delete_document), color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; deleteId = item.id })
                                 }
                             }
                         }
@@ -183,7 +192,9 @@ fun HomeScreen(
                 }
                 HorizontalDivider()
                 TextButton(onClick = { appearanceDialog = true }, enabled = active && !state.themeSaving,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) { Text("外观") }
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.appearance)) }
+                TextButton(onClick = { scope.launch { drawer.close(); settingsDialog = true } }, enabled = active,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.settings)) }
                 }
             }
         },
@@ -195,19 +206,19 @@ fun HomeScreen(
                     title = { Text(document?.title ?: stringResource(R.string.app_name), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawer.open() } }, enabled = active,
-                            modifier = Modifier.semantics { contentDescription = "打开文档列表" }) { Text("☰") }
+                            modifier = Modifier.semantics { contentDescription = openDocumentListDescription }) { Text("☰") }
                     },
                     actions = {
                         Box {
                             IconButton(onClick = { more = true }, enabled = document != null && ready,
-                                modifier = Modifier.semantics { contentDescription = "文档操作" }) { Text("⋯") }
+                                modifier = Modifier.semantics { contentDescription = documentActionsDescription }) { Text("⋯") }
                             DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
                                 if (document != null) {
-                                    DropdownMenuItem(text = { Text("重命名", style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename), style = ComposeTypography.Font16, color = LocalContentColor.current) },
                                         onClick = { more = false; beginRename(document.id, document.title) }, enabled = ready)
-                                    DropdownMenuItem(text = { Text("导出文档", style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.export_document), style = ComposeTypography.Font16, color = LocalContentColor.current) },
                                         onClick = { more = false; viewModel.export() }, enabled = ready)
-                                    DropdownMenuItem(text = { Text("删除文档", style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.error) },
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.delete_document), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.error) },
                                         onClick = { more = false; deleteId = document.id }, enabled = ready)
                                 }
                             }
@@ -229,8 +240,8 @@ fun HomeScreen(
                                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                 ) {
                                     Row(Modifier.padding(4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        LocalImage(latest.uri, "最新图片：${latest.name}", Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)), crop = true)
-                                        Text("新增${state.pending.size}", Modifier.weight(1f, fill = false).padding(end = 8.dp),
+                                        LocalImage(latest.uri, stringResource(R.string.latest_image, latest.name), Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)), crop = true)
+                                        Text(stringResource(R.string.new_images_count, state.pending.size), Modifier.weight(1f, fill = false).padding(end = 8.dp),
                                             style = ComposeTypography.Font14M, color = MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     }
@@ -239,7 +250,7 @@ fun HomeScreen(
                         }
                         FloatingActionButton(
                             onClick = { if (ready) onPickImages() },
-                            modifier = Modifier.semantics { contentDescription = "打开相册添加图片"; if (!ready) disabled() },
+                            modifier = Modifier.semantics { contentDescription = openPickerDescription; if (!ready) disabled() },
                             containerColor = if (ready) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = if (ready) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         ) {
@@ -258,17 +269,17 @@ fun HomeScreen(
                                     Column(Modifier.width(104.dp).clickable(enabled = !disabled) {
                                         selected = if (candidate.uri in selected) selected - candidate.uri else selected + candidate.uri
                                     }) {
-                                        LocalImage(candidate.uri, "图片：${candidate.name}", Modifier.size(104.dp), crop = true)
+                                        LocalImage(candidate.uri, stringResource(R.string.image_named, candidate.name), Modifier.size(104.dp), crop = true)
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Checkbox(checked = candidate.uri in selected, onCheckedChange = null, enabled = !disabled)
-                                            if (candidate.uri in imported) Text("已添加", style = MaterialTheme.typography.bodySmall)
+                                            if (candidate.uri in imported) Text(stringResource(R.string.already_added), style = MaterialTheme.typography.bodySmall)
                                         }
                                     }
                                 }
                             }
                             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End) {
-                                TextButton(onClick = { viewModel.ignoreCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) { Text("忽略") }
-                                Button(onClick = { onCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) { Text("添加 ${selected.size} 张") }
+                                TextButton(onClick = { viewModel.ignoreCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) { Text(stringResource(R.string.ignore)) }
+                                Button(onClick = { onCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) { Text(stringResource(R.string.add_images_count, selected.size)) }
                             }
                         }
                     }
@@ -291,7 +302,7 @@ fun HomeScreen(
                     }
                     Box(Modifier.fillMaxWidth().padding(top = 12.dp)) {
                         ComposeLineTabLayout(
-                            tabs = listOf("节点", "文档"), selectedIndex = pager.currentPage,
+                            tabs = listOf(stringResource(R.string.tab_nodes), stringResource(R.string.tab_document)), selectedIndex = pager.currentPage,
                             modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                             style = ComposeLineTabLayoutStyle(
                                 height = 48.dp, startPadding = 0.dp, itemHorizontalPadding = 0.dp,
@@ -310,8 +321,8 @@ fun HomeScreen(
                     }
                     PermissionBanner(state, onPermission = requestPermission, active = active)
                     if (state.mirrorFailed) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("已保存，文档镜像更新失败", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = viewModel::retryMirror, enabled = ready) { Text("重试") }
+                        Text(stringResource(R.string.mirror_failed), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                        TextButton(onClick = viewModel::retryMirror, enabled = ready) { Text(stringResource(R.string.retry)) }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         if (content != null) {
@@ -341,25 +352,25 @@ fun HomeScreen(
     )
     if (active && guide == null && state.permissionPromptVisible) AlertDialog(
         onDismissRequest = viewModel::dismissPermissionPrompt,
-        title = { Text("授予图片访问权限") },
-        text = { Text("授权访问全部图片后，每次进入会自动提醒新增图片，方便您的使用。\n如果不授权，则可以每次手动选择添加图片。") },
-        confirmButton = { TextButton(onClick = viewModel::requestImagePermission, enabled = !state.permissionPromptSaving) { Text("授予权限") } },
-        dismissButton = { TextButton(onClick = viewModel::dismissPermissionPrompt, enabled = !state.permissionPromptSaving) { Text("暂不授权") } },
+        title = { Text(stringResource(R.string.grant_photo_access_title)) },
+        text = { Text(stringResource(R.string.grant_photo_access_message)) },
+        confirmButton = { TextButton(onClick = viewModel::requestImagePermission, enabled = !state.permissionPromptSaving) { Text(stringResource(R.string.grant_permission)) } },
+        dismissButton = { TextButton(onClick = viewModel::dismissPermissionPrompt, enabled = !state.permissionPromptSaving) { Text(stringResource(R.string.not_now)) } },
     )
     if (active && renameId != null) AlertDialog(
-        onDismissRequest = { renameId = null }, title = { Text("重命名文档") },
-        text = { OutlinedTextField(value = renameTitle, onValueChange = { renameTitle = it }, singleLine = true, label = { Text("标题") }) },
-        confirmButton = { TextButton(onClick = { viewModel.rename(renameId!!, renameTitle); renameId = null }, enabled = renameTitle.trim().isNotEmpty() && ready) { Text("保存") } },
-        dismissButton = { TextButton(onClick = { renameId = null }) { Text("取消") } },
+        onDismissRequest = { renameId = null }, title = { Text(stringResource(R.string.rename_document)) },
+        text = { OutlinedTextField(value = renameTitle, onValueChange = { renameTitle = it }, singleLine = true, label = { Text(stringResource(R.string.title)) }) },
+        confirmButton = { TextButton(onClick = { viewModel.rename(renameId!!, renameTitle); renameId = null }, enabled = renameTitle.trim().isNotEmpty() && ready) { Text(stringResource(R.string.save)) } },
+        dismissButton = { TextButton(onClick = { renameId = null }) { Text(stringResource(R.string.cancel)) } },
     )
     if (active && deleteId != null) AlertDialog(
-        onDismissRequest = { deleteId = null }, title = { Text("删除文档", color = MaterialTheme.colorScheme.error) },
-        text = { Text("将删除「${state.documents.firstOrNull { it.id == deleteId }?.title.orEmpty()}」的所有节点、文字和本地图片副本，无法恢复。") },
-        confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text("删除", color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = { deleteId = null }) { Text("取消") } },
+        onDismissRequest = { deleteId = null }, title = { Text(stringResource(R.string.delete_document), color = MaterialTheme.colorScheme.error) },
+        text = { Text(stringResource(R.string.delete_document_message, state.documents.firstOrNull { it.id == deleteId }?.title.orEmpty())) },
+        confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { TextButton(onClick = { deleteId = null }) { Text(stringResource(R.string.cancel)) } },
     )
     if (active && appearanceDialog) AlertDialog(
-        onDismissRequest = { appearanceDialog = false }, title = { Text("外观") },
+        onDismissRequest = { appearanceDialog = false }, title = { Text(stringResource(R.string.appearance)) },
         text = {
             Column(Modifier.selectableGroup()) {
                 ComposeTheme.entries.forEach { theme ->
@@ -372,20 +383,48 @@ fun HomeScreen(
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { appearanceDialog = false }) { Text("关闭") } },
+        confirmButton = { TextButton(onClick = { appearanceDialog = false }) { Text(stringResource(R.string.close)) } },
+    )
+    if (active && settingsDialog) AlertDialog(
+        onDismissRequest = { settingsDialog = false }, title = { Text(stringResource(R.string.settings)) },
+        text = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) {
+                        settingsDialog = false
+                        try {
+                            context.startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.parse("package:${context.packageName}")))
+                        } catch (e: Exception) {
+                            logEx(throwable = e, message = "Open language settings failed")
+                            viewModel.showMessage(Globals.app.getString(R.string.error_open_language_settings))
+                        }
+                    }.padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.language), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface)
+                }
+            } else {
+                Box(Modifier.fillMaxWidth().heightIn(min = 160.dp), contentAlignment = Alignment.Center) {
+                    Text(stringResource(R.string.settings_empty), style = MaterialTheme.typography.headlineSmall, fontSize = 26.sp, textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { settingsDialog = false }) { Text(stringResource(R.string.close)) } },
     )
 }
 
 @Composable
 private fun PermissionBanner(state: HomeState, onPermission: () -> Unit, active: Boolean) {
     if (state.access == PhotoAccess.Full && state.scanError == null) return
+    val managePhotoAccessDescription = stringResource(R.string.manage_photo_access)
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         if (state.access != PhotoAccess.Full) Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(if (state.access == PhotoAccess.Partial) "图片权限：部分图片" else "图片权限：未授权",
+            Text(stringResource(if (state.access == PhotoAccess.Partial) R.string.photo_access_partial else R.string.photo_access_denied),
                 Modifier.weight(1f), style = MaterialTheme.typography.labelMedium)
             IconButton(onClick = onPermission,
                 enabled = active && !state.permissionHistoryLoading && !state.permissionPromptSaving && !state.permissionRequestPending,
-                modifier = Modifier.semantics { contentDescription = "管理图片访问权限" }) {
+                modifier = Modifier.semantics { contentDescription = managePhotoAccessDescription }) {
                 Text("›", style = MaterialTheme.typography.titleLarge)
             }
         }

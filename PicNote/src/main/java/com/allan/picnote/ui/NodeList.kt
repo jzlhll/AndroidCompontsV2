@@ -2,6 +2,7 @@ package com.allan.picnote.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +40,8 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -53,6 +56,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
+import com.allan.picnote.R
 import com.allan.picnote.data.entity.DocumentContent
 import com.allan.picnote.data.entity.NodeContent
 import com.allan.picnote.data.NodeGuideKind
@@ -70,12 +74,13 @@ import java.io.File
 import kotlin.math.hypot
 import kotlin.time.Duration.Companion.milliseconds
 
-private fun nodeTypeLabel(kind: String): String = when (kind) {
-    "title" -> "标题"
-    "introduction" -> "引言"
-    "chapter" -> "章节标题"
-    else -> "正文"
-}
+@Composable
+private fun nodeTypeLabel(kind: String): String = stringResource(when (kind) {
+    "title" -> R.string.title
+    "introduction" -> R.string.introduction
+    "chapter" -> R.string.chapter_title
+    else -> R.string.body
+})
 
 @Composable
 fun NodeList(
@@ -204,7 +209,7 @@ fun NodeList(
                 LaunchedEffect(interactive) { if (!interactive) menu = false }
                 Box(Modifier.clickable(enabled = interactive, role = Role.Button) { menu = true }
                     .padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
-                    Text("＋ 添加节点", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.add_node), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     DropdownMenu(expanded = menu && interactive, onDismissRequest = { menu = false }) {
                         InsertItems { kind -> menu = false; onInsert(null, kind) }
                     }
@@ -214,26 +219,26 @@ fun NodeList(
     }
     if (active) deleting?.let { item ->
         AlertDialog(
-            onDismissRequest = { deleting = null }, title = { Text("删除节点") },
-            text = { Text(if (item.node.kind == "chapter") "仅删除章节标题「${item.node.title}」，其后的节点将保留。" else "将删除此节点的文字和 ${item.images.size} 张图片引用，无法恢复。") },
-            confirmButton = { TextButton(onClick = { onDelete(item.node.id); deleting = null }, enabled = interactive) { Text("删除") } },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("取消") } },
+            onDismissRequest = { deleting = null }, title = { Text(stringResource(R.string.delete_node)) },
+            text = { Text(if (item.node.kind == "chapter") stringResource(R.string.delete_chapter_message, item.node.title) else stringResource(R.string.delete_node_message, item.images.size)) },
+            confirmButton = { TextButton(onClick = { onDelete(item.node.id); deleting = null }, enabled = interactive) { Text(stringResource(R.string.delete)) } },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
     if (active) merging?.let { pair ->
         val selected = content.nodes.withIndex().filter { it.value.node.id == pair.first || it.value.node.id == pair.second }
         val valid = selected.size == 2 && selected.all { it.value.node.kind == "body" }
         AlertDialog(
-            onDismissRequest = { merging = null }, title = { Text("合并节点") },
+            onDismissRequest = { merging = null }, title = { Text(stringResource(R.string.merge_nodes)) },
             text = { Text(if (valid) {
                 val earlier = selected[0]
                 val later = selected[1]
                 val firstNumber = (earlier.index + 1).toString().padStart(2, '0')
                 val secondNumber = (later.index + 1).toString().padStart(2, '0')
-                "将合并 $firstNumber（${earlier.value.images.size} 张图片）与 $secondNumber（${later.value.images.size} 张图片）。\n文字和图片均按 $firstNumber、$secondNumber 的顺序保留，文字以换行连接，保留 $firstNumber 的位置。"
-            } else "节点已变化，请取消后重新选择。") },
-            confirmButton = { TextButton(onClick = { merging = null; onMerge(pair.first, pair.second) }, enabled = valid && interactive) { Text("合并") } },
-            dismissButton = { TextButton(onClick = { merging = null }) { Text("取消") } },
+                stringResource(R.string.merge_nodes_message, firstNumber, earlier.value.images.size, secondNumber, later.value.images.size)
+            } else stringResource(R.string.merge_nodes_changed)) },
+            confirmButton = { TextButton(onClick = { merging = null; onMerge(pair.first, pair.second) }, enabled = valid && interactive) { Text(stringResource(R.string.merge)) } },
+            dismissButton = { TextButton(onClick = { merging = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }
@@ -256,31 +261,37 @@ private fun NodeMenu(
 ) {
     var menu by remember { mutableStateOf(false) }
     var inserting by remember { mutableStateOf(false) }
+    val nodeActionsDescription = stringResource(R.string.node_actions)
     LaunchedEffect(enabled) { if (!enabled) { menu = false; inserting = false } }
     if (guideAnchor != null) DisposableEffect(guideAnchor) { onDispose { guideAnchor.bounds = null } }
-    Box(modifier.size(48.dp), contentAlignment = Alignment.Center) {
-        Box(Modifier.size(48.dp).clip(CircleShape)
-            .onClick(enabled = enabled, onClickLabel = "节点操作", role = Role.Button) {
+    Box(modifier.size(width = 48.dp, height = 80.dp), contentAlignment = Alignment.TopCenter) {
+        Box(Modifier.matchParentSize()
+            .onClick(enabled = enabled, onClickLabel = nodeActionsDescription, role = Role.Button) {
                 inserting = false
                 menu = true
                 onOpen()
-            }.semantics { contentDescription = "节点操作" }, contentAlignment = Alignment.Center) {
-            Box(Modifier.size(8.dp).background(foreground, CircleShape))
+            }.semantics { contentDescription = nodeActionsDescription }, contentAlignment = Alignment.TopCenter) {
+            Image(
+                painter = painterResource(R.drawable.node_bamboo_long_branch),
+                contentDescription = null,
+                modifier = Modifier.size(width = 30.dp, height = 60.dp)
+                    .background(MaterialTheme.colorScheme.background),
+            )
         }
-        Text(number, Modifier.align(Alignment.TopCenter).offset(y = 32.dp)
+        Text(number, Modifier.align(Alignment.TopCenter).offset(y = 64.dp)
             .background(MaterialTheme.colorScheme.background).padding(horizontal = 2.dp)
             .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) { guideAnchor.bounds = it.boundsInWindow } else Modifier),
             style = MaterialTheme.typography.labelSmall, color = foreground, maxLines = 1, softWrap = false)
         DropdownMenu(expanded = menu && enabled, onDismissRequest = { menu = false; inserting = false }) {
             if (inserting) {
-                DropdownMenuItem(text = { Text("‹ 返回") }, onClick = { inserting = false })
+                DropdownMenuItem(text = { Text("‹ ${stringResource(R.string.back)}") }, onClick = { inserting = false })
                 InsertItems { kind -> menu = false; inserting = false; onInsert(kind) }
             } else {
-                if (!fixed) DropdownMenuItem(text = { Text("插入上一个") }, onClick = { inserting = true })
-                if (canMoveUp) DropdownMenuItem(text = { Text("上移") }, onClick = { menu = false; onMoveUp() })
-                if (canMoveDown) DropdownMenuItem(text = { Text("下移") }, onClick = { menu = false; onMoveDown() })
-                if (!fixed) DropdownMenuItem(text = { Text("删除节点") }, onClick = { menu = false; onDelete() })
-                if (fixed) DropdownMenuItem(text = { Text("固定节点") }, enabled = false, onClick = {})
+                if (!fixed) DropdownMenuItem(text = { Text(stringResource(R.string.insert_before)) }, onClick = { inserting = true })
+                if (canMoveUp) DropdownMenuItem(text = { Text(stringResource(R.string.move_up)) }, onClick = { menu = false; onMoveUp() })
+                if (canMoveDown) DropdownMenuItem(text = { Text(stringResource(R.string.move_down)) }, onClick = { menu = false; onMoveDown() })
+                if (!fixed) DropdownMenuItem(text = { Text(stringResource(R.string.delete_node)) }, onClick = { menu = false; onDelete() })
+                if (fixed) DropdownMenuItem(text = { Text(stringResource(R.string.fixed_node)) }, enabled = false, onClick = {})
             }
         }
     }

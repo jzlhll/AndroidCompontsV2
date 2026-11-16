@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
@@ -27,6 +28,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
+import com.allan.picnote.R
 import com.allan.picnote.data.NodeGuideKind
 import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androiduiex.styles.ComposeButton as Button
@@ -93,9 +95,10 @@ fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boole
         val geometry = remember { NodeGuideGeometry() }
         val insets = WindowInsets.safeDrawing
         val bubbleColor = scheme.surfaceContainerHigh
+        val paneDescription = stringResource(R.string.node_guide_title)
         Layout(
             modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f))
-                .semantics { paneTitle = "节点操作提示" }
+                .semantics { paneTitle = paneDescription }
                 .drawWithCache {
                     val path = Path()
                     onDrawBehind {
@@ -130,10 +133,10 @@ fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boole
             content = {
                 Surface(color = bubbleColor, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, scheme.outlineVariant)) {
                     Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
-                        Text(if (kind == NodeGuideKind.Menu) "单击左侧的节点，可以弹出操作菜单。" else "点击卡片，可以显示更多操作。", color = scheme.onSurface, style = ComposeTypography.Font14sp)
+                        Text(stringResource(if (kind == NodeGuideKind.Menu) R.string.node_guide_menu else R.string.node_guide_card), color = scheme.onSurface, style = ComposeTypography.Font14sp)
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = onAcknowledge, enabled = !saving, modifier = Modifier.align(androidx.compose.ui.Alignment.End)) {
-                            Text("知道了")
+                            Text(stringResource(R.string.got_it))
                         }
                     }
                 }

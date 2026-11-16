@@ -91,7 +91,7 @@ fun PicNoteApp(app: PicNoteApplication) {
             catch (e: Exception) {
                 pickerDocumentId = null
                 logEx(throwable = e, message = "Launch home image picker failed")
-                home.showMessage("无法打开系统相册，请重试")
+                home.showMessage(Globals.app.getString(R.string.error_open_photo_picker))
             }
         }
     }
@@ -105,18 +105,18 @@ fun PicNoteApp(app: PicNoteApplication) {
         state.exportedFile?.let { file ->
             home.consumedExport()
             try {
-                val uri = checkNotNull(getUriFromFile(context, file)) { "无法生成文档分享链接" }
+                val uri = checkNotNull(getUriFromFile(context, file)) { Globals.app.getString(R.string.error_create_share_uri) }
                 val send = Intent(Intent.ACTION_SEND).apply {
                     type = "application/zip"
                     putExtra(Intent.EXTRA_STREAM, uri)
                     clipData = ClipData.newRawUri(Globals.app.getString(R.string.app_name), uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                context.startActivity(Intent.createChooser(send, "导出文档"))
+                context.startActivity(Intent.createChooser(send, Globals.app.getString(R.string.export_document)))
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
                 logEx(throwable = e, message = "Open export share failed")
-                home.showMessage("无法打开分享面板，请重试")
+                home.showMessage(Globals.app.getString(R.string.error_open_share_sheet))
             }
         }
     }
