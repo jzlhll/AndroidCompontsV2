@@ -1,6 +1,7 @@
 package com.allan.picnote.ui.theme
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -11,6 +12,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import com.au.module_androiduiex.styles.ComposeTheme
+import com.au.module_androiduiex.styles.dark
+import com.au.module_androiduiex.styles.resolve
 import com.au.module_androiduiex.styles.composeThemeColorScheme
 
 data class StatusColors(val foreground: Color, val background: Color)
@@ -55,7 +58,8 @@ val AlucardPalette = ThemePalette(composeThemeColorScheme(ComposeTheme.Alucard),
     introductionContent = StatusColors(Color(0xFF666660), Color(0xFFECEBE6)),
     chapter = StatusColors(Color(0xFF846E15), Color(0xFFFFFBEB)), body = StatusColors(Color(0xFF14710A), Color(0xFFE3EACF)))
 
-fun themePalette(theme: ComposeTheme): ThemePalette = when (theme) {
+fun themePalette(theme: ComposeTheme, systemDark: Boolean): ThemePalette = when (theme.resolve(systemDark)) {
+    ComposeTheme.FollowSystem -> error("FollowSystem must resolve to a fixed theme")
     ComposeTheme.Black -> BlackPalette
     ComposeTheme.White -> WhitePalette
     ComposeTheme.Dracula -> DraculaPalette
@@ -67,13 +71,15 @@ val LocalThemePalette = staticCompositionLocalOf { SagePalette }
 
 @Composable
 fun PicNoteTheme(theme: ComposeTheme = ComposeTheme.Sage, content: @Composable () -> Unit) {
-    val palette = themePalette(theme)
+    val systemDark = isSystemInDarkTheme()
+    val resolved = theme.resolve(systemDark)
+    val palette = themePalette(theme, systemDark)
     val activity = LocalActivity.current
     SideEffect {
         activity?.window?.let { window ->
             WindowCompat.getInsetsController(window, window.decorView).apply {
-                isAppearanceLightStatusBars = !theme.dark
-                isAppearanceLightNavigationBars = !theme.dark
+                isAppearanceLightStatusBars = !resolved.dark
+                isAppearanceLightNavigationBars = !resolved.dark
             }
         }
     }

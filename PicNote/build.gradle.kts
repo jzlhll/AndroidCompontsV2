@@ -28,6 +28,7 @@ dependencies {
     implementation(files("libs/pastehub-image-1.0.0.aar"))
     implementation(project(":Module-AndroidCommon"))
     implementation(project(":Module-AndroidUiEx"))
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.activity.compose)

@@ -1,6 +1,7 @@
 package com.au.agit.ui.theme
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -9,6 +10,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import com.au.agit.model.AppTheme
+import com.au.agit.model.dark
+import com.au.agit.model.resolve
 import com.au.agit.model.ChangeType
 import com.au.module_androiduiex.styles.ComposeAppTheme
 import com.au.module_androiduiex.styles.ComposeTheme
@@ -38,7 +41,8 @@ val DraculaPalette = palette(ComposeTheme.Dracula, status(0xFF83E5A1, 0xFF2B3C36
 val SagePalette = palette(ComposeTheme.Sage, status(0xFF236B35, 0xFFE0EEE3), status(0xFF2F668B, 0xFFE7EFF3), status(0xFF855315, 0xFFF5EEDC))
 val AlucardPalette = palette(ComposeTheme.Alucard, status(0xFF14710A, 0xFFE3EACF), status(0xFF036A96, 0xFFE5E2EF), status(0xFF846E15, 0xFFFFFBEB))
 
-fun themePalette(theme: AppTheme): ThemePalette = when (theme) {
+fun themePalette(theme: AppTheme, systemDark: Boolean): ThemePalette = when (theme.resolve(systemDark)) {
+    AppTheme.FollowSystem -> error("FollowSystem must resolve to a fixed theme")
     AppTheme.Black -> BlackPalette
     AppTheme.White -> WhitePalette
     AppTheme.Dracula -> DraculaPalette
@@ -47,6 +51,7 @@ fun themePalette(theme: AppTheme): ThemePalette = when (theme) {
 }
 
 private fun AppTheme.toComposeTheme(): ComposeTheme = when (this) {
+    AppTheme.FollowSystem -> ComposeTheme.FollowSystem
     AppTheme.Black -> ComposeTheme.Black
     AppTheme.White -> ComposeTheme.White
     AppTheme.Dracula -> ComposeTheme.Dracula
@@ -58,17 +63,19 @@ val LocalThemePalette = staticCompositionLocalOf { WhitePalette }
 
 @Composable
 fun AGitTheme(theme: AppTheme = AppTheme.White, content: @Composable () -> Unit) {
-    val palette = themePalette(theme)
+    val systemDark = isSystemInDarkTheme()
+    val resolved = theme.resolve(systemDark)
+    val palette = themePalette(theme, systemDark)
     val activity = LocalActivity.current
     SideEffect {
         activity?.window?.let { window ->
             WindowCompat.getInsetsController(window, window.decorView).apply {
-                isAppearanceLightStatusBars = !theme.dark
-                isAppearanceLightNavigationBars = !theme.dark
+                isAppearanceLightStatusBars = !resolved.dark
+                isAppearanceLightNavigationBars = !resolved.dark
             }
         }
     }
     CompositionLocalProvider(LocalThemePalette provides palette) {
-        ComposeAppTheme(theme.toComposeTheme(), content)
+        ComposeAppTheme(resolved.toComposeTheme(), content)
     }
 }

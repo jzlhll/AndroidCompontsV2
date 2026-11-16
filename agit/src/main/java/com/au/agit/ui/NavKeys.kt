@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class AuthorKey(val tokenGroupSetup: Boolean = false, val cloneAfterSave: Boolean = false) : NavKey
 @Serializable data object LogsKey : NavKey
 @Serializable data object SettingsKey : NavKey
+@Serializable data object LanguageKey : NavKey
 @Serializable data class LogFileKey(val name: String) : NavKey
 @Serializable data object ThemeKey : NavKey
 @Serializable data class MediaKey(val projectId: String, val path: String) : NavKey

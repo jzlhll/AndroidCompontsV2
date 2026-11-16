@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":Module-AndroidUi"))
     implementation(project(":Module-AndroidUiEx"))
     implementation(project(":Module-ImageCompressed"))
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.compose)

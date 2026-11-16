@@ -4,10 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.RelativeLayout
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.withResumed
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.log.logd
@@ -22,8 +26,12 @@ import com.yalantis.ucrop.UCrop
 import com.yalantis.ucrop.UCrop.EXTRA_OUTPUT_URI
 import com.yalantis.ucrop.UCropFragment
 import com.yalantis.ucrop.UCropFragmentCallback
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
+import kotlin.coroutines.resume
 
+/** 圆形图片裁剪页，初始化与裁剪回调随当前 View 生命周期结束。 */
 class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCropFragmentCallback {
     companion object {
         const val DIR_CROP = "ucrop"
@@ -66,11 +74,35 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
             binding.saveBtn.gone()
             binding.save2Btn.visible()
         }
+    }
 
-        binding.fcv.post {
-            resizeScreen()
-            replaceUcropFragment()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val owner = viewLifecycleOwner
+        val container = binding.fcv
+        owner.lifecycleScope.launch {
+            // 保留布局后的初始化时机，View 销毁时同时移除尚未执行的回调。
+            suspendCancellableCoroutine<Unit> { continuation ->
+                val callback = Runnable { continuation.resume(Unit) }
+                container.post(callback)
+                continuation.invokeOnCancellation { container.removeCallbacks(callback) }
+            }
+            // 页面进入后台或已保存状态时等待恢复，不提交过期的 Fragment 事务。
+            owner.lifecycle.withResumed {
+                resizeScreen()
+                replaceUcropFragment()
+            }
         }
+    }
+
+    override fun onDestroyView() {
+        // UCrop 的异步任务会直接调用 callback，不能置 null；隔离旧实例的迟到结果。
+        uCropFragment?.setCallback(object : UCropFragmentCallback {
+            override fun loadingProgress(showLoader: Boolean) {}
+            override fun onCropFinish(result: UCropFragment.UCropResult) {}
+        })
+        uCropFragment = null
+        super.onDestroyView()
     }
 
     private fun resizeScreen() {
@@ -126,12 +158,15 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
     }
 
     override fun onCropFinish(result: UCropFragment.UCropResult) {
+        if (view == null || !viewLifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)) return
+        val host = activity ?: return
+        if (host.isFinishing || host.isDestroyed) return
         logd { "on crop finish ${result.mResultCode} ${result.mResultData}" }
         if (result.mResultCode == UCrop.RESULT_ERROR) {
-            requireActivity().setResult(RESULT_ERROR, Intent())
+            host.setResult(RESULT_ERROR, Intent())
         } else {
-            requireActivity().setResult(RESULT_OK, result.mResultData)
+            host.setResult(RESULT_OK, result.mResultData)
         }
-        requireActivity().finishAfterTransition()
+        host.finishAfterTransition()
     }
 }

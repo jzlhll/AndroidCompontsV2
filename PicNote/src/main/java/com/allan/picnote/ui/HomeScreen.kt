@@ -2,7 +2,6 @@ package com.allan.picnote.ui
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -10,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,11 +34,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.R
@@ -52,7 +47,6 @@ import com.allan.picnote.media.photoAccess
 import com.allan.picnote.media.photoPermissions
 import com.allan.picnote.ui.components.CreateDocumentButton
 import com.au.module_android.Globals
-import com.au.module_androiduiex.styles.ComposeTheme
 import com.au.module_androiduiex.styles.ComposeLineTabLayout
 import com.au.module_androiduiex.styles.ComposeLineTabLayoutStyle
 import com.au.module_androiduiex.styles.ComposeTypography
@@ -73,6 +67,8 @@ fun HomeScreen(
     onEdit: (EditRoute) -> Unit,
     onPickImages: () -> Unit,
     onCandidates: (List<String>) -> Unit,
+    onAppearance: () -> Unit,
+    onSettings: () -> Unit,
     modifier: Modifier = Modifier,
     active: Boolean = true,
 ) {
@@ -83,7 +79,7 @@ fun HomeScreen(
             context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
         } catch (e: Exception) {
             logEx(throwable = e, message = "Open image permission settings failed")
-            viewModel.showMessage(Globals.app.getString(R.string.error_open_settings))
+            viewModel.showMessage(Globals.getString(R.string.error_open_settings))
         }
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -99,7 +95,7 @@ fun HomeScreen(
                 } catch (e: CancellationException) { throw e }
                 catch (e: Exception) {
                     logEx(throwable = e, message = "Launch image permission request failed")
-                    viewModel.showMessage(Globals.app.getString(R.string.error_request_photo_permission))
+                    viewModel.showMessage(Globals.getString(R.string.error_request_photo_permission))
                 }
             }
         }
@@ -130,8 +126,6 @@ fun HomeScreen(
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     var ribbon by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    var appearanceDialog by rememberSaveable { mutableStateOf(false) }
-    var settingsDialog by rememberSaveable { mutableStateOf(false) }
     val content = state.content
     val document = content?.document
     val guide = state.nodeGuide
@@ -191,9 +185,9 @@ fun HomeScreen(
                     }
                 }
                 HorizontalDivider()
-                TextButton(onClick = { appearanceDialog = true }, enabled = active && !state.themeSaving,
+                TextButton(onClick = { scope.launch { drawer.close(); onAppearance() } }, enabled = active && !state.themeSaving,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.appearance)) }
-                TextButton(onClick = { scope.launch { drawer.close(); settingsDialog = true } }, enabled = active,
+                TextButton(onClick = { scope.launch { drawer.close(); onSettings() } }, enabled = active,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.settings)) }
                 }
             }
@@ -368,49 +362,6 @@ fun HomeScreen(
         text = { Text(stringResource(R.string.delete_document_message, state.documents.firstOrNull { it.id == deleteId }?.title.orEmpty())) },
         confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { deleteId = null }) { Text(stringResource(R.string.cancel)) } },
-    )
-    if (active && appearanceDialog) AlertDialog(
-        onDismissRequest = { appearanceDialog = false }, title = { Text(stringResource(R.string.appearance)) },
-        text = {
-            Column(Modifier.selectableGroup()) {
-                ComposeTheme.entries.forEach { theme ->
-                    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).selectable(selected = state.theme == theme, enabled = !state.themeSaving, role = Role.RadioButton,
-                        onClick = { viewModel.setTheme(theme); appearanceDialog = false }).padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = state.theme == theme, onClick = null, enabled = !state.themeSaving)
-                        Text(theme.name, style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface)
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = { appearanceDialog = false }) { Text(stringResource(R.string.close)) } },
-    )
-    if (active && settingsDialog) AlertDialog(
-        onDismissRequest = { settingsDialog = false }, title = { Text(stringResource(R.string.settings)) },
-        text = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Row(
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) {
-                        settingsDialog = false
-                        try {
-                            context.startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.parse("package:${context.packageName}")))
-                        } catch (e: Exception) {
-                            logEx(throwable = e, message = "Open language settings failed")
-                            viewModel.showMessage(Globals.app.getString(R.string.error_open_language_settings))
-                        }
-                    }.padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(stringResource(R.string.language), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface)
-                }
-            } else {
-                Box(Modifier.fillMaxWidth().heightIn(min = 160.dp), contentAlignment = Alignment.Center) {
-                    Text(stringResource(R.string.settings_empty), style = MaterialTheme.typography.headlineSmall, fontSize = 26.sp, textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = { settingsDialog = false }) { Text(stringResource(R.string.close)) } },
     )
 }
 

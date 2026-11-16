@@ -90,7 +90,10 @@ fun AGitNavHost(
                     val logsModel = koinViewModel<LogsViewModel>()
                     LogsRoute(logsModel, model, onBack = navigation::back, onOpen = { navigation.go(LogFileKey(it)) })
                 }
-                entry<SettingsKey> { SettingsScreen(onBack = navigation::back, onLogs = { navigation.go(LogsKey) }) }
+                entry<SettingsKey> {
+                    SettingsScreen(onBack = navigation::back, onLogs = { navigation.go(LogsKey) }, onLanguage = { navigation.go(LanguageKey) })
+                }
+                entry<LanguageKey> { LanguageScreen(onBack = navigation::back) }
                 entry<LogFileKey> { key ->
                     val logsModel = koinViewModel<LogsViewModel>(parameters = { parametersOf(key.name) })
                     LogFileRoute(key.name, logsModel, onBack = navigation::back)

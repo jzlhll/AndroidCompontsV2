@@ -127,7 +127,7 @@ object Globals {
     /** Application 原生图片资源；需要界面夜间模式时使用 Activity Context。 */
     fun getDrawable(@DrawableRes resId: Int): Drawable? = ContextCompat.getDrawable(app, resId)
 
-    /** 非 Activity 文案入口，Android 12 及以下也遵循 AppCompat 保存的应用语言。 */
+    /** 异步及非 Activity 文案入口，不依赖 Fragment 附着状态，Android 12 及以下也遵循应用语言。 */
     fun getString(@StringRes resId: Int): String = ContextCompat.getString(app, resId)
 
     fun getString(@StringRes resId: Int, vararg formatArgs: Any): String =

@@ -192,4 +192,7 @@
     <string name="token_access_hint">Use a Token with access to your repositories.</string>
     <string name="clone_description">Clone an existing GitHub repository.</string>
     <string name="author_identity_hint">Set the identity shown on your commits.</string>
+    <string name="follow_system">Follow System</string>
+    <string name="language">Language</string>
+    <string name="error_open_language_settings">Cannot open system language settings. Try again.</string>
 </resources>

@@ -42,6 +42,15 @@ import kotlinx.serialization.Serializable
 data object HomeRoute : NavKey
 
 @Serializable
+data object SettingsRoute : NavKey
+
+@Serializable
+data object AppearanceRoute : NavKey
+
+@Serializable
+data object LanguageRoute : NavKey
+
+@Serializable
 data class EditRoute(
     val documentId: String? = null,
     val nodeId: String? = null,
@@ -91,7 +100,7 @@ fun PicNoteApp(app: PicNoteApplication) {
             catch (e: Exception) {
                 pickerDocumentId = null
                 logEx(throwable = e, message = "Launch home image picker failed")
-                home.showMessage(Globals.app.getString(R.string.error_open_photo_picker))
+                home.showMessage(Globals.getString(R.string.error_open_photo_picker))
             }
         }
     }
@@ -105,18 +114,18 @@ fun PicNoteApp(app: PicNoteApplication) {
         state.exportedFile?.let { file ->
             home.consumedExport()
             try {
-                val uri = checkNotNull(getUriFromFile(context, file)) { Globals.app.getString(R.string.error_create_share_uri) }
+                val uri = checkNotNull(getUriFromFile(context, file)) { Globals.getString(R.string.error_create_share_uri) }
                 val send = Intent(Intent.ACTION_SEND).apply {
                     type = "application/zip"
                     putExtra(Intent.EXTRA_STREAM, uri)
-                    clipData = ClipData.newRawUri(Globals.app.getString(R.string.app_name), uri)
+                    clipData = ClipData.newRawUri(Globals.getString(R.string.app_name), uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                context.startActivity(Intent.createChooser(send, Globals.app.getString(R.string.export_document)))
+                context.startActivity(Intent.createChooser(send, Globals.getString(R.string.export_document)))
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
                 logEx(throwable = e, message = "Open export share failed")
-                home.showMessage(Globals.app.getString(R.string.error_open_share_sheet))
+                home.showMessage(Globals.getString(R.string.error_open_share_sheet))
             }
         }
     }
@@ -165,9 +174,33 @@ fun PicNoteApp(app: PicNoteApplication) {
                                     } else home.importCandidates(id, identities)
                                 }
                             },
+                            onAppearance = {
+                                if (backStack.lastOrNull() == HomeRoute) backStack.add(AppearanceRoute)
+                            },
+                            onSettings = {
+                                if (backStack.lastOrNull() == HomeRoute) backStack.add(SettingsRoute)
+                            },
                             active = homeActive,
                         )
                         }
+                    }
+                    entry<SettingsRoute> {
+                        SettingsScreen(
+                            onBack = { if (backStack.lastOrNull() == SettingsRoute) navigateBack() },
+                            onLanguage = { if (backStack.lastOrNull() == SettingsRoute) backStack.add(LanguageRoute) },
+                            onMessage = home::showMessage,
+                        )
+                    }
+                    entry<AppearanceRoute> {
+                        AppearanceScreen(
+                            selected = theme,
+                            onSelect = home::setTheme,
+                            onBack = { if (backStack.lastOrNull() == AppearanceRoute) navigateBack() },
+                            saving = state.themeSaving,
+                        )
+                    }
+                    entry<LanguageRoute> {
+                        LanguageScreen(onBack = { if (backStack.lastOrNull() == LanguageRoute) navigateBack() })
                     }
                     entry<EditRoute> { route ->
                         val editor: EditorViewModel = viewModel(factory = EditorViewModel.Factory(home.repository, route))

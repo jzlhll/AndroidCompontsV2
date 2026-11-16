@@ -3,4 +3,12 @@ package com.au.agit.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class AppTheme(val dark: Boolean) { Black(true), White(false), Dracula(true), Sage(false), Alucard(false) }
+enum class AppTheme { FollowSystem, Black, White, Dracula, Sage, Alucard }
+
+fun AppTheme.resolve(systemDark: Boolean): AppTheme =
+    if (this == AppTheme.FollowSystem) {
+        if (systemDark) AppTheme.Black else AppTheme.White
+    } else this
+
+val AppTheme.dark: Boolean
+    get() = this == AppTheme.Black || this == AppTheme.Dracula

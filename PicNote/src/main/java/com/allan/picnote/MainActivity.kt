@@ -2,12 +2,12 @@ package com.allan.picnote
 
 import android.os.Bundle
 import android.content.res.Configuration
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.allan.picnote.ui.PicNoteApp
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycleLog("on_create", " restored=${savedInstanceState != null}")

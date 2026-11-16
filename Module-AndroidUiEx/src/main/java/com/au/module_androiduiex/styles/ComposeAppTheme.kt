@@ -1,5 +1,6 @@
 package com.au.module_androiduiex.styles
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -8,7 +9,16 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-enum class ComposeTheme(val dark: Boolean) { Black(true), White(false), Dracula(true), Sage(false), Alucard(false) }
+enum class ComposeTheme { FollowSystem, Black, White, Dracula, Sage, Alucard }
+
+/** 将外观偏好解析为固定配色，系统深色只影响 FollowSystem。 */
+fun ComposeTheme.resolve(systemDark: Boolean): ComposeTheme =
+    if (this == ComposeTheme.FollowSystem) {
+        if (systemDark) ComposeTheme.Black else ComposeTheme.White
+    } else this
+
+val ComposeTheme.dark: Boolean
+    get() = this == ComposeTheme.Black || this == ComposeTheme.Dracula
 
 private fun colorScheme(
     dark: Boolean, primary: Long, onPrimary: Long, background: Long, panel: Long,
@@ -42,7 +52,8 @@ private val SageScheme = colorScheme(false, 0xFF326E40, 0xFFFFFFFF, 0xFFF8F9F7, 
 private val AlucardScheme = colorScheme(false, 0xFFA3144D, 0xFFFFFFFF, 0xFFFFFBEB, 0xFFEFEDDC, 0xFF1F1F1F, 0xFF6C664B, 0xFFCECCC0, 0xFFECE9F2,
     0xFF644AC9, 0xFFE5E2EF, 0xFFB52F22, 0xFFF5DFD6)
 
-fun composeThemeColorScheme(theme: ComposeTheme): ColorScheme = when (theme) {
+fun composeThemeColorScheme(theme: ComposeTheme, systemDark: Boolean = false): ColorScheme = when (theme.resolve(systemDark)) {
+    ComposeTheme.FollowSystem -> error("FollowSystem must resolve to a fixed theme")
     ComposeTheme.Black -> BlackScheme
     ComposeTheme.White -> WhiteScheme
     ComposeTheme.Dracula -> DraculaScheme
@@ -53,5 +64,5 @@ fun composeThemeColorScheme(theme: ComposeTheme): ColorScheme = when (theme) {
 /** 为独立 Compose 应用提供统一的主题颜色与标准 Material3 文字样式。 */
 @Composable
 fun ComposeAppTheme(theme: ComposeTheme, content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = composeThemeColorScheme(theme), typography = Typography(), content = content)
+    MaterialTheme(colorScheme = composeThemeColorScheme(theme, isSystemInDarkTheme()), typography = Typography(), content = content)
 }

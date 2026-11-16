@@ -1,6 +1,7 @@
 package com.au.agit.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
@@ -24,10 +25,11 @@ import com.au.module_androiduiex.styles.ComposeTypography
 
 @Composable
 fun ThemeScreen(selected: AppTheme, onSelect: (AppTheme) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val systemDark = isSystemInDarkTheme()
     PageScaffold(stringResource(R.string.appearance), onBack, modifier) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding).selectableGroup(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(AppTheme.entries, key = { it.name }) { theme ->
-                val palette = themePalette(theme)
+            items(AppTheme.entries, key = { it.name }, contentType = { "theme" }) { theme ->
+                val palette = themePalette(theme, systemDark)
                 val colors = palette.scheme
                 OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = colors.surface, contentColor = colors.onSurface),
                     modifier = Modifier.fillMaxWidth().selectable(selected = selected == theme, role = Role.RadioButton, onClick = { onSelect(theme) })) {
@@ -36,6 +38,7 @@ fun ThemeScreen(selected: AppTheme, onSelect: (AppTheme) -> Unit, onBack: () -> 
                             RadioButton(selected = selected == theme, onClick = null,
                                 colors = RadioButtonDefaults.colors(selectedColor = colors.primary, unselectedColor = colors.onSurfaceVariant))
                             Text(stringResource(when (theme) {
+                                AppTheme.FollowSystem -> R.string.follow_system
                                 AppTheme.Black -> R.string.theme_black
                                 AppTheme.White -> R.string.theme_white
                                 AppTheme.Dracula -> R.string.theme_dracula

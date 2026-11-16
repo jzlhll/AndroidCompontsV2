@@ -45,6 +45,8 @@ Clone 页面和执行弹窗的标题固定为 `Clone Repository`。`GitDownloadC
 
 `SettingsKey → LogsKey → LogFileKey` 在同一 Navigation 3 返回栈内展示日志。`LogsViewModel` 由各个 NavEntry 持有，Koin 注入 `LogRepository` 与 `UserFeedback`；只在进入页面和用户刷新时读取，不注册全局 Activity 监听或文件监听。列表按日期分组、显示文件名和大小，沿用模块的查看/删除/压缩分享行为。内容复用 `FileLog.logParser` 解析，可隐藏元信息、切换换行，并按级别着色。
 
+设置与外观使用独立页面。`SettingsKey` 显示当前应用语言，Android 13 及以上打开系统应用语言页；旧版 Android 通过 `SettingsKey → LanguageKey` 展示应用内语言单选页面，选择后返回设置并应用语言。`LanguageKey` 与 PicNote 的 `LanguageRoute` 共用 `AppLanguagePicker`，语言列表来自各自的 `locales_config.xml`，均支持跟随系统。
+
 日志读取先等待 `FileLog.logHandler` 中已入队的写入完成，再在 IO 线程读取快照，不设置 `FileLog.ignoreWrite`。内容按 256KB 分页，从最新一页进入并允许加载更早记录；刷新取消并等待上一任务。压缩分享仅包含用户选中的最多三份 `.log` 文件，输出位于 `cacheDir/shared/logs/`，使用既有 FileProvider 临时只读授权，不扩大共享根目录。
 
 实际异常通过 `safeFailure` 转成英中字符串资源和受控英文错误码。用户错误编号由 `AGitErrorCode` 集中定义，`appString` 和 `errorStringResource` 统一在正文末尾追加编号；资源只保留可翻译正文。内部英文错误码继续用于业务判断，不与用户编号混用。Toast 复用模块 `ToastBuilder`，操作日志复用 `FileLog`。不记录原始异常正文、凭据、文件内容或提交说明。应用级操作状态跨配置变化保存；进程结束后只从磁盘恢复仓库与编辑记录，不恢复或自动重跑旧 Job。

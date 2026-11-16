@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.AGit" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.AGit" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>

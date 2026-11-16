@@ -7,7 +7,6 @@
     <string name="appearance">外觀</string>
     <string name="settings">設定</string>
     <string name="language">語言</string>
-    <string name="settings_empty">空空如也</string>
     <string name="rename">重命名</string>
     <string name="delete_document">刪除文檔</string>
     <string name="export_document">導出文檔</string>
@@ -163,4 +162,5 @@
     <string name="error_photo_access_changed">圖片權限已變化，請重新授權</string>
     <string name="error_media_library_changed">圖片庫已變化，下次進入時重試</string>
     <string name="error_read_image_list">無法讀取圖片列表，請重試</string>
+    <string name="follow_system">跟隨系統</string>
 </resources>
