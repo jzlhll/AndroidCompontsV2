@@ -51,9 +51,6 @@ import java.util.concurrent.TimeUnit
  */
 class App : InitApplication() {
 
-    override fun initBeforeAttachBaseContext() {
-    }
-
     override fun onCreate() {
         super.onCreate()
         OkhttpGlobal.initBeforeAnyRequest(OkhttpInitParams().also {

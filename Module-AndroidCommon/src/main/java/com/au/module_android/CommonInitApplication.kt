@@ -1,10 +1,6 @@
 package com.au.module_android
 
 import android.app.Application
-import android.content.Context
-import android.content.res.Configuration
-import android.content.res.Resources
-import androidx.annotation.EmptySuper
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.au.module_android.crash.UncaughtExceptionHandlerObj
 import com.au.module_android.init.GlobalActivityCallback
@@ -55,28 +51,6 @@ open class CommonInitApplication : Application() {
         }
         super.onCreate()
         init(this)
-        DarkModeAndLocalesConst.appOnCreated(this)
         preInitGlide(this)
-    }
-
-    final override fun attachBaseContext(base: Context?) {
-        initBeforeAttachBaseContext()
-        super.attachBaseContext(DarkModeAndLocalesConst.appAttachBaseContext(base))
-    }
-
-    @EmptySuper
-    open fun initBeforeAttachBaseContext() {}
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        DarkModeAndLocalesConst.appOnConfigurationChanged(this, newConfig)
-    }
-
-    override fun getResources() : Resources {
-        if (BuildConfig.SUPPORT_LOCALES || BuildConfig.SUPPORT_DARKMODE) {
-            //会影响Activity的获取。必须将处理后的resource替换掉。
-            return DarkModeAndLocalesConst.themedContext?.resources ?: return super.getResources()
-        }
-        return super.getResources()
     }
 }

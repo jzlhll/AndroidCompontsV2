@@ -12,7 +12,6 @@ import androidx.core.animation.doOnStart
 import com.allan.autoclickfloat.R
 import com.allan.autoclickfloat.consts.Const
 import com.allan.autoclickfloat.floats.views.BaseFloatingView
-import com.au.module_android.Globals
 import com.au.module_android.utils.gone
 import com.au.module_android.utils.unsafeLazy
 
@@ -32,8 +31,10 @@ class SetupClickFloatView private constructor(): BaseFloatingView(R.layout.view_
 
     var callback:(x:Int, y:Int)->Unit = {_,_->}
 
-    val workingColor = ColorStateList.valueOf(Globals.getColor(R.color.floating_working_color))
-    val settingColor = ColorStateList.valueOf(Globals.getColor(R.color.floating_setting_color))
+    val workingColor: ColorStateList
+        get() = ColorStateList.valueOf(mRoot.context.getColor(R.color.floating_working_color))
+    val settingColor: ColorStateList
+        get() = ColorStateList.valueOf(mRoot.context.getColor(R.color.floating_setting_color))
 
     val icon: ImageView
 

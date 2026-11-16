@@ -9,7 +9,6 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.core.net.toUri
 import com.au.module_android.Globals
-import com.au.module_android.Globals.getColor
 import com.au.module_android.click.onClick
 import com.au.module_android.log.logd
 import com.au.module_android.utils.getScreenFullSize
@@ -112,7 +111,7 @@ class CropCircleImageFragment : BindingFragment<CropCircleLayoutBinding>(), UCro
             it.setShowCropFrame(true)
             //it.setToolbarTitleSize(20)
             it.setShowCropGrid(true)
-            it.setRootViewBackgroundColor(getColor(com.au.module_androidcolor.R.color.windowBackground))
+            it.setRootViewBackgroundColor(requireContext().getColor(com.au.module_androidcolor.R.color.windowBackground))
             //it.setToolbarTitle("Crop") //later: String
         })
         val uCropFragment = uCrop.fragment

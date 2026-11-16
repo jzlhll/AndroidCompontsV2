@@ -12,14 +12,14 @@
         android:theme="@style/Theme.AndroidLearning">
         <activity
             android:name=".MainActivity"
-            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|locale|orientation|screenLayout|uiMode|navigation"
+            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|orientation|screenLayout|navigation"
             android:windowSoftInputMode="adjustPan|stateHidden"
             android:screenOrientation="portrait">
         </activity>
 
         <activity
             android:name="com.au.jobstudy.CompactSplashActivity"
-            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|locale|orientation|screenLayout|uiMode|navigation"
+            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|orientation|screenLayout|navigation"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">

@@ -1,7 +1,5 @@
 package com.au.module_androidui.ui.base
 
-import android.content.Context
-import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -12,9 +10,6 @@ import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.doOnAttach
-import com.au.module_android.BuildConfig
-import com.au.module_android.DarkModeAndLocalesConst
-import com.au.module_android.log.logdNoFile
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.utils.*
 import com.au.module_androidui.ui.KEY_ENTER_ANIM
@@ -38,9 +33,6 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
      */
     var object3:Any? = null
 
-    //记录Activity resources configuration的uiMode
-    private var mCurrentUiMode : Int = Int.MIN_VALUE
-
     private val enterAnim by unsafeLazy { intent.getIntExtra(KEY_ENTER_ANIM, 0) }
     private val exitAnim by unsafeLazy { intent.getIntExtra(KEY_EXIT_ANIM, 0) }
 
@@ -56,7 +48,6 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
             if(exitAnim != 0) overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, exitAnim)
         }
 
-        mCurrentUiMode = resources.configuration.uiMode
         installWindowInsetsListener()
     }
 
@@ -131,43 +122,7 @@ open class AbsActivity : AppCompatActivity(), IFullWindow {
         }
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        //这里的不准。系统是先走Application的onConfigChanged，然后走这里。
-        // 那么，我们会先更新themedContext，以themedContext优先。
-        // 如果我们不更新application的uiMode就会有问题，而它已经deprecated。
-
-        if (BuildConfig.SUPPORT_DARKMODE) {
-            val newUiMode = DarkModeAndLocalesConst.themedContext?.resources?.configuration?.uiMode ?: newConfig.uiMode //todo
-            //dark mode
-            //不论是系统切换，还是app设置中强制切换都会触发Activity configurationChange
-            if (DarkModeAndLocalesConst.isDarkModeFollowSystem()) {
-                //1. 如果是跟随系统，有切换了，判断重建
-                if (mCurrentUiMode != newUiMode) {
-                    mCurrentUiMode = newUiMode
-                    logdNoFile { "onConfigurationChanged system in activity newUIMode $mCurrentUiMode " }
-                    recreate()
-                }
-            } else {
-                //2. 如果不跟系统，这里得到的newConfig是不准的，可能是系统触发而来(应该抛弃)，也可能是自己设置而来（接受）
-                //这个应该被抛弃，以DarkModeUtil里面为准，即AppCompatDelegate.getDefaultNightMode()
-                val appIsForceDark = DarkModeAndLocalesConst.isForceDark()
-                val curIsDark = (mCurrentUiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-                if (curIsDark != appIsForceDark) {
-                    logdNoFile { "onConfigurationChanged force in activity curUiMode $mCurrentUiMode curIsDark=$curIsDark, app=$appIsForceDark recreate!" }
-                    recreate()
-                } else {
-                    logdNoFile { "onConfigurationChanged force in activity curUiMode $mCurrentUiMode curIsDark=$curIsDark, app=$appIsForceDark do nothing!" }
-                }
-            }
-        }
-    }
-
     open fun isAutoHideIme() = false
-
-    override fun attachBaseContext(newBase: Context?) {
-        super.attachBaseContext(DarkModeAndLocalesConst.activityAttachBaseContext(newBase))
-    }
 
     override fun finish() {
         super.finish()

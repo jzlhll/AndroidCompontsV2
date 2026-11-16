@@ -2,6 +2,7 @@ package com.au.module_androidui
 
 import android.app.Activity
 import android.os.Bundle
+import com.au.module_android.restoreAppNightMode
 import com.au.module_android.CommonInitApplication
 import com.au.module_androidui.ui.ActivityFrameRateMonitor
 import com.au.module_androidui.ui.monitorActivityFrameRate
@@ -9,6 +10,7 @@ import com.au.module_androidui.ui.monitorActivityLoadTime
 
 open class InitApplication : CommonInitApplication() {
     override fun onCreate() {
+        restoreAppNightMode(this)
         super.onCreate()
         if (ENABLE_MONITOR) {
             registerActivityLifecycleCallbacks(MonitorActivityCallback())

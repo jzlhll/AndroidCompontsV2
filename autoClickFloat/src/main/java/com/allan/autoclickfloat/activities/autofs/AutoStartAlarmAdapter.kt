@@ -68,8 +68,8 @@ class AutoStartAlarmItemHolder(switchClick:(autoFsId:String, isClose:Boolean)->B
                                binding: FragmentAutoStartupNewHolderItemBinding)
         : BindViewHolder<AutoStartRcvBean, FragmentAutoStartupNewHolderItemBinding>(binding) {
     val orangeColor = "#FFA500".toColorInt()
-    val defaultColor = Globals.getColor(com.au.module_androidcolor.R.color.color_text_normal)
-    val descColor = Globals.getColor(com.au.module_androidcolor.R.color.color_text_desc)
+    val defaultColor = binding.root.context.getColor(com.au.module_androidcolor.R.color.color_text_normal)
+    val descColor = binding.root.context.getColor(com.au.module_androidcolor.R.color.color_text_desc)
 
     init {
         binding.switchBtn.valueCallback = {

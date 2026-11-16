@@ -131,7 +131,7 @@ fun ImageView.glideSetAnyWithDefault(
     load: String?,
     @ColorInt colorGray:Int? = null
 ) {
-    val c = colorGray ?: Globals.getColor(R.color.color_glide_gray_default)
+    val c = colorGray ?: context.getColor(R.color.color_glide_gray_default)
     val resInt = c.toDrawable()
     if (load == null) {
         setImageDrawable(resInt)

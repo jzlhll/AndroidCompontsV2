@@ -3,7 +3,6 @@ package com.au.logsystem.oncelog
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.au.logsystem.R
-import com.au.module_android.Globals
 import com.au.module_android.utils.NoWayException
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_nested.recyclerview.AutoLoadMoreBindRcvAdapter
@@ -18,13 +17,13 @@ class LogViewAdapter(private val mRcv: RecyclerView) : AutoLoadMoreBindRcvAdapte
     private var beans:List<LogViewNormalBean>? = null
 
     val errorColor by unsafeLazy {
-        Globals.getColor(R.color.color_log_error)
+        mRcv.context.getColor(R.color.color_log_error)
     }
     val warnColor by unsafeLazy {
-        Globals.getColor(R.color.color_log_warn)
+        mRcv.context.getColor(R.color.color_log_warn)
     }
     val debugColor by unsafeLazy {
-        Globals.getColor(com.au.module_androidcolor.R.color.color_text_normal)
+        mRcv.context.getColor(com.au.module_androidcolor.R.color.color_text_normal)
     }
 
     fun loadNext() {

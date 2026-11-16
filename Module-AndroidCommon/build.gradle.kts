@@ -1,5 +1,3 @@
-import com.android.build.api.variant.BuildConfigField
-
 plugins {
     id("com.android.library")
 
@@ -51,16 +49,6 @@ android {
 
     buildFeatures {
         buildConfig = true
-    }
-}
-
-androidComponents {
-    onVariants { variant ->
-        mapOf("SUPPORT_LOCALES" to "app.supportLocales", "SUPPORT_DARKMODE" to "app.supportDarkMode").forEach { (field, property) ->
-            checkNotNull(variant.buildConfigFields).put(field, providers.gradleProperty(property).orElse("false").map {
-                BuildConfigField("boolean", it.toBoolean().toString(), "应用功能开关")
-            })
-        }
     }
 }
 

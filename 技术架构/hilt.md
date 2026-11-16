@@ -85,10 +85,6 @@ android {
 ```kotlin
 @HiltAndroidApp
 class App : InitApplication() {
-    override fun initBeforeAttachBaseContext() {
-        DarkModeAnd...
-    }
-
     override fun onCreate() {
         super.onCreate()
         debug...
@@ -236,11 +232,6 @@ lateinit var mHelper : EntryHelper
 /* compiled from: App.kt */
 @HiltAndroidApp
 public final class App extends Hilt_App {
-    @Override // com.au.module_android.InitApplication
-    public void initBeforeAttachBaseContext() {
-        DarkModeAn...
-    }
-
     @Override // com.allan.androidlearning.Hilt_App, com.au.module_android.InitApplication, android.app.Application
     public void onCreate() {
         super.onCreate();

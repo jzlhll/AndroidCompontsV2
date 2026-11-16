@@ -16,7 +16,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.window.layout.WindowMetricsCalculator
-import com.au.module_android.DarkModeAndLocalesConst
+import com.au.module_android.isNightMode
 
 //参考资料
 //https://developer.android.google.cn/develop/ui/views/layout/edge-to-edge?hl=zh-cn
@@ -39,7 +39,7 @@ fun ComponentActivity.enableEdgeToEdgeFix(
  *
  */
 fun isAppearanceLightForBars(context: Context) : Boolean{
-    val detectIsDark = DarkModeAndLocalesConst.detectDarkMode(context)
+    val detectIsDark = context.isNightMode()
     return !detectIsDark
 }
 

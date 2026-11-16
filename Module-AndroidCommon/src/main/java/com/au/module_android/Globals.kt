@@ -9,6 +9,7 @@ import android.os.HandlerThread
 import android.os.Looper
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import com.au.module_android.scopes.BackAppScope
@@ -119,33 +120,18 @@ object Globals {
         return Handler(handlerThread.looper)
     }
 
-    /**
-     * 兼容dark模式获取资源
-     * Application不具备识别night资源的能力。
-     * 需要使用构建的themedContext。
-     */
+    /** Application 原生颜色资源；需要界面夜间模式时使用 Activity Context。 */
     @ColorInt
-    fun getColor(@ColorRes resId:Int) : Int {
-        return ContextCompat.getColor(app, resId)
-    }
+    fun getColor(@ColorRes resId: Int): Int = ContextCompat.getColor(app, resId)
 
-    /**
-     * 兼容dark模式获取资源
-     * Application不具备识别night资源的能力。
-     * 需要使用构建的themedContext。
-     */
-    fun getDrawable(@ColorRes resId:Int) : Drawable? {
-        return ContextCompat.getDrawable(app, resId)
-    }
+    /** Application 原生图片资源；需要界面夜间模式时使用 Activity Context。 */
+    fun getDrawable(@DrawableRes resId: Int): Drawable? = ContextCompat.getDrawable(app, resId)
 
-    /**
-     * 兼容dark模式获取资源
-     * Application不具备识别night资源的能力。
-     * 需要使用构建的themedContext。
-     */
-    fun getString(@StringRes resId:Int) : String {
-        return ContextCompat.getString(app, resId)
-    }
+    /** 非 Activity 文案入口，Android 12 及以下也遵循 AppCompat 保存的应用语言。 */
+    fun getString(@StringRes resId: Int): String = ContextCompat.getString(app, resId)
+
+    fun getString(@StringRes resId: Int, vararg formatArgs: Any): String =
+        ContextCompat.getContextForLanguage(app).getString(resId, *formatArgs)
 }
 
 //----------------------handler start

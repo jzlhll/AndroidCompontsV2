@@ -1,9 +1,7 @@
 package com.allan.autoclickfloat.activities.autofs
 
-import android.content.res.ColorStateList
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.au.module_android.Globals
 import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.dialogs.AbsActionDialogFragment
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
@@ -50,9 +48,8 @@ class ActionDialog : AbsActionDialogFragment() {
         fun onNotify(mode:ActionMode)
     }
 
-    private fun normalTextColor() = ColorStateList.valueOf(Globals.getColor(com.au.module_androidcolor.R.color.color_text_normal))
     private val _items = listOf(
-        ItemBean(EDIT, "编辑", com.allan.autoclickfloat.R.drawable.action_edit, normalTextColor()),
+        ItemBean(EDIT, "编辑", com.allan.autoclickfloat.R.drawable.action_edit),
         ItemBean(DELETE, "删除", com.allan.autoclickfloat.R.drawable.action_red_delete)
     )
 

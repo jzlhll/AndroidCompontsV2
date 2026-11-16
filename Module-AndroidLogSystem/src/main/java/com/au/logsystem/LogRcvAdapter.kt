@@ -5,9 +5,7 @@ import android.view.ViewGroup
 import androidx.annotation.Keep
 import com.au.logsystem.databinding.FragmentLogSystemHolderDayBinding
 import com.au.logsystem.databinding.FragmentLogSystemHolderNormalBinding
-import com.au.module_android.Globals
 import com.au.module_android.utils.ViewBackgroundBuilder
-import com.au.module_android.utils.unsafeLazy
 import com.au.module_nested.recyclerview.BindRcvAdapter
 import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import com.au.module_nested.recyclerview.IViewTypeBean
@@ -32,22 +30,17 @@ fun generateNormal(info:String, secondInfo: String, file: File, clickBlock:(LogB
 }
 
 class LogRcvAdapter : BindRcvAdapter<LogBean, BindViewHolder<LogBean, *>>() {
-    private val normalBackground by unsafeLazy {
-        ViewBackgroundBuilder().setBackground(Globals.getColor(com.au.module_androidcolor.R.color.color_normal_block))
-            .setCornerRadius(16f).build()
-    }
-
-    private val selectedBackground by unsafeLazy {
-        ViewBackgroundBuilder()
-            .setBackground(Globals.getColor(com.au.module_androidcolor.R.color.colorPrimary_press))
-            .setBackgroundAlpha((0.8f * 255).toInt())
-            .setCornerRadius(16f).build()
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindViewHolder<LogBean, *> {
         if (viewType == TYPE_HEAD) {
             return LogRcvHeadHolder(create(parent))
         }
+        val normalBackground = ViewBackgroundBuilder()
+            .setBackground(parent.context.getColor(com.au.module_androidcolor.R.color.color_normal_block))
+            .setCornerRadius(16f).build()
+        val selectedBackground = ViewBackgroundBuilder()
+            .setBackground(parent.context.getColor(com.au.module_androidcolor.R.color.colorPrimary_press))
+            .setBackgroundAlpha((0.8f * 255).toInt())
+            .setCornerRadius(16f).build()
         return LogRcvHolder(normalBackground, selectedBackground, create(parent))
     }
 }

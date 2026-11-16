@@ -77,7 +77,7 @@
 
         <activity
             android:name=".SplashActivity"
-            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|locale|orientation|screenLayout|uiMode|navigation"
+            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|orientation|screenLayout|navigation"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">

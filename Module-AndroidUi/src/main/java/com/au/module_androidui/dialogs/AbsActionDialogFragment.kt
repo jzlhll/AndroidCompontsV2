@@ -9,7 +9,6 @@ import android.widget.LinearLayout
 import android.widget.Space
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
-import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.utils.asOrNull
 import com.au.module_androidui.databinding.LeftIconAndTextBinding
@@ -29,7 +28,8 @@ abstract class AbsActionDialogFragment : ViewFragment() {
         return fragment.resources.getDimension(com.au.module_androidui.R.dimen.action_dialog_item_height)
     }
 
-    val normalColor = ColorStateList.valueOf(Globals.getColor(com.au.module_androidcolor.R.color.color_text_normal))
+    val normalColor: ColorStateList
+        get() = ColorStateList.valueOf(requireContext().getColor(com.au.module_androidcolor.R.color.color_text_normal))
 
     override fun onUiCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return LinearLayout(inflater.context).also {
