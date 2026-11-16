@@ -47,12 +47,16 @@ import com.allan.picnote.media.photoAccess
 import com.allan.picnote.media.photoPermissions
 import com.allan.picnote.ui.components.CreateDocumentButton
 import com.au.module_android.Globals
+import com.au.module_androiduiex.dialogs.ComposeBottomSheet
+import com.au.module_androiduiex.dialogs.ComposeBottomSheetToolbar
 import com.au.module_androiduiex.styles.ComposeLineTabLayout
 import com.au.module_androiduiex.styles.ComposeLineTabLayoutStyle
 import com.au.module_androiduiex.styles.ComposeTypography
 import com.au.module_androiduiex.styles.ComposeButton as Button
+import com.au.module_androiduiex.styles.ComposeOutlinedButton as OutlinedButton
 import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
 import com.au.module_androiduiex.styles.ComposeIconButton as IconButton
+import com.au.module_androiduiex.styles.navBarInsetBaseline
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import java.text.DateFormat
@@ -138,9 +142,16 @@ fun HomeScreen(
     val openDocumentListDescription = stringResource(R.string.open_document_list)
     val documentActionsDescription = stringResource(R.string.document_actions)
     val openPickerDescription = stringResource(R.string.open_picker_add_images)
+    val closeDescription = stringResource(R.string.close)
     LaunchedEffect(state.pending, imported) {
         selected = selected.filter { id -> state.pending.any { it.uri == id } && id !in imported }
         if (state.pending.isEmpty()) ribbon = false
+    }
+    LaunchedEffect(active) {
+        if (!active) {
+            ribbon = false
+            selected = emptyList()
+        }
     }
 
     ModalNavigationDrawer(
@@ -174,6 +185,12 @@ fun HomeScreen(
                                 IconButton(onClick = { menu = true }, enabled = ready,
                                     modifier = Modifier.semantics { contentDescription = itemActionsDescription }) { Text("⋯") }
                                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.export_full)) }, enabled = ready,
+                                        onClick = { menu = false; viewModel.exportFull(item.id) })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.export_web)) }, enabled = ready,
+                                        onClick = { menu = false; viewModel.exportWeb(item.id) })
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.duplicate_document)) }, enabled = ready,
+                                        onClick = { menu = false; viewModel.duplicateDocument(item.id) })
                                     DropdownMenuItem(text = { Text(stringResource(R.string.delete_document), color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; deleteId = item.id })
                                 }
                             }
@@ -181,10 +198,19 @@ fun HomeScreen(
                     }
                 }
                 HorizontalDivider()
-                TextButton(onClick = { scope.launch { drawer.close(); onAppearance() } }, enabled = active && !state.themeSaving,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.appearance)) }
-                TextButton(onClick = { scope.launch { drawer.close(); onSettings() } }, enabled = active,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) { Text(stringResource(R.string.settings)) }
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).navBarInsetBaseline()) {
+                    Row(Modifier.fillMaxWidth().height(48.dp).clickable(enabled = active && !state.themeSaving) {
+                        scope.launch { drawer.close(); onAppearance() }
+                    }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.appearance), color = MaterialTheme.colorScheme.primary)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Row(Modifier.fillMaxWidth().height(48.dp).clickable(enabled = active) {
+                        scope.launch { drawer.close(); onSettings() }
+                    }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.settings), color = MaterialTheme.colorScheme.primary)
+                    }
+                }
                 }
             }
         },
@@ -204,8 +230,12 @@ fun HomeScreen(
                                 modifier = Modifier.semantics { contentDescription = documentActionsDescription }) { Text("⋯") }
                             DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
                                 if (document != null) {
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.export_document), style = ComposeTypography.Font16, color = LocalContentColor.current) },
-                                        onClick = { more = false; viewModel.export() }, enabled = ready)
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.export_full), style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                                        onClick = { more = false; viewModel.exportFull(document.id) }, enabled = ready)
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.export_web), style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                                        onClick = { more = false; viewModel.exportWeb(document.id) }, enabled = ready)
+                                    DropdownMenuItem(text = { Text(stringResource(R.string.duplicate_document), style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                                        onClick = { more = false; viewModel.duplicateDocument(document.id) }, enabled = ready)
                                     DropdownMenuItem(text = { Text(stringResource(R.string.delete_document), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.error) },
                                         onClick = { more = false; deleteId = document.id }, enabled = ready)
                                 }
@@ -217,7 +247,7 @@ fun HomeScreen(
             floatingActionButtonPosition = FabPosition.Center,
             floatingActionButton = {
                 if (showMediaActions) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).navBarInsetBaseline(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) {
                             latestPending?.let { latest ->
@@ -229,9 +259,8 @@ fun HomeScreen(
                                 ) {
                                     Row(Modifier.padding(4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                                         LocalImage(latest.uri, stringResource(R.string.latest_image, latest.name), Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)), crop = true)
-                                        Text(stringResource(R.string.new_images_count, state.pending.size), Modifier.weight(1f, fill = false).padding(end = 8.dp),
-                                            style = ComposeTypography.Font14M, color = MaterialTheme.colorScheme.onSurface,
-                                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text("+${state.pending.size}", Modifier.padding(start = 4.dp, end = 8.dp),
+                                            style = ComposeTypography.Font14M, color = MaterialTheme.colorScheme.onSurface)
                                     }
                                 }
                             }
@@ -243,32 +272,6 @@ fun HomeScreen(
                             contentColor = if (ready) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(24.dp))
-                        }
-                    }
-                }
-            },
-            bottomBar = {
-                if (showMediaActions && ribbon && state.pending.isNotEmpty()) {
-                    Surface(tonalElevation = 2.dp) {
-                        Column(Modifier.navigationBarsPadding()) {
-                            LazyRow(Modifier.fillMaxWidth().padding(top = 12.dp), contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                items(state.pending, key = { it.uri }, contentType = { "candidate" }) { candidate ->
-                                    val disabled = candidate.uri in imported || !ready
-                                    Column(Modifier.width(104.dp).clickable(enabled = !disabled) {
-                                        selected = if (candidate.uri in selected) selected - candidate.uri else selected + candidate.uri
-                                    }) {
-                                        LocalImage(candidate.uri, stringResource(R.string.image_named, candidate.name), Modifier.size(104.dp), crop = true)
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Checkbox(checked = candidate.uri in selected, onCheckedChange = null, enabled = !disabled)
-                                            if (candidate.uri in imported) Text(stringResource(R.string.already_added), style = MaterialTheme.typography.bodySmall)
-                                        }
-                                    }
-                                }
-                            }
-                            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End) {
-                                TextButton(onClick = { viewModel.ignoreCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) { Text(stringResource(R.string.ignore)) }
-                                Button(onClick = { onCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) { Text(stringResource(R.string.add_images_count, selected.size)) }
-                            }
                         }
                     }
                 }
@@ -335,6 +338,44 @@ fun HomeScreen(
             }
         }
     }
+    if (active && showMediaActions && ribbon && state.pending.isNotEmpty()) {
+        ComposeBottomSheet(
+            onDismissRequest = { ribbon = false },
+            backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            showToolbar = ComposeBottomSheetToolbar.Custom { dismiss ->
+                Row(Modifier.fillMaxWidth().height(48.dp).padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.recent_new_images, selected.size, state.pending.size),
+                        Modifier.weight(1f).padding(start = 20.dp), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        style = ComposeTypography.Font16M, color = MaterialTheme.colorScheme.onSurface)
+                    IconButton(onClick = dismiss, modifier = Modifier.semantics { contentDescription = closeDescription }) { Text("✕") }
+                }
+            },
+        ) { dismiss, safeAreaPadding ->
+            Column(Modifier.fillMaxWidth().padding(safeAreaPadding)) {
+                LazyRow(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(state.pending, key = { it.uri }, contentType = { "candidate" }) { candidate ->
+                        CandidateTile(
+                            uri = candidate.uri, name = candidate.name, imported = candidate.uri in imported,
+                            checked = candidate.uri in selected, enabled = ready,
+                            onClick = {
+                                selected = if (candidate.uri in selected) selected - candidate.uri else selected + candidate.uri
+                            },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
+                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { dismiss(); viewModel.ignorePending() }, enabled = ready) { Text(stringResource(R.string.ignore)) }
+                    Spacer(Modifier.weight(1f))
+                    Button(onClick = { dismiss(); onCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) {
+                        Text(stringResource(R.string.add))
+                    }
+                }
+            }
+        }
+    }
     if (active && guide != null && guideAnchor != null && guide.documentId == document?.id) NodeGuideOverlay(
         anchor = guideAnchor, kind = guide.kind, saving = state.nodeGuideSaving, onAcknowledge = viewModel::acknowledgeNodeGuide,
     )
@@ -351,6 +392,23 @@ fun HomeScreen(
         confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { deleteId = null }) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** 待选缩略图：选中用 30% 白色覆盖表示，已加入当前文档的图片不再可选。 */
+@Composable
+private fun CandidateTile(uri: String, name: String, imported: Boolean, checked: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    val description = stringResource(R.string.image_named, name)
+    Box(Modifier.size(84.dp).clip(RoundedCornerShape(8.dp))
+        .semantics { selected = checked }
+        .clickable(enabled = enabled && !imported, onClick = onClick)) {
+        LocalImage(uri, description, Modifier.fillMaxSize(), crop = true)
+        if (imported) {
+            Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)))
+            Text(stringResource(R.string.already_added), Modifier.align(Alignment.Center), style = ComposeTypography.Font12MWhite)
+        } else if (checked) {
+            Box(Modifier.matchParentSize().background(Color.White.copy(alpha = 0.3f)))
+        }
+    }
 }
 
 @Composable

@@ -1,6 +1,5 @@
 package com.allan.picnote.ui
 
-import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.R
-import com.au.module_android.openApplicationLanguageSettings
+import com.au.module_android.appLocaleLabel
 import com.au.module_android.supportedAppLocales
 import com.au.module_androiduiex.picker.AppLanguagePicker
 import com.au.module_androiduiex.styles.ComposeTheme
@@ -34,10 +33,8 @@ import java.util.Locale
 fun SettingsScreen(
     onBack: () -> Unit,
     onLanguage: () -> Unit,
-    onMessage: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     var languageTag by remember { mutableStateOf(AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag().orEmpty()) }
     LifecycleResumeEffect(Unit) {
         languageTag = AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag().orEmpty()
@@ -50,19 +47,11 @@ fun SettingsScreen(
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.language), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface) },
                     supportingContent = {
-                        Text(language?.getDisplayName(language) ?: stringResource(R.string.follow_system),
+                        Text(language?.let(::appLocaleLabel) ?: stringResource(R.string.follow_system),
                             style = ComposeTypography.Font14sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     },
                     trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
-                    modifier = Modifier.clickable {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            if (!context.openApplicationLanguageSettings()) {
-                                onMessage(context.getString(R.string.error_open_language_settings))
-                            }
-                        } else {
-                            onLanguage()
-                        }
-                    },
+                    modifier = Modifier.clickable { onLanguage() },
                 )
             }
         }

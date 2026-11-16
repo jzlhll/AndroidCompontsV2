@@ -71,6 +71,8 @@ interface PicNoteDao {
     suspend fun clearSourceUris(prefix: String)
     @Query("DELETE FROM pending_media WHERE uri IN (:uris)")
     suspend fun consumePending(uris: List<String>)
+    @Query("DELETE FROM pending_media")
+    suspend fun clearPending()
     @Query("DELETE FROM pending_media WHERE volume = :volume AND uri NOT IN (SELECT uri FROM media_snapshots)")
     suspend fun cleanMissingPending(volume: String)
     @Query("UPDATE media_scan_states SET baseline_valid = 0")

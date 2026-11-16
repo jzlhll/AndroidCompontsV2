@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.ContentUris
 import android.content.res.Resources
 import android.provider.MediaStore
+import android.util.Base64
 import androidx.room.withTransaction
 import com.allan.picnote.R
 import com.allan.picnote.data.PicNoteDatabase
@@ -26,8 +27,12 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.commonmark.parser.Parser
+import org.commonmark.renderer.html.HtmlRenderer
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.text.Normalizer
@@ -189,6 +194,51 @@ class DocumentRepository(private val context: Context, private val database: Pic
         mutex.withLock {
             database.withTransaction { dao.deleteDocument(id) }
             if (!File(root, id).deleteRecursively()) loge("Delete document files failed")
+        }
+    }
+
+    /** 复制整份文档：标题追加 (V2)，节点、图片记录与媒体文件各自独立，镜像按新标题重建。 */
+    suspend fun duplicate(id: String): Saved<String> = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val source = snapshot(id)
+            val newId = UUID.randomUUID().toString()
+            val title = "${source.document.title}(V2)"
+            val directory = File(root, newId)
+            var committed = false
+            try {
+                val media = File(root, "$id/media")
+                if (media.isDirectory) {
+                    val target = File(directory, "media")
+                    check(target.isDirectory || target.mkdirs()) { Globals.app.getString(R.string.error_create_image_dir) }
+                    media.listFiles()?.filter { it.isFile && !it.name.startsWith(".") }?.forEach { file ->
+                        currentCoroutineContext().ensureActive()
+                        file.copyTo(File(target, file.name), overwrite = true)
+                    }
+                }
+                currentCoroutineContext().ensureActive()
+                withContext(NonCancellable) {
+                    database.withTransaction {
+                        dao.putDocument(DocumentEntity(newId, title, System.currentTimeMillis()))
+                        val nodeIds = source.nodes.associate { it.node.id to UUID.randomUUID().toString() }
+                        dao.putNodes(source.nodes.map { node ->
+                            node.node.copy(id = nodeIds.getValue(node.node.id), documentId = newId,
+                                title = if (node.node.kind == "title") title else node.node.title)
+                        })
+                        val images = source.nodes.flatMap { node ->
+                            node.images.map { image ->
+                                image.copy(id = UUID.randomUUID().toString(), nodeId = nodeIds.getValue(node.node.id), documentId = newId)
+                            }
+                        }
+                        dao.putImages(images)
+                        dao.putSourceImages(images.mapNotNull { image -> image.sourceUri?.let { SourceImageEntity(it, newId, image.fileName) } })
+                    }
+                    committed = true
+                    preferences.edit().putString("last_document", newId).apply()
+                    Saved(newId, !writeMirror(newId))
+                }
+            } finally {
+                if (!committed) directory.deleteRecursively()
+            }
         }
     }
 
@@ -487,7 +537,8 @@ class DocumentRepository(private val context: Context, private val database: Pic
         }
     }
 
-    suspend fun export(id: String): File = withContext(Dispatchers.IO) {
+    /** 完整导出：Markdown 与图片素材分别成文件的 ZIP，便于继续编辑。 */
+    suspend fun exportFull(id: String): File = withContext(Dispatchers.IO) {
         mutex.withLock {
             val content = snapshot(id)
             check(exportRoot.isDirectory || exportRoot.mkdirs()) { Globals.app.getString(R.string.error_create_export_dir) }
@@ -495,7 +546,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
             val temporary = File(exportRoot, ".${output.name}.tmp")
             try {
                 ZipOutputStream(FileOutputStream(temporary)).use { zip ->
-                    zip.putNextEntry(ZipEntry(exportMarkdownFileName(content.document.title)))
+                    zip.putNextEntry(ZipEntry(exportFileName(content.document.title, "md")))
                     zip.write(content.markdown().toByteArray(Charsets.UTF_8))
                     zip.closeEntry()
                     content.nodes.flatMap { it.images }.distinctBy { it.fileName }.forEach { image ->
@@ -515,7 +566,95 @@ class DocumentRepository(private val context: Context, private val database: Pic
         }
     }
 
-    private fun exportMarkdownFileName(title: String): String {
+    /** 网页导出：单文件 HTML，图片以 base64 内嵌，直接用浏览器打开即可阅读。 */
+    suspend fun exportWeb(id: String): File = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            val content = snapshot(id)
+            check(exportRoot.isDirectory || exportRoot.mkdirs()) { Globals.app.getString(R.string.error_create_export_dir) }
+            val output = File(exportRoot, "picnote-${UUID.randomUUID()}.html")
+            val temporary = File(exportRoot, ".${output.name}.tmp")
+            try {
+                FileOutputStream(temporary).use { stream ->
+                    val writer = OutputStreamWriter(stream, Charsets.UTF_8)
+                    writer.write(htmlHeader(content.document.title))
+                    content.nodes.forEach { node ->
+                        currentCoroutineContext().ensureActive()
+                        when (node.node.kind) {
+                            "title" -> writer.write("<h1>${htmlEscape(content.document.title)}</h1>\n")
+                            "chapter" -> writer.write("<h2>${htmlEscape(node.node.title)}</h2>\n")
+                            else -> {
+                                node.images.forEach { image -> writeInlineImage(writer, id, image.fileName) }
+                                if (node.node.bodyMarkdown.isNotBlank()) {
+                                    val body = htmlRenderer.render(markdownParser.parse(node.node.bodyMarkdown))
+                                    if (node.node.kind == "introduction") writer.write("<blockquote>\n$body</blockquote>\n") else writer.write(body)
+                                }
+                            }
+                        }
+                    }
+                    writer.write("</main></body></html>\n")
+                    writer.flush()
+                    stream.fd.sync()
+                }
+                Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.ATOMIC_MOVE)
+                output
+            } finally {
+                temporary.delete()
+            }
+        }
+    }
+
+    private val markdownParser by lazy { Parser.builder().build() }
+    private val htmlRenderer by lazy { HtmlRenderer.builder().escapeHtml(true).softbreak("<br>").build() }
+
+    private fun writeInlineImage(writer: Writer, documentId: String, fileName: String) {
+        val file = imageFile(documentId, fileName)
+        require(file.isFile && file.canRead()) { Globals.app.getString(R.string.error_export_image_unreadable) }
+        val mime = when (file.extension.lowercase()) {
+            "png" -> "image/png"
+            "jpg", "jpeg" -> "image/jpeg"
+            else -> "image/webp"
+        }
+        val data = Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)
+        writer.write("<p><img alt=\"\" src=\"data:$mime;base64,$data\"></p>\n")
+    }
+
+    private fun htmlHeader(title: String): String {
+        val lang = context.resources.configuration.locales[0].toLanguageTag()
+        return """<!DOCTYPE html>
+<html lang="$lang">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${htmlEscape(title)}</title>
+<style>
+:root { color-scheme: light dark; }
+body { margin: 0; padding: 24px 16px 48px; background: #fafafa; color: #1b1b1b;
+  font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 28px 24px 32px; background: #fff; border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+h1 { margin: 8px 0 24px; font-size: 26px; text-align: center; }
+h2 { margin: 28px 0 12px; padding-bottom: 6px; font-size: 20px; border-bottom: 1px solid #e5e5e5; }
+p { margin: 12px 0; }
+img { display: block; max-width: 100%; height: auto; margin: 12px auto; border-radius: 8px; }
+blockquote { margin: 16px 0; padding: 8px 16px; background: #f2f2f2; border-radius: 8px; color: #555; }
+blockquote p { margin: 6px 0; }
+a { color: #1a73e8; }
+@media (prefers-color-scheme: dark) {
+  body { background: #121212; color: #e6e6e6; }
+  main { background: #1e1e1e; box-shadow: none; }
+  h2 { border-bottom-color: #333; }
+  blockquote { background: #262626; color: #b8b8b8; }
+}
+</style>
+</head>
+<body><main>
+"""
+    }
+
+    private fun htmlEscape(value: String) = value.replace("&", "&amp;").replace("<", "&lt;")
+        .replace(">", "&gt;").replace("\"", "&quot;")
+
+    private fun exportFileName(title: String, extension: String): String {
         val cleaned = Normalizer.normalize(title, Normalizer.Form.NFC)
             .replace(Regex("""[<>:"/\\|?*\p{Cc}\p{Cs}()\[\]{},，（）【】]+"""), "-")
             .replace(Regex("""[\s\p{Z}-]+"""), "-")
@@ -523,9 +662,10 @@ class DocumentRepository(private val context: Context, private val database: Pic
             .ifBlank { "document" }
         val reserved = Regex("""CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³]""", RegexOption.IGNORE_CASE)
         val name = if (reserved.matches(cleaned.substringBefore('.'))) "document-$cleaned" else cleaned
+        val limit = 255 - extension.length - 1
         var end = 0
         var bytes = 0
-        // 为 .md 预留 3 字节，按码点截断，避免拆开中文或 emoji。
+        // 按码点截断，避免拆开中文或 emoji。
         while (end < name.length) {
             val codePoint = name.codePointAt(end)
             val size = when {
@@ -534,11 +674,11 @@ class DocumentRepository(private val context: Context, private val database: Pic
                 codePoint <= 0xFFFF -> 3
                 else -> 4
             }
-            if (bytes + size > 252) break
+            if (bytes + size > limit) break
             bytes += size
             end += Character.charCount(codePoint)
         }
-        return name.substring(0, end).trimEnd('.', '-') + ".md"
+        return name.substring(0, end).trimEnd('.', '-') + ".$extension"
     }
 
     suspend fun cleanup(): Set<String> = withContext(Dispatchers.IO) {

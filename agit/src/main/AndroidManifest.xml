@@ -11,6 +11,14 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"
         android:theme="@style/Theme.AGit">
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
         <activity android:name="com.au.module_androidui.ui.FragmentShellActivity" tools:node="remove" />
         <activity android:name="com.au.module_androidui.ui.FragmentShellTranslucentActivity" tools:node="remove" />
         <activity android:name="com.au.module_androidui.ui.FragmentShellOrientationActivity" tools:node="remove" />

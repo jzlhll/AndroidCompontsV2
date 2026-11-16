@@ -49,7 +49,13 @@ class MediaScanner(private val context: Context, private val database: PicNoteDa
         if (photoAccess(context) == PhotoAccess.Full) dao.pending() else emptyList()
     }
 
-    suspend fun ignore(uris: List<String>) = withContext(Dispatchers.IO) { dao.consumePending(uris) }
+    /** 忽略全部提示：onStart 扫描已把全量列表写成基线，这里只需清空待选与变化记录。 */
+    suspend fun ignoreAll() = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            dao.clearPending()
+            dao.clearChanges()
+        }
+    }
 
     suspend fun previousSummary(): ScanSummary? = withContext(Dispatchers.IO) {
         val states = dao.scanStates().filter { it.available && it.baselineValid }

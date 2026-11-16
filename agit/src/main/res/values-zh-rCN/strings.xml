@@ -192,5 +192,4 @@
     <string name="author_identity_hint">设置提交记录中的作者身份。</string>
     <string name="follow_system">跟随系统</string>
     <string name="language">语言</string>
-    <string name="error_open_language_settings">无法打开系统语言设置，请重试</string>
 </resources>

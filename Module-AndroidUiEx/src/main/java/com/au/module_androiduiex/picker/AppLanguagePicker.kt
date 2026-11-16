@@ -13,10 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.au.module_android.appLocaleLabel
 import com.au.module_androiduiex.styles.ComposeTypography
 import java.util.Locale
 
-/** 旧版 Android 的应用语言单选，空语言标签表示跟随系统。 */
+/** 应用语言单选，空语言标签表示跟随系统；选中后由调用方写入 AppCompatDelegate。 */
 @Composable
 fun AppLanguagePicker(
     locales: List<Locale>,
@@ -37,7 +38,7 @@ fun AppLanguagePicker(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 RadioButton(selected = selected, onClick = null)
-                Text(locale?.getDisplayName(locale) ?: followSystemLabel,
+                Text(locale?.let(::appLocaleLabel) ?: followSystemLabel,
                     style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface)
             }
         }

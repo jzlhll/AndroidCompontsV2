@@ -16,12 +16,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -85,11 +85,11 @@ fun EditorScreen(
         topBar = {
             TopAppBar(
                 title = { Text(when {
-                    creatingDocument -> "新建文档"
-                    route.nodeId != null -> "节点编辑"
-                    introduction -> "创建引言"
-                    chapter -> "创建章节标题"
-                    else -> "创建正文"
+                    creatingDocument -> stringResource(R.string.new_document)
+                    route.nodeId != null -> stringResource(R.string.edit)
+                    introduction -> stringResource(R.string.create_introduction)
+                    chapter -> stringResource(R.string.create_chapter)
+                    else -> stringResource(R.string.create_body)
                 }, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = close, enabled = !state.busy && state.savedId == null) {
@@ -97,11 +97,6 @@ fun EditorScreen(
                     }
                 },
                 actions = {
-                    if (!creatingDocument && state.loaded && state.kind == "body") {
-                        IconButton(onClick = addImages, enabled = editable) {
-                            Icon(painterResource(R.drawable.ic_add_photo), stringResource(R.string.add_image))
-                        }
-                    }
                     if (!creatingDocument && state.loaded && !state.fixed && route.nodeId != null) {
                         IconButton(onClick = { deleting = true }, enabled = editable) {
                             Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_node), tint = MaterialTheme.colorScheme.error)
@@ -168,6 +163,11 @@ fun EditorScreen(
                             }
                         }
                     }
+                }
+            }
+            if (!creatingDocument && state.kind == "body") item(key = "add-image-button") {
+                Box(Modifier.fillMaxWidth().padding(bottom = 12.dp), contentAlignment = Alignment.Center) {
+                    TextButton(onClick = addImages, enabled = editable) { Text(stringResource(R.string.add_image), fontSize = 16.sp) }
                 }
             }
             if (creatingDocument || introduction || state.kind == "body") item(key = "body-input") {

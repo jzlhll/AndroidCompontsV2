@@ -116,7 +116,7 @@ fun PicNoteApp(app: PicNoteApplication) {
             try {
                 val uri = checkNotNull(getUriFromFile(context, file)) { Globals.getString(R.string.error_create_share_uri) }
                 val send = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/zip"
+                    type = if (file.extension.equals("html", ignoreCase = true)) "text/html" else "application/zip"
                     putExtra(Intent.EXTRA_STREAM, uri)
                     clipData = ClipData.newRawUri(Globals.getString(R.string.app_name), uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -188,7 +188,6 @@ fun PicNoteApp(app: PicNoteApplication) {
                         SettingsScreen(
                             onBack = { if (backStack.lastOrNull() == SettingsRoute) navigateBack() },
                             onLanguage = { if (backStack.lastOrNull() == SettingsRoute) backStack.add(LanguageRoute) },
-                            onMessage = home::showMessage,
                         )
                     }
                     entry<AppearanceRoute> {

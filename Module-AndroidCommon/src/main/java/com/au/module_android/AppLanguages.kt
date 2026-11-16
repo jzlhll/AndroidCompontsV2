@@ -25,6 +25,19 @@ fun supportedAppLocales(context: Context, @XmlRes localeConfig: Int): List<Local
         }
     }
 
+/**
+ * 语言名称按标签固定：中文区分简繁，其他语言取该语言自身的写法。
+ * 不依赖系统 ICU 的 getDisplayName，避免不同系统返回“中文 (中國台灣)”“中文 (简体中文)”这类带括注的差异。
+ */
+fun appLocaleLabel(locale: Locale): String {
+    val tag = locale.toLanguageTag()
+    return when {
+        tag == "zh" || tag.startsWith("zh-") ->
+            if (tag.contains("Hant") || tag.endsWith("TW") || tag.endsWith("HK") || tag.endsWith("MO")) "繁體中文" else "简体中文"
+        else -> locale.getDisplayLanguage(locale).ifBlank { tag }
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 fun Context.openApplicationLanguageSettings(): Boolean = try {
     startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", packageName, null)))

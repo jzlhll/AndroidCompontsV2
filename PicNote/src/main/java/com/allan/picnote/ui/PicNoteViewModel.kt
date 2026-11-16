@@ -14,8 +14,9 @@ import com.allan.picnote.data.entity.*
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.data.repositories.Saved
 import com.allan.picnote.media.*
-import com.au.module_androiduiex.styles.ComposeTheme
 import com.au.module_android.utils.withIOThread
+import com.au.module_androidui.toast.ToastUtil
+import com.au.module_androiduiex.styles.ComposeTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -312,6 +313,13 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         reload(stateFlow.value.content?.document?.id)
     }
 
+    fun duplicateDocument(id: String) = operation {
+        val result = repository.duplicate(id)
+        reload(result.value)
+        ToastUtil.toastOnTop("已复制文档")
+        saved(result.value, result)
+    }
+
     fun deleteNode(nodeId: String) {
         val id = stateFlow.value.content?.document?.id ?: return
         operation {
@@ -348,10 +356,12 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         }
     }
 
-    fun importImages(documentId: String, uris: List<String>, candidateUris: List<String> = emptyList()) = operation(waitForLoading = true) {
+    fun importImages(documentId: String, uris: List<String>, candidateUris: List<String> = emptyList(), clearPending: Boolean = false) = operation(waitForLoading = true) {
         val result = repository.importImages(documentId, uris, candidateUris)
+        // 与“忽略”一致：本次新增整体并入基线，确认后不再重复提示。
+        if (clearPending) app.scanner.ignoreAll()
         reload(documentId)
-        mutableStateFlow.update { it.copy(message = "已添加 ${result.value} 个图片节点") }
+        ToastUtil.toastOnTop("已添加 ${result.value} 个图片节点")
         saved(documentId, result)
     }
 
@@ -362,19 +372,24 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
             showMessage("待选图片已变化，请重新选择")
             return
         }
-        if (selected.isNotEmpty()) importImages(documentId, selected.map { it.uri }, selected.map { it.uri })
+        if (selected.isEmpty()) return
+        importImages(documentId, selected.map { it.uri }, selected.map { it.uri }, clearPending = true)
     }
 
-    fun ignoreCandidates(uris: List<String>) = operation {
-        app.scanner.ignore(uris)
+    fun ignorePending() = operation {
+        app.scanner.ignoreAll()
         val pending = app.scanner.pending()
         mutableStateFlow.update { it.copy(pending = pending) }
     }
 
-    fun export() {
-        val id = stateFlow.value.content?.document?.id ?: return
+    fun exportFull(id: String? = stateFlow.value.content?.document?.id) = exportWith(id, repository::exportFull)
+
+    fun exportWeb(id: String? = stateFlow.value.content?.document?.id) = exportWith(id, repository::exportWeb)
+
+    private fun exportWith(id: String?, produce: suspend (String) -> File) {
+        if (id == null) return
         operation {
-            val file = repository.export(id)
+            val file = produce(id)
             mutableStateFlow.update { it.copy(exportedFile = file) }
         }
     }

@@ -273,17 +273,19 @@ private fun NodeMenu(
                 menu = true
                 onOpen()
             }.semantics { contentDescription = nodeActionsDescription }, contentAlignment = Alignment.TopCenter) {
-            Image(
-                painter = painterResource(R.drawable.node_bamboo_long_branch),
-                contentDescription = null,
-                modifier = Modifier.size(width = 27.dp, height = 48.dp)
-                    .background(MaterialTheme.colorScheme.background),
-            )
+            Column(Modifier.background(MaterialTheme.colorScheme.background),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(R.drawable.node_bamboo_long_branch),
+                    contentDescription = null,
+                    modifier = Modifier.size(width = 24.dp, height = 39.dp),
+                )
+                Spacer(Modifier.height(1.dp))
+                Text(number, Modifier.padding(horizontal = 2.dp)
+                    .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) { guideAnchor.bounds = it.boundsInWindow } else Modifier),
+                    style = MaterialTheme.typography.labelSmall, color = foreground, maxLines = 1, softWrap = false)
+            }
         }
-        Text(number, Modifier.align(Alignment.TopCenter).offset(y = 52.dp)
-            .background(MaterialTheme.colorScheme.background).padding(horizontal = 2.dp)
-            .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) { guideAnchor.bounds = it.boundsInWindow } else Modifier),
-            style = MaterialTheme.typography.labelSmall, color = foreground, maxLines = 1, softWrap = false)
         DropdownMenu(expanded = menu && enabled, onDismissRequest = { menu = false; inserting = false }) {
             if (inserting) {
                 DropdownMenuItem(text = { Text("‹ ${stringResource(R.string.back)}") }, onClick = { inserting = false })
@@ -415,7 +417,7 @@ private fun NodeCard(
                     if (content.node.kind == "title") Layout(
                         modifier = Modifier.fillMaxSize(),
                         content = {
-                            Text(text, Modifier.padding(horizontal = 8.dp), textAlign = TextAlign.Center,
+                            Text(text, textAlign = TextAlign.Center,
                                 maxLines = 2, overflow = TextOverflow.Ellipsis,
                                 style = ComposeTypography.Font24B, color = MaterialTheme.colorScheme.onSurface)
                             NodeEditControls(
@@ -425,12 +427,13 @@ private fun NodeCard(
                         },
                     ) { measurables, constraints ->
                         val controls = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
-                        // 两侧按编辑控件的实际宽度对称留位，使标题始终位于整张卡片的中间。
-                        val availableWidth = constraints.maxWidth - controls.width * 2
+                        val startPadding = 15.dp.roundToPx()
+                        val endPadding = 24.dp.roundToPx()
+                        val availableWidth = constraints.maxWidth - startPadding - endPadding
                         val textWidth = if (availableWidth > 0) availableWidth else 0
                         val title = measurables[0].measure(constraints.copy(minWidth = textWidth, maxWidth = textWidth, minHeight = 0))
                         layout(constraints.maxWidth, constraints.maxHeight) {
-                            title.placeRelative((constraints.maxWidth - title.width) / 2, (constraints.maxHeight - title.height) / 2)
+                            title.placeRelative(startPadding, (constraints.maxHeight - title.height) / 2)
                             controls.placeRelative(constraints.maxWidth - controls.width, 0)
                         }
                     } else Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -480,31 +483,34 @@ private fun NodeCard(
                     }) {
                         NodeStackImage(repository.imageFile(content.node.documentId, image.fileName), "图片 ${imageIndex + 1}，共 ${content.images.size} 张", Modifier.fillMaxSize())
                     }
-                    if (content.node.bodyMarkdown.isNotBlank()) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().heightIn(min = 48.dp)
-                        .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))))
-                        .padding(horizontal = if (multiImage) 48.dp else 10.dp), contentAlignment = Alignment.CenterStart) {
-                        Text(preview, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Color.White, style = ComposeTypography.Font16)
+                    val hasText = content.node.bodyMarkdown.isNotBlank()
+                    Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        if (multiImage) Row(Modifier.fillMaxWidth()
+                            .graphicsLayer { alpha = if (settingsVisible) controlsAlpha.value else 0f }
+                            .then(if (settingsVisible) Modifier else Modifier.clearAndSetSemantics { }),
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            if (imageIndex > 0) IconButton(onClick = { moveImage(-1) }, enabled = settingsVisible && !switching,
+                                modifier = Modifier.size(42.dp)) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "图片前移一位", tint = Color.White,
+                                    modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
+                            } else Spacer(Modifier.size(42.dp))
+                            if (imageIndex < content.images.lastIndex) IconButton(onClick = { moveImage(1) }, enabled = settingsVisible && !switching,
+                                modifier = Modifier.size(42.dp)) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, "图片后移一位", tint = Color.White,
+                                    modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
+                            } else Spacer(Modifier.size(42.dp))
+                        }
+                        if (hasText) Box(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))))
+                            .padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
+                            Text(preview, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Color.White, style = ComposeTypography.Font16)
+                        }
                     }
                     NodeEditControls(
                         type = nodeTypeLabel(content.node.kind), colors = colors, visible = settingsVisible,
                         alphaProvider = { controlsAlpha.value }, onEdit = edit,
                         modifier = Modifier.align(Alignment.TopEnd),
                     )
-                    if (multiImage) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                        .graphicsLayer { alpha = if (settingsVisible) controlsAlpha.value else 0f }
-                        .then(if (settingsVisible) Modifier else Modifier.clearAndSetSemantics { }),
-                        horizontalArrangement = Arrangement.SpaceBetween) {
-                        if (imageIndex > 0) IconButton(onClick = { moveImage(-1) }, enabled = settingsVisible && !switching,
-                            modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "图片前移一位", tint = Color.White,
-                                modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
-                        } else Spacer(Modifier.size(48.dp))
-                        if (imageIndex < content.images.lastIndex) IconButton(onClick = { moveImage(1) }, enabled = settingsVisible && !switching,
-                            modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, "图片后移一位", tint = Color.White,
-                                modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
-                        } else Spacer(Modifier.size(48.dp))
-                    }
                 }
             }
         }
