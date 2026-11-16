@@ -106,7 +106,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
             }
         }
         binding.directTakePicDeepBtn.onClick {
-            cameraHelper.safeRunTakePicMust(true, "deep")
+            cameraHelper.safeRunTakePicMust(compress = true, quality = 60)
             {mode, uri->
                 logdNoFile { "take pic mode $mode $uri" }
                 if (uri != null) {
@@ -115,7 +115,7 @@ class NewPhotoPickerFragment : BindingFragment<FragmentPhotoPickerBinding>(), Ta
             }
         }
         binding.directTakePicShallowBtn.onClick {
-            cameraHelper.safeRunTakePicMust(true, "shallow")
+            cameraHelper.safeRunTakePicMust(compress = true, quality = 90)
             {mode, uri->
                 logdNoFile { "take pic mode $mode $uri" }
                 if (uri != null) {

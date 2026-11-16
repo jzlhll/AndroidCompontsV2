@@ -6,7 +6,6 @@ import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.click.onClick
 import com.au.module_android.log.logdNoFile
 import com.au.module_androidui.ui.bindings.BindingFragment
-import com.au.module_imagecompressed.compressor.CompressCacheConstManager
 import com.luck.picture.lib.basic.PictureSelector
 import com.luck.picture.lib.config.SelectMimeType
 import com.luck.picture.lib.entity.LocalMedia
@@ -116,8 +115,9 @@ class PictureSelectorTestFragment : BindingFragment<FragmentPictureSelectorBindi
 
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        CompressCacheConstManager.cleanSpace(true)
-    }
+    // 压缩缓存已改为任务启动前清理过期文件，停用页面销毁时全量清理的旧示例。
+    // override fun onDestroy() {
+    //     super.onDestroy()
+    //     CompressCacheConstManager.cleanSpace(true)
+    // }
 }

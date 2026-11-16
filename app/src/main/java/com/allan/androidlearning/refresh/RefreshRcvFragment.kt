@@ -60,7 +60,7 @@ class RefreshRcvFragment : BindingFragment<FragmentRefresh1Binding>() {
             setSimpleLoadingFooter()
 
             //第一个参数是背景色；第二个参数是文字颜色
-            setPrimaryColorsId(com.au.module_androidcolor.R.color.windowBackground, com.au.module_androidcolor.R.color.color_text_desc)
+            // setPrimaryColorsId(com.au.module_androidcolor.R.color.windowBackground, com.au.module_androidcolor.R.color.color_text_desc)
 
             setEnableAutoLoadMore(debugEnableAutoLoadMore)//是否启用列表惯性滑动到底部时自动加载更多
             setEnableFooterFollowWhenNoMoreData(debugEnableFooterFollowWhenNoMoreData) //当没有更多数据的时候，是否一直显示footer

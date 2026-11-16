@@ -306,12 +306,6 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
             }) }
     }
 
-    fun rename(id: String, title: String) = operation {
-        val result = repository.rename(id, title)
-        reload(stateFlow.value.content?.document?.id)
-        saved(id, result)
-    }
-
     fun deleteDocument(id: String) = operation {
         repository.deleteDocument(id)
         mirrorFailures.remove(id)

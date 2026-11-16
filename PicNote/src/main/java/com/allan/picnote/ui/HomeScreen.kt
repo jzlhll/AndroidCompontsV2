@@ -121,8 +121,6 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val ready = active && !state.busy && !state.loading
     var more by remember { mutableStateOf(false) }
-    var renameId by rememberSaveable { mutableStateOf<String?>(null) }
-    var renameTitle by rememberSaveable { mutableStateOf("") }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     var ribbon by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
@@ -144,7 +142,6 @@ fun HomeScreen(
         selected = selected.filter { id -> state.pending.any { it.uri == id } && id !in imported }
         if (state.pending.isEmpty()) ribbon = false
     }
-    val beginRename: (String, String) -> Unit = { id, title -> renameId = id; renameTitle = title }
 
     ModalNavigationDrawer(
         modifier = modifier,
@@ -177,7 +174,6 @@ fun HomeScreen(
                                 IconButton(onClick = { menu = true }, enabled = ready,
                                     modifier = Modifier.semantics { contentDescription = itemActionsDescription }) { Text("⋯") }
                                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename)) }, onClick = { menu = false; beginRename(item.id, item.title) })
                                     DropdownMenuItem(text = { Text(stringResource(R.string.delete_document), color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; deleteId = item.id })
                                 }
                             }
@@ -196,7 +192,7 @@ fun HomeScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    expandedHeight = 64.dp,
+                    expandedHeight = 54.dp,
                     title = { Text(document?.title ?: stringResource(R.string.app_name), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawer.open() } }, enabled = active,
@@ -208,8 +204,6 @@ fun HomeScreen(
                                 modifier = Modifier.semantics { contentDescription = documentActionsDescription }) { Text("⋯") }
                             DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
                                 if (document != null) {
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.rename), style = ComposeTypography.Font16, color = LocalContentColor.current) },
-                                        onClick = { more = false; beginRename(document.id, document.title) }, enabled = ready)
                                     DropdownMenuItem(text = { Text(stringResource(R.string.export_document), style = ComposeTypography.Font16, color = LocalContentColor.current) },
                                         onClick = { more = false; viewModel.export() }, enabled = ready)
                                     DropdownMenuItem(text = { Text(stringResource(R.string.delete_document), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.error) },
@@ -294,7 +288,7 @@ fun HomeScreen(
                             }
                         }
                     }
-                    Box(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                    Box(Modifier.fillMaxWidth().padding(top = 2.dp)) {
                         ComposeLineTabLayout(
                             tabs = listOf(stringResource(R.string.tab_nodes), stringResource(R.string.tab_document)), selectedIndex = pager.currentPage,
                             modifier = Modifier.background(MaterialTheme.colorScheme.surface),
@@ -350,12 +344,6 @@ fun HomeScreen(
         text = { Text(stringResource(R.string.grant_photo_access_message)) },
         confirmButton = { TextButton(onClick = viewModel::requestImagePermission, enabled = !state.permissionPromptSaving) { Text(stringResource(R.string.grant_permission)) } },
         dismissButton = { TextButton(onClick = viewModel::dismissPermissionPrompt, enabled = !state.permissionPromptSaving) { Text(stringResource(R.string.not_now)) } },
-    )
-    if (active && renameId != null) AlertDialog(
-        onDismissRequest = { renameId = null }, title = { Text(stringResource(R.string.rename_document)) },
-        text = { OutlinedTextField(value = renameTitle, onValueChange = { renameTitle = it }, singleLine = true, label = { Text(stringResource(R.string.title)) }) },
-        confirmButton = { TextButton(onClick = { viewModel.rename(renameId!!, renameTitle); renameId = null }, enabled = renameTitle.trim().isNotEmpty() && ready) { Text(stringResource(R.string.save)) } },
-        dismissButton = { TextButton(onClick = { renameId = null }) { Text(stringResource(R.string.cancel)) } },
     )
     if (active && deleteId != null) AlertDialog(
         onDismissRequest = { deleteId = null }, title = { Text(stringResource(R.string.delete_document), color = MaterialTheme.colorScheme.error) },

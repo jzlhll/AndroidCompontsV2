@@ -89,7 +89,7 @@ class AndroidUi2Fragment : BindingFragment<FragmentAndroidUi2Binding>() {
         }
 
         binding.androidUiDialog7.onClick {
-            FragmentBottomSheetDialog.show<EditFragment>(childFragmentManager, hasEditText = true)
+            FragmentBottomSheetDialog.show<EditFragment>(childFragmentManager)
         }
     }
 

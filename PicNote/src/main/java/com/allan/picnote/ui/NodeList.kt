@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onLayoutRectChanged
@@ -49,6 +50,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -264,7 +266,7 @@ private fun NodeMenu(
     val nodeActionsDescription = stringResource(R.string.node_actions)
     LaunchedEffect(enabled) { if (!enabled) { menu = false; inserting = false } }
     if (guideAnchor != null) DisposableEffect(guideAnchor) { onDispose { guideAnchor.bounds = null } }
-    Box(modifier.size(width = 48.dp, height = 80.dp), contentAlignment = Alignment.TopCenter) {
+    Box(modifier.size(width = 48.dp, height = 68.dp), contentAlignment = Alignment.TopCenter) {
         Box(Modifier.matchParentSize()
             .onClick(enabled = enabled, onClickLabel = nodeActionsDescription, role = Role.Button) {
                 inserting = false
@@ -274,11 +276,11 @@ private fun NodeMenu(
             Image(
                 painter = painterResource(R.drawable.node_bamboo_long_branch),
                 contentDescription = null,
-                modifier = Modifier.size(width = 30.dp, height = 60.dp)
+                modifier = Modifier.size(width = 27.dp, height = 48.dp)
                     .background(MaterialTheme.colorScheme.background),
             )
         }
-        Text(number, Modifier.align(Alignment.TopCenter).offset(y = 64.dp)
+        Text(number, Modifier.align(Alignment.TopCenter).offset(y = 52.dp)
             .background(MaterialTheme.colorScheme.background).padding(horizontal = 2.dp)
             .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) { guideAnchor.bounds = it.boundsInWindow } else Modifier),
             style = MaterialTheme.typography.labelSmall, color = foreground, maxLines = 1, softWrap = false)
@@ -299,7 +301,7 @@ private fun NodeMenu(
 
 @Composable
 private fun InsertItems(onInsert: (String) -> Unit) {
-    listOf("introduction", "chapter", "body").forEach { kind ->
+    listOf("chapter", "body").forEach { kind ->
         DropdownMenuItem(text = { Text(nodeTypeLabel(kind)) }, onClick = { onInsert(kind) })
     }
 }
@@ -410,11 +412,31 @@ private fun NodeCard(
                             if (content.node.kind == "introduction") "引言内容" else "正文内容"
                         }
                     }
-                    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    if (content.node.kind == "title") Layout(
+                        modifier = Modifier.fillMaxSize(),
+                        content = {
+                            Text(text, Modifier.padding(horizontal = 8.dp), textAlign = TextAlign.Center,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                style = ComposeTypography.Font24B, color = MaterialTheme.colorScheme.onSurface)
+                            NodeEditControls(
+                                type = nodeTypeLabel(content.node.kind), colors = colors, visible = settingsVisible,
+                                alphaProvider = { controlsAlpha.value }, onEdit = edit,
+                            )
+                        },
+                    ) { measurables, constraints ->
+                        val controls = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+                        // 两侧按编辑控件的实际宽度对称留位，使标题始终位于整张卡片的中间。
+                        val availableWidth = constraints.maxWidth - controls.width * 2
+                        val textWidth = if (availableWidth > 0) availableWidth else 0
+                        val title = measurables[0].measure(constraints.copy(minWidth = textWidth, maxWidth = textWidth, minHeight = 0))
+                        layout(constraints.maxWidth, constraints.maxHeight) {
+                            title.placeRelative((constraints.maxWidth - title.width) / 2, (constraints.maxHeight - title.height) / 2)
+                            controls.placeRelative(constraints.maxWidth - controls.width, 0)
+                        }
+                    } else Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text, Modifier.weight(1f).padding(start = if (content.node.kind == "introduction") 38.dp else 14.dp, end = 8.dp),
                             maxLines = 2, overflow = TextOverflow.Ellipsis,
                             style = when (content.node.kind) {
-                                "title" -> ComposeTypography.Font24B
                                 "chapter" -> ComposeTypography.Font20M
                                 "introduction" -> ComposeTypography.Font16
                                 else -> ComposeTypography.Font18

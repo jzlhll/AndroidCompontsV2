@@ -127,8 +127,8 @@ class AndroidUi3Fragment : BindingFragment<FragmentAndroidUi3Binding>() {
         picker.setMinValue(min)
         if(changeToDef) picker.setValue(def)
         getOrCreateFontFace(Globals.app, FONT_NUMBER_PATH)?.let { picker.setTypeFace(it) }
-        picker.setTextColor(requireContext().getColor(com.au.module_androidcolor.R.color.color_text_normal))
-        picker.setSecondTextColor(requireContext().getColor(com.au.module_androidcolor.R.color.color_text_desc))
+        // picker.setTextColor(requireContext().getColor(com.au.module_androidcolor.R.color.color_text_normal))
+        // picker.setSecondTextColor(requireContext().getColor(com.au.module_androidcolor.R.color.color_text_desc))
         picker.setTextSize(20f.dp) //文字大小，这里最好使用px转dp
 
         if (picker is SimpleNumberPickerCompat) {

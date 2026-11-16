@@ -1,0 +1,8 @@
+生成工具：内置 imagegen。
+输出资源：src/main/res/drawable-nodpi/node_bamboo_long_branch.webp。
+资源尺寸：108 × 192px，透明背景，无损 WebP；NodeMenu 显示为 27 × 48dp。
+
+最终提示词：
+Use case: precise-object-edit.
+Asset type: transparent Android UI bamboo node illustration.
+Input image 1 is the exact edit target, a green bamboo branch illustration used by PicNote. Produce one replacement asset of the same bamboo artwork. The only requested change is geometric compression: make its total height 80% of the original and total width 90% of the original, so the entire bamboo, internodes, branch junctions and leaves are vertically more compact. Preserve the recognizable leaf arrangement, stem direction, green palette, shading and illustration style. Do not redesign it or add any leaves or decorative items. Preserve all existing visible content, avoid cropping. Output as a tightly framed, tall portrait PNG with genuine alpha transparency, with the bamboo centered and only a small even transparent margin. The resulting artwork's width-to-height ratio should be about 0.5625 (9:16), corresponding to a final Android display size 27dp wide and 48dp tall. No background, no checkerboard pixels, no text, no shadow or border. It must be ready to use as an image asset, not a UI screenshot.

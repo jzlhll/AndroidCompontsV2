@@ -7,7 +7,6 @@
     <string name="appearance">Appearance</string>
     <string name="settings">Settings</string>
     <string name="language">Language</string>
-    <string name="rename">Rename</string>
     <string name="delete_document">Delete document</string>
     <string name="export_document">Export document</string>
     <string name="cancel">Cancel</string>
@@ -40,7 +39,6 @@
     <string name="grant_photo_access_message">With access to all images, Bambootes can notify you of new images when you return to the app.\nYou can still add images manually without this permission.</string>
     <string name="grant_permission">Grant access</string>
     <string name="not_now">Not now</string>
-    <string name="rename_document">Rename document</string>
     <string name="delete_document_message">Delete %1$s and all its nodes, text, and local image copies? This cannot be undone.</string>
     <string name="photo_access_partial">Photo access: selected photos</string>
     <string name="photo_access_denied">Photo access: not granted</string>
@@ -75,8 +73,8 @@
     <string name="create_body">New body node</string>
     <string name="add_image">Add image</string>
     <string name="image_actions">Actions for image %1$d</string>
-    <string name="replace_image">Replace image %1$d</string>
-    <string name="remove_image">Remove image %1$d</string>
+    <string name="replace_image">Replace</string>
+    <string name="remove_image">Remove</string>
     <string name="introduction_optional">Introduction (optional)</string>
     <string name="text_content">Text</string>
     <string name="note">Note</string>
@@ -124,7 +122,6 @@
     <string name="error_save_welcome_state">Cannot save guide initialization state</string>
     <string name="error_create_welcome_media_dir">Cannot create guide image directory</string>
     <string name="error_title_required">Enter a title</string>
-    <string name="error_invalid_title_node">Invalid document title node</string>
     <string name="error_node_deleted">Node deleted</string>
     <string name="error_fixed_node_delete">Title and main introduction cannot be deleted</string>
     <string name="error_fixed_node_move">Title and main introduction cannot be moved</string>
@@ -137,8 +134,10 @@
     <string name="error_node_deleted_retry">Node deleted. Go back and try again.</string>
     <string name="error_invalid_node_type">Invalid node type</string>
     <string name="error_only_one_title">A document can have only one title</string>
+    <string name="error_create_introduction">The introduction is created with the document and cannot be added separately.</string>
     <string name="error_change_node_type">Node type cannot be changed</string>
     <string name="error_node_images_not_allowed">Images cannot be added to this node</string>
+    <string name="error_insert_before_fixed">Cannot insert before the title or main introduction</string>
     <string name="error_introduction_required">Enter an introduction</string>
     <string name="error_image_expired">Image is no longer available</string>
     <string name="error_duplicate_existing_image">This image is already in the document. The original node was not changed.</string>

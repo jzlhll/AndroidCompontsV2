@@ -11,7 +11,7 @@ class AvatarViewTestFragment : BindingFragment<FragmentAvatarViewTestBinding>() 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
         super.onBindingCreated(savedInstanceState)
         binding.avatarCodeText.setAvatarText("B")
-        binding.avatarCodeSrc.setAvatarResource(com.au.module_androidcolor.R.drawable.icon_eye)
+        // binding.avatarCodeSrc.setAvatarResource(com.au.module_androidcolor.R.drawable.icon_eye)
         binding.avatarCodeGlide.avatarImage.glideSetAny("https://profile-avatar.csdnimg.cn/default.jpg!1")
     }
 }

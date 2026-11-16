@@ -86,10 +86,24 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
         mutableStateFlow.update { it.copy(error = "无法打开系统相册，请重试") }
     }
     fun addImages(uris: List<String>) { prepareImages(uris) }
-    fun removeImage(index: Int) { updateDraft { it.copy(images = it.images.filterIndexed { i, _ -> i != index }) } }
-    fun replaceImage(index: Int, uri: String) {
-        val id = stateFlow.value.images.getOrNull(index)?.id ?: return
-        prepareImages(listOf(uri), id)
+    fun removeImage(imageId: String) { updateDraft { it.copy(images = it.images.filter { image -> image.id != imageId }) } }
+    fun replaceImage(imageId: String, uri: String) {
+        if (stateFlow.value.images.none { it.id == imageId }) return
+        prepareImages(listOf(uri), imageId)
+    }
+
+    fun moveImage(imageId: String, direction: Int) {
+        if (direction != -1 && direction != 1) return
+        updateDraft { draft ->
+            if (draft.kind != "body") return@updateDraft draft
+            val index = draft.images.indexOfFirst { it.id == imageId }
+            val target = index + direction
+            if (index < 0 || target !in draft.images.indices) return@updateDraft draft
+            val images = draft.images.toMutableList()
+            images[index] = draft.images[target]
+            images[target] = draft.images[index]
+            draft.copy(images = images)
+        }
     }
 
     private fun prepareImages(uris: List<String>, replacementId: String? = null) {

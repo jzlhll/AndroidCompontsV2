@@ -28,7 +28,7 @@ class LogSystemFragment : ViewFragment() {
                 it.layoutParams = FrameLayout.LayoutParams(200.dp, 50.dp).also { lp->
                     lp.topMargin = 20.dp
                 }
-                it.setBackgroundResource(com.au.module_androidcolor.R.drawable.corner_btn_primary)
+                // it.setBackgroundResource(com.au.module_androidcolor.R.drawable.corner_btn_primary)
                 it.onClick {
                     FragmentShellActivity.start(requireActivity(), LogSystemFragment::class.java)
                 }

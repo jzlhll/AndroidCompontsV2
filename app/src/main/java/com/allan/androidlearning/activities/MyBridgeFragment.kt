@@ -1,6 +1,5 @@
 package com.allan.androidlearning.activities
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -36,16 +35,17 @@ open class MyBridgeFragment : BridgeWebViewExFragment(), IFullWindow {
         mAndroidBug5497Workaround?.onDestroy()
     }
 
-    override fun webViewBackgroundColor(): Int {
-        requireActivity().immersive(true,  true)
-        return if (forceLight()) {
-            Color.WHITE
-        } else if (isDialog()) {
-            requireContext().getColor(com.au.module_androidcolor.R.color.windowDialogBackground)
-        } else {
-            requireContext().getColor(com.au.module_androidcolor.R.color.windowBackground)
-        }
-    }
+    // Module-AndroidColor 相关背景示例已停用，沿用 BridgeWebViewExFragment 默认背景。
+    // override fun webViewBackgroundColor(): Int {
+    //     requireActivity().immersive(true,  true)
+    //     return if (forceLight()) {
+    //         Color.WHITE
+    //     } else if (isDialog()) {
+    //         requireContext().getColor(com.au.module_androidcolor.R.color.windowDialogBackground)
+    //     } else {
+    //         requireContext().getColor(com.au.module_androidcolor.R.color.windowBackground)
+    //     }
+    // }
 
     override fun immersiveMode(): ImmersiveMode {
         return ImmersiveMode.FullImmersive {statusHeight, navHeight->

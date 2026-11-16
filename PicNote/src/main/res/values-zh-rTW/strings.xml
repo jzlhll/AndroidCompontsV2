@@ -7,7 +7,6 @@
     <string name="appearance">外觀</string>
     <string name="settings">設定</string>
     <string name="language">語言</string>
-    <string name="rename">重命名</string>
     <string name="delete_document">刪除文檔</string>
     <string name="export_document">導出文檔</string>
     <string name="cancel">取消</string>
@@ -40,7 +39,6 @@
     <string name="grant_photo_access_message">授權訪問全部圖片後，每次進入會自動提醒新增圖片，方便您的使用。\n如果不授權，則可以每次手動選擇添加圖片。</string>
     <string name="grant_permission">授予權限</string>
     <string name="not_now">暫不授權</string>
-    <string name="rename_document">重命名文檔</string>
     <string name="delete_document_message">將刪除「%1$s」的所有節點、文字和本地圖片副本，無法恢復。</string>
     <string name="photo_access_partial">圖片權限：部分圖片</string>
     <string name="photo_access_denied">圖片權限：未授權</string>
@@ -75,8 +73,8 @@
     <string name="create_body">創建正文</string>
     <string name="add_image">添加圖片</string>
     <string name="image_actions">圖片 %1$d 的操作</string>
-    <string name="replace_image">替換圖片 %1$d</string>
-    <string name="remove_image">移除圖片 %1$d</string>
+    <string name="replace_image">替換</string>
+    <string name="remove_image">移除</string>
     <string name="introduction_optional">引言（可選）</string>
     <string name="text_content">文字內容</string>
     <string name="note">備註</string>
@@ -124,7 +122,6 @@
     <string name="error_save_welcome_state">無法保存教程初始化狀態</string>
     <string name="error_create_welcome_media_dir">無法創建教程圖片目錄</string>
     <string name="error_title_required">請填寫標題</string>
-    <string name="error_invalid_title_node">文檔標題節點無效</string>
     <string name="error_node_deleted">節點已刪除</string>
     <string name="error_fixed_node_delete">標題和主引言不能刪除</string>
     <string name="error_fixed_node_move">標題和主引言不能移動</string>
@@ -137,8 +134,10 @@
     <string name="error_node_deleted_retry">節點已刪除，請返回重試</string>
     <string name="error_invalid_node_type">節點類型無效</string>
     <string name="error_only_one_title">文檔只能有一個標題</string>
+    <string name="error_create_introduction">引言隨文件自動建立，不能單獨新增</string>
     <string name="error_change_node_type">不能更改節點類型</string>
     <string name="error_node_images_not_allowed">此節點不能添加圖片</string>
+    <string name="error_insert_before_fixed">不能插入到標題或主引言之前</string>
     <string name="error_introduction_required">請填寫引言</string>
     <string name="error_image_expired">圖片已失效</string>
     <string name="error_duplicate_existing_image">這張圖片已存在於當前文檔，原節點尚未修改。</string>

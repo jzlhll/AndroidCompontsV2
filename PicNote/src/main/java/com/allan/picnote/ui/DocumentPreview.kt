@@ -14,10 +14,13 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.DrawableWrapper
 import android.net.Uri
 import android.text.Spanned
+import android.text.SpannableStringBuilder
 import android.text.Layout
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ForegroundColorSpan
+import android.text.style.AlignmentSpan
+import android.text.style.LineHeightSpan
 import android.text.style.LeadingMarginSpan
 import android.widget.TextView
 import android.view.View
@@ -69,6 +72,7 @@ import io.noties.markwon.MarkwonVisitor
 import io.noties.markwon.core.MarkwonTheme
 import io.noties.markwon.core.CoreProps
 import io.noties.markwon.core.spans.HeadingSpan
+import io.noties.markwon.utils.LeadingMarginUtils
 import io.noties.markwon.image.DefaultMediaDecoder
 import io.noties.markwon.image.AsyncDrawableScheduler
 import io.noties.markwon.image.ImagesPlugin
@@ -213,12 +217,13 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
     val density = LocalDensity.current
     val quoteMargin = with(density) { 24.dp.roundToPx() }
     val titleTextSize = with(density) { 24.sp.toPx() }
+    val titleUnderlineGap = with(density) { 2.dp.roundToPx() }
     val chapterTextSize = with(density) { 20.sp.toPx() }
     val errorTextSize = with(density) { 14.sp.toPx() }
     val errorPadding = with(density) { 8.dp.toPx() }
     val imageCornerRadius = with(density) { 8.dp.toPx() }
     val ruleColor = scheme.outlineVariant.toArgb()
-    val markwon = remember(context, destinations, nodeMarker, density, textColor, linkColor, codeBackground, quoteTextColor, quoteMargin, titleTextSize, chapterTextSize, errorTextSize, errorPadding, imageCornerRadius, ruleColor) {
+    val markwon = remember(context, destinations, nodeMarker, density, textColor, linkColor, codeBackground, quoteTextColor, quoteMargin, titleTextSize, titleUnderlineGap, chapterTextSize, errorTextSize, errorPadding, imageCornerRadius, ruleColor) {
         val linkResolver = LinkResolverDef()
         val mediaDecoder = DefaultMediaDecoder.create(context.resources)
         Markwon.builder(context)
@@ -260,7 +265,7 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                     builder.setFactory(Heading::class.java) { configuration, props ->
                         val level = CoreProps.HEADING_LEVEL.require(props)
                         when (level) {
-                            1 -> DocumentHeadingSpan(configuration.theme(), level, titleTextSize)
+                            1 -> DocumentHeadingSpan(configuration.theme(), level, titleTextSize, titleUnderlineGap)
                             2 -> DocumentHeadingSpan(configuration.theme(), level, chapterTextSize)
                             else -> DocumentHeadingSpan(configuration.theme(), level, with(density) { (24 - level * 2).sp.toPx() })
                         }
@@ -312,9 +317,15 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                                 val destination = destinations.process(child.destination)
                                 add(DocumentBlock.Picture(key, section.nodeId, destination,
                                     markdownPlainText(child).ifBlank { "图片" }, images[destination]))
-                            } else add(DocumentBlock.FormattedText(key, section.nodeId, markwon.render(node),
-                                quoted = node is BlockQuote, introduction = section.kind == "introduction",
-                                heading = node is Heading, textSizeSp = textSizeSp))
+                            } else {
+                                val rendered = markwon.render(node)
+                                val text = if (section.kind == "title") SpannableStringBuilder(rendered).apply {
+                                    setSpan(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                                } else rendered
+                                add(DocumentBlock.FormattedText(key, section.nodeId, text,
+                                    quoted = node is BlockQuote, introduction = section.kind == "introduction",
+                                    heading = node is Heading, textSizeSp = textSizeSp))
+                            }
                         }
                     }
                 }
@@ -349,10 +360,16 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                 ChapterDivider(block.number, blockModifier)
             }
             else if (block is DocumentBlock.FormattedText) {
-                val textModifier = if (block.quoted) blockModifier.clip(RoundedCornerShape(8.dp))
-                    .background(quoteColors.background).heightIn(min = if (block.introduction) 42.dp else 0.dp)
-                    .padding(horizontal = 24.dp, vertical = 8.dp) else blockModifier
-                MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() }, textModifier)
+                if (block.quoted) {
+                    Box(
+                        modifier = blockModifier.clip(RoundedCornerShape(8.dp)).background(quoteColors.background)
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                            .heightIn(min = if (block.introduction) 36.dp else 0.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() })
+                    }
+                } else MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() }, blockModifier)
             }
             else if (block is DocumentBlock.Picture) {
                 var ratio by rememberSaveable(block.destination) { mutableStateOf(block.image?.let { it.width.toFloat() / it.height } ?: 1f) }
@@ -442,7 +459,12 @@ private class RoundedDocumentImageDrawable(drawable: Drawable, private val radiu
 }
 
 /** 统一标题字号与字重，仅在总标题下绘制分隔线。 */
-private class DocumentHeadingSpan(theme: MarkwonTheme, private val headingLevel: Int, private val textSize: Float) : HeadingSpan(theme, headingLevel) {
+private class DocumentHeadingSpan(
+    theme: MarkwonTheme,
+    private val headingLevel: Int,
+    private val textSize: Float,
+    private val underlineGap: Int = 0,
+) : HeadingSpan(theme, headingLevel), LineHeightSpan {
     private val headingTypeface = Typeface.create(Typeface.DEFAULT, if (headingLevel == 1) 600 else 500, false)
 
     override fun updateMeasureState(paint: TextPaint) {
@@ -452,6 +474,14 @@ private class DocumentHeadingSpan(theme: MarkwonTheme, private val headingLevel:
     }
 
     override fun updateDrawState(paint: TextPaint) = updateMeasureState(paint)
+
+    override fun chooseHeight(text: CharSequence, start: Int, end: Int, spanstartv: Int, v: Int, fontMetrics: Paint.FontMetricsInt) {
+        if (headingLevel == 1 && LeadingMarginUtils.selfEnd(end, text, this)) {
+            // 只增加末行文字下方的空间，下划线随行底部下移，保持文字基线不变。
+            fontMetrics.descent += underlineGap
+            fontMetrics.bottom += underlineGap
+        }
+    }
 
     override fun drawLeadingMargin(
         canvas: Canvas,

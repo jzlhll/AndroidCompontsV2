@@ -48,24 +48,25 @@ class AndroidUi1Fragment : BindingFragment<FragmentAndroidUi1Binding>() {
     fun darkModeAndLocalesTest() {
         val activityContext = requireContext()
         val languageContext = ContextCompat.getContextForLanguage(Globals.app)
-        val str1 = getString(R.string.app_name)
-        val str2 = Globals.app.getString(R.string.app_name)
-        val str3 = Globals.getString(R.string.app_name)
-
-        val colorRes = com.au.module_androidcolor.R.color.color_text_normal
-        val color1 = activityContext.getColor(colorRes)
-        val color2 = Globals.app.getColor(colorRes)
-        val color3 = languageContext.getColor(colorRes)
-
-        binding.text.text = getString(R.string.resource_context_demo,
-            str1, Color.valueOf(color1).toRgbStr(),
-            str2, Color.valueOf(color2).toRgbStr(),
-            str3, Color.valueOf(color3).toRgbStr())
+        // Module-AndroidColor 相关的颜色上下文对比示例已停用。
+        // val str1 = getString(R.string.app_name)
+        // val str2 = Globals.app.getString(R.string.app_name)
+        // val str3 = Globals.getString(R.string.app_name)
+        //
+        // val colorRes = com.au.module_androidcolor.R.color.color_text_normal
+        // val color1 = activityContext.getColor(colorRes)
+        // val color2 = Globals.app.getColor(colorRes)
+        // val color3 = languageContext.getColor(colorRes)
+        //
+        // binding.text.text = getString(R.string.resource_context_demo,
+        //     str1, Color.valueOf(color1).toRgbStr(),
+        //     str2, Color.valueOf(color2).toRgbStr(),
+        //     str3, Color.valueOf(color3).toRgbStr())
         binding.image1.setImageDrawable(activityContext.getDrawable(R.drawable.test_night_image))
         binding.image2.setImageDrawable(Globals.app.getDrawable(R.drawable.test_night_image))
         binding.image3.setImageDrawable(languageContext.getDrawable(R.drawable.test_night_image))
-        binding.testColor1.setTextColor(color1)
-        binding.testColor2.setTextColor(color2)
-        binding.testColor3.setTextColor(color3)
+        // binding.testColor1.setTextColor(color1)
+        // binding.testColor2.setTextColor(color2)
+        // binding.testColor3.setTextColor(color3)
     }
 }

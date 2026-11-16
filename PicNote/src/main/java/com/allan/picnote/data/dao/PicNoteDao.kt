@@ -31,7 +31,7 @@ interface PicNoteDao {
     suspend fun putImages(values: List<NodeImageEntity>)
 
     @Query("UPDATE documents SET title = :title, updated_at = :time WHERE id = :id")
-    suspend fun renameDocument(id: String, title: String, time: Long)
+    suspend fun updateDocumentTitle(id: String, title: String, time: Long)
     @Query("UPDATE documents SET updated_at = :time WHERE id = :id")
     suspend fun touchDocument(id: String, time: Long)
     @Query("UPDATE nodes SET sort_key = :key WHERE id = :id")
