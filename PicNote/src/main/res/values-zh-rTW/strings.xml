@@ -89,7 +89,6 @@
     <string name="delete_node_question">刪除節點？</string>
     <string name="delete_chapter_editor_message">僅刪除此章節標題，其後的其他節點將保留。</string>
     <string name="delete_node_editor_message">將刪除此節點已保存的文字和 %1$d 張圖片引用，當前草稿也將丟棄，無法恢復。</string>
-    <string name="keep_node">保留節點</string>
     <string name="node_guide_title">節點操作提示</string>
     <string name="node_guide_menu">單擊左側的節點，可以彈出操作菜單。</string>
     <string name="node_guide_card">點擊卡片，可以顯示更多操作。</string>

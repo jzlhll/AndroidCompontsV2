@@ -89,7 +89,6 @@
     <string name="delete_node_question">删除节点？</string>
     <string name="delete_chapter_editor_message">仅删除此章节标题，其后的其他节点将保留。</string>
     <string name="delete_node_editor_message">将删除此节点已保存的文字和 %1$d 张图片引用，当前草稿也将丢弃，无法恢复。</string>
-    <string name="keep_node">保留节点</string>
     <string name="node_guide_title">节点操作提示</string>
     <string name="node_guide_menu">单击左侧的节点，可以弹出操作菜单。</string>
     <string name="node_guide_card">点击卡片，可以显示更多操作。</string>

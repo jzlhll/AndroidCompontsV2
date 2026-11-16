@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,12 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.R
+import com.au.module_androiduiex.landscape.SecondaryPageScaffold
 import com.au.module_android.appLocaleLabel
 import com.au.module_android.supportedAppLocales
 import com.au.module_androiduiex.picker.AppLanguagePicker
 import com.au.module_androiduiex.styles.ComposeTheme
 import com.au.module_androiduiex.styles.ComposeTypography
-import com.au.module_androiduiex.styles.ComposeIconButton as IconButton
 import java.util.Locale
 
 @Composable
@@ -41,8 +40,8 @@ fun SettingsScreen(
         onPauseOrDispose { }
     }
     val language = if (languageTag.isEmpty()) null else Locale.forLanguageTag(languageTag)
-    SettingsScaffold(stringResource(R.string.settings), onBack, modifier) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding)) {
+    SecondaryPageScaffold(stringResource(R.string.settings), onBack, stringResource(R.string.back), modifier) {
+        LazyColumn(Modifier.fillMaxSize()) {
             item {
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.language), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface) },
@@ -66,8 +65,8 @@ fun AppearanceScreen(
     modifier: Modifier = Modifier,
     saving: Boolean = false,
 ) {
-    SettingsScaffold(stringResource(R.string.appearance), onBack, modifier) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).selectableGroup(), contentPadding = PaddingValues(vertical = 8.dp)) {
+    SecondaryPageScaffold(stringResource(R.string.appearance), onBack, stringResource(R.string.back), modifier) {
+        LazyColumn(Modifier.fillMaxSize().selectableGroup(), contentPadding = PaddingValues(vertical = 8.dp)) {
             items(ComposeTheme.entries, key = { it.name }) { theme ->
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 56.dp)
@@ -89,7 +88,7 @@ fun AppearanceScreen(
 fun LanguageScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val locales = remember(context) { supportedAppLocales(context, R.xml.locales_config) }
-    SettingsScaffold(stringResource(R.string.language), onBack, modifier) { padding ->
+    SecondaryPageScaffold(stringResource(R.string.language), onBack, stringResource(R.string.back), modifier) {
         AppLanguagePicker(
             locales = locales,
             selectedLanguageTag = AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag().orEmpty(),
@@ -98,32 +97,7 @@ fun LanguageScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 onBack()
                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tag))
             },
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize(),
         )
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SettingsScaffold(
-    title: String,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable (PaddingValues) -> Unit,
-) {
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                expandedHeight = 64.dp,
-                title = { Text(title, style = ComposeTypography.Font20M, color = MaterialTheme.colorScheme.onSurface) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
-                    }
-                },
-            )
-        },
-        content = content,
-    )
 }

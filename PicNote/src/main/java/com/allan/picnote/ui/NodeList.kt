@@ -175,8 +175,13 @@ fun NodeList(
                     onDragCancel = { dragging = null; targetId = null; dragOffset = Offset.Zero },
                 )
             }
-            chapterNumbers[item.node.id]?.let { chapterNumber ->
-                ChapterDivider(chapterNumber, Modifier.padding(start = 48.dp, top = 6.dp, bottom = 12.dp))
+            val sectionLabel = when (item.node.kind) {
+                "title", "introduction" -> nodeTypeLabel(item.node.kind)
+                "chapter" -> chapterNumbers[item.node.id]?.let { stringResource(R.string.chapter_number, it) }
+                else -> null
+            }
+            sectionLabel?.let { label ->
+                SectionDivider(label, Modifier.padding(start = 48.dp, top = 6.dp, bottom = 12.dp))
             }
             Row(Modifier.fillMaxWidth().padding(bottom = 12.dp).drawBehind {
                 drawLine(lineColor, Offset(24.dp.toPx(), -12.dp.toPx()), Offset(24.dp.toPx(), size.height), 1.dp.toPx())
@@ -563,18 +568,18 @@ private fun NodeEditControls(
             override val minimumTouchTargetSize = DpSize(32.dp, 32.dp)
         }
     }
-    Row(modifier.graphicsLayer { alpha = if (visible) alphaProvider() else 0f }
-        .then(if (visible) Modifier else Modifier.clearAndSetSemantics { }).padding(4.dp),
-        horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-        Text(type, Modifier.background(colors.background, RoundedCornerShape(6.dp))
-            .padding(horizontal = 4.dp, vertical = 2.dp),
-            style = ComposeTypography.Font12sp, color = colors.foreground,
-            maxLines = 1, softWrap = false)
-        Spacer(Modifier.width(4.dp))
-        CompositionLocalProvider(LocalViewConfiguration provides editViewConfiguration) {
-            Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp))
-                .clickable(enabled = visible, role = Role.Button, onClick = onEdit).semantics { contentDescription = "编辑节点" },
-                contentAlignment = Alignment.Center) {
+    val editDescription = stringResource(R.string.edit_node)
+    CompositionLocalProvider(LocalViewConfiguration provides editViewConfiguration) {
+        Row(modifier.graphicsLayer { alpha = if (visible) alphaProvider() else 0f }
+            .then(if (visible) Modifier.clickable(role = Role.Button, onClick = onEdit)
+                .semantics { contentDescription = editDescription } else Modifier.clearAndSetSemantics { }).padding(4.dp),
+            horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+            Text(type, Modifier.background(colors.background, RoundedCornerShape(6.dp))
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+                style = ComposeTypography.Font12sp, color = colors.foreground,
+                maxLines = 1, softWrap = false)
+            Spacer(Modifier.width(4.dp))
+            Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
                 Box(Modifier.size(24.dp).background(colors.background, RoundedCornerShape(6.dp))
                     .border(1.dp, colors.foreground, RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp), tint = colors.foreground)

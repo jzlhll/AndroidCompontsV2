@@ -89,7 +89,6 @@
     <string name="delete_node_question">Delete node?</string>
     <string name="delete_chapter_editor_message">Only this chapter title will be deleted. Other nodes will remain.</string>
     <string name="delete_node_editor_message">This node has saved text and %1$d image references. The current draft will also be discarded. This cannot be undone.</string>
-    <string name="keep_node">Keep node</string>
     <string name="node_guide_title">Node actions tip</string>
     <string name="node_guide_menu">Tap a node marker on the left to open its actions.</string>
     <string name="node_guide_card">Tap a card to show more actions.</string>
