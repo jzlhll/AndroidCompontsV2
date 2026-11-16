@@ -12,7 +12,7 @@ import com.allan.androidlearning.R
 import com.allan.androidlearning.activities.CoroutineFragment
 import com.allan.androidlearning.databinding.FragmentAndroidUi2Binding
 import com.allan.androidlearning.databinding.FragmentDialogEditBinding
-import com.au.module_android.DarkModeAndLocalesConst
+import com.au.module_android.isNightMode
 import com.au.module_android.click.onClick
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.base.IBaseDialog
@@ -141,7 +141,7 @@ class AndroidUi2Fragment : BindingFragment<FragmentAndroidUi2Binding>() {
 
     val getDarkStrFunc = {
         val mode = requireContext().resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        val isDark = DarkModeAndLocalesConst.detectDarkMode(requireContext())
+        val isDark = requireContext().isNightMode()
         val s2 = when (mode) {
             Configuration.UI_MODE_NIGHT_YES -> "UI_MODE_NIGHT_YES"
             Configuration.UI_MODE_NIGHT_UNDEFINED -> "UI_MODE_NIGHT_UNDEFINED"

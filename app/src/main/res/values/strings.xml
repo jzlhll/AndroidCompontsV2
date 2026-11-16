@@ -109,4 +109,6 @@
 
     <string name="select_all">Select all</string>
     <string name="select_all_cancel">Cancel select all</string>
+    <string name="resource_context_demo">Activity: %1$s %2$s\nApplication: %3$s %4$s\nLanguage Context: %5$s %6$s\nActivity uses the app language and night mode. Application keeps its native configuration; Language Context only applies the app language.</string>
+    <string name="error_open_language_settings">Cannot open system language settings. Try again.</string>
 </resources>

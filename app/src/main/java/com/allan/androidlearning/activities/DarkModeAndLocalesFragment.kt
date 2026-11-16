@@ -1,198 +1,82 @@
 package com.allan.androidlearning.activities
 
-import android.content.Intent
-import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
-import com.allan.androidlearning.EntryActivity
-import com.allan.androidlearning.Locales
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.allan.androidlearning.R
 import com.allan.androidlearning.databinding.FragmentDarkModeSettingBinding
 import com.allan.classnameanno.EntryFrgName
-import com.au.module_android.DarkModeAndLocalesConst
-import com.au.module_android.Globals
+import com.au.module_android.AppNightMode
+import com.au.module_android.appNightMode
 import com.au.module_android.click.onClick
-import com.au.module_android.utils.HtmlPart
-import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.gone
-import com.au.module_android.utils.invisible
-import com.au.module_android.utils.unsafeLazy
-import com.au.module_android.utils.useSimpleHtmlText
-import com.au.module_android.utils.visible
-import com.au.module_androidui.ui.ToolbarMenuManager
+import com.au.module_android.openApplicationLanguageSettings
+import com.au.module_android.setAppNightMode
+import com.au.module_android.supportedAppLocales
 import com.au.module_androidui.ui.bindings.BindingFragment
-import com.au.module_androidui.ui.startActivityFix
+import com.au.module_androidui.ui.views.YourToolbarInfo
 
 @EntryFrgName(customName = "GenerateSetting")
 class DarkModeAndLocalesFragment : BindingFragment<FragmentDarkModeSettingBinding>() {
-    private val localePart = LocalesPart()
-    private var toolbarManager: ToolbarMenuManager? = null
+    override fun toolbarInfo(): YourToolbarInfo = YourToolbarInfo.Defaults(getString(R.string.settings))
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        toolbarManager = ToolbarMenuManager(this, binding.toolbar, com.au.module_androidui.R.menu.right_menu_save) {
-            if (it.itemId == com.au.module_androidui.R.id.menuOk) {
-                localePart.afterChange()
-            }
-        }
-        DarkModePart().initDarkMode()
-        localePart.initLocales()
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        toolbarManager?.showMenu()
-    }
-
-    private inner class LocalesPart {
-        private val strMap by unsafeLazy { mapOf(
-            Locales.LOCALE_JIANTI_CN_KEY to getString(R.string.language_cn),
-            Locales.LOCALE_FANTI_CN_KEY to getString(R.string.language_tw),
-            Locales.LOCALE_US_KEY to getString(R.string.language_en))  }
-
-        private var enterLocale:String? = null
-        private var tempLocale:String? = null
-
-        fun changeUi(curLocale:String?, isChanged:Boolean = true) {
-            tempLocale = curLocale
-            binding.localesFollowSystemCheck.invisible()
-            binding.localesCNCheck.invisible()
-            binding.localesTWCheck.invisible()
-            binding.localesENCheck.invisible()
-
-            if (curLocale.isNullOrEmpty()) {
-                binding.localesFollowSystemCheck.visible()
-            }
-            if (curLocale == Locales.LOCALE_JIANTI_CN_KEY) {
-                binding.localesCNCheck.visible()
-            }
-            if (curLocale == Locales.LOCALE_FANTI_CN_KEY) {
-                binding.localesTWCheck.visible()
-            }
-            if (curLocale == Locales.LOCALE_US_KEY) {
-                binding.localesENCheck.visible()
-            }
-
-            toolbarManager?.hideMenu()
-            if (isChanged && tempLocale != enterLocale) {
-                toolbarManager?.showMenu()
-            }
-        }
-
-        fun initLocales() {
-            val locale = DarkModeAndLocalesConst.spCurrentLocaleKey(requireContext())
-            enterLocale = locale
-            changeUi(enterLocale, false)
-
-            val systemLocal = DarkModeAndLocalesConst.systemLocal
-            val sysLocalStr = systemLocal.language + "_" + systemLocal.country
-
-            binding.followSystemTitle.useSimpleHtmlText(
-                HtmlPart(getString(R.string.follow_system) + " "),
-                HtmlPart("(" + (strMap[sysLocalStr] ?: systemLocal.displayName) + ")", "#999999"))
-            binding.localesFollowSystemCheck.parent.asOrNull<ViewGroup>()?.onClick {
-                changeUi(null)
-            }
-            binding.localesCNCheck.parent.asOrNull<ViewGroup>()?.onClick {
-                changeUi(Locales.LOCALE_JIANTI_CN_KEY)
-            }
-            binding.localesTWCheck.parent.asOrNull<ViewGroup>()?.onClick {
-                changeUi(Locales.LOCALE_FANTI_CN_KEY)
-            }
-            binding.localesENCheck.parent.asOrNull<ViewGroup>()?.onClick {
-                changeUi(Locales.LOCALE_US_KEY)
-            }
-        }
-
-        fun afterChange() {
-            if (tempLocale == enterLocale) {
-                return
-            }
-
-            DarkModeAndLocalesConst.settingChangeLanguage(Globals.app, tempLocale)
-
-            if (true) {
-                Globals.activityList.forEach {
-                    it.finish()
+        binding.languageBtn.onClick {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (!requireContext().openApplicationLanguageSettings()) {
+                    Toast.makeText(requireContext(), R.string.error_open_language_settings, Toast.LENGTH_LONG).show()
                 }
             } else {
-                System.exit(0)
+                showLanguagePicker()
             }
-
-            Globals.app.startActivityFix(Intent(Globals.app, EntryActivity::class.java))
         }
+        binding.nightModeBtn.onClick {
+            val modes = AppNightMode.entries
+            val labels = arrayOf(getString(R.string.follow_system), getString(R.string.light), getString(R.string.dark))
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.dark_mode)
+                .setSingleChoiceItems(labels, modes.indexOf(appNightMode(requireContext()))) { dialog, which ->
+                    dialog.dismiss()
+                    setAppNightMode(requireContext(), modes[which])
+                    updateSummaries()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+        updateSummaries()
     }
 
-    private inner class DarkModePart {
-        //进入本界面加载的sp信息
-        fun initDarkMode() {
-            DarkModeAndLocalesConst.spCurrentAppDarkMode(Globals.app).let {
-                when (it) {
-                    Configuration.UI_MODE_NIGHT_YES -> {
-                        setAsDarkMode(true)
-                    }
-                    Configuration.UI_MODE_NIGHT_NO -> {
-                        setAsLightMode(true)
-                    }
-                    else -> {
-                        setAsAutomatic(true)
-                    }
-                }
+    override fun onResume() {
+        super.onResume()
+        updateSummaries()
+    }
+
+    private fun updateSummaries() {
+        val locale = AppCompatDelegate.getApplicationLocales()[0]
+        binding.languageTv.text = locale?.getDisplayName(locale) ?: getString(R.string.follow_system)
+        binding.nightModeTv.setText(when (appNightMode(requireContext())) {
+            AppNightMode.FollowSystem -> R.string.follow_system
+            AppNightMode.Light -> R.string.light
+            AppNightMode.Dark -> R.string.dark
+        })
+    }
+
+    private fun showLanguagePicker() {
+        val locales = supportedAppLocales(requireContext(), R.xml.locales_config)
+        val labels = listOf(getString(R.string.follow_system)) + locales.map { it.getDisplayName(it) }
+        val currentTag = AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag()
+        val selected = locales.indexOfFirst { it.toLanguageTag() == currentTag } + 1
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.language)
+            .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
+                dialog.dismiss()
+                val tags = if (which == 0) "" else locales[which - 1].toLanguageTag()
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags))
+                updateSummaries()
             }
-
-            binding.lightHost.onClick {
-                setAsLightMode(false)
-                DarkModeAndLocalesConst.settingChangeDarkMode(Globals.app, Configuration.UI_MODE_NIGHT_NO)
-            }
-
-            binding.darkHost.onClick {
-                setAsDarkMode(false)
-                DarkModeAndLocalesConst.settingChangeDarkMode(Globals.app, Configuration.UI_MODE_NIGHT_YES)
-            }
-
-            binding.switchBtn.valueCallback = { isClosed->
-                //由于默认是跟随系统。第一次关闭需要特殊处理，设置为当前系统的状态。
-                if (isClosed) {
-                    val curDark = DarkModeAndLocalesConst.detectDarkMode(requireContext())
-                    if (curDark) {
-                        setAsDarkMode(false)
-                    } else {
-                        setAsLightMode(false)
-                    }
-                    DarkModeAndLocalesConst.settingChangeDarkMode(Globals.app, if(curDark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
-                } else {
-                    setAsAutomatic(false)
-                    DarkModeAndLocalesConst.settingChangeDarkMode(Globals.app, null)
-                    requireActivity().recreate() //实测下来，修改为follow System，Activity无法收到onConfigChanged，只能重建
-                }
-            }
-        }
-
-        private fun setAsAutomatic(isInit:Boolean) {
-            binding.hideLayout.gone()
-            if(isInit) binding.switchBtn.initValue(false) else binding.switchBtn.setValue(false)
-            val curDark = DarkModeAndLocalesConst.detectDarkMode(requireContext())
-            if (curDark) {
-                binding.darkModeCheck.visible()
-                binding.lightModeCheck.invisible()
-            } else {
-                binding.darkModeCheck.invisible()
-                binding.lightModeCheck.visible()
-            }
-        }
-
-        private fun setAsDarkMode(isInit:Boolean) {
-            binding.hideLayout.visible()
-            if(isInit) binding.switchBtn.initValue(true) else binding.switchBtn.setValue(true)
-            binding.darkModeCheck.visible()
-            binding.lightModeCheck.invisible()
-        }
-
-        private fun setAsLightMode(isInit:Boolean) {
-            binding.hideLayout.visible()
-            if(isInit) binding.switchBtn.initValue(true) else binding.switchBtn.setValue(true)
-            binding.darkModeCheck.invisible()
-            binding.lightModeCheck.visible()
-        }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 }

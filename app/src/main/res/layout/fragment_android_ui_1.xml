@@ -12,6 +12,14 @@
         android:orientation="vertical"
         android:layout_height="wrap_content">
 
+        <com.au.module_androidui.widget.CustomButton
+            android:id="@+id/settingsBtn"
+            style="@style/StyleButtonPrimary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/ui_padding_edge"
+            android:text="@string/settings" />
+
         <com.au.module_androidui.widget.CustomFontText
             android:layout_marginTop="8dp"
             android:paddingHorizontal="@dimen/ui_padding_edge"

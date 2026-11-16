@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import com.au.module_android.Globals.getColor
 import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.immersive
 import com.au.module_androidui.ui.AndroidBug5497Workaround
@@ -42,9 +41,9 @@ open class MyBridgeFragment : BridgeWebViewExFragment(), IFullWindow {
         return if (forceLight()) {
             Color.WHITE
         } else if (isDialog()) {
-            getColor(com.au.module_androidcolor.R.color.windowDialogBackground)
+            requireContext().getColor(com.au.module_androidcolor.R.color.windowDialogBackground)
         } else {
-            getColor(com.au.module_androidcolor.R.color.windowBackground)
+            requireContext().getColor(com.au.module_androidcolor.R.color.windowBackground)
         }
     }
 

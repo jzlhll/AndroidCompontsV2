@@ -7,4 +7,6 @@
     <string name="select_manually">手动选择</string>
     <string name="automatic_desc">开启后，app将会跟随系统自动切换浅色或者深色模式。</string>
     <string name="language">语言</string>
+    <string name="resource_context_demo">Activity：%1$s %2$s\nApplication：%3$s %4$s\nLanguage Context：%5$s %6$s\nActivity 使用应用语言与夜间模式。Application 保留原生配置；Language Context 仅应用语言选择。</string>
+    <string name="error_open_language_settings">无法打开系统语言设置，请重试</string>
 </resources>
