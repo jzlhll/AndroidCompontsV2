@@ -23,10 +23,11 @@
 | [03-程序界面设计.md](03-程序界面设计.md) | 两个 Tab、节点图片与备注编辑、Markdown 阅读预览 |
 | [04-首次使用文档.md](04-首次使用文档.md) | 内置教程、中英文配图与首次初始化 |
 | [05-节点设计.md](05-节点设计.md) | 节点类型、独立编辑页、插入、移动、合并与主题配色 |
+| [doc/README.md](doc/README.md) | 解析升级设计（尚未实现）：范围、轮次、记忆、界面与迁移 |
 | [原型图/README.md](原型图/README.md) | 原型索引与生成方法 |
 
 ![11-首次使用文档.webp](原型图/11-首次使用文档.webp)
 
-初版范围以五份文档为准；原型中的归档、设置等未纳入入口不实现。
+初版范围以五份文档为准；原型中的归档、设置等未纳入入口不实现。截图解析升级的设计结论见 [doc/README.md](doc/README.md)，当前代码尚未接入网络与解析能力。
 
 应用模块为 `:picnote`，应用 ID 为 `com.allan.picnote`，从仓库根工程打开。入口为 [MainActivity.kt](src/main/java/com/allan/picnote/MainActivity.kt) 与 [PicNoteApp.kt](src/main/java/com/allan/picnote/ui/PicNoteApp.kt)；文档保存见 [DocumentRepository.kt](src/main/java/com/allan/picnote/data/repositories/DocumentRepository.kt)，图片差异检查见 [MediaScanner.kt](src/main/java/com/allan/picnote/media/MediaScanner.kt)。
