@@ -34,8 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onLayoutRectChanged
@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -126,8 +127,8 @@ fun NodeList(
     }
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val interactive = enabled && active && lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
-    LaunchedEffect(interactive) {
-        if (!interactive) { dragging = null; targetId = null; dragOffset = Offset.Zero }
+    if (!interactive && (dragging != null || targetId != null || dragOffset != Offset.Zero)) {
+        SideEffect { dragging = null; targetId = null; dragOffset = Offset.Zero }
     }
     val lineColor = MaterialTheme.colorScheme.outlineVariant
     val palette = LocalThemePalette.current
@@ -180,9 +181,6 @@ fun NodeList(
                 "chapter" -> chapterNumbers[item.node.id]?.let { stringResource(R.string.chapter_number, it) }
                 else -> null
             }
-            sectionLabel?.let { label ->
-                SectionDivider(label, Modifier.padding(start = 48.dp, top = 6.dp, bottom = 12.dp))
-            }
             Row(Modifier.fillMaxWidth().padding(bottom = 12.dp).drawBehind {
                 drawLine(lineColor, Offset(24.dp.toPx(), -12.dp.toPx()), Offset(24.dp.toPx(), size.height), 1.dp.toPx())
             }.zIndex(if (dragging == item.node.id) 1f else 0f), verticalAlignment = Alignment.CenterVertically) {
@@ -201,6 +199,7 @@ fun NodeList(
                     highlighted = targetId == item.node.id, onEdit = { onEdit(item) },
                     onMoveImage = { imageId, direction -> onMoveImage(item.node.id, imageId, direction) },
                     onCardClick = onNodeCardClicked,
+                    sectionLabel = sectionLabel,
                     guideAnchor = if (guideKind == NodeGuideKind.Card) guideAnchor else null,
                     guideIndex = index,
                     modifier = Modifier.weight(1f).graphicsLayer {
@@ -213,7 +212,7 @@ fun NodeList(
         item(key = "insert-tail", contentType = "insert-tail") {
             Row(Modifier.fillMaxWidth().padding(start = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                 var menu by remember { mutableStateOf(false) }
-                LaunchedEffect(interactive) { if (!interactive) menu = false }
+                if (!interactive && menu) SideEffect { menu = false }
                 Box(Modifier.clickable(enabled = interactive, role = Role.Button) { menu = true }
                     .padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.add_node), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -269,7 +268,7 @@ private fun NodeMenu(
     var menu by remember { mutableStateOf(false) }
     var inserting by remember { mutableStateOf(false) }
     val nodeActionsDescription = stringResource(R.string.node_actions)
-    LaunchedEffect(enabled) { if (!enabled) { menu = false; inserting = false } }
+    if (!enabled && (menu || inserting)) SideEffect { menu = false; inserting = false }
     if (guideAnchor != null) DisposableEffect(guideAnchor) { onDispose { guideAnchor.bounds = null } }
     Box(modifier.size(width = 48.dp, height = 68.dp), contentAlignment = Alignment.TopCenter) {
         Box(Modifier.matchParentSize()
@@ -326,6 +325,7 @@ private fun NodeCard(
     onMoveImage: (String, Int) -> Unit,
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier,
+    sectionLabel: String? = null,
     guideAnchor: NodeGuideAnchor? = null,
     guideIndex: Int = -1,
 ) {
@@ -382,6 +382,9 @@ private fun NodeCard(
         }
     }
     val shape = RoundedCornerShape(12.dp)
+    val textStartPadding = if (content.node.kind == "introduction") 32.dp else 16.dp
+    val textEndPadding = if (content.node.kind == "title") 16.dp else 24.dp
+    val imageFramePadding = 4.dp
     Column(modifier.semantics {
         customActions = if (enabled && !dragging && !switching) buildList {
             add(CustomAccessibilityAction("编辑节点") { edit(); true })
@@ -399,120 +402,98 @@ private fun NodeCard(
             }
         } else emptyList()
     }) {
-        Box(Modifier.fillMaxWidth().then(if (image == null) Modifier.height(72.dp) else Modifier.aspectRatio(4f / 3f))
-            .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) {
-                guideAnchor.updateCard(guideIndex, it.boundsInWindow, hasImages = content.images.isNotEmpty())
-            } else Modifier)
-            .border(if (highlighted) 2.dp else 0.dp, if (highlighted) MaterialTheme.colorScheme.primary else Color.Transparent, shape)) {
-            if (multiImage) {
-                Box(Modifier.matchParentSize().padding(start = 8.dp, top = 8.dp).background(colors.foreground.copy(alpha = 0.3f), shape))
-                Box(Modifier.matchParentSize().padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 4.dp).background(colors.foreground.copy(alpha = 0.15f), shape))
-            }
-            Box(Modifier.fillMaxSize().padding(end = if (multiImage) 8.dp else 0.dp, bottom = if (multiImage) 8.dp else 0.dp)
-                .clip(shape).background(colors.background).then(if (image != null) Modifier.padding(4.dp).clip(RoundedCornerShape(8.dp)) else Modifier)
-                .onClick(enabled = enabled && !dragging, onClickLabel = "显示节点设置") { showSettings(); onCardClick() }) {
-                if (image == null) {
-                    val text = when {
-                        content.node.kind == "title" || content.node.kind == "chapter" -> content.node.title
-                        content.node.kind == "introduction" && content.node.bodyMarkdown.isBlank() -> "添加引言"
-                        else -> preview.ifBlank {
-                            if (content.node.kind == "introduction") "引言内容" else "正文内容"
+        NodeCardSection(sectionLabel, backgroundColor = colors.background) {
+            Box(Modifier.fillMaxWidth().then(if (image == null) Modifier.height(72.dp) else Modifier.aspectRatio(4f / 3f))
+                .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) {
+                    guideAnchor.updateCard(guideIndex, it.boundsInWindow, hasImages = content.images.isNotEmpty())
+                } else Modifier)
+                .border(if (highlighted) 2.dp else 0.dp, if (highlighted) MaterialTheme.colorScheme.primary else Color.Transparent, shape)) {
+                if (multiImage) {
+                    Box(Modifier.matchParentSize().padding(start = 8.dp, top = 8.dp).background(colors.foreground.copy(alpha = 0.3f), shape))
+                    Box(Modifier.matchParentSize().padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 4.dp).background(colors.foreground.copy(alpha = 0.15f), shape))
+                }
+                Box(Modifier.fillMaxSize().padding(end = if (multiImage) 8.dp else 0.dp, bottom = if (multiImage) 8.dp else 0.dp)
+                    .clip(shape).background(colors.background).then(if (image != null) Modifier.padding(imageFramePadding).clip(RoundedCornerShape(8.dp)) else Modifier)
+                    .onClick(enabled = enabled && !dragging, onClickLabel = "显示节点设置") { showSettings(); onCardClick() }) {
+                    if (image == null) {
+                        val text = when {
+                            content.node.kind == "title" || content.node.kind == "chapter" -> content.node.title
+                            content.node.kind == "introduction" && content.node.bodyMarkdown.isBlank() -> "添加引言"
+                            else -> preview.ifBlank {
+                                if (content.node.kind == "introduction") "引言内容" else "正文内容"
+                            }
                         }
-                    }
-                    if (content.node.kind == "title") Layout(
-                        modifier = Modifier.fillMaxSize(),
-                        content = {
-                            Text(text, textAlign = TextAlign.Center,
-                                maxLines = 2, overflow = TextOverflow.Ellipsis,
-                                style = ComposeTypography.Font24B, color = MaterialTheme.colorScheme.onSurface)
-                            NodeEditControls(
-                                type = nodeTypeLabel(content.node.kind), colors = colors, visible = settingsVisible,
-                                alphaProvider = { controlsAlpha.value }, onEdit = edit,
-                            )
-                        },
-                    ) { measurables, constraints ->
-                        val controls = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
-                        val startPadding = 15.dp.roundToPx()
-                        val endPadding = 24.dp.roundToPx()
-                        val availableWidth = constraints.maxWidth - startPadding - endPadding
-                        val textWidth = if (availableWidth > 0) availableWidth else 0
-                        val title = measurables[0].measure(constraints.copy(minWidth = textWidth, maxWidth = textWidth, minHeight = 0))
-                        layout(constraints.maxWidth, constraints.maxHeight) {
-                            title.placeRelative(startPadding, (constraints.maxHeight - title.height) / 2)
-                            controls.placeRelative(constraints.maxWidth - controls.width, 0)
-                        }
-                    } else Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text, Modifier.weight(1f).padding(start = if (content.node.kind == "introduction") 38.dp else 14.dp, end = 8.dp),
+                        Text(text, Modifier.align(Alignment.Center).fillMaxWidth().padding(start = textStartPadding, end = textEndPadding),
+                            textAlign = if (content.node.kind == "title") TextAlign.Center else TextAlign.Start,
                             maxLines = 2, overflow = TextOverflow.Ellipsis,
                             style = when (content.node.kind) {
+                                "title" -> ComposeTypography.Font24B
                                 "chapter" -> ComposeTypography.Font20M
                                 "introduction" -> ComposeTypography.Font16
                                 else -> ComposeTypography.Font18
                             },
                             color = if (content.node.kind == "introduction") LocalThemePalette.current.introductionContent.foreground else MaterialTheme.colorScheme.onSurface)
-                        NodeEditControls(
-                            type = nodeTypeLabel(content.node.kind), colors = colors, visible = settingsVisible,
-                            alphaProvider = { controlsAlpha.value }, onEdit = edit, modifier = Modifier.align(Alignment.Top),
-                        )
-                    }
-                } else {
-                    Box(Modifier.fillMaxSize().then(if (multiImage) Modifier.pointerInput(enabled, dragging, switching, content.images, imageIndex) {
-                        if (!enabled || dragging || switching) return@pointerInput
-                        var distance = 0f
-                        detectHorizontalDragGestures(
-                            onDragStart = { distance = 0f },
-                            onHorizontalDrag = { _, amount -> distance += amount },
-                            onDragEnd = {
-                                val threshold = 48.dp.toPx()
-                                val direction = when {
-                                    distance < -threshold -> 1
-                                    distance > threshold -> -1
-                                    else -> 0
-                                }
-                                if (direction != 0) {
-                                    selectedIndex = (imageIndex + direction + content.images.size) % content.images.size
-                                    showSettings()
-                                }
-                            },
-                        )
-                    } else Modifier).drawWithContent {
-                        drawContent()
-                        val progress = ripple.value
-                        if (progress < 1f) {
-                            val inset = 24.dp.toPx()
-                            val center = Offset(if (rippleDirection < 0) inset else size.width - inset, size.height - inset)
-                            val radius = hypot(size.width, size.height) * progress
-                            drawCircle(Color.White.copy(alpha = 0.2f * (1f - progress)), radius, center)
-                            drawCircle(Color.White.copy(alpha = 0.4f * (1f - progress)), radius, center, style = Stroke(2.dp.toPx()))
+                    } else {
+                        Box(Modifier.fillMaxSize().then(if (multiImage) Modifier.pointerInput(enabled, dragging, switching, content.images, imageIndex) {
+                            if (!enabled || dragging || switching) return@pointerInput
+                            var distance = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { distance = 0f },
+                                onHorizontalDrag = { _, amount -> distance += amount },
+                                onDragEnd = {
+                                    val threshold = 48.dp.toPx()
+                                    val direction = when {
+                                        distance < -threshold -> 1
+                                        distance > threshold -> -1
+                                        else -> 0
+                                    }
+                                    if (direction != 0) {
+                                        selectedIndex = (imageIndex + direction + content.images.size) % content.images.size
+                                        showSettings()
+                                    }
+                                },
+                            )
+                        } else Modifier).drawWithContent {
+                            drawContent()
+                            val progress = ripple.value
+                            if (progress < 1f) {
+                                val inset = 24.dp.toPx()
+                                val center = Offset(if (rippleDirection < 0) inset else size.width - inset, size.height - inset)
+                                val radius = hypot(size.width, size.height) * progress
+                                drawCircle(Color.White.copy(alpha = 0.2f * (1f - progress)), radius, center)
+                                drawCircle(Color.White.copy(alpha = 0.4f * (1f - progress)), radius, center, style = Stroke(2.dp.toPx()))
+                            }
+                        }) {
+                            NodeStackImage(repository.imageFile(content.node.documentId, image.fileName), "图片 ${imageIndex + 1}，共 ${content.images.size} 张", Modifier.fillMaxSize())
                         }
-                    }) {
-                        NodeStackImage(repository.imageFile(content.node.documentId, image.fileName), "图片 ${imageIndex + 1}，共 ${content.images.size} 张", Modifier.fillMaxSize())
-                    }
-                    val hasText = content.node.bodyMarkdown.isNotBlank()
-                    Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        if (multiImage) Row(Modifier.fillMaxWidth()
-                            .graphicsLayer { alpha = if (settingsVisible) controlsAlpha.value else 0f }
-                            .then(if (settingsVisible) Modifier else Modifier.clearAndSetSemantics { }),
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                            if (imageIndex > 0) IconButton(onClick = { moveImage(-1) }, enabled = settingsVisible && !switching,
-                                modifier = Modifier.size(42.dp)) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "图片前移一位", tint = Color.White,
-                                    modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
-                            } else Spacer(Modifier.size(42.dp))
-                            if (imageIndex < content.images.lastIndex) IconButton(onClick = { moveImage(1) }, enabled = settingsVisible && !switching,
-                                modifier = Modifier.size(42.dp)) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, "图片后移一位", tint = Color.White,
-                                    modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
-                            } else Spacer(Modifier.size(42.dp))
-                        }
-                        if (hasText) Box(Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))))
-                            .padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
-                            Text(preview, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Color.White, style = ComposeTypography.Font16)
+                        val hasText = content.node.bodyMarkdown.isNotBlank()
+                        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            if (multiImage && settingsVisible) Row(Modifier.fillMaxWidth()
+                                .graphicsLayer { alpha = controlsAlpha.value },
+                                horizontalArrangement = Arrangement.SpaceBetween) {
+                                if (imageIndex > 0) IconButton(onClick = { moveImage(-1) }, enabled = !switching,
+                                    modifier = Modifier.size(42.dp)) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "图片前移一位", tint = Color.White,
+                                        modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
+                                } else Spacer(Modifier.size(42.dp))
+                                if (imageIndex < content.images.lastIndex) IconButton(onClick = { moveImage(1) }, enabled = !switching,
+                                    modifier = Modifier.size(42.dp)) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowForward, "图片后移一位", tint = Color.White,
+                                        modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape).padding(3.dp).size(18.dp))
+                                } else Spacer(Modifier.size(42.dp))
+                            } else if (multiImage) {
+                                // 保留箭头行高度，避免字体放大时备注可用空间随显隐变化。
+                                Spacer(Modifier.height(42.dp))
+                            }
+                            if (hasText) Box(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))))
+                                .padding(start = textStartPadding - imageFramePadding, end = textEndPadding - imageFramePadding), contentAlignment = Alignment.CenterStart) {
+                                Text(preview, maxLines = 2, overflow = TextOverflow.Ellipsis, color = Color.White, style = ComposeTypography.Font16)
+                            }
                         }
                     }
-                    NodeEditControls(
-                        type = nodeTypeLabel(content.node.kind), colors = colors, visible = settingsVisible,
+                    if (settingsVisible) NodeEditControls(
+                        colors = colors,
                         alphaProvider = { controlsAlpha.value }, onEdit = edit,
                         modifier = Modifier.align(Alignment.TopEnd),
                     )
@@ -536,28 +517,60 @@ private fun NodeCard(
 }
 
 @Composable
+private fun NodeCardSection(
+    label: String?,
+    backgroundColor: Color,
+    content: @Composable () -> Unit,
+) {
+    if (label == null) {
+        content()
+        return
+    }
+    val color = LocalThemePalette.current.introductionContent.foreground
+    Layout(
+        modifier = Modifier.fillMaxWidth(),
+        content = {
+            content()
+            Text(label,
+                modifier = Modifier.background(backgroundColor, RoundedCornerShape(6.dp)).padding(horizontal = 12.dp),
+                style = ComposeTypography.Font13sp, color = color,
+                maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
+        },
+    ) { measurables, constraints ->
+        val labelPlaceable = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val topInset = labelPlaceable.height / 2
+        val card = measurables[0].measure(constraints.offset(vertical = -topInset))
+        layout(card.width, card.height + topInset) {
+            card.placeRelative(0, topInset)
+            labelPlaceable.placeRelative((card.width - labelPlaceable.width) / 2, 0)
+        }
+    }
+}
+
+@Composable
 private fun NodeStackImage(file: File, description: String, modifier: Modifier = Modifier) {
     var displayedFile by remember { mutableStateOf(file) }
-    val imageAlpha = remember(file, displayedFile) { Animatable(if (displayedFile == file) 1f else 0f) }
-    var ready by remember(file) { mutableStateOf(false) }
-    LaunchedEffect(file, ready) {
-        if (ready) {
+    val imageAlpha = if (displayedFile != file) remember(file, displayedFile) { Animatable(0f) } else null
+    val onResult: (() -> Unit)? = if (imageAlpha != null) {
+        var ready by remember(file) { mutableStateOf(false) }
+        if (ready) LaunchedEffect(file, imageAlpha) {
             imageAlpha.animateTo(1f, tween(240))
             displayedFile = file
         }
-    }
+        val onLoaded = { ready = true }
+        onLoaded
+    } else null
     Box(modifier) {
-        if (displayedFile != file) LocalImage(displayedFile, description, Modifier.fillMaxSize(), crop = true)
-        LocalImage(file, description, Modifier.fillMaxSize().graphicsLayer { alpha = imageAlpha.value }, crop = true,
-            onResult = { ready = true })
+        if (imageAlpha != null) LocalImage(displayedFile, description, Modifier.fillMaxSize(), crop = true)
+        LocalImage(file, description, Modifier.fillMaxSize()
+            .then(if (imageAlpha != null) Modifier.graphicsLayer { alpha = imageAlpha.value } else Modifier),
+            crop = true, onResult = onResult)
     }
 }
 
 @Composable
 private fun NodeEditControls(
-    type: String,
     colors: StatusColors,
-    visible: Boolean,
     alphaProvider: () -> Float,
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
@@ -570,15 +583,10 @@ private fun NodeEditControls(
     }
     val editDescription = stringResource(R.string.edit_node)
     CompositionLocalProvider(LocalViewConfiguration provides editViewConfiguration) {
-        Row(modifier.graphicsLayer { alpha = if (visible) alphaProvider() else 0f }
-            .then(if (visible) Modifier.clickable(role = Role.Button, onClick = onEdit)
-                .semantics { contentDescription = editDescription } else Modifier.clearAndSetSemantics { }).padding(4.dp),
-            horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            Text(type, Modifier.background(colors.background, RoundedCornerShape(6.dp))
-                .padding(horizontal = 4.dp, vertical = 2.dp),
-                style = ComposeTypography.Font12sp, color = colors.foreground,
-                maxLines = 1, softWrap = false)
-            Spacer(Modifier.width(4.dp))
+        Box(modifier.graphicsLayer { alpha = alphaProvider() }
+            .clickable(role = Role.Button, onClick = onEdit)
+            .semantics { contentDescription = editDescription }.padding(4.dp),
+            contentAlignment = Alignment.Center) {
             Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
                 Box(Modifier.size(24.dp).background(colors.background, RoundedCornerShape(6.dp))
                     .border(1.dp, colors.foreground, RoundedCornerShape(6.dp)), contentAlignment = Alignment.Center) {

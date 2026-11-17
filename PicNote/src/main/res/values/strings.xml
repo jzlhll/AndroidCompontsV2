@@ -56,7 +56,7 @@
     <string name="merge_nodes_message">Merge %1$s (%2$d images) and %3$s (%4$d images)?\nText and images will remain in this order, at the position of %1$s.</string>
     <string name="merge_nodes_changed">The nodes changed. Cancel and select them again.</string>
     <string name="merge">Merge</string>
-    <string name="insert_before">Insert before</string>
+    <string name="insert_before">Insert node</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
     <string name="fixed_node">Fixed node</string>

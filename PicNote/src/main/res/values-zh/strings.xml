@@ -56,7 +56,7 @@
     <string name="merge_nodes_message">将合并 %1$s（%2$d 张图片）与 %3$s（%4$d 张图片）。\n文字和图片均按 %1$s、%3$s 的顺序保留，保留 %1$s 的位置。</string>
     <string name="merge_nodes_changed">节点已变化，请取消后重新选择。</string>
     <string name="merge">合并</string>
-    <string name="insert_before">插入上一个</string>
+    <string name="insert_before">插入节点</string>
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
     <string name="fixed_node">固定节点</string>
