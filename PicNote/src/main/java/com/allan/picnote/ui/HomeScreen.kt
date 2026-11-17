@@ -236,15 +236,15 @@ fun HomeScreen(
                             Text(stringResource(R.string.my_documents), Modifier.weight(1f),
                                 style = MaterialTheme.typography.titleLarge, fontSize = 21.sp)
                             CreateDocumentButton(stringResource(R.string.new_document_button),
-                                onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
+                                onClick = { scope.launch { drawer.snapTo(DrawerValue.Closed); onCreate() } }, enabled = ready)
                         }
                         if (landscape) {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                                TextButton(onClick = { scope.launch { drawer.close(); onAppearance() } }, enabled = active && !state.themeSaving,
+                                TextButton(onClick = { scope.launch { drawer.snapTo(DrawerValue.Closed); onAppearance() } }, enabled = active && !state.themeSaving,
                                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 9.dp)) {
                                     Text(stringResource(R.string.appearance))
                                 }
-                                TextButton(onClick = { scope.launch { drawer.close(); onSettings() } }, enabled = active,
+                                TextButton(onClick = { scope.launch { drawer.snapTo(DrawerValue.Closed); onSettings() } }, enabled = active,
                                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 9.dp)) {
                                     Text(stringResource(R.string.settings))
                                 }
@@ -288,13 +288,13 @@ fun HomeScreen(
                         HorizontalDivider()
                         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).navBarInsetBaseline()) {
                             Row(Modifier.fillMaxWidth().height(48.dp).clickable(enabled = active && !state.themeSaving) {
-                                scope.launch { drawer.close(); onAppearance() }
+                                scope.launch { drawer.snapTo(DrawerValue.Closed); onAppearance() }
                             }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                                 Text(stringResource(R.string.appearance), color = MaterialTheme.colorScheme.primary)
                             }
                             Spacer(Modifier.height(6.dp))
                             Row(Modifier.fillMaxWidth().height(48.dp).clickable(enabled = active) {
-                                scope.launch { drawer.close(); onSettings() }
+                                scope.launch { drawer.snapTo(DrawerValue.Closed); onSettings() }
                             }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                                 Text(stringResource(R.string.settings), color = MaterialTheme.colorScheme.primary)
                             }
