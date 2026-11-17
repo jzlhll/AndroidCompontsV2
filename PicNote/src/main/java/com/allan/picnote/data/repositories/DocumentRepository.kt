@@ -13,6 +13,7 @@ import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.WelcomeDocumentTemplate
 import com.allan.picnote.data.entity.*
 import com.allan.picnote.data.markdown
+import com.allan.picnote.data.parseCodeBlock
 import com.allan.picnote.logEx
 import com.allan.picnote.loge
 import com.allan.picnote.media.ImagePreparation
@@ -323,7 +324,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
             val current = original.nodes.getOrNull(currentIndex)
             if (nodeId != null) require(current != null) { Globals.app.getString(R.string.error_node_deleted_retry) }
             val savedKind = current?.node?.kind ?: kind
-            require(savedKind in listOf("title", "introduction", "chapter", "body")) { Globals.app.getString(R.string.error_invalid_node_type) }
+            require(savedKind in listOf("title", "introduction", "chapter", "body", "code")) { Globals.app.getString(R.string.error_invalid_node_type) }
             require(nodeId != null || savedKind != "title") { Globals.app.getString(R.string.error_only_one_title) }
             require(nodeId != null || savedKind != "introduction") { Globals.app.getString(R.string.error_create_introduction) }
             require(current == null || savedKind == kind) { Globals.app.getString(R.string.error_change_node_type) }
@@ -332,6 +333,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
             if (nodeId == null) require(anchorIndex >= 2) { Globals.app.getString(R.string.error_insert_before_fixed) }
             require(savedKind !in listOf("title", "chapter") || title.trim().isNotEmpty()) { Globals.app.getString(R.string.error_title_required) }
             require(savedKind != "introduction" || currentIndex == 1 || body.isNotBlank()) { Globals.app.getString(R.string.error_introduction_required) }
+            require(savedKind != "code" || parseCodeBlock(body)?.code?.isNotBlank() == true) { Globals.app.getString(R.string.error_code_required) }
             val createdFiles = mutableListOf<File>()
             var committed = false
             try {
@@ -370,7 +372,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
                         val currentNodes = dao.nodes(documentId)
                         val validSources = validSourceUris(consumedUris + savedImages.mapNotNull { it.sourceUri }, sourceVersions)
                         val savedTitle = if (savedKind == "title" || savedKind == "chapter") title.trim() else ""
-                        val savedBody = if (savedKind == "body" || savedKind == "introduction") body else ""
+                        val savedBody = if (savedKind in listOf("body", "introduction", "code")) body else ""
                         if (nodeId == null) {
                             val index = if (anchorId == null) currentNodes.size else currentNodes.indexOfFirst { it.id == anchorId }
                             require(index >= 2) { Globals.app.getString(R.string.error_insert_anchor_changed) }
@@ -641,11 +643,14 @@ img { display: block; max-width: 100%; height: auto; margin: 12px auto; border-r
 blockquote { margin: 16px 0; padding: 8px 16px; background: #f2f2f2; border-radius: 8px; color: #555; }
 blockquote p { margin: 6px 0; }
 a { color: #1a73e8; }
+pre { overflow-x: auto; padding: 12px 16px; background: #f2f2f2; border-radius: 8px; }
+pre code { font: 14px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
 @media (prefers-color-scheme: dark) {
   body { background: #121212; color: #e6e6e6; }
   main { background: #1e1e1e; box-shadow: none; }
   h2 { border-bottom-color: #333; }
   blockquote { background: #262626; color: #b8b8b8; }
+  pre { background: #262626; }
 }
 </style>
 </head>

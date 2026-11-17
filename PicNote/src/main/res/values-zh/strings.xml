@@ -30,6 +30,13 @@
     <string name="introduction">引言</string>
     <string name="chapter_title">章节标题</string>
     <string name="body">图文</string>
+    <string name="advanced">高级</string>
+    <string name="code_block">代码块</string>
+    <string name="create_code_block">创建代码块</string>
+    <string name="code_description">描述（可选）</string>
+    <string name="code_language_value">语言：%1$s</string>
+    <string name="plain_text">纯文本</string>
+    <string name="error_code_required">请输入代码</string>
     <string name="image">图片</string>
     <string name="image_number">图片 %1$d</string>
     <string name="chapter_number">章节%1$s</string>

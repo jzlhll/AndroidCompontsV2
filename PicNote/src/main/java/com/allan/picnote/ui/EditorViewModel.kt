@@ -3,10 +3,13 @@ package com.allan.picnote.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.allan.picnote.data.CodeBlockContent
+import com.allan.picnote.data.parseCodeBlock
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.data.repositories.ImageDraft
 import com.allan.picnote.logEx
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
@@ -22,6 +25,8 @@ data class EditorState(
     val kind: String = "body",
     val fixed: Boolean = false,
     val body: String = "",
+    val code: String = "",
+    val codeLanguage: String = "",
     val images: List<ImageDraft> = emptyList(),
     val dirty: Boolean = false,
     val busy: Boolean = false,
@@ -57,7 +62,11 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
                 val nodes = repository.content(documentId).nodes
                 val index = nodes.indexOfFirst { it.node.id == nodeId }
                 val node = nodes.getOrNull(index) ?: error("节点已删除")
-                originalDraft = EditorState(title = node.node.title, kind = node.node.kind, fixed = index < 2, body = node.node.bodyMarkdown,
+                val codeBlock = if (node.node.kind == "code") parseCodeBlock(node.node.bodyMarkdown) else null
+                originalDraft = EditorState(title = node.node.title, kind = node.node.kind, fixed = index < 2,
+                    body = codeBlock?.description ?: if (node.node.kind == "code") "" else node.node.bodyMarkdown,
+                    code = codeBlock?.code ?: if (node.node.kind == "code") node.node.bodyMarkdown else "",
+                    codeLanguage = codeBlock?.language.orEmpty(),
                     images = node.images.map { ImageDraft(existing = it) }, savedImageCount = node.images.size)
                 mutableStateFlow.value = originalDraft
             } catch (e: CancellationException) { throw e }
@@ -77,11 +86,14 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
 
     private fun changed(draft: EditorState): EditorState = draft.copy(
         dirty = draft.title.trim() != originalDraft.title.trim() || draft.body != originalDraft.body ||
+            draft.code != originalDraft.code || draft.codeLanguage != originalDraft.codeLanguage ||
             draft.images.filterNot { it.pendingRemoval } != originalDraft.images,
     )
 
     fun setTitle(value: String) { updateDraft { it.copy(title = value) } }
     fun setBody(value: String) { updateDraft { it.copy(body = value) } }
+    fun setCode(value: String) { updateDraft { it.copy(code = value) } }
+    fun setCodeLanguage(value: String) { updateDraft { it.copy(codeLanguage = value) } }
     fun imagePickerFailed(e: Exception) {
         logEx(throwable = e, message = "Launch editor image picker failed")
         mutableStateFlow.update { it.copy(error = "无法打开系统相册，请重试") }
@@ -133,13 +145,22 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
 
     fun save() {
         val draft = stateFlow.value
-        if (draft.busy || draft.loading || !draft.loaded || draft.savedId != null || (route.nodeId != null && !draft.dirty)) return
+        if (draft.busy || draft.loading || !draft.loaded || draft.savedId != null || (route.nodeId != null && !draft.dirty && draft.kind != "code")) return
         mutableStateFlow.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             try {
-                val result = if (route.documentId == null) repository.create(draft.title, draft.body)
+                val body = if (draft.kind == "code") withContext(Dispatchers.Default) {
+                    val code = try { formatCodeForSave(draft.code, draft.codeLanguage) }
+                    catch (e: CancellationException) { throw e }
+                    catch (e: Exception) {
+                        logEx(throwable = e, message = "Format code failed")
+                        draft.code
+                    }
+                    CodeBlockContent(draft.body, code, draft.codeLanguage).markdown()
+                } else draft.body
+                val result = if (route.documentId == null) repository.create(draft.title, body)
                 else repository.saveNode(route.documentId, route.nodeId, route.anchorId, draft.kind,
-                    draft.title, draft.body, draft.images.filterNot { it.pendingRemoval })
+                    draft.title, body, draft.images.filterNot { it.pendingRemoval })
                 mutableStateFlow.update { it.copy(busy = false, dirty = false, savedId = result.value, mirrorFailed = result.mirrorFailed) }
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {

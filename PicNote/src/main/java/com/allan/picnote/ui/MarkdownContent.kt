@@ -36,6 +36,7 @@ fun rememberNodePreviews(nodes: List<NodeContent>): Map<String, String> {
             buildMap {
                 nodes.forEach { content ->
                     currentCoroutineContext().ensureActive()
+                    if (content.node.kind == "code") return@forEach
                     val markdown = content.node.bodyMarkdown
                     if (markdown.isNotBlank() && !containsKey(markdown)) {
                         put(markdown, previous[markdown] ?: markdownPlainText(parser.parse(markdown)))

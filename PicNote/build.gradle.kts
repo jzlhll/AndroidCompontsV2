@@ -24,6 +24,38 @@ android {
 
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 
+// 仅提取已发布的语法源码，避免旧版注解处理器依赖 javac 内部 API。
+val codeGrammarBundle by configurations.creating {
+    isCanBeConsumed = false
+    isTransitive = false
+}
+val codeGrammarSources = codeGrammarBundle.elements.map { artifacts ->
+    artifacts.map { artifact ->
+        zipTree(artifact.asFile).matching {
+            include(listOf("clike", "java", "kotlin", "c", "cpp", "markup", "swift", "go", "javascript", "python", "json", "css", "sql", "yaml")
+                .map { "languages/Prism_$it.java" })
+        }
+    }
+}
+
+/** 提取语法源码，并通过输出目录接入 Android 的源码与任务依赖。 */
+abstract class ExtractCodeGrammars : Sync() {
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+}
+
+val extractCodeGrammars = tasks.register<ExtractCodeGrammars>("extractCodeGrammars") {
+    outputDirectory.set(layout.buildDirectory.dir("generated/sources/codeGrammars"))
+    from(codeGrammarSources)
+    into(outputDirectory)
+    eachFile { path = "io/noties/prism4j/$path" }
+    includeEmptyDirs = false
+}
+
+androidComponents.onVariants { variant ->
+    variant.sources.java?.addGeneratedSourceDirectory(extractCodeGrammars, ExtractCodeGrammars::outputDirectory)
+}
+
 dependencies {
     implementation(files("libs/pastehub-image-1.0.0.aar"))
     implementation(project(":Module-AndroidCommon"))
@@ -51,4 +83,8 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.6.3")
     implementation("io.noties.markwon:core:4.6.2")
     implementation("io.noties.markwon:image:4.6.2")
+    implementation("io.noties.markwon:syntax-highlight:4.6.2") {
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
+    codeGrammarBundle("io.noties:prism4j-bundler:2.0.0")
 }

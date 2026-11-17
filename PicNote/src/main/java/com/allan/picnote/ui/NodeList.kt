@@ -87,6 +87,7 @@ private fun nodeTypeLabel(kind: String): String = stringResource(when (kind) {
     "title" -> R.string.title
     "introduction" -> R.string.introduction
     "chapter" -> R.string.chapter_title
+    "code" -> R.string.code_block
     else -> R.string.body
 })
 
@@ -182,6 +183,7 @@ fun NodeList(
         itemsIndexed(content.nodes, key = { _, item -> item.node.id }, contentType = { _, item ->
             when {
                 item.node.kind == "chapter" -> "chapter"
+                item.node.kind == "code" -> "code"
                 item.images.isEmpty() -> "text"
                 else -> "picture"
             }
@@ -233,7 +235,7 @@ fun NodeList(
                 )
             }
             val sectionLabel = when (item.node.kind) {
-                "title", "introduction" -> nodeTypeLabel(item.node.kind)
+                "title", "introduction", "code" -> nodeTypeLabel(item.node.kind)
                 "chapter" -> chapterNumbers[item.node.id]?.let { stringResource(R.string.chapter_number, it) }
                 else -> null
             }
@@ -285,7 +287,7 @@ fun NodeList(
                     .padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.add_node), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     DropdownMenu(expanded = menu && editingEnabled, onDismissRequest = { menu = false }) {
-                        InsertItems { kind -> menu = false; onInsert(null, kind) }
+                        if (menu && editingEnabled) InsertItems { kind -> menu = false; onInsert(null, kind) }
                     }
                 }
             }
@@ -344,8 +346,7 @@ private fun NodeMenu(
         }
         DropdownMenu(expanded = menu && enabled, onDismissRequest = { menu = false; inserting = false }) {
             if (inserting) {
-                DropdownMenuItem(text = { Text("‹ ${stringResource(R.string.back)}") }, onClick = { inserting = false })
-                InsertItems { kind -> menu = false; inserting = false; onInsert(kind) }
+                InsertItems(onBack = { inserting = false }) { kind -> menu = false; inserting = false; onInsert(kind) }
             } else {
                 if (!fixed) DropdownMenuItem(text = { Text(stringResource(R.string.insert_before)) }, onClick = { inserting = true })
                 if (canMoveUp) DropdownMenuItem(text = { Text(stringResource(R.string.move_up)) }, onClick = { menu = false; onMoveUp() })
@@ -358,9 +359,18 @@ private fun NodeMenu(
 }
 
 @Composable
-private fun InsertItems(onInsert: (String) -> Unit) {
-    listOf("chapter", "body").forEach { kind ->
-        DropdownMenuItem(text = { Text(nodeTypeLabel(kind)) }, onClick = { onInsert(kind) })
+private fun InsertItems(onBack: (() -> Unit)? = null, onInsert: (String) -> Unit) {
+    var advanced by remember { mutableStateOf(false) }
+    if (advanced) {
+        DropdownMenuItem(text = { Text("‹ ${stringResource(R.string.back)}") }, onClick = { advanced = false })
+        DropdownMenuItem(text = { Text(stringResource(R.string.code_block)) }, onClick = { onInsert("code") })
+    } else {
+        if (onBack != null) DropdownMenuItem(text = { Text("‹ ${stringResource(R.string.back)}") }, onClick = onBack)
+        listOf("chapter", "body").forEach { kind ->
+            DropdownMenuItem(text = { Text(nodeTypeLabel(kind)) }, onClick = { onInsert(kind) })
+        }
+        DropdownMenuItem(text = { Text(stringResource(R.string.advanced)) }, onClick = { advanced = true },
+            trailingIcon = { Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null) })
     }
 }
 
@@ -460,7 +470,11 @@ private fun NodeCard(
         } else emptyList()
     }) {
         NodeCardSection(sectionLabel, backgroundColor = colors.background) {
-            Box(Modifier.fillMaxWidth().then(if (image == null) Modifier.height(72.dp) else Modifier.aspectRatio(4f / 3f))
+            Box(Modifier.fillMaxWidth().then(when {
+                content.node.kind == "code" -> Modifier.height(240.dp)
+                image == null -> Modifier.height(72.dp)
+                else -> Modifier.aspectRatio(4f / 3f)
+            })
                 .then(if (guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) {
                     guideAnchor.updateCard(guideIndex, it.boundsInWindow, hasImages = content.images.isNotEmpty())
                 } else Modifier)
@@ -474,7 +488,9 @@ private fun NodeCard(
                     .then(if (!selectionMode) Modifier.onClick(enabled = enabled && !dragging, onClickLabel = "显示节点设置") {
                         showSettings(); onCardClick()
                     } else Modifier)) {
-                    if (image == null) {
+                    if (content.node.kind == "code") {
+                        CodeNodePreview(content.node.bodyMarkdown, enabled && !dragging && !selectionMode, Modifier.fillMaxSize())
+                    } else if (image == null) {
                         val text = when {
                             content.node.kind == "title" || content.node.kind == "chapter" -> content.node.title
                             content.node.kind == "introduction" && content.node.bodyMarkdown.isBlank() -> "添加引言"

@@ -30,6 +30,13 @@
     <string name="introduction">Introduction</string>
     <string name="chapter_title">Chapter title</string>
     <string name="body">Content</string>
+    <string name="advanced">Advanced</string>
+    <string name="code_block">Code block</string>
+    <string name="create_code_block">New code block</string>
+    <string name="code_description">Description (optional)</string>
+    <string name="code_language_value">Language: %1$s</string>
+    <string name="plain_text">Plain text</string>
+    <string name="error_code_required">Enter code</string>
     <string name="image">Image</string>
     <string name="image_number">Image %1$d</string>
     <string name="chapter_number">Chapter %1$s</string>

@@ -241,7 +241,8 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
     val errorPadding = with(density) { 8.dp.toPx() }
     val imageCornerRadius = with(density) { 8.dp.toPx() }
     val ruleColor = scheme.outlineVariant.toArgb()
-    val markwon = remember(context, destinations, nodeMarker, density, textColor, linkColor, codeBackground, quoteTextColor, quoteMargin, titleTextSize, titleUnderlineGap, chapterTextSize, errorTextSize, errorPadding, imageCornerRadius, ruleColor) {
+    val codeHighlight = rememberCodeSyntaxHighlight()
+    val markwon = remember(context, destinations, nodeMarker, density, textColor, linkColor, codeBackground, quoteTextColor, quoteMargin, titleTextSize, titleUnderlineGap, chapterTextSize, errorTextSize, errorPadding, imageCornerRadius, ruleColor, codeHighlight) {
         val linkResolver = LinkResolverDef()
         val mediaDecoder = DefaultMediaDecoder.create(context.resources)
         Markwon.builder(context)
@@ -261,7 +262,7 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                 }
 
                 override fun configureConfiguration(builder: MarkwonConfiguration.Builder) {
-                    builder.imageDestinationProcessor(destinations)
+                    builder.syntaxHighlight(codeHighlight).imageDestinationProcessor(destinations)
                         .linkResolver { view, link ->
                             if (Uri.parse(link).scheme.equals("file", ignoreCase = true)) {
                                 showMessage("暂不支持直接打开本地文件链接")
