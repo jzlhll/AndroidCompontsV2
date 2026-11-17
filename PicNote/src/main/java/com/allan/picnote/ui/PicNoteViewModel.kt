@@ -385,10 +385,10 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         }
     }
 
-    fun mergeNodes(firstId: String, secondId: String) {
+    fun mergeNodes(nodeIds: List<String>) {
         val id = stateFlow.value.content?.document?.id ?: return
         operation {
-            val result = repository.mergeNodes(id, firstId, secondId)
+            val result = repository.mergeNodes(id, nodeIds)
             reload(id)
             saved(id, result)
         }

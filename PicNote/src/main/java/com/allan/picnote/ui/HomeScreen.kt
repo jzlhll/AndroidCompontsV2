@@ -47,6 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.allan.picnote.R
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.NodeGuideKind
@@ -144,10 +147,21 @@ fun HomeScreen(
     var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
     val content = state.content
     val document = content?.document
+    var mergeSelection by rememberSaveable(document?.id) { mutableStateOf<List<String>?>(null) }
+    var merging by remember(document?.id) { mutableStateOf<List<String>?>(null) }
+    val bodyNodeIds = remember(content?.nodes) {
+        content?.nodes.orEmpty().filter { it.node.kind == "body" }.map { it.node.id }.toSet()
+    }
+    val selectedNodeIds = remember(mergeSelection) { mergeSelection?.toSet() }
+    val currentSelection = mergeSelection
+    if (currentSelection != null && currentSelection.any { it !in bodyNodeIds }) {
+        SideEffect { mergeSelection = currentSelection.filter { it in bodyNodeIds } }
+    }
     val guide = state.nodeGuide
     val guideAnchor = remember(guide) { guide?.let { NodeGuideAnchor() } }
     val guideNodeId = if (guide?.kind == NodeGuideKind.Menu) content?.nodes?.getOrNull(2)?.node?.id else null
     val showMediaActions = document?.id != WelcomeDocumentId
+    val showEditingMediaActions = showMediaActions && mergeSelection == null
     val latestPending = state.pending.firstOrNull()
     val showLoading = state.loading || state.busy || state.scanning
     val imported = remember(state.content) { state.content?.nodes.orEmpty().flatMap { it.images }.mapNotNull { it.sourceUri }.toSet() }
@@ -157,6 +171,12 @@ fun HomeScreen(
     val documentActionsDescription = stringResource(R.string.document_actions)
     val openPickerDescription = stringResource(R.string.open_picker_add_images)
     val closeDescription = stringResource(R.string.close)
+    val mergeBackState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = mergeBackState,
+        isBackEnabled = active && mergeSelection != null && merging == null && drawer.isClosed,
+        onBackCompleted = { mergeSelection = null },
+    )
     LaunchedEffect(state.pending, imported) {
         selected = selected.filter { id -> state.pending.any { it.uri == id } && id !in imported }
         if (state.pending.isEmpty()) ribbon = false
@@ -165,11 +185,13 @@ fun HomeScreen(
         if (!active) {
             ribbon = false
             selected = emptyList()
+            mergeSelection = null
+            merging = null
         }
     }
     val documentActions: @Composable () -> Unit = {
         Box {
-            IconButton(onClick = { more = true }, enabled = document != null && ready,
+            IconButton(onClick = { more = true }, enabled = document != null && ready && mergeSelection == null,
                 modifier = Modifier.semantics { contentDescription = documentActionsDescription }) {
                 Icon(Icons.Default.MoreVert, contentDescription = null)
             }
@@ -227,7 +249,7 @@ fun HomeScreen(
     ModalNavigationDrawer(
         modifier = modifier,
         drawerState = drawer,
-        gesturesEnabled = ready,
+        gesturesEnabled = ready && mergeSelection == null,
         drawerContent = {
             ModalDrawerSheet(Modifier.fillMaxWidth(if (landscape) 0.65f else 0.86f)) {
                 Column(Modifier.fillMaxHeight()) {
@@ -310,7 +332,36 @@ fun HomeScreen(
             val documentScroll = rememberLazyListState()
             val tabs = listOf(stringResource(R.string.tab_nodes), stringResource(R.string.tab_document))
             val onTabSelected: (Int) -> Unit = { index ->
-                if (active && content != null) scope.launch { pager.animateScrollToPage(index) }
+                if (active && content != null) {
+                    mergeSelection = null
+                    merging = null
+                    scope.launch { pager.animateScrollToPage(index) }
+                }
+            }
+            val openDocumentList: () -> Unit = {
+                mergeSelection = null
+                merging = null
+                scope.launch { drawer.open() }
+            }
+            val mergeActions: @Composable () -> Unit = {
+                if (pager.currentPage == 0 && document != null) {
+                    if (mergeSelection != null) {
+                        TextButton(onClick = { mergeSelection = null }, enabled = ready) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                        TextButton(onClick = { merging = mergeSelection }, enabled = ready && mergeSelection.orEmpty().size >= 2) {
+                            Text(stringResource(R.string.merge_selected_count, mergeSelection.orEmpty().size))
+                        }
+                    } else {
+                        TextButton(onClick = {
+                            more = false
+                            ribbon = false
+                            mergeSelection = emptyList()
+                        }, enabled = ready && bodyNodeIds.size >= 2) {
+                            Text(stringResource(R.string.merge))
+                        }
+                    }
+                }
             }
             LaunchedEffect(guide, active) {
                 if (active && guide != null && content != null && guide.documentId == content.document.id) {
@@ -328,17 +379,17 @@ fun HomeScreen(
                             expandedHeight = 54.dp,
                             title = { Text(document?.title ?: stringResource(R.string.app_name), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             navigationIcon = {
-                                IconButton(onClick = { scope.launch { drawer.open() } }, enabled = active,
+                                IconButton(onClick = openDocumentList, enabled = active,
                                     modifier = Modifier.semantics { contentDescription = openDocumentListDescription }) {
                                     Icon(Icons.Default.Menu, contentDescription = null)
                                 }
                             },
-                            actions = { documentActions() },
+                            actions = { mergeActions(); if (mergeSelection == null) documentActions() },
                         )
                     },
                     floatingActionButtonPosition = FabPosition.Center,
                     floatingActionButton = {
-                        if (!useSidePanel && showMediaActions) {
+                        if (!useSidePanel && showEditingMediaActions) {
                             mediaActions(Modifier.fillMaxWidth().padding(horizontal = 16.dp).navBarInsetBaseline())
                         }
                     },
@@ -348,9 +399,9 @@ fun HomeScreen(
                         sidePane = {
                             Box(Modifier.fillMaxSize()) {
                                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                                    .padding(start = 12.dp, end = 12.dp, bottom = if (showMediaActions) 80.dp else 12.dp)) {
+                                    .padding(start = 12.dp, end = 12.dp, bottom = if (showEditingMediaActions) 80.dp else 12.dp)) {
                                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                        IconButton(onClick = { scope.launch { drawer.open() } }, enabled = active,
+                                        IconButton(onClick = openDocumentList, enabled = active,
                                             modifier = Modifier.semantics { contentDescription = openDocumentListDescription }) {
                                             Icon(Icons.Default.Menu, contentDescription = null)
                                         }
@@ -366,7 +417,7 @@ fun HomeScreen(
                                     Spacer(Modifier.height(12.dp))
                                     statusMessages()
                                 }
-                                if (showMediaActions) {
+                                if (showEditingMediaActions) {
                                     mediaActions(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp).navBarInsetBaseline())
                                 }
                             }
@@ -374,6 +425,11 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
                     ) {
                         Column(Modifier.fillMaxSize()) {
+                            if (useSidePanel && pager.currentPage == 0 && document != null) {
+                                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.End) {
+                                    mergeActions()
+                                }
+                            }
                             if (!useSidePanel) {
                                 Box(Modifier.fillMaxWidth().padding(top = 2.dp)) {
                                     ComposeLineTabLayout(
@@ -403,16 +459,23 @@ fun HomeScreen(
                                             content = content, repository = viewModel.repository, listState = nodeScroll, enabled = ready, active = active && pager.currentPage == 0,
                                             onEdit = { node -> onEdit(EditRoute(content.document.id, node.node.id, kind = node.node.kind)) },
                                             onInsert = { anchor, kind -> onEdit(EditRoute(content.document.id, anchorId = anchor, kind = kind)) },
-                                            onMove = viewModel::move, onDelete = viewModel::deleteNode, onMerge = viewModel::mergeNodes,
+                                            onMove = viewModel::move, onDelete = viewModel::deleteNode, onMerge = { merging = it },
+                                            onSelectNode = { id ->
+                                                val selection = mergeSelection
+                                                if (ready && selection != null && id in bodyNodeIds) {
+                                                    mergeSelection = if (id in selection) selection - id else selection + id
+                                                }
+                                            },
                                             onMoveImage = viewModel::moveImage,
                                             onNodeMenuOpened = { viewModel.recordNodeClick(NodeGuideKind.Menu) },
                                             onNodeCardClicked = { viewModel.recordNodeClick(NodeGuideKind.Card) },
-                                            bottomContentPadding = if (!useSidePanel && showMediaActions) 96.dp else 24.dp,
+                                            selectedNodeIds = selectedNodeIds,
+                                            bottomContentPadding = if (!useSidePanel && showEditingMediaActions) 96.dp else 24.dp,
                                             guideNodeId = guideNodeId, guideKind = guide?.kind,
                                             guideAnchor = if (guide != null && pager.currentPage == 0) guideAnchor else null,
                                         ) else DocumentPreview(content, viewModel.repository, documentScroll, onMessage = viewModel::showMessage,
                                             onDownloadImage = viewModel::downloadImage, active = active && pager.currentPage == 1, enabled = ready,
-                                            bottomContentPadding = if (!useSidePanel && showMediaActions) 96.dp else 24.dp)
+                                            bottomContentPadding = if (!useSidePanel && showEditingMediaActions) 96.dp else 24.dp)
                                     }
                                 }
                             }
@@ -422,7 +485,18 @@ fun HomeScreen(
             }
         }
     }
-    if (active && showMediaActions && ribbon && state.pending.isNotEmpty()) {
+    if (active && content != null) merging?.let { ids ->
+        MergeNodesDialog(
+            content = content, nodeIds = ids, enabled = ready,
+            onDismiss = { merging = null },
+            onConfirm = {
+                merging = null
+                mergeSelection = null
+                viewModel.mergeNodes(ids)
+            },
+        )
+    }
+    if (active && showEditingMediaActions && ribbon && state.pending.isNotEmpty()) {
         ComposeBottomSheet(
             onDismissRequest = { ribbon = false },
             backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow,

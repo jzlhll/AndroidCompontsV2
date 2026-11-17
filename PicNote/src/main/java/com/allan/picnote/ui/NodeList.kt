@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -100,18 +101,19 @@ fun NodeList(
     onInsert: (String?, String) -> Unit,
     onMove: (String, String?) -> Unit,
     onDelete: (String) -> Unit,
-    onMerge: (String, String) -> Unit,
+    onMerge: (List<String>) -> Unit,
+    onSelectNode: (String) -> Unit,
     onMoveImage: (String, String, Int) -> Unit,
     onNodeMenuOpened: () -> Unit,
     onNodeCardClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    selectedNodeIds: Set<String>? = null,
     bottomContentPadding: Dp = 24.dp,
     guideNodeId: String? = null,
     guideKind: NodeGuideKind? = null,
     guideAnchor: NodeGuideAnchor? = null,
 ) {
     var deleting by remember(content.document.id) { mutableStateOf<NodeContent?>(null) }
-    var merging by remember(content.document.id) { mutableStateOf<Pair<String, String>?>(null) }
     var dragging by remember(content.document.id) { mutableStateOf<String?>(null) }
     var dragOffset by remember { mutableStateOf(Offset.Zero) }
     var dragPosition by remember { mutableStateOf(Offset.Zero) }
@@ -134,7 +136,9 @@ fun NodeList(
     }
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val interactive = enabled && active && lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
-    if (!interactive && (dragging != null || targetId != null || dragOffset != Offset.Zero)) {
+    val selecting = selectedNodeIds != null
+    val editingEnabled = interactive && !selecting
+    if (!editingEnabled && (dragging != null || targetId != null || dragOffset != Offset.Zero)) {
         SideEffect { dragging = null; targetId = null; dragOffset = Offset.Zero }
     }
     fun updateDragTarget() {
@@ -147,12 +151,12 @@ fun NodeList(
         }?.key
     }
     val autoScrollStep = with(LocalDensity.current) { 6.dp.toPx() }
-    LaunchedEffect(content.document.id, dragging, interactive, listState, autoScrollStep) {
+    LaunchedEffect(content.document.id, dragging, editingEnabled, listState, autoScrollStep) {
         val sourceId = dragging ?: return@LaunchedEffect
-        if (!interactive) return@LaunchedEffect
+        if (!editingEnabled) return@LaunchedEffect
         while (isActive && dragging == sourceId) {
             withFrameNanos { }
-            if (!interactive || dragging != sourceId) break
+            if (!editingEnabled || dragging != sourceId) break
             updateDragTarget()
             val viewport = viewportCoordinates ?: continue
             val source = cardCoordinates[sourceId] ?: continue
@@ -193,8 +197,8 @@ fun NodeList(
                 onDispose { handle?.release() }
             }
             DisposableEffect(item.node.id, item.node.kind) { onDispose { cardCoordinates.remove(item.node.id) } }
-            val dragModifier = if (item.node.kind != "body") Modifier else Modifier.pointerInput(item.node.id, interactive, content.nodes) {
-                if (interactive) detectDragGesturesAfterLongPress(
+            val dragModifier = if (item.node.kind != "body") Modifier else Modifier.pointerInput(item.node.id, editingEnabled, content.nodes) {
+                if (editingEnabled) detectDragGesturesAfterLongPress(
                     onDragStart = start@ { position ->
                         val coordinates = cardCoordinates[item.node.id] ?: return@start
                         if (!coordinates.isAttached) return@start
@@ -220,7 +224,7 @@ fun NodeList(
                     onDragEnd = {
                         updateDragTarget()
                         val target = targetId
-                        if (dragging == item.node.id && target != null) merging = item.node.id to target
+                        if (dragging == item.node.id && target != null) onMerge(listOf(item.node.id, target))
                         dragging = null
                         targetId = null
                         dragOffset = Offset.Zero
@@ -237,7 +241,7 @@ fun NodeList(
                 drawLine(lineColor, Offset(24.dp.toPx(), -12.dp.toPx()), Offset(24.dp.toPx(), size.height), 1.dp.toPx())
             }.zIndex(if (dragging == item.node.id) 1f else 0f), verticalAlignment = Alignment.CenterVertically) {
                 NodeMenu(
-                    number = number, enabled = interactive, foreground = colors.foreground, fixed = fixed,
+                    number = number, enabled = editingEnabled, foreground = colors.foreground, fixed = fixed,
                     canMoveUp = index > 2, canMoveDown = !fixed && index < content.nodes.lastIndex,
                     onInsert = { onInsert(item.node.id, it) },
                     onMoveUp = { onMove(item.node.id, content.nodes[index - 1].node.id) },
@@ -255,8 +259,9 @@ fun NodeList(
                         }
                     } else Modifier).then(dragModifier)) {
                     NodeCard(item, repository, colors, preview = previews[item.node.bodyMarkdown].orEmpty(),
-                        enabled = interactive, dragging = isDragging,
-                        highlighted = targetId == item.node.id, onEdit = { onEdit(item) },
+                        enabled = interactive && (!selecting || item.node.kind == "body"), dragging = isDragging,
+                        highlighted = targetId == item.node.id || selectedNodeIds?.contains(item.node.id) == true,
+                        onEdit = { onEdit(item) },
                         onMoveImage = { imageId, direction -> onMoveImage(item.node.id, imageId, direction) },
                         onCardClick = onNodeCardClicked,
                         sectionLabel = sectionLabel,
@@ -265,46 +270,33 @@ fun NodeList(
                         modifier = Modifier.graphicsLayer {
                             translationX = if (dragging == item.node.id) dragOffset.x else 0f
                             translationY = if (dragging == item.node.id) dragOffset.y else 0f
-                        })
+                        },
+                        selectionMode = selecting,
+                        selected = selectedNodeIds?.contains(item.node.id) == true,
+                        onSelect = { onSelectNode(item.node.id) })
                 }
             }
         }
         item(key = "insert-tail", contentType = "insert-tail") {
             Row(Modifier.fillMaxWidth().padding(start = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                 var menu by remember { mutableStateOf(false) }
-                if (!interactive && menu) SideEffect { menu = false }
-                Box(Modifier.clickable(enabled = interactive, role = Role.Button) { menu = true }
+                if (!editingEnabled && menu) SideEffect { menu = false }
+                Box(Modifier.clickable(enabled = editingEnabled, role = Role.Button) { menu = true }
                     .padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.add_node), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    DropdownMenu(expanded = menu && interactive, onDismissRequest = { menu = false }) {
+                    DropdownMenu(expanded = menu && editingEnabled, onDismissRequest = { menu = false }) {
                         InsertItems { kind -> menu = false; onInsert(null, kind) }
                     }
                 }
             }
         }
     }
-    if (active) deleting?.let { item ->
+    if (active && !selecting) deleting?.let { item ->
         AlertDialog(
             onDismissRequest = { deleting = null }, title = { Text(stringResource(R.string.delete_node)) },
             text = { Text(if (item.node.kind == "chapter") stringResource(R.string.delete_chapter_message, item.node.title) else stringResource(R.string.delete_node_message, item.images.size)) },
             confirmButton = { TextButton(onClick = { onDelete(item.node.id); deleting = null }, enabled = interactive) { Text(stringResource(R.string.delete)) } },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.cancel)) } },
-        )
-    }
-    if (active) merging?.let { pair ->
-        val selected = content.nodes.withIndex().filter { it.value.node.id == pair.first || it.value.node.id == pair.second }
-        val valid = selected.size == 2 && selected.all { it.value.node.kind == "body" }
-        AlertDialog(
-            onDismissRequest = { merging = null }, title = { Text(stringResource(R.string.merge_nodes)) },
-            text = { Text(if (valid) {
-                val earlier = selected[0]
-                val later = selected[1]
-                val firstNumber = (earlier.index + 1).toString().padStart(2, '0')
-                val secondNumber = (later.index + 1).toString().padStart(2, '0')
-                stringResource(R.string.merge_nodes_message, firstNumber, earlier.value.images.size, secondNumber, later.value.images.size)
-            } else stringResource(R.string.merge_nodes_changed)) },
-            confirmButton = { TextButton(onClick = { merging = null; onMerge(pair.first, pair.second) }, enabled = valid && interactive) { Text(stringResource(R.string.merge)) } },
-            dismissButton = { TextButton(onClick = { merging = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }
@@ -385,6 +377,9 @@ private fun NodeCard(
     onMoveImage: (String, Int) -> Unit,
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selectionMode: Boolean = false,
+    selected: Boolean = false,
+    onSelect: () -> Unit = {},
     sectionLabel: String? = null,
     guideAnchor: NodeGuideAnchor? = null,
     guideIndex: Int = -1,
@@ -396,8 +391,8 @@ private fun NodeCard(
     var switchingJob by remember { mutableStateOf<Job?>(null) }
     var switching by remember { mutableStateOf(false) }
     var rippleDirection by remember { mutableIntStateOf(1) }
-    LaunchedEffect(enabled, dragging) {
-        if (!enabled || dragging) {
+    LaunchedEffect(enabled, dragging, selectionMode) {
+        if (!enabled || dragging || selectionMode) {
             visibilityJob?.cancel()
             switchingJob?.cancel()
             controlsAlpha.snapTo(0f)
@@ -425,9 +420,9 @@ private fun NodeCard(
     val image = content.images.getOrNull(imageIndex)
     val multiImage = content.images.size > 1
     val fadingVisible by remember(controlsAlpha) { derivedStateOf { controlsAlpha.value > 0f } }
-    val settingsVisible = fadingVisible && enabled && !dragging
+    val settingsVisible = fadingVisible && enabled && !dragging && !selectionMode
     val moveImage: (Int) -> Unit = { direction ->
-        if (image != null && enabled && !dragging && !switching && content.images.getOrNull(imageIndex + direction) != null) {
+        if (image != null && enabled && !dragging && !switching && !selectionMode && content.images.getOrNull(imageIndex + direction) != null) {
             switching = true
             rippleDirection = direction
             switchingJob = scope.launch {
@@ -445,8 +440,10 @@ private fun NodeCard(
     val textStartPadding = if (content.node.kind == "introduction") 32.dp else 16.dp
     val textEndPadding = if (content.node.kind == "title") 16.dp else 24.dp
     val imageFramePadding = 4.dp
-    Column(modifier.semantics {
-        customActions = if (enabled && !dragging && !switching) buildList {
+    Column(modifier.then(if (selectionMode && content.node.kind == "body") Modifier.toggleable(
+        value = selected, enabled = enabled, role = Role.Checkbox, onValueChange = { onSelect() },
+    ) else Modifier).semantics {
+        customActions = if (enabled && !dragging && !switching && !selectionMode) buildList {
             add(CustomAccessibilityAction("编辑节点") { edit(); true })
             if (multiImage) {
                 add(CustomAccessibilityAction("查看上一张图片") {
@@ -474,7 +471,9 @@ private fun NodeCard(
                 }
                 Box(Modifier.fillMaxSize().padding(end = if (multiImage) 8.dp else 0.dp, bottom = if (multiImage) 8.dp else 0.dp)
                     .clip(shape).background(colors.background).then(if (image != null) Modifier.padding(imageFramePadding).clip(RoundedCornerShape(8.dp)) else Modifier)
-                    .onClick(enabled = enabled && !dragging, onClickLabel = "显示节点设置") { showSettings(); onCardClick() }) {
+                    .then(if (!selectionMode) Modifier.onClick(enabled = enabled && !dragging, onClickLabel = "显示节点设置") {
+                        showSettings(); onCardClick()
+                    } else Modifier)) {
                     if (image == null) {
                         val text = when {
                             content.node.kind == "title" || content.node.kind == "chapter" -> content.node.title
@@ -494,7 +493,7 @@ private fun NodeCard(
                             },
                             color = if (content.node.kind == "introduction") LocalThemePalette.current.introductionContent.foreground else MaterialTheme.colorScheme.onSurface)
                     } else {
-                        Box(Modifier.fillMaxSize().then(if (multiImage) Modifier.pointerInput(enabled, dragging, switching, content.images, imageIndex) {
+                        Box(Modifier.fillMaxSize().then(if (multiImage && !selectionMode) Modifier.pointerInput(enabled, dragging, switching, content.images, imageIndex) {
                             if (!enabled || dragging || switching) return@pointerInput
                             var distance = 0f
                             detectHorizontalDragGestures(
@@ -558,6 +557,11 @@ private fun NodeCard(
                         modifier = Modifier.align(Alignment.TopEnd),
                     )
                 }
+                if (selectionMode && content.node.kind == "body") Checkbox(
+                    checked = selected, onCheckedChange = null, enabled = enabled,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(32.dp)
+                        .background(colors.background, RoundedCornerShape(6.dp)).clearAndSetSemantics { },
+                )
             }
         }
         if (multiImage) {

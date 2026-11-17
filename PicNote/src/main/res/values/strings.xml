@@ -58,9 +58,10 @@
     <string name="delete_chapter_message">Delete only chapter title %1$s? The following nodes will remain.</string>
     <string name="delete_node_message">Delete this node, its text, and %1$d image references? This cannot be undone.</string>
     <string name="merge_nodes">Merge nodes</string>
-    <string name="merge_nodes_message">Merge %1$s (%2$d images) and %3$s (%4$d images)?\nText and images will remain in this order, at the position of %1$s.</string>
+    <string name="merge_nodes_message">Merge nodes %1$s (%2$d images in total)?\nText and images will remain in document order, at the position of node %3$s.</string>
     <string name="merge_nodes_changed">The nodes changed. Cancel and select them again.</string>
     <string name="merge">Merge</string>
+    <string name="merge_selected_count">Merge (%1$d)</string>
     <string name="insert_before">Insert node</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
@@ -138,8 +139,8 @@
     <string name="error_fixed_node_delete">Title and main introduction cannot be deleted</string>
     <string name="error_fixed_node_move">Title and main introduction cannot be moved</string>
     <string name="error_move_before_fixed">Cannot move before the title or main introduction</string>
-    <string name="error_select_two_body_nodes">Select two different body nodes</string>
-    <string name="error_merge_nodes_changed">The nodes changed. Select two body nodes again.</string>
+    <string name="error_select_body_nodes">Select at least two different body nodes</string>
+    <string name="error_merge_nodes_changed">The nodes changed. Select the body nodes again.</string>
     <string name="error_invalid_image_direction">Invalid image move direction</string>
     <string name="error_image_deleted">Image deleted</string>
     <string name="error_image_at_edge">Image is already at the end</string>

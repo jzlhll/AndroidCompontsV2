@@ -58,9 +58,10 @@
     <string name="delete_chapter_message">僅刪除章節標題「%1$s」，其後的節點將保留。</string>
     <string name="delete_node_message">將刪除此節點的文字和 %1$d 張圖片引用，無法恢復。</string>
     <string name="merge_nodes">合併節點</string>
-    <string name="merge_nodes_message">將合併 %1$s（%2$d 張圖片）與 %3$s（%4$d 張圖片）。\n文字和圖片均按 %1$s、%3$s 的順序保留，保留 %1$s 的位置。</string>
+    <string name="merge_nodes_message">將合併節點 %1$s（共 %2$d 張圖片）。\n文字和圖片均按文檔原順序保留，保留節點 %3$s 的位置。</string>
     <string name="merge_nodes_changed">節點已變化，請取消後重新選擇。</string>
     <string name="merge">合併</string>
+    <string name="merge_selected_count">合併（%1$d）</string>
     <string name="insert_before">插入節點</string>
     <string name="move_up">上移</string>
     <string name="move_down">下移</string>
@@ -138,8 +139,8 @@
     <string name="error_fixed_node_delete">標題和主引言不能刪除</string>
     <string name="error_fixed_node_move">標題和主引言不能移動</string>
     <string name="error_move_before_fixed">不能移動到標題或主引言之前</string>
-    <string name="error_select_two_body_nodes">請選擇兩個不同的正文節點</string>
-    <string name="error_merge_nodes_changed">合併節點已變化，請重新選擇兩個正文節點</string>
+    <string name="error_select_body_nodes">請選擇至少兩個不同的正文節點</string>
+    <string name="error_merge_nodes_changed">合併節點已變化，請重新選擇正文節點</string>
     <string name="error_invalid_image_direction">圖片移動方向無效</string>
     <string name="error_image_deleted">圖片已刪除</string>
     <string name="error_image_at_edge">圖片已在邊界位置</string>

@@ -280,20 +280,20 @@ class DocumentRepository(private val context: Context, private val database: Pic
         else dao.setSortKey(order[index], key)
     }
 
-    suspend fun mergeNodes(documentId: String, firstId: String, secondId: String): Saved<String> = mutate(documentId) {
-        require(firstId != secondId) { Globals.app.getString(R.string.error_select_two_body_nodes) }
+    suspend fun mergeNodes(documentId: String, nodeIds: List<String>): Saved<String> = mutate(documentId) {
+        val ids = nodeIds.toSet()
+        require(ids.size >= 2 && ids.size == nodeIds.size) { Globals.app.getString(R.string.error_select_body_nodes) }
         val content = snapshot(documentId)
-        val selected = content.nodes.filter { it.node.id == firstId || it.node.id == secondId }
-        require(selected.size == 2 && selected.all { it.node.kind == "body" }) { Globals.app.getString(R.string.error_merge_nodes_changed) }
+        val selected = content.nodes.filter { it.node.id in ids }
+        require(selected.size == ids.size && selected.all { it.node.kind == "body" }) { Globals.app.getString(R.string.error_merge_nodes_changed) }
         // 以当前文档顺序为准，先转移引用，再删除较后节点，避免级联删除图片。
-        val earlier = selected[0]
-        val later = selected[1]
+        val earlier = selected.first()
         val body = selected.map { it.node.bodyMarkdown }.filter { it.isNotBlank() }.joinToString("\n")
         dao.updateNode(earlier.node.id, "body", body, "")
-        dao.putImages((earlier.images + later.images).mapIndexed { index, image ->
+        dao.putImages(selected.flatMap { it.images }.mapIndexed { index, image ->
             image.copy(nodeId = earlier.node.id, sortIndex = index)
         })
-        dao.deleteNode(later.node.id)
+        selected.drop(1).forEach { dao.deleteNode(it.node.id) }
         earlier.node.id
     }
 
