@@ -42,7 +42,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 data class Saved<T>(val value: T, val mirrorFailed: Boolean = false)
-data class ImageDraft(val existing: NodeImageEntity? = null, val prepared: PreparedImage? = null, val id: String = existing?.id ?: UUID.randomUUID().toString())
+data class ImageDraft(val existing: NodeImageEntity? = null, val prepared: PreparedImage? = null, val id: String = existing?.id ?: UUID.randomUUID().toString(), val pendingRemoval: Boolean = false)
 data class HomeDocuments(val documents: List<DocumentSummary>, val content: DocumentContent?)
 
 /** 串行维护文档结构、WebP 副本、源 URI 映射与可重建的 Markdown 镜像。 */

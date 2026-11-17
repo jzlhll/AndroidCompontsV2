@@ -11,6 +11,9 @@ import androidx.core.content.ContextCompat
 import androidx.room.withTransaction
 import com.allan.picnote.data.PicNoteDatabase
 import com.allan.picnote.data.entity.*
+import com.allan.picnote.R
+import com.au.module_android.Globals
+import com.au.module_android.utils.withIOThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -57,6 +60,31 @@ class MediaScanner(private val context: Context, private val database: PicNoteDa
         }
     }
 
+    suspend fun ignoreBatch(uris: List<String>) = withIOThread {
+        val consumed = uris.toSet()
+        database.withTransaction {
+            uris.distinct().chunked(900).forEach { dao.consumePending(it) }
+            val remaining = dao.changes().filter { it.uri !in consumed }
+            dao.clearChanges()
+            dao.putChanges(remaining)
+        }
+    }
+
+    suspend fun deletionBatch(images: List<PendingMediaEntity>): MediaDeletionBatch = withIOThread {
+        check(photoAccess(context) == PhotoAccess.Full) { Globals.app.getString(R.string.error_photo_access_changed) }
+        val pending = dao.pending().associateBy { it.uri }
+        check(images.all { pending[it.uri] == it }) { Globals.app.getString(R.string.pending_images_changed) }
+        val states = dao.scanStates().associateBy { it.volume }
+        val versions = images.map { it.volume }.distinct().associateWith { volume ->
+            val state = states[volume]
+            check(state != null && state.available && state.baselineValid && state.version == MediaStore.getVersion(context, volume)) {
+                Globals.app.getString(R.string.error_media_library_changed)
+            }
+            state.version
+        }
+        MediaDeletionBatch(images, versions)
+    }
+
     suspend fun previousSummary(): ScanSummary? = withContext(Dispatchers.IO) {
         val states = dao.scanStates().filter { it.available && it.baselineValid }
         if (states.isEmpty()) null else {
@@ -67,19 +95,15 @@ class MediaScanner(private val context: Context, private val database: PicNoteDa
 
     private fun volumes(): Set<String> = MediaStore.getExternalVolumeNames(context)
 
-    private fun version(volume: String): String = if (Build.VERSION.SDK_INT >= 30) {
-        MediaStore.getVersion(context, volume)
-    } else MediaStore.getVersion(context)
-
     suspend fun scan(): ScanSummary = withContext(Dispatchers.IO) {
         check(photoAccess(context) == PhotoAccess.Full) { "需要完整图片权限才能扫描" }
         val beforeVolumes = volumes()
-        val versions = beforeVolumes.associateWith { version(it) }
+        val versions = beforeVolumes.associateWith { MediaStore.getVersion(context, it) }
         val queried = beforeVolumes.associateWith { queryVolume(it) }
         currentCoroutineContext().ensureActive()
         fun validate() {
             check(photoAccess(context) == PhotoAccess.Full) { "图片权限已变化，请重新授权" }
-            check(volumes() == beforeVolumes && beforeVolumes.all { version(it) == versions[it] }) { "图片库已变化，下次进入时重试" }
+            check(volumes() == beforeVolumes && beforeVolumes.all { MediaStore.getVersion(context, it) == versions[it] }) { "图片库已变化，下次进入时重试" }
         }
         validate()
         database.withTransaction {

@@ -79,6 +79,11 @@
     <string name="image_actions">圖片 %1$d 的操作</string>
     <string name="replace_image">替換</string>
     <string name="remove_image">移除</string>
+    <string name="restore_image">取消移除圖片</string>
+    <string name="download_image">下載圖片</string>
+    <string name="show_image_actions">顯示圖片操作</string>
+    <string name="image_downloaded">圖片已儲存至相簿</string>
+    <string name="error_download_image">圖片儲存失敗，請重試</string>
     <string name="introduction_optional">引言（可選）</string>
     <string name="text_content">文字內容</string>
     <string name="note">備註</string>
@@ -164,4 +169,22 @@
     <string name="error_media_library_changed">圖片庫已變化，下次進入時重試</string>
     <string name="error_read_image_list">無法讀取圖片列表，請重試</string>
     <string name="follow_system">跟隨系統</string>
+    <string name="import_mode">加入模式</string>
+    <string name="import_mode_current">加入模式：%1$s</string>
+    <string name="import_mode_add_only">僅加入</string>
+    <string name="import_mode_delete_selected">加入後刪除原圖</string>
+    <string name="import_mode_delete_batch">加入並刪除本批全部</string>
+    <string name="import_mode_add_only_description">將選取的待選圖片儲存到應用程式，保留系統相簿中的圖片。</string>
+    <string name="import_mode_delete_selected_description">將選取的待選圖片儲存到應用程式後，請求刪除這些圖片在系統相簿中的原圖。未選取的圖片保留。</string>
+    <string name="import_mode_delete_batch_description">僅儲存選取的待選圖片，成功後請求刪除目前整批系統圖片，包含未選取的原始截圖及裁切圖。每次加入前都會再次確認。</string>
+    <string name="import_delete_batch_title">加入並刪除本批全部？</string>
+    <string name="import_delete_batch_message">將儲存選取的 %1$d 張圖片，成功後請求刪除本批全部 %2$d 張系統圖片，包含未選取項目。未選取的圖片不會儲存到應用程式。是否繼續？</string>
+    <string name="import_add_and_delete">加入並刪除</string>
+    <string name="error_read_import_mode">無法讀取加入模式，已使用僅加入</string>
+    <string name="error_save_import_mode">無法儲存加入模式，已恢復原模式</string>
+    <string name="error_import_mode_loading">正在載入加入模式，請稍後重試</string>
+    <string name="error_full_access_import_mode">待選圖片的加入模式需要完整圖片權限</string>
+    <string name="import_saved_delete_completed">已儲存到應用程式，系統相簿圖片已清理</string>
+    <string name="import_saved_delete_cancelled">已儲存到應用程式，未完成全部系統相簿刪除</string>
+    <string name="import_saved_delete_failed">已儲存到應用程式，系統相簿圖片刪除失敗</string>
 </resources>

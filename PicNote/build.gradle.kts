@@ -10,7 +10,7 @@ android {
     compileSdk = gradle.extra["compileSdk"] as Int
     defaultConfig {
         applicationId = "com.allan.picnote"
-        minSdk = gradle.extra["minSdk"] as Int
+        minSdk = 31
         targetSdk = gradle.extra["targetSdk"] as Int
         versionCode = 1
         versionName = "0.1.0"

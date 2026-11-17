@@ -12,8 +12,10 @@ import com.allan.picnote.data.PicNoteDatabase
 import com.allan.picnote.data.PermissionPreferences
 import com.allan.picnote.data.AppearancePreferences
 import com.allan.picnote.data.NodeGuidePreferences
+import com.allan.picnote.data.ImportModePreferences
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.media.MediaScanner
+import com.allan.picnote.media.MediaDeletion
 import com.allan.picnote.media.ScrollThumbnailFetcher
 import com.au.module_android.CommonInitApplication
 import com.au.module_android.init.GlobalBackgroundCallback
@@ -34,9 +36,11 @@ class PicNoteApplication : CommonInitApplication(), SingletonImageLoader.Factory
     val database by lazy { Room.databaseBuilder(this, PicNoteDatabase::class.java, "picnote.db").fallbackToDestructiveMigration(dropAllTables = true).build() }
     val documents by lazy { DocumentRepository(this, database) }
     val scanner by lazy { MediaScanner(this, database) }
+    val mediaDeletion by lazy { MediaDeletion(this) }
     val permissionPreferences by lazy { PermissionPreferences(this) }
     val appearancePreferences by lazy { AppearancePreferences(this) }
     val nodeGuidePreferences by lazy { NodeGuidePreferences(this) }
+    val importModePreferences by lazy { ImportModePreferences(this) }
 
     override fun config() = FirstInitialConfig(tag = "PicNote")
 

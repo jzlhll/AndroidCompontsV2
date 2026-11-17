@@ -12,14 +12,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,7 +78,7 @@ fun EditorScreen(
     val valid = when {
         creatingDocument || titleNode || chapter -> state.title.trim().isNotEmpty()
         introduction -> state.fixed || state.body.isNotBlank()
-        else -> state.body.isNotBlank() || state.images.isNotEmpty()
+        else -> state.body.isNotBlank() || state.images.any { !it.pendingRemoval }
     }
     val save = { if (route.nodeId != null && !state.dirty) onBack() else viewModel.save() }
     val editorTitle = stringResource(when {
@@ -146,26 +146,20 @@ fun EditorScreen(
                                 modifier = Modifier.size(imageActionSize)) {
                                 Icon(Icons.Default.KeyboardArrowDown, stringResource(R.string.move_down))
                             }
-                            Box {
-                                var menu by rememberSaveable { mutableStateOf(false) }
-                                val imageActionsDescription = stringResource(R.string.image_actions, index + 1)
-                                ImageIconButton(onClick = { menu = true }, enabled = editable,
-                                    modifier = Modifier.size(imageActionSize).semantics { contentDescription = imageActionsDescription }) { Text("⋯") }
-                                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.replace_image)) }, enabled = editable, onClick = {
-                                        menu = false
-                                        if (replaceImageId == null) {
-                                            replaceImageId = draft.id
-                                            try { replacer.launch(maxItems = 1) }
-                                            catch (e: CancellationException) { replaceImageId = null; throw e }
-                                            catch (e: Exception) { replaceImageId = null; viewModel.imagePickerFailed(e) }
-                                        }
-                                    })
-                                    DropdownMenuItem(text = { Text(stringResource(R.string.remove_image)) }, enabled = editable, onClick = {
-                                        menu = false
-                                        viewModel.removeImage(draft.id)
-                                    })
+                            ImageIconButton(onClick = {
+                                if (replaceImageId == null) {
+                                    replaceImageId = draft.id
+                                    try { replacer.launch(maxItems = 1) }
+                                    catch (e: CancellationException) { replaceImageId = null; throw e }
+                                    catch (e: Exception) { replaceImageId = null; viewModel.imagePickerFailed(e) }
                                 }
+                            }, enabled = editable, modifier = Modifier.size(imageActionSize)) {
+                                Icon(Icons.Default.Refresh, stringResource(R.string.replace_image))
+                            }
+                            ImageIconButton(onClick = { viewModel.toggleImageRemoval(draft.id) }, enabled = editable,
+                                modifier = Modifier.size(imageActionSize),
+                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) {
+                                Icon(Icons.Default.Delete, stringResource(if (draft.pendingRemoval) R.string.restore_image else R.string.remove_image))
                             }
                         }
                         Box(Modifier.weight(1f)
@@ -174,6 +168,9 @@ fun EditorScreen(
                             .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(2.dp))) {
                             LocalImage(model, "图片 ${index + 1}", Modifier.fillMaxWidth().aspectRatio(ratio), cacheKey = draft.id,
                                 onSize = { width, height -> if (width > 0 && height > 0) ratio = width.toFloat() / height })
+                            if (draft.pendingRemoval) {
+                                Box(Modifier.matchParentSize().background(Color.White.copy(alpha = 0.5f), RoundedCornerShape(2.dp)))
+                            }
                         }
                     }
                 }

@@ -50,11 +50,13 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.R
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.NodeGuideKind
+import com.allan.picnote.data.ImportMode
 import com.allan.picnote.logEx
 import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.photoAccess
 import com.allan.picnote.media.photoPermissions
 import com.allan.picnote.ui.components.CreateDocumentButton
+import com.allan.picnote.ui.components.ImportModeIcon
 import com.au.module_android.Globals
 import com.au.module_androiduiex.dialogs.ComposeBottomSheet
 import com.au.module_androiduiex.dialogs.ComposeBottomSheetToolbar
@@ -81,6 +83,7 @@ fun HomeScreen(
     onEdit: (EditRoute) -> Unit,
     onPickImages: () -> Unit,
     onCandidates: (List<String>) -> Unit,
+    onImportMode: () -> Unit,
     onAppearance: () -> Unit,
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -134,7 +137,7 @@ fun HomeScreen(
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val documentStates = rememberSaveableStateHolder()
     val scope = rememberCoroutineScope()
-    val ready = active && !state.busy && !state.loading
+    val ready = active && !state.busy && !state.loading && state.candidateImportConfirmation == null
     var more by rememberSaveable { mutableStateOf(false) }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     var ribbon by rememberSaveable { mutableStateOf(false) }
@@ -390,7 +393,8 @@ fun HomeScreen(
                                             guideNodeId = guideNodeId, guideKind = guide?.kind,
                                             guideAnchor = if (guide != null && pager.currentPage == 0) guideAnchor else null,
                                         ) else DocumentPreview(content, viewModel.repository, documentScroll, onMessage = viewModel::showMessage,
-                                            active = active && pager.currentPage == 1, bottomContentPadding = if (!useSidePanel && showMediaActions) 96.dp else 24.dp)
+                                            onDownloadImage = viewModel::downloadImage, active = active && pager.currentPage == 1, enabled = ready,
+                                            bottomContentPadding = if (!useSidePanel && showMediaActions) 96.dp else 24.dp)
                                     }
                                 }
                             }
@@ -431,12 +435,36 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(onClick = { dismiss(); viewModel.ignorePending() }, enabled = ready) { Text(stringResource(R.string.ignore)) }
                     Spacer(Modifier.weight(1f))
-                    Button(onClick = { dismiss(); onCandidates(selected); selected = emptyList() }, enabled = selected.isNotEmpty() && ready) {
+                    if (state.access == PhotoAccess.Full) {
+                        val mode = state.importMode ?: ImportMode.AddOnly
+                        val modeDescription = stringResource(R.string.import_mode_current, stringResource(importModeTitle(mode)))
+                        val modeEnabled = ready && state.importMode != null && !state.importModeSaving
+                        IconButton(onClick = { dismiss(); onImportMode() }, enabled = modeEnabled,
+                            modifier = Modifier.semantics { contentDescription = modeDescription }) {
+                            ImportModeIcon(mode, enabled = modeEnabled)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Button(onClick = { dismiss(); onCandidates(selected); selected = emptyList() },
+                        enabled = selected.isNotEmpty() && ready && state.importMode != null && !state.importModeSaving) {
                         Text(stringResource(R.string.add))
                     }
                 }
             }
         }
+    }
+    state.candidateImportConfirmation?.let { confirmation ->
+        if (active) AlertDialog(
+            onDismissRequest = viewModel::dismissCandidateImportConfirmation,
+            title = { Text(stringResource(R.string.import_delete_batch_title)) },
+            text = { Text(stringResource(R.string.import_delete_batch_message, confirmation.request.selected.size, confirmation.request.batch.size)) },
+            confirmButton = {
+                TextButton(onClick = viewModel::confirmCandidateImport, enabled = !state.busy && !state.loading) {
+                    Text(stringResource(R.string.import_add_and_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = viewModel::dismissCandidateImportConfirmation) { Text(stringResource(R.string.cancel)) } },
+        )
     }
     if (active && guide != null && guideAnchor != null && guide.documentId == document?.id) NodeGuideOverlay(
         anchor = guideAnchor, kind = guide.kind, saving = state.nodeGuideSaving, onAcknowledge = viewModel::acknowledgeNodeGuide,

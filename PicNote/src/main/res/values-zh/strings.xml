@@ -79,6 +79,11 @@
     <string name="image_actions">图片 %1$d 的操作</string>
     <string name="replace_image">替换</string>
     <string name="remove_image">移除</string>
+    <string name="restore_image">取消移除图片</string>
+    <string name="download_image">下载图片</string>
+    <string name="show_image_actions">显示图片操作</string>
+    <string name="image_downloaded">图片已保存到相册</string>
+    <string name="error_download_image">图片保存失败，请重试</string>
     <string name="introduction_optional">引言（可选）</string>
     <string name="text_content">文字内容</string>
     <string name="note">备注</string>
@@ -164,4 +169,22 @@
     <string name="error_media_library_changed">图片库已变化，下次进入时重试</string>
     <string name="error_read_image_list">无法读取图片列表，请重试</string>
     <string name="follow_system">跟随系统</string>
+    <string name="import_mode">添加模式</string>
+    <string name="import_mode_current">添加模式：%1$s</string>
+    <string name="import_mode_add_only">只添加</string>
+    <string name="import_mode_delete_selected">添加后删除原图</string>
+    <string name="import_mode_delete_batch">添加并删除本批全部</string>
+    <string name="import_mode_add_only_description">将选中的待选图片保存到应用，保留系统相册中的图片。</string>
+    <string name="import_mode_delete_selected_description">将选中的待选图片保存到应用后，请求删除这些图片在系统相册中的原图。未选中的图片保留。</string>
+    <string name="import_mode_delete_batch_description">只保存选中的待选图片，成功后请求删除当前整批系统图片，包含未选中的原截图和裁剪图。每次添加前都会再次确认。</string>
+    <string name="import_delete_batch_title">添加并删除本批全部？</string>
+    <string name="import_delete_batch_message">将保存选中的 %1$d 张图片，成功后请求删除本批全部 %2$d 张系统图片，包含未选中项。未选中的图片不会保存到应用。是否继续？</string>
+    <string name="import_add_and_delete">添加并删除</string>
+    <string name="error_read_import_mode">读取添加模式失败，已使用只添加</string>
+    <string name="error_save_import_mode">添加模式保存失败，已恢复原模式</string>
+    <string name="error_import_mode_loading">添加模式正在加载，请稍后重试</string>
+    <string name="error_full_access_import_mode">待选图片的添加模式需要完整图片权限</string>
+    <string name="import_saved_delete_completed">已保存到应用，系统相册图片已清理</string>
+    <string name="import_saved_delete_cancelled">已保存到应用，未完成全部系统相册删除</string>
+    <string name="import_saved_delete_failed">已保存到应用，系统相册图片删除失败</string>
 </resources>

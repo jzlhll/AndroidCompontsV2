@@ -2,6 +2,10 @@ package com.allan.picnote.ui
 
 import android.content.ClipData
 import android.content.Intent
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -21,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -31,6 +36,8 @@ import androidx.navigation3.ui.NavDisplay
 import com.allan.picnote.PicNoteApplication
 import com.allan.picnote.R
 import com.allan.picnote.logEx
+import com.allan.picnote.data.ImportMode
+import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.ui.theme.PicNoteTheme
 import com.au.module_android.Globals
 import com.au.module_android.utilsmedia.getUriFromFile
@@ -49,6 +56,9 @@ data object AppearanceRoute : NavKey
 
 @Serializable
 data object LanguageRoute : NavKey
+
+@Serializable
+data object ImportModeRoute : NavKey
 
 @Serializable
 data class EditRoute(
@@ -77,13 +87,12 @@ fun PicNoteApp(app: PicNoteApplication) {
     val snackbar = remember { SnackbarHostState() }
     var pickerDocumentId by rememberSaveable { mutableStateOf<String?>(null) }
     var actionAfterCreate by rememberSaveable { mutableStateOf<String?>(null) }
-    var candidatesAfterCreate by rememberSaveable { mutableStateOf(emptyList<String>()) }
     val navigateBack: () -> Unit = {
         if (backStack.size > 1) {
             focusManager.clearFocus(force = true)
             keyboard?.hide()
             actionAfterCreate = null
-            candidatesAfterCreate = emptyList()
+            home.cancelPreparedCandidateImport()
             backStack.removeLastOrNull()
         }
     }
@@ -91,6 +100,23 @@ fun PicNoteApp(app: PicNoteApplication) {
         val documentId = pickerDocumentId
         pickerDocumentId = null
         if (documentId != null && uris.isNotEmpty()) home.importImages(documentId, uris.map { it.toString() })
+    }
+    val mediaDeleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        home.completeMediaDeleteRequest(result.resultCode == Activity.RESULT_OK)
+    }
+    LifecycleResumeEffect(state.mediaDeleteRequest, homeActive) {
+        if (homeActive) home.consumeMediaDeleteRequest()?.let { sender ->
+            try {
+                mediaDeleteLauncher.launch(IntentSenderRequest.Builder(sender).build())
+            } catch (e: CancellationException) {
+                home.failMediaDeleteRequest(e)
+                throw e
+            } catch (e: Exception) {
+                logEx(throwable = e, message = "Launch system media deletion failed")
+                home.failMediaDeleteRequest(e)
+            }
+        }
+        onPauseOrDispose { }
     }
     val openPicker: (String) -> Unit = { id ->
         if (pickerDocumentId == null && backStack.lastOrNull() == HomeRoute) {
@@ -166,13 +192,17 @@ fun PicNoteApp(app: PicNoteApplication) {
                             },
                             onCandidates = { identities ->
                                 if (backStack.lastOrNull() == HomeRoute && !home.stateFlow.value.loading && !home.stateFlow.value.busy) {
-                                    val id = home.stateFlow.value.content?.document?.id
-                                    if (id == null) {
-                                        actionAfterCreate = "candidates"
-                                        candidatesAfterCreate = identities
-                                        openEditor(EditRoute())
-                                    } else home.importCandidates(id, identities)
+                                    if (home.prepareCandidateImport(identities)) {
+                                        val id = home.stateFlow.value.content?.document?.id
+                                        if (id == null) {
+                                            actionAfterCreate = "candidates"
+                                            openEditor(EditRoute())
+                                        } else home.importCandidates(id)
+                                    }
                                 }
+                            },
+                            onImportMode = {
+                                if (backStack.lastOrNull() == HomeRoute && !state.busy && state.access == PhotoAccess.Full) backStack.add(ImportModeRoute)
                             },
                             onAppearance = {
                                 if (backStack.lastOrNull() == HomeRoute) backStack.add(AppearanceRoute)
@@ -201,6 +231,14 @@ fun PicNoteApp(app: PicNoteApplication) {
                     entry<LanguageRoute> {
                         LanguageScreen(onBack = { if (backStack.lastOrNull() == LanguageRoute) navigateBack() })
                     }
+                    entry<ImportModeRoute> {
+                        ImportModeScreen(
+                            selected = state.importMode ?: ImportMode.AddOnly,
+                            onSelect = home::setImportMode,
+                            onBack = { if (backStack.lastOrNull() == ImportModeRoute) navigateBack() },
+                            enabled = state.importMode != null && !state.importModeSaving && !state.busy && state.access == PhotoAccess.Full,
+                        )
+                    }
                     entry<EditRoute> { route ->
                         val editor: EditorViewModel = viewModel(factory = EditorViewModel.Factory(home.repository, route))
                         EditorScreen(
@@ -219,11 +257,10 @@ fun PicNoteApp(app: PicNoteApplication) {
                                     if (route.documentId == null) {
                                         when (actionAfterCreate) {
                                             "picker" -> openPicker(id)
-                                            "candidates" -> home.importCandidates(id, candidatesAfterCreate)
+                                            "candidates" -> home.importCandidates(id)
                                         }
                                     }
                                     actionAfterCreate = null
-                                    candidatesAfterCreate = emptyList()
                                 }
                             },
                         )

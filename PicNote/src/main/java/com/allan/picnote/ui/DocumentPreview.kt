@@ -25,12 +25,17 @@ import android.text.style.LeadingMarginSpan
 import android.widget.TextView
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -38,10 +43,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +67,7 @@ import coil3.request.allowHardware
 import coil3.request.allowRgb565
 import coil3.request.bitmapConfig
 import com.allan.picnote.media.ScrollThumbnail
+import com.allan.picnote.R
 import com.allan.picnote.data.entity.DocumentContent
 import com.allan.picnote.data.entity.NodeImageEntity
 import com.allan.picnote.data.markdownNodes
@@ -62,6 +75,7 @@ import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.logEx
 import com.allan.picnote.ui.theme.LocalThemePalette
 import com.au.module_androiduiex.styles.ComposeTypography
+import com.au.module_androiduiex.styles.onClick
 import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.LinkResolverDef
 import io.noties.markwon.Markwon
@@ -81,8 +95,11 @@ import io.noties.markwon.image.destination.ImageDestinationProcessorRelativeToAb
 import io.noties.markwon.image.file.FileSchemeHandler
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.commonmark.node.Image
 import org.commonmark.node.Paragraph
@@ -101,6 +118,7 @@ import java.io.File
 import java.io.InputStream
 import java.util.UUID
 import kotlin.math.ceil
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun LocalImage(model: Any?, description: String, modifier: Modifier = Modifier, crop: Boolean = false, cacheKey: String? = null, onSize: ((Int, Int) -> Unit)? = null, onResult: (() -> Unit)? = null) {
@@ -202,7 +220,7 @@ private sealed interface DocumentBlock {
 private data class ParsedDocument(val blocks: List<DocumentBlock>, val error: String? = null)
 
 @Composable
-fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, scroll: LazyListState, onMessage: (String) -> Unit, modifier: Modifier = Modifier, active: Boolean = true, bottomContentPadding: Dp = 24.dp) {
+fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, scroll: LazyListState, onMessage: (String) -> Unit, onDownloadImage: (String) -> Unit, modifier: Modifier = Modifier, active: Boolean = true, enabled: Boolean = true, bottomContentPadding: Dp = 24.dp) {
     val context = LocalContext.current
     val showMessage by rememberUpdatedState(onMessage)
     val base = remember(content.document.id, repository) { Uri.fromFile(File(repository.documentDirectory(content.document.id), "doc.md")).toString() }
@@ -372,9 +390,49 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                 } else MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() }, blockModifier)
             }
             else if (block is DocumentBlock.Picture) {
-                var ratio by rememberSaveable(block.destination) { mutableStateOf(block.image?.let { it.width.toFloat() / it.height } ?: 1f) }
-                LocalImage(Uri.parse(block.destination), block.description, blockModifier.aspectRatio(ratio).clip(RoundedCornerShape(8.dp)),
-                    onSize = { width, height -> if (width > 0 && height > 0) ratio = width.toFloat() / height })
+                DocumentImage(block, enabled = active && enabled && block.image != null,
+                    onDownload = { block.image?.let { onDownloadImage(it.id) } }, modifier = blockModifier)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DocumentImage(block: DocumentBlock.Picture, enabled: Boolean, onDownload: () -> Unit, modifier: Modifier = Modifier) {
+    var ratio by rememberSaveable(block.destination) { mutableStateOf(block.image?.let { it.width.toFloat() / it.height } ?: 1f) }
+    val controlsAlpha = remember(block.destination) { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    var visibilityJob by remember(block.destination) { mutableStateOf<Job?>(null) }
+    val fadingVisible by remember(controlsAlpha) { derivedStateOf { controlsAlpha.value > 0f } }
+    val downloadDescription = stringResource(R.string.download_image)
+    LaunchedEffect(enabled, controlsAlpha) {
+        if (!enabled) {
+            visibilityJob?.cancel()
+            controlsAlpha.snapTo(0f)
+        }
+    }
+    DisposableEffect(controlsAlpha) { onDispose { visibilityJob?.cancel() } }
+    Box(modifier.aspectRatio(ratio).clip(RoundedCornerShape(8.dp))
+        .onClick(enabled = enabled, onClickLabel = stringResource(R.string.show_image_actions)) {
+            visibilityJob?.cancel()
+            visibilityJob = scope.launch {
+                controlsAlpha.animateTo(1f, tween(500))
+                delay(3000.milliseconds)
+                controlsAlpha.animateTo(0f, tween(500))
+            }
+        }.semantics {
+            customActions = if (enabled) listOf(CustomAccessibilityAction(downloadDescription) { onDownload(); true }) else emptyList()
+        }) {
+        LocalImage(Uri.parse(block.destination), block.description, Modifier.fillMaxSize(),
+            onSize = { width, height -> if (width > 0 && height > 0) ratio = width.toFloat() / height })
+        if (fadingVisible && enabled) {
+            Box(Modifier.matchParentSize().graphicsLayer { alpha = controlsAlpha.value }
+                .background(Color.Black.copy(alpha = 0.2f)))
+            IconButton(onClick = onDownload,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 6.dp, bottom = 6.dp).size(48.dp)
+                    .graphicsLayer { alpha = controlsAlpha.value },
+                colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.5f), contentColor = Color.White)) {
+                Icon(painterResource(R.drawable.ic_download), contentDescription = downloadDescription, modifier = Modifier.size(24.dp))
             }
         }
     }

@@ -79,6 +79,11 @@
     <string name="image_actions">Actions for image %1$d</string>
     <string name="replace_image">Replace</string>
     <string name="remove_image">Remove</string>
+    <string name="restore_image">Cancel image removal</string>
+    <string name="download_image">Download image</string>
+    <string name="show_image_actions">Show image actions</string>
+    <string name="image_downloaded">Image saved to gallery</string>
+    <string name="error_download_image">Cannot save the image. Try again.</string>
     <string name="introduction_optional">Introduction (optional)</string>
     <string name="text_content">Text</string>
     <string name="note">Note</string>
@@ -164,4 +169,22 @@
     <string name="error_media_library_changed">Photo library changed. Retry next time you open the app.</string>
     <string name="error_read_image_list">Cannot read the image list. Try again.</string>
     <string name="follow_system">Follow System</string>
+    <string name="import_mode">Import mode</string>
+    <string name="import_mode_current">Import mode: %1$s</string>
+    <string name="import_mode_add_only">Add only</string>
+    <string name="import_mode_delete_selected">Add, then delete originals</string>
+    <string name="import_mode_delete_batch">Add and delete the entire batch</string>
+    <string name="import_mode_add_only_description">Save selected suggested images in the app and keep all images in the system gallery.</string>
+    <string name="import_mode_delete_selected_description">After saving selected suggested images in the app, request deletion of their originals from the system gallery. Unselected images are kept.</string>
+    <string name="import_mode_delete_batch_description">Save only selected suggested images, then request deletion of the entire current batch, including unselected screenshots and cropped copies. Confirm again before each import.</string>
+    <string name="import_delete_batch_title">Add and delete the entire batch?</string>
+    <string name="import_delete_batch_message">Save %1$d selected images, then request deletion of all %2$d system images in this batch, including unselected images. Unselected images will not be saved in the app. Continue?</string>
+    <string name="import_add_and_delete">Add and delete</string>
+    <string name="error_read_import_mode">Cannot load import mode. Using Add only.</string>
+    <string name="error_save_import_mode">Cannot save import mode. Restored the previous mode.</string>
+    <string name="error_import_mode_loading">Import mode is loading. Try again shortly.</string>
+    <string name="error_full_access_import_mode">Full photo access is required for suggested image import modes</string>
+    <string name="import_saved_delete_completed">Saved in the app. System gallery images have been removed.</string>
+    <string name="import_saved_delete_cancelled">Saved in the app. System gallery deletion was not fully completed.</string>
+    <string name="import_saved_delete_failed">Saved in the app, but system gallery images could not be deleted.</string>
 </resources>

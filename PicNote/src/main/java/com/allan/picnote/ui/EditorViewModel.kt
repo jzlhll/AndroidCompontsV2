@@ -76,7 +76,8 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
     }
 
     private fun changed(draft: EditorState): EditorState = draft.copy(
-        dirty = draft.title.trim() != originalDraft.title.trim() || draft.body != originalDraft.body || draft.images != originalDraft.images,
+        dirty = draft.title.trim() != originalDraft.title.trim() || draft.body != originalDraft.body ||
+            draft.images.filterNot { it.pendingRemoval } != originalDraft.images,
     )
 
     fun setTitle(value: String) { updateDraft { it.copy(title = value) } }
@@ -86,7 +87,13 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
         mutableStateFlow.update { it.copy(error = "无法打开系统相册，请重试") }
     }
     fun addImages(uris: List<String>) { prepareImages(uris) }
-    fun removeImage(imageId: String) { updateDraft { it.copy(images = it.images.filter { image -> image.id != imageId }) } }
+    fun toggleImageRemoval(imageId: String) {
+        updateDraft { draft ->
+            draft.copy(images = draft.images.map { image ->
+                if (image.id == imageId) image.copy(pendingRemoval = !image.pendingRemoval) else image
+            })
+        }
+    }
     fun replaceImage(imageId: String, uri: String) {
         if (stateFlow.value.images.none { it.id == imageId }) return
         prepareImages(listOf(uri), imageId)
@@ -132,7 +139,7 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
             try {
                 val result = if (route.documentId == null) repository.create(draft.title, draft.body)
                 else repository.saveNode(route.documentId, route.nodeId, route.anchorId, draft.kind,
-                    draft.title, draft.body, draft.images)
+                    draft.title, draft.body, draft.images.filterNot { it.pendingRemoval })
                 mutableStateFlow.update { it.copy(busy = false, dirty = false, savedId = result.value, mirrorFailed = result.mirrorFailed) }
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {

@@ -1,23 +1,29 @@
 package com.allan.picnote.ui
 
 import android.os.SystemClock
+import android.content.IntentSender
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.allan.picnote.PicNoteApplication
+import com.allan.picnote.R
 import com.allan.picnote.logEx
 import com.allan.picnote.logd
 import com.allan.picnote.data.PermissionHistory
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.NodeGuideKind
+import com.allan.picnote.data.ImportMode
 import com.allan.picnote.data.entity.*
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.data.repositories.Saved
 import com.allan.picnote.media.*
 import com.au.module_android.utils.withIOThread
+import com.au.module_android.Globals
+import com.au.module_android.utilsmedia.saveFileToPublicDirectory
 import com.au.module_androidui.toast.ToastUtil
 import com.au.module_androiduiex.styles.ComposeTheme
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
@@ -30,6 +36,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.coroutineContext
 import java.io.File
+
+data class CandidateImportRequest(val selected: List<PendingMediaEntity>, val batch: List<PendingMediaEntity>, val mode: ImportMode)
+data class CandidateImportConfirmation(val documentId: String, val request: CandidateImportRequest)
 
 data class HomeState(
     val loading: Boolean = true,
@@ -54,6 +63,10 @@ data class HomeState(
     val themeSaving: Boolean = false,
     val nodeGuide: NodeGuide? = null,
     val nodeGuideSaving: Boolean = false,
+    val importMode: ImportMode? = null,
+    val importModeSaving: Boolean = false,
+    val candidateImportConfirmation: CandidateImportConfirmation? = null,
+    val mediaDeleteRequest: IntentSender? = null,
 )
 
 /** 连接首页操作与本地存储，真实前台检查按次排队，写操作先等待旧检查退出。 */
@@ -65,8 +78,20 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
     private var reloadJob: Job? = null
     private val pendingForegroundChecks = ArrayDeque<Int>()
     private val mirrorFailures = mutableSetOf<String>()
+    private var preparedCandidateImport: CandidateImportRequest? = null
+    private var mediaDeleteResult: CompletableDeferred<Boolean>? = null
 
     init {
+        viewModelScope.launch {
+            try {
+                val mode = app.importModePreferences.readMode()
+                mutableStateFlow.update { it.copy(importMode = mode) }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                logEx(throwable = e, message = "Read import mode failed")
+                mutableStateFlow.update { it.copy(importMode = ImportMode.AddOnly, message = Globals.app.getString(R.string.error_read_import_mode)) }
+            }
+        }
         viewModelScope.launch {
             try {
                 val theme = app.appearancePreferences.readTheme()
@@ -161,6 +186,28 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
             catch (e: Exception) {
                 logEx(throwable = e, message = "Save appearance failed")
                 mutableStateFlow.update { it.copy(theme = previous, themeSaving = false, message = "外观保存失败，已恢复原主题") }
+            }
+        }
+    }
+
+    fun setImportMode(mode: ImportMode) {
+        val state = stateFlow.value
+        val previous = state.importMode ?: return
+        if (state.busy || state.importModeSaving || previous == mode) return
+        if (photoAccess(app) != PhotoAccess.Full) {
+            showMessage(Globals.app.getString(R.string.error_full_access_import_mode))
+            return
+        }
+        mutableStateFlow.update { it.copy(importMode = mode, importModeSaving = true) }
+        viewModelScope.launch {
+            try {
+                app.importModePreferences.saveMode(mode)
+                mutableStateFlow.update { it.copy(importModeSaving = false) }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                logEx(throwable = e, message = "Save import mode failed")
+                mutableStateFlow.update { it.copy(importMode = previous, importModeSaving = false,
+                    message = Globals.app.getString(R.string.error_save_import_mode)) }
             }
         }
     }
@@ -356,25 +403,106 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         }
     }
 
-    fun importImages(documentId: String, uris: List<String>, candidateUris: List<String> = emptyList(), clearPending: Boolean = false) = operation(waitForLoading = true) {
-        val result = repository.importImages(documentId, uris, candidateUris)
-        // 与“忽略”一致：本次新增整体并入基线，确认后不再重复提示。
-        if (clearPending) app.scanner.ignoreAll()
+    fun importImages(documentId: String, uris: List<String>) = operation(waitForLoading = true) {
+        val result = repository.importImages(documentId, uris, emptyList())
         reload(documentId)
         ToastUtil.toastOnTop("已添加 ${result.value} 个图片节点")
         saved(documentId, result)
     }
 
-    fun importCandidates(documentId: String, uris: List<String>) {
-        val candidates = stateFlow.value.pending.associateBy { it.uri }
-        val selected = uris.mapNotNull { candidates[it] }
-        if (selected.size != uris.size) {
-            showMessage("待选图片已变化，请重新选择")
+    fun prepareCandidateImport(uris: List<String>): Boolean {
+        val state = stateFlow.value
+        if (state.busy || state.loading || state.importModeSaving || state.candidateImportConfirmation != null) return false
+        if (photoAccess(app) != PhotoAccess.Full) {
+            showMessage(Globals.app.getString(R.string.error_full_access_import_mode))
+            return false
+        }
+        val mode = state.importMode ?: run {
+            showMessage(Globals.app.getString(R.string.error_import_mode_loading))
+            return false
+        }
+        val batch = state.pending.toList()
+        val candidates = batch.associateBy { it.uri }
+        val selected = uris.distinct().mapNotNull { candidates[it] }
+        if (selected.isEmpty() || selected.size != uris.size) {
+            showMessage(Globals.app.getString(R.string.pending_images_changed))
+            return false
+        }
+        preparedCandidateImport = CandidateImportRequest(selected, batch, mode)
+        return true
+    }
+
+    fun cancelPreparedCandidateImport() { preparedCandidateImport = null }
+
+    fun importCandidates(documentId: String) {
+        val request = preparedCandidateImport
+        preparedCandidateImport = null
+        if (request == null) {
+            showMessage(Globals.app.getString(R.string.pending_images_changed))
             return
         }
-        if (selected.isEmpty()) return
-        importImages(documentId, selected.map { it.uri }, selected.map { it.uri }, clearPending = true)
+        val confirmation = CandidateImportConfirmation(documentId, request)
+        if (request.mode == ImportMode.DeleteBatch) {
+            mutableStateFlow.update { it.copy(candidateImportConfirmation = confirmation) }
+        } else performCandidateImport(confirmation)
     }
+
+    fun dismissCandidateImportConfirmation() {
+        mutableStateFlow.update { it.copy(candidateImportConfirmation = null) }
+    }
+
+    fun confirmCandidateImport() {
+        val confirmation = stateFlow.value.candidateImportConfirmation ?: return
+        mutableStateFlow.update { it.copy(candidateImportConfirmation = null) }
+        performCandidateImport(confirmation)
+    }
+
+    private fun performCandidateImport(confirmation: CandidateImportConfirmation) = operation(waitForLoading = true) {
+        val request = confirmation.request
+        val current = app.scanner.pending().associateBy { it.uri }
+        check(request.selected.all { current[it.uri] == it }) { Globals.app.getString(R.string.pending_images_changed) }
+        val deletion = if (request.mode == ImportMode.AddOnly) null else app.scanner.deletionBatch(
+            if (request.mode == ImportMode.DeleteBatch) request.batch else request.selected)
+        val selected = request.selected.map { it.uri }
+        val result = repository.importImages(confirmation.documentId, selected, selected)
+        app.scanner.ignoreBatch(request.batch.map { it.uri })
+        reload(confirmation.documentId)
+        ToastUtil.toastOnTop(Globals.app.getString(R.string.imported_image_nodes, result.value))
+        saved(confirmation.documentId, result)
+        if (deletion != null) {
+            try {
+                val completed = app.mediaDeletion.delete(deletion, ::requestMediaDeletion)
+                showMessage(Globals.app.getString(if (completed) R.string.import_saved_delete_completed else R.string.import_saved_delete_cancelled))
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                logEx(throwable = e, message = "Delete imported system images failed")
+                showMessage(Globals.app.getString(R.string.import_saved_delete_failed))
+            }
+        }
+    }
+
+    private suspend fun requestMediaDeletion(sender: IntentSender): Boolean {
+        val result = CompletableDeferred<Boolean>()
+        check(mediaDeleteResult == null)
+        mediaDeleteResult = result
+        mutableStateFlow.update { it.copy(mediaDeleteRequest = sender) }
+        try {
+            return result.await()
+        } finally {
+            mediaDeleteResult = null
+            mutableStateFlow.update { it.copy(mediaDeleteRequest = null) }
+        }
+    }
+
+    fun consumeMediaDeleteRequest(): IntentSender? {
+        val sender = stateFlow.value.mediaDeleteRequest ?: return null
+        mutableStateFlow.update { it.copy(mediaDeleteRequest = null) }
+        return sender
+    }
+
+    fun completeMediaDeleteRequest(approved: Boolean) { mediaDeleteResult?.complete(approved) }
+
+    fun failMediaDeleteRequest(error: Exception) { mediaDeleteResult?.completeExceptionally(error) }
 
     fun ignorePending() = operation {
         app.scanner.ignoreAll()
@@ -385,6 +513,24 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
     fun exportFull(id: String? = stateFlow.value.content?.document?.id) = exportWith(id, repository::exportFull)
 
     fun exportWeb(id: String? = stateFlow.value.content?.document?.id) = exportWith(id, repository::exportWeb)
+
+    fun downloadImage(imageId: String) {
+        val image = stateFlow.value.content?.nodes?.flatMap { it.images }?.firstOrNull { it.id == imageId } ?: return
+        operation {
+            try {
+                val saved = withIOThread {
+                    saveFileToPublicDirectory(app, repository.imageFile(image.documentId, image.fileName),
+                        deleteOldFile = false, path = "Bambootes")
+                }
+                checkNotNull(saved)
+                showMessage(Globals.app.getString(R.string.image_downloaded))
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                logEx(throwable = e, message = "Download image failed imageId=$imageId")
+                showMessage(Globals.app.getString(R.string.error_download_image))
+            }
+        }
+    }
 
     private fun exportWith(id: String?, produce: suspend (String) -> File) {
         if (id == null) return
