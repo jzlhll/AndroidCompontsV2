@@ -7,6 +7,10 @@
     <string name="appearance">Appearance</string>
     <string name="settings">Settings</string>
     <string name="language">Language</string>
+    <string name="clear_cache">Clear cache</string>
+    <string name="cache_cleared">Cache cleared</string>
+    <string name="cache_clear_incomplete">Some cache files could not be cleared. Try again later.</string>
+    <string name="error_clear_cache">Cannot clear cache. Try again.</string>
     <string name="delete_document">Delete document</string>
     <string name="duplicate_document">Duplicate document</string>
     <string name="export_document">Export document</string>

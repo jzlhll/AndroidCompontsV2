@@ -32,7 +32,9 @@ import java.util.Locale
 fun SettingsScreen(
     onBack: () -> Unit,
     onLanguage: () -> Unit,
+    onClearCache: () -> Unit,
     modifier: Modifier = Modifier,
+    busy: Boolean = false,
 ) {
     var languageTag by remember { mutableStateOf(AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag().orEmpty()) }
     LifecycleResumeEffect(Unit) {
@@ -40,7 +42,7 @@ fun SettingsScreen(
         onPauseOrDispose { }
     }
     val language = if (languageTag.isEmpty()) null else Locale.forLanguageTag(languageTag)
-    SecondaryPageScaffold(stringResource(R.string.settings), onBack, stringResource(R.string.back), modifier) {
+    SecondaryPageScaffold(stringResource(R.string.settings), onBack, stringResource(R.string.back), modifier, loading = busy) {
         LazyColumn(Modifier.fillMaxSize()) {
             item {
                 ListItem(
@@ -51,6 +53,15 @@ fun SettingsScreen(
                     },
                     trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
                     modifier = Modifier.clickable { onLanguage() },
+                )
+            }
+            item {
+                ListItem(
+                    headlineContent = {
+                        Text(stringResource(R.string.clear_cache), style = ComposeTypography.Font16,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (busy) 0.38f else 1f))
+                    },
+                    modifier = Modifier.clickable(enabled = !busy, onClick = onClearCache),
                 )
             }
         }

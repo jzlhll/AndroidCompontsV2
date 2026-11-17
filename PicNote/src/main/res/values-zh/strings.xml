@@ -7,6 +7,10 @@
     <string name="appearance">外观</string>
     <string name="settings">设置</string>
     <string name="language">语言</string>
+    <string name="clear_cache">清理缓存</string>
+    <string name="cache_cleared">缓存已清理</string>
+    <string name="cache_clear_incomplete">部分缓存未能清理，请稍后重试</string>
+    <string name="error_clear_cache">清理缓存失败，请重试</string>
     <string name="delete_document">删除文档</string>
     <string name="duplicate_document">复制文档</string>
     <string name="export_document">导出文档</string>

@@ -13,15 +13,20 @@ import com.allan.picnote.data.PermissionPreferences
 import com.allan.picnote.data.AppearancePreferences
 import com.allan.picnote.data.NodeGuidePreferences
 import com.allan.picnote.data.ImportModePreferences
+import com.allan.picnote.data.CleanupResult
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.media.MediaScanner
 import com.allan.picnote.media.MediaDeletion
 import com.allan.picnote.media.ScrollThumbnailFetcher
 import com.au.module_android.CommonInitApplication
+import com.au.module_android.Globals
 import com.au.module_android.init.GlobalBackgroundCallback
 import com.au.module_android.log.logDebugEnabled
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import java.util.UUID
 import java.io.File
 
@@ -32,6 +37,7 @@ class PicNoteApplication : CommonInitApplication(), SingletonImageLoader.Factory
     var foregroundOrdinal: Int = 0
         private set
     private val foregroundEvents = Channel<Int>(Channel.UNLIMITED)
+    private val startupCleanup = CompletableDeferred<CleanupResult>()
     val foregroundEntries = foregroundEvents.receiveAsFlow()
     val database by lazy { Room.databaseBuilder(this, PicNoteDatabase::class.java, "picnote.db").fallbackToDestructiveMigration(dropAllTables = true).build() }
     val documents by lazy { DocumentRepository(this, database) }
@@ -43,6 +49,8 @@ class PicNoteApplication : CommonInitApplication(), SingletonImageLoader.Factory
     val importModePreferences by lazy { ImportModePreferences(this) }
 
     override fun config() = FirstInitialConfig(tag = "PicNote")
+
+    suspend fun awaitStartupCleanup(): CleanupResult = startupCleanup.await()
 
     override fun newImageLoader(context: Context): ImageLoader = ImageLoader.Builder(context)
         .components { add(ScrollThumbnailFetcher.Factory()) }
@@ -67,6 +75,19 @@ class PicNoteApplication : CommonInitApplication(), SingletonImageLoader.Factory
                 if (!isBackground) {
                     foregroundOrdinal++
                     logd("event=foreground_enter startupId=$startupId pid=$processId foregroundOrdinal=$foregroundOrdinal")
+                    if (foregroundOrdinal == 1) {
+                        Globals.backgroundScope.launch {
+                            try {
+                                startupCleanup.complete(documents.cleaner.clean(clearAllCache = false))
+                            } catch (e: CancellationException) {
+                                startupCleanup.cancel(e)
+                                throw e
+                            } catch (e: Exception) {
+                                logEx(throwable = e, message = "Startup cleanup failed")
+                                startupCleanup.complete(CleanupResult(failedTasks = setOf("startup")))
+                            }
+                        }
+                    }
                     foregroundEvents.trySend(foregroundOrdinal)
                 } else logd("event=background startupId=$startupId pid=$processId foregroundOrdinal=$foregroundOrdinal")
             }

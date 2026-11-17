@@ -7,6 +7,10 @@
     <string name="appearance">外觀</string>
     <string name="settings">設定</string>
     <string name="language">語言</string>
+    <string name="clear_cache">清理快取</string>
+    <string name="cache_cleared">快取已清理</string>
+    <string name="cache_clear_incomplete">部分快取無法清理，請稍後重試</string>
+    <string name="error_clear_cache">清理快取失敗，請重試</string>
     <string name="delete_document">刪除文檔</string>
     <string name="duplicate_document">複製文檔</string>
     <string name="export_document">導出文檔</string>

@@ -8,6 +8,7 @@ import android.util.Base64
 import androidx.room.withTransaction
 import com.allan.picnote.R
 import com.allan.picnote.data.PicNoteDatabase
+import com.allan.picnote.data.PicNoteCleaner
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.WelcomeDocumentTemplate
 import com.allan.picnote.data.entity.*
@@ -55,6 +56,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
     private val activeDrafts = ConcurrentHashMap.newKeySet<String>()
     private val preparation = ImagePreparation(context)
     private val preferences = context.getSharedPreferences("picnote", Context.MODE_PRIVATE)
+    val cleaner = PicNoteCleaner(context, database, mutex, activeDrafts, ::writeMirror)
 
     fun imageFile(documentId: String, fileName: String): File = File(root, "$documentId/media/$fileName")
 
@@ -679,29 +681,6 @@ a { color: #1a73e8; }
             end += Character.charCount(codePoint)
         }
         return name.substring(0, end).trimEnd('.', '-') + ".$extension"
-    }
-
-    suspend fun cleanup(): Set<String> = withContext(Dispatchers.IO) {
-        mutex.withLock {
-            val summaries = dao.documents()
-            val documents = summaries.map { it.id }.toSet()
-            root.listFiles()?.forEach { directory ->
-                if (directory.name !in documents) directory.deleteRecursively()
-                else {
-                    cleanMedia(directory.name)
-                    File(directory, ".doc.md.tmp").delete()
-                }
-            }
-            draftRoot.listFiles()?.filter { it.name !in activeDrafts }?.forEach { it.deleteRecursively() }
-            val expiry = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
-            exportRoot.listFiles()?.filter { it.name.endsWith(".tmp") || it.lastModified() < expiry }?.forEach { it.delete() }
-            val failures = mutableSetOf<String>()
-            summaries.forEach { document ->
-                val mirror = File(root, "${document.id}/doc.md")
-                if ((!mirror.isFile || mirror.lastModified() < document.updatedAt) && !writeMirror(document.id)) failures += document.id
-            }
-            failures
-        }
     }
 
     private suspend fun cleanMedia(id: String) {

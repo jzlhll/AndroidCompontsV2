@@ -218,6 +218,8 @@ fun PicNoteApp(app: PicNoteApplication) {
                         SettingsScreen(
                             onBack = { if (backStack.lastOrNull() == SettingsRoute) navigateBack() },
                             onLanguage = { if (backStack.lastOrNull() == SettingsRoute) backStack.add(LanguageRoute) },
+                            onClearCache = home::clearCache,
+                            busy = state.loading || state.busy,
                         )
                     }
                     entry<AppearanceRoute> {

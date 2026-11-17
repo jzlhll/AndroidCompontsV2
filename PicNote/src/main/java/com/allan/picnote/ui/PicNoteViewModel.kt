@@ -115,7 +115,7 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         reloadJob = viewModelScope.launch {
             try {
                 repository.initializeWelcome()?.let { if (it.mirrorFailed) mirrorFailures.add(it.value) }
-                mirrorFailures.addAll(repository.cleanup())
+                mirrorFailures.addAll(app.awaitStartupCleanup().mirrorFailures)
                 reload()
             } catch (e: CancellationException) {
                 throw e
@@ -513,6 +513,20 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
     fun exportFull(id: String? = stateFlow.value.content?.document?.id) = exportWith(id, repository::exportFull)
 
     fun exportWeb(id: String? = stateFlow.value.content?.document?.id) = exportWith(id, repository::exportWeb)
+
+    fun clearCache() = operation {
+        try {
+            val result = repository.cleaner.clean(clearAllCache = true)
+            mirrorFailures.clear()
+            mirrorFailures.addAll(result.mirrorFailures)
+            mutableStateFlow.update { it.copy(mirrorFailed = it.content?.document?.id in mirrorFailures,
+                message = Globals.app.getString(if (result.failedTasks.isEmpty()) R.string.cache_cleared else R.string.cache_clear_incomplete)) }
+        } catch (e: CancellationException) { throw e }
+        catch (e: Exception) {
+            logEx(throwable = e, message = "Clear cache failed")
+            showMessage(Globals.app.getString(R.string.error_clear_cache))
+        }
+    }
 
     fun downloadImage(imageId: String) {
         val image = stateFlow.value.content?.nodes?.flatMap { it.images }?.firstOrNull { it.id == imageId } ?: return
