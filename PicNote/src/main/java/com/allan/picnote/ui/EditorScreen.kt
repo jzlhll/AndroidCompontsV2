@@ -1,5 +1,6 @@
 package com.allan.picnote.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,7 +34,6 @@ import com.au.module_androiduiex.landscape.SecondaryPageScaffold
 import com.au.module_androiduiex.picker.rememberComposePhotoPicker
 import com.au.module_androiduiex.styles.composeOffsetBlurShadow
 import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
-import com.au.module_androiduiex.styles.ComposeIconButton as IconButton
 import androidx.compose.material3.IconButton as ImageIconButton
 import kotlinx.coroutines.CancellationException
 
@@ -45,6 +46,7 @@ fun EditorScreen(
     onSaved: (String, Boolean) -> Unit,
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val route = viewModel.route
     val creatingDocument = route.documentId == null
     val titleNode = state.kind == "title"
@@ -92,7 +94,7 @@ fun EditorScreen(
     val canDelete = !creatingDocument && state.loaded && !state.fixed && route.nodeId != null
     val imageActionSize = 32.dp
     val imageContentStartPadding = 24.dp + imageActionSize
-    val bodyContentStartPadding = if (!creatingDocument && state.kind == "body" && state.images.isNotEmpty()) imageContentStartPadding else 24.dp
+    val bodyContentStartPadding = if (landscape && !creatingDocument && state.kind == "body" && state.images.isNotEmpty()) imageContentStartPadding else 24.dp
     SecondaryPageScaffold(
         title = editorTitle,
         onBack = close,
@@ -105,8 +107,8 @@ fun EditorScreen(
         loading = state.loading || state.busy,
         actions = {
             if (canDelete) {
-                IconButton(onClick = { deleting = true }, enabled = editable) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_node), tint = MaterialTheme.colorScheme.error)
+                TextButton(onClick = { deleting = true }, enabled = editable) {
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             }
         },
@@ -203,7 +205,7 @@ fun EditorScreen(
     if (deleting && !state.fixed) AlertDialog(
         onDismissRequest = { deleting = false }, title = { Text(stringResource(R.string.delete_node_question), color = MaterialTheme.colorScheme.error) },
         text = { Text(if (chapter) stringResource(R.string.delete_chapter_editor_message) else stringResource(R.string.delete_node_editor_message, state.savedImageCount)) },
-        confirmButton = { TextButton(onClick = { deleting = false; viewModel.deleteNode() }, enabled = editable) { Text(stringResource(R.string.delete_node), color = MaterialTheme.colorScheme.error) } },
+        confirmButton = { TextButton(onClick = { deleting = false; viewModel.deleteNode() }, enabled = editable) { Text(stringResource(R.string.confirm), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { deleting = false }) { Text(stringResource(R.string.cancel)) } },
     )
 }

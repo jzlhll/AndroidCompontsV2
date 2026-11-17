@@ -17,6 +17,7 @@
     <string name="export_full">完整導出</string>
     <string name="export_web">網頁導出</string>
     <string name="cancel">取消</string>
+    <string name="confirm">確認</string>
     <string name="save">保存</string>
     <string name="create">創建</string>
     <string name="edit">編輯</string>

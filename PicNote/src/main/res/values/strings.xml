@@ -17,6 +17,7 @@
     <string name="export_full">Full export</string>
     <string name="export_web">Web export</string>
     <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
     <string name="save">Save</string>
     <string name="create">Create</string>
     <string name="edit">Edit</string>

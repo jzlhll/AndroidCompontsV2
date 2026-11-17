@@ -238,14 +238,16 @@ fun HomeScreen(
                             CreateDocumentButton(stringResource(R.string.new_document_button),
                                 onClick = { scope.launch { drawer.close(); onCreate() } }, enabled = ready)
                         }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = { scope.launch { drawer.close(); onAppearance() } }, enabled = active && !state.themeSaving,
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 9.dp)) {
-                                Text(stringResource(R.string.appearance))
-                            }
-                            TextButton(onClick = { scope.launch { drawer.close(); onSettings() } }, enabled = active,
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 9.dp)) {
-                                Text(stringResource(R.string.settings))
+                        if (landscape) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(onClick = { scope.launch { drawer.close(); onAppearance() } }, enabled = active && !state.themeSaving,
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 9.dp)) {
+                                    Text(stringResource(R.string.appearance))
+                                }
+                                TextButton(onClick = { scope.launch { drawer.close(); onSettings() } }, enabled = active,
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 9.dp)) {
+                                    Text(stringResource(R.string.settings))
+                                }
                             }
                         }
                     }
@@ -279,6 +281,22 @@ fun HomeScreen(
                                         DropdownMenuItem(text = { Text(stringResource(R.string.delete_document), color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; deleteId = item.id })
                                     }
                                 }
+                            }
+                        }
+                    }
+                    if (!landscape) {
+                        HorizontalDivider()
+                        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).navBarInsetBaseline()) {
+                            Row(Modifier.fillMaxWidth().height(48.dp).clickable(enabled = active && !state.themeSaving) {
+                                scope.launch { drawer.close(); onAppearance() }
+                            }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Text(stringResource(R.string.appearance), color = MaterialTheme.colorScheme.primary)
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Row(Modifier.fillMaxWidth().height(48.dp).clickable(enabled = active) {
+                                scope.launch { drawer.close(); onSettings() }
+                            }, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Text(stringResource(R.string.settings), color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
