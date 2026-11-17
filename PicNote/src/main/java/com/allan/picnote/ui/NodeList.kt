@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -36,9 +37,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.LocalPinnableContainer
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onLayoutRectChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.res.painterResource
@@ -72,6 +75,7 @@ import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
 import com.au.module_androiduiex.styles.ComposeIconButton as IconButton
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.hypot
@@ -111,7 +115,10 @@ fun NodeList(
     var dragging by remember(content.document.id) { mutableStateOf<String?>(null) }
     var dragOffset by remember { mutableStateOf(Offset.Zero) }
     var dragPosition by remember { mutableStateOf(Offset.Zero) }
+    var dragPointerOffset by remember { mutableStateOf(Offset.Zero) }
+    var dragDirection by remember { mutableFloatStateOf(0f) }
     var targetId by remember { mutableStateOf<String?>(null) }
+    var viewportCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val cardCoordinates = remember(content.document.id) { mutableMapOf<String, LayoutCoordinates>() }
     val previews = rememberNodePreviews(content.nodes)
     val chapterNumbers = remember(content.nodes) {
@@ -130,9 +137,41 @@ fun NodeList(
     if (!interactive && (dragging != null || targetId != null || dragOffset != Offset.Zero)) {
         SideEffect { dragging = null; targetId = null; dragOffset = Offset.Zero }
     }
+    fun updateDragTarget() {
+        val sourceId = dragging
+        val viewport = viewportCoordinates
+        targetId = if (sourceId == null || viewport == null || !viewport.isAttached ||
+            !viewport.boundsInRoot().contains(dragPosition)
+        ) null else cardCoordinates.entries.firstOrNull { (id, coordinates) ->
+            id != sourceId && coordinates.isAttached && coordinates.boundsInRoot().contains(dragPosition)
+        }?.key
+    }
+    val autoScrollStep = with(LocalDensity.current) { 6.dp.toPx() }
+    LaunchedEffect(content.document.id, dragging, interactive, listState, autoScrollStep) {
+        val sourceId = dragging ?: return@LaunchedEffect
+        if (!interactive) return@LaunchedEffect
+        while (isActive && dragging == sourceId) {
+            withFrameNanos { }
+            if (!interactive || dragging != sourceId) break
+            updateDragTarget()
+            val viewport = viewportCoordinates ?: continue
+            val source = cardCoordinates[sourceId] ?: continue
+            if (!viewport.isAttached || !source.isAttached) continue
+            val viewportBounds = viewport.boundsInRoot()
+            val cardTop = dragPosition.y - dragPointerOffset.y
+            val cardBottom = cardTop + source.size.height
+            val scroll = when {
+                dragDirection < 0f && cardTop < viewportBounds.top && listState.canScrollBackward -> -autoScrollStep
+                dragDirection > 0f && cardBottom > viewportBounds.bottom && listState.canScrollForward -> autoScrollStep
+                else -> 0f
+            }
+            if (scroll != 0f) listState.scrollBy(scroll)
+        }
+    }
     val lineColor = MaterialTheme.colorScheme.outlineVariant
     val palette = LocalThemePalette.current
     LazyColumn(state = listState, modifier = modifier.fillMaxSize()
+        .onPlaced { viewportCoordinates = it }
         .then(if (guideKind == NodeGuideKind.Card && guideAnchor != null) Modifier.onLayoutRectChanged(debounceMillis = 0) {
             guideAnchor.updateViewport(it.boundsInWindow)
         } else Modifier), contentPadding = PaddingValues(start = 4.dp, end = 16.dp, top = 16.dp, bottom = bottomContentPadding)) {
@@ -146,6 +185,13 @@ fun NodeList(
             val colors = palette.nodeColors(item.node.kind)
             val fixed = index < 2
             val number = (index + 1).toString().padStart(2, '0')
+            val isDragging = dragging == item.node.id
+            val pinnableContainer = LocalPinnableContainer.current
+            DisposableEffect(pinnableContainer, isDragging) {
+                // 保留拖动源，避免自动滚动后被 LazyColumn 回收并中断手势。
+                val handle = if (isDragging) pinnableContainer?.pin() else null
+                onDispose { handle?.release() }
+            }
             DisposableEffect(item.node.id, item.node.kind) { onDispose { cardCoordinates.remove(item.node.id) } }
             val dragModifier = if (item.node.kind != "body") Modifier else Modifier.pointerInput(item.node.id, interactive, content.nodes) {
                 if (interactive) detectDragGesturesAfterLongPress(
@@ -154,19 +200,25 @@ fun NodeList(
                         if (!coordinates.isAttached) return@start
                         dragging = item.node.id
                         dragOffset = Offset.Zero
+                        dragPointerOffset = position
                         dragPosition = coordinates.localToRoot(position)
+                        dragDirection = 0f
                         targetId = null
                     },
-                    onDrag = drag@ { change, amount ->
+                    onDrag = drag@ { change, _ ->
                         if (dragging != item.node.id) return@drag
+                        val coordinates = cardCoordinates[item.node.id] ?: return@drag
+                        if (!coordinates.isAttached) return@drag
                         change.consume()
-                        dragOffset += amount
-                        dragPosition += amount
-                        targetId = cardCoordinates.entries.firstOrNull { (id, coordinates) ->
-                            id != item.node.id && coordinates.isAttached && coordinates.boundsInRoot().contains(dragPosition)
-                        }?.key
+                        val position = coordinates.localToRoot(change.position)
+                        val distance = position.y - dragPosition.y
+                        if (distance != 0f) dragDirection = distance
+                        dragPosition = position
+                        dragOffset = position - coordinates.localToRoot(dragPointerOffset)
+                        updateDragTarget()
                     },
                     onDragEnd = {
+                        updateDragTarget()
                         val target = targetId
                         if (dragging == item.node.id && target != null) merging = item.node.id to target
                         dragging = null
@@ -194,19 +246,27 @@ fun NodeList(
                     onOpen = onNodeMenuOpened,
                     guideAnchor = if (guideKind == NodeGuideKind.Menu && item.node.id == guideNodeId) guideAnchor else null,
                 )
-                NodeCard(item, repository, colors, preview = previews[item.node.bodyMarkdown].orEmpty(),
-                    enabled = interactive, dragging = dragging == item.node.id,
-                    highlighted = targetId == item.node.id, onEdit = { onEdit(item) },
-                    onMoveImage = { imageId, direction -> onMoveImage(item.node.id, imageId, direction) },
-                    onCardClick = onNodeCardClicked,
-                    sectionLabel = sectionLabel,
-                    guideAnchor = if (guideKind == NodeGuideKind.Card) guideAnchor else null,
-                    guideIndex = index,
-                    modifier = Modifier.weight(1f).graphicsLayer {
-                        translationX = if (dragging == item.node.id) dragOffset.x else 0f
-                        translationY = if (dragging == item.node.id) dragOffset.y else 0f
-                    }.then(if (item.node.kind == "body") Modifier.onPlaced { cardCoordinates[item.node.id] = it } else Modifier)
-                        .then(dragModifier))
+                Box(Modifier.weight(1f)
+                    .then(if (item.node.kind == "body") Modifier.onPlaced { coordinates ->
+                        cardCoordinates[item.node.id] = coordinates
+                        if (dragging == item.node.id) {
+                            // 使用未平移的卡片位置补偿滚动，保持卡片与手指的相对位置。
+                            dragOffset = dragPosition - coordinates.localToRoot(dragPointerOffset)
+                        }
+                    } else Modifier).then(dragModifier)) {
+                    NodeCard(item, repository, colors, preview = previews[item.node.bodyMarkdown].orEmpty(),
+                        enabled = interactive, dragging = isDragging,
+                        highlighted = targetId == item.node.id, onEdit = { onEdit(item) },
+                        onMoveImage = { imageId, direction -> onMoveImage(item.node.id, imageId, direction) },
+                        onCardClick = onNodeCardClicked,
+                        sectionLabel = sectionLabel,
+                        guideAnchor = if (guideKind == NodeGuideKind.Card) guideAnchor else null,
+                        guideIndex = index,
+                        modifier = Modifier.graphicsLayer {
+                            translationX = if (dragging == item.node.id) dragOffset.x else 0f
+                            translationY = if (dragging == item.node.id) dragOffset.y else 0f
+                        })
+                }
             }
         }
         item(key = "insert-tail", contentType = "insert-tail") {
