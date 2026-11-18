@@ -11,6 +11,7 @@
     <string name="bluetooth_enable">開啟藍牙</string>
     <string name="bluetooth_allow_discovery">允許附近裝置探索</string>
     <string name="bluetooth_rescan">重新掃描</string>
+    <string name="bluetooth_choose_device_again">重新選擇裝置</string>
     <string name="bluetooth_settings_error">無法開啟設定。請在系統設定中檢查藍牙與應用程式權限。</string>
     <string name="bluetooth_cancel_title">取消這次傳輸？</string>
     <string name="bluetooth_cancel_body">取消後傳輸會停止。兩台裝置就緒後可重新傳輸。</string>

@@ -14,9 +14,18 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.nio.file.Files
 import kotlin.time.Duration.Companion.days
 
 data class CleanupResult(val mirrorFailures: Set<String> = emptySet(), val failedTasks: Set<String> = emptySet())
+
+const val DocumentsDirectory = "documents"
+const val ImageDraftsDirectory = "image_drafts"
+const val ExportDraftsDirectory = "export_drafts"
+const val SharedExportsDirectory = "shared/exports"
+
+fun unreferencedMedia(documentDirectory: File, referenced: Set<String>, retained: Set<String>): List<File> =
+    File(documentDirectory, "media").listFiles().orEmpty().filter { it.name !in referenced && it.name !in retained }
 
 /** 复用应用后台作用域串行维护缓存与存储残留，各项失败互不影响。 */
 class PicNoteCleaner(
@@ -24,28 +33,39 @@ class PicNoteCleaner(
     database: PicNoteDatabase,
     private val storageMutex: Mutex,
     private val activeDrafts: Set<String>,
+    private val activeExports: Set<String>,
+    private val retainedExportMedia: Map<String, Map<String, Int>>,
     private val writeMirror: suspend (String) -> Boolean,
 ) {
     private val dao = database.dao()
-    private val root = File(context.filesDir, "documents")
-    private val draftRoot = File(context.filesDir, "image_drafts")
+    private val root = File(context.filesDir, DocumentsDirectory)
+    private val draftRoot = File(context.filesDir, ImageDraftsDirectory)
+    private val exportDraftRoot = File(context.cacheDir, ExportDraftsDirectory)
     private val bluetoothArchiveRoot = File(context.filesDir, BluetoothArchiveDirectory)
-    private val exportRoot = File(context.cacheDir, "shared/exports")
+    private val exportRoot = File(context.cacheDir, SharedExportsDirectory)
 
     suspend fun clean(clearAllCache: Boolean): CleanupResult = withContext(Globals.backgroundScope.coroutineContext.minusKey(Job)) {
-        // 与导入、保存和导出共用同一把锁，清理之间也不会交错执行。
+        // 与导入、保存和导出快照共用同一把锁。
         storageMutex.withLock {
             val failures = mutableSetOf<String>()
             val mirrorFailures = mutableSetOf<String>()
+            // Send 与 Receive 均等待启动清理，设置页清理期间可能已有活跃蓝牙会话。
+            if (!clearAllCache) {
+                bluetoothArchiveRoot.listFiles().orEmpty().forEach { file ->
+                    ignoreCleanupError("bluetooth_archive:${file.name}", failures) { removeFile(file) }
+                }
+            }
             ignoreCleanupError("documents", failures) {
                 val summaries = dao.documents()
                 val documents = summaries.map { it.id }.toSet()
                 root.listFiles().orEmpty().forEach { directory ->
                     ignoreCleanupError("document:${directory.name}", failures) {
-                        if (directory.name !in documents) removeFile(directory)
-                        else {
+                        val retained = retainedExportMedia[directory.name].orEmpty()
+                        if (directory.name !in documents) {
+                            if (retained.isEmpty()) removeFile(directory)
+                        } else {
                             val referenced = dao.referencedFiles(directory.name).toSet()
-                            File(directory, "media").listFiles().orEmpty().filter { it.name !in referenced }.forEach { file ->
+                            unreferencedMedia(directory, referenced, retained.keys).forEach { file ->
                                 ignoreCleanupError("media:${directory.name}/${file.name}", failures) { removeFile(file) }
                             }
                             removeFile(File(directory, ".doc.md.tmp"))
@@ -66,19 +86,14 @@ class PicNoteCleaner(
                     ignoreCleanupError("draft:${file.name}", failures) { removeFile(file) }
                 }
             }
+            ignoreCleanupError("export_drafts", failures) {
+                exportDraftRoot.listFiles().orEmpty().filter { it.name !in activeExports }.forEach { file ->
+                    ignoreCleanupError("export_draft:${file.name}", failures) { removeFile(file) }
+                }
+            }
             ignoreCleanupError("exports", failures) {
                 val expiry = System.currentTimeMillis() - 7.days.inWholeMilliseconds
-                exportRoot.listFiles().orEmpty()
-                    .filter { clearAllCache || it.name.endsWith(".tmp") || it.lastModified() < expiry }
-                    .forEach { file ->
-                        ignoreCleanupError("export:${file.name}", failures) { removeFile(file) }
-                    }
-            }
-            ignoreCleanupError("bluetooth_archives", failures) {
-                val expiry = System.currentTimeMillis() - 1.days.inWholeMilliseconds
-                bluetoothArchiveRoot.listFiles().orEmpty().filter { it.lastModified() < expiry }.forEach { file ->
-                    ignoreCleanupError("bluetooth_archive:${file.name}", failures) { removeFile(file) }
-                }
+                cleanExports(exportRoot, clearAllCache, expiry, failures)
             }
             if (clearAllCache) {
                 ignoreCleanupError("coil_disk_cache", failures) { SingletonImageLoader.get(context).diskCache?.clear() }
@@ -90,6 +105,19 @@ class PicNoteCleaner(
                 }
             }
             CleanupResult(mirrorFailures, failures)
+        }
+    }
+
+    private suspend fun cleanExports(directory: File, clearAll: Boolean, expiry: Long, failures: MutableSet<String>) {
+        directory.listFiles().orEmpty().forEach { file ->
+            ignoreCleanupError("export:${file.relativeTo(exportRoot).path}", failures) {
+                if (file.isDirectory && !Files.isSymbolicLink(file.toPath())) {
+                    cleanExports(file, clearAll, expiry, failures)
+                    if (file.list()?.isEmpty() == true) removeFile(file)
+                } else if (clearAll || file.name.endsWith(".tmp") || file.lastModified() < expiry) {
+                    Files.deleteIfExists(file.toPath())
+                }
+            }
         }
     }
 

@@ -1,0 +1,6 @@
+<resources>
+    <string name="code_markdown_source">Markdown source</string>
+    <string name="code_preview_loading">Loading code…</string>
+    <string name="code_markdown_source_hint">This code block uses an older format. Edit its Markdown directly.</string>
+    <string name="document_section_raw_markdown">This section is shown as Markdown source.</string>
+</resources>

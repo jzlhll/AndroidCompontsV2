@@ -22,6 +22,15 @@ suspend fun deleteSystemAlbumImages(
     context: Context,
     uris: List<Uri>,
     requestConfirmation: suspend (IntentSender) -> Boolean,
+): Boolean = deleteSystemAlbumImages(context, uris, { it }, requestConfirmation)
+
+/** 在每个系统确认前复核本批 URI，允许跳过已不存在的图片。 */
+@RequiresApi(Build.VERSION_CODES.S)
+suspend fun deleteSystemAlbumImages(
+    context: Context,
+    uris: List<Uri>,
+    verifyBatch: suspend (List<Uri>) -> Collection<Uri>,
+    requestConfirmation: suspend (IntentSender) -> Boolean,
 ): Boolean {
     require(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { "Deleting system album images requires Android 12 or later" }
     val images = uris.distinct()
@@ -33,8 +42,14 @@ suspend fun deleteSystemAlbumImages(
     }) { "Only specific MediaStore image URIs can be deleted" }
     for (batch in images.chunked(2000)) {
         currentCoroutineContext().ensureActive()
-        val sender = withIOThread { MediaStore.createDeleteRequest(context.contentResolver, batch).intentSender }
-        if (!requestConfirmation(sender)) return false
+        val sender = withIOThread {
+            val verified = verifyBatch(batch).toSet()
+            val remaining = batch.filter { it in verified }
+            currentCoroutineContext().ensureActive()
+            if (remaining.isEmpty()) null
+            else MediaStore.createDeleteRequest(context.contentResolver, remaining).intentSender
+        }
+        if (sender != null && !requestConfirmation(sender)) return false
     }
     return true
 }

@@ -72,12 +72,20 @@ class NodeGuideAnchor {
 /** 在测量与绘制间共享气泡位置，不用坐标状态驱动整页重组。 */
 private class NodeGuideGeometry {
     var bubble = Rect.Zero
+    var target: IntRect? = null
 }
 
 @Composable
-fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boolean, onAcknowledge: () -> Unit) {
-    Dialog(onDismissRequest = {}, properties = DialogProperties(
-        dismissOnBackPress = false, dismissOnClickOutside = false,
+fun NodeGuideOverlay(
+    anchor: NodeGuideAnchor,
+    kind: NodeGuideKind,
+    saving: Boolean,
+    saveFailed: Boolean,
+    onAcknowledge: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(
+        dismissOnBackPress = !saving, dismissOnClickOutside = false,
         usePlatformDefaultWidth = false, decorFitsSystemWindows = false,
     )) {
         val view = LocalView.current
@@ -102,7 +110,7 @@ fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boole
                 .drawWithCache {
                     val path = Path()
                     onDrawBehind {
-                        val target = anchor.bounds
+                        val target = anchor.bounds?.takeIf { it == geometry.target }
                         val bubble = geometry.bubble
                         if (target != null && bubble.width > 0f) {
                             path.rewind()
@@ -134,6 +142,12 @@ fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boole
                 Surface(color = bubbleColor, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, scheme.outlineVariant)) {
                     Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
                         Text(stringResource(if (kind == NodeGuideKind.Menu) R.string.node_guide_menu else R.string.node_guide_card), color = scheme.onSurface, style = ComposeTypography.Font14sp)
+                        if (saveFailed) Text(
+                            stringResource(R.string.error_save_node_guide),
+                            modifier = Modifier.padding(top = 8.dp),
+                            color = scheme.error,
+                            style = ComposeTypography.Font14sp,
+                        )
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = onAcknowledge, enabled = !saving, modifier = Modifier.align(androidx.compose.ui.Alignment.End)) {
                             Text(stringResource(R.string.got_it))
@@ -142,36 +156,38 @@ fun NodeGuideOverlay(anchor: NodeGuideAnchor, kind: NodeGuideKind, saving: Boole
                 }
             },
         ) { measurables, constraints ->
-            val target = anchor.bounds
             val margin = 16.dp.roundToPx()
             val left = insets.getLeft(this, layoutDirection) + margin
             val right = constraints.maxWidth - insets.getRight(this, layoutDirection) - margin
             val top = insets.getTop(this) + margin
             val bottom = constraints.maxHeight - insets.getBottom(this) - margin
-            var x = if (kind == NodeGuideKind.Menu) (target?.right ?: left) + 12.dp.roundToPx() else left
-            if (x < left) x = left
-            if (x >= right) x = right - 1
-            var width = right - x
-            if (width > 288.dp.roundToPx()) width = 288.dp.roundToPx()
-            if (width < 1) width = 1
-            var availableHeight = bottom - top
-            if (availableHeight < 1) availableHeight = 1
+            val gap = 12.dp.roundToPx()
+            val availableWidth = (right - left).let { if (it > 0) it else 1 }
+            val maximumWidth = 288.dp.roundToPx()
+            val preferredWidth = if (availableWidth < maximumWidth) availableWidth else maximumWidth
+            val target = anchor.bounds?.takeIf {
+                it.width > 0 && it.height > 0 && it.left < right && it.right > left && it.top < bottom && it.bottom > top &&
+                    (kind != NodeGuideKind.Menu || right - it.right > gap && right - it.right - gap >= preferredWidth / 2)
+            }
+            val menuX = if (target != null && kind == NodeGuideKind.Menu) target.right + gap else null
+            val width = if (menuX != null && right - menuX < preferredWidth) right - menuX else preferredWidth
+            val availableHeight = (bottom - top).let { if (it > 0) it else 1 }
             val bubble = measurables.single().measure(Constraints(minWidth = width, maxWidth = width, maxHeight = availableHeight))
-            var y = if (kind == NodeGuideKind.Menu || target == null) (target?.center?.y ?: top) - bubble.height / 2 else {
-                x = left + (right - left - bubble.width) / 2
-                val gap = 12.dp.roundToPx()
-                when {
-                    target.bottom + gap + bubble.height <= bottom -> target.bottom + gap
-                    target.top - gap - bubble.height >= top -> target.top - gap - bubble.height
-                    target.center.y > (top + bottom) / 2 -> top
-                    else -> bottom - bubble.height
-                }
+            val x = menuX ?: left + (availableWidth - bubble.width) / 2
+            var y = when {
+                target == null -> top + (availableHeight - bubble.height) / 2
+                kind == NodeGuideKind.Menu -> target.center.y - bubble.height / 2
+                target.bottom + gap + bubble.height <= bottom -> target.bottom + gap
+                target.top - gap - bubble.height >= top -> target.top - gap - bubble.height
+                target.center.y > (top + bottom) / 2 -> top
+                else -> bottom - bubble.height
             }
             if (y + bubble.height > bottom) y = bottom - bubble.height
             if (y < top) y = top
-            geometry.bubble = if (target == null) Rect.Zero else Rect(x.toFloat(), y.toFloat(), (x + bubble.width).toFloat(), (y + bubble.height).toFloat())
+            geometry.target = target
+            geometry.bubble = Rect(x.toFloat(), y.toFloat(), (x + bubble.width).toFloat(), (y + bubble.height).toFloat())
             layout(constraints.maxWidth, constraints.maxHeight) {
-                if (target != null) bubble.place(x, y)
+                bubble.place(x, y)
             }
         }
     }

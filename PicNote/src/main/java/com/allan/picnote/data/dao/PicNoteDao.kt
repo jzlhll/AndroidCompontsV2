@@ -17,15 +17,15 @@ interface PicNoteDao {
     @Query("SELECT id, document_id, sort_key, kind, body_markdown, title FROM nodes WHERE document_id = :id ORDER BY sort_key, id")
     suspend fun nodes(id: String): List<NodeEntity>
 
-    @Query("SELECT id, node_id, document_id, sort_index, file_name, hash, width, height, source_uri FROM node_images WHERE document_id = :id ORDER BY sort_index")
+    @Query("SELECT id, node_id, document_id, sort_index, file_name, hash, width, height, source_uri FROM node_images WHERE document_id = :id ORDER BY sort_index, id")
     suspend fun images(id: String): List<NodeImageEntity>
 
     @Query("SELECT file_name FROM node_images WHERE document_id = :id")
     suspend fun referencedFiles(id: String): List<String>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun putDocument(value: DocumentEntity)
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun putNodes(values: List<NodeEntity>)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putImages(values: List<NodeImageEntity>)
@@ -49,37 +49,42 @@ interface PicNoteDao {
     suspend fun snapshots(prefix: String): List<MediaSnapshotEntity>
     @Query("SELECT * FROM media_scan_states")
     suspend fun scanStates(): List<MediaScanStateEntity>
-    @Query("SELECT * FROM media_changes")
-    suspend fun changes(): List<MediaChangeEntity>
-    @Query("SELECT p.* FROM pending_media p JOIN media_scan_states s ON p.volume = s.volume WHERE s.available = 1 AND s.baseline_valid = 1 ORDER BY p.added_at DESC, p.uri")
+    @Query("SELECT p.* FROM pending_media p JOIN media_scan_states s ON p.volume = s.volume AND p.version = s.version WHERE s.available = 1 AND s.baseline_valid = 1 ORDER BY p.added_at DESC, p.uri")
     suspend fun pending(): List<PendingMediaEntity>
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putSnapshots(values: List<MediaSnapshotEntity>)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putScanStates(values: List<MediaScanStateEntity>)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun putChanges(values: List<MediaChangeEntity>)
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putPending(values: List<PendingMediaEntity>)
-    @Query("DELETE FROM media_changes")
-    suspend fun clearChanges()
     @Query("DELETE FROM media_snapshots WHERE substr(uri, 1, length(:prefix)) = :prefix")
     suspend fun clearSnapshots(prefix: String)
     @Query("DELETE FROM pending_media WHERE volume = :volume")
     suspend fun clearPendingVolume(volume: String)
-    @Query("UPDATE node_images SET source_uri = NULL WHERE substr(source_uri, 1, length(:prefix)) = :prefix")
-    suspend fun clearSourceUris(prefix: String)
     @Query("DELETE FROM pending_media WHERE uri IN (:uris)")
     suspend fun consumePending(uris: List<String>)
     @Query("DELETE FROM pending_media")
     suspend fun clearPending()
-    @Query("DELETE FROM pending_media WHERE volume = :volume AND uri NOT IN (SELECT uri FROM media_snapshots)")
+    @Query("DELETE FROM pending_media WHERE volume = :volume AND NOT EXISTS (SELECT 1 FROM media_snapshots s WHERE s.uri = pending_media.uri AND s.time = pending_media.added_at)")
     suspend fun cleanMissingPending(volume: String)
     @Query("UPDATE media_scan_states SET baseline_valid = 0")
     suspend fun invalidateBaselines()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun putSourceImages(values: List<SourceImageEntity>)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun keepSourceImages(values: List<SourceImageEntity>)
+    @Query("SELECT source_uri, document_id, file_name, source_version, source_added_at FROM source_images WHERE document_id = :id")
+    suspend fun sourceImages(id: String): List<SourceImageEntity>
+    @Query("""
+        SELECT a.source_uri, a.document_id, a.file_name, a.source_version, a.source_added_at FROM source_images a
+        JOIN media_snapshots s ON s.uri = a.source_uri AND s.time = a.source_added_at
+        JOIN media_scan_states v ON v.version = a.source_version AND v.baseline_valid = 1 AND v.available = 1
+            AND substr(a.source_uri, 1, length('content://media/' || v.volume || '/images/media/')) = 'content://media/' || v.volume || '/images/media/'
+        WHERE a.document_id = :id
+            AND EXISTS (SELECT 1 FROM node_images n WHERE n.document_id = a.document_id AND n.file_name = a.file_name)
+    """)
+    suspend fun activeSourceImages(id: String): List<SourceImageEntity>
     @Query("DELETE FROM source_images WHERE document_id = :id AND file_name NOT IN (SELECT file_name FROM node_images WHERE document_id = :id)")
     suspend fun cleanSourceImages(id: String)
 }

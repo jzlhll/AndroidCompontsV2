@@ -49,8 +49,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -69,10 +71,17 @@ import coil3.request.allowHardware
 import coil3.request.allowRgb565
 import coil3.request.bitmapConfig
 import com.allan.picnote.media.ScrollThumbnail
+import com.allan.picnote.media.scrollThumbnailCacheKey
 import com.allan.picnote.R
+import com.allan.picnote.data.CodeLanguageToken
 import com.allan.picnote.data.entity.DocumentContent
 import com.allan.picnote.data.entity.NodeImageEntity
+import com.allan.picnote.data.entity.chapterNumbers
+import com.allan.picnote.data.MarkdownBlockSeparator
+import com.allan.picnote.data.MarkdownReference
+import com.allan.picnote.data.NodeMarkdown
 import com.allan.picnote.data.markdownNodes
+import com.allan.picnote.data.parseMarkdownSections
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.logEx
 import com.allan.picnote.ui.theme.LocalThemePalette
@@ -82,7 +91,6 @@ import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.LinkResolverDef
 import io.noties.markwon.Markwon
 import io.noties.markwon.MarkwonConfiguration
-import io.noties.markwon.MarkwonReducer
 import io.noties.markwon.MarkwonSpansFactory
 import io.noties.markwon.MarkwonVisitor
 import io.noties.markwon.core.MarkwonTheme
@@ -104,23 +112,15 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.commonmark.node.Image
+import org.commonmark.node.LinkReferenceDefinition
 import org.commonmark.node.Paragraph
 import org.commonmark.node.BlockQuote
 import org.commonmark.node.Heading
 import org.commonmark.node.FencedCodeBlock
 import org.commonmark.node.IndentedCodeBlock
-import org.commonmark.node.Block
-import org.commonmark.node.CustomBlock
-import org.commonmark.parser.Parser
-import org.commonmark.parser.block.AbstractBlockParser
-import org.commonmark.parser.block.AbstractBlockParserFactory
-import org.commonmark.parser.block.BlockContinue
-import org.commonmark.parser.block.BlockStart
-import org.commonmark.parser.block.MatchedBlockParser
-import org.commonmark.parser.block.ParserState
 import java.io.File
 import java.io.InputStream
-import java.util.UUID
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -136,16 +136,13 @@ fun LocalImage(model: Any?, description: String, modifier: Modifier = Modifier, 
         }
     }
     val baseKey = if (file != null) "${file.absolutePath}:${cacheKey.orEmpty()}" else cacheKey ?: model.toString()
-    val fullKey = "$baseKey:rgb565"
-    val thumbnailKey = "${file?.absolutePath ?: baseKey}:scroll-20-min32-rgb565-v1"
+    val fullKey = "$baseKey:full"
+    val thumbnailKey = scrollThumbnailCacheKey(file?.absolutePath ?: baseKey)
     val request = remember(context, model, fullKey) {
         ImageRequest.Builder(context)
             .data(model)
             .memoryCacheKey(fullKey)
             .placeholderMemoryCacheKey(fullKey)
-            .bitmapConfig(Bitmap.Config.RGB_565)
-            .allowRgb565(true)
-            .allowHardware(false)
             .build()
     }
     val thumbnailRequest = remember(context, file, thumbnailKey) {
@@ -187,7 +184,7 @@ fun LocalImage(model: Any?, description: String, modifier: Modifier = Modifier, 
             },
         )
         if (failed) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("图片不可读，请替换图片", style = ComposeTypography.Font12sp)
+            Text(stringResource(R.string.image_unreadable_replace), style = ComposeTypography.Font12sp)
         }
     }
 }
@@ -209,8 +206,13 @@ private sealed interface DocumentBlock {
         val quoted: Boolean,
         val introduction: Boolean,
         val heading: Boolean,
-        val codeBlock: Boolean,
+        val codeLanguage: String?,
         val textSizeSp: Int,
+    ) : DocumentBlock
+
+    data class SectionWarning(
+        override val key: String,
+        override val nodeId: String,
     ) : DocumentBlock
 
     data class Picture(
@@ -218,11 +220,31 @@ private sealed interface DocumentBlock {
         override val nodeId: String,
         val destination: String,
         val description: String,
-        val image: NodeImageEntity?,
     ) : DocumentBlock
 }
 
-private data class ParsedDocument(val blocks: List<DocumentBlock>, val error: String? = null)
+private data class RenderedSection(
+    val markdown: NodeMarkdown,
+    val blocks: List<DocumentBlock>,
+    val usesRawMarkdown: Boolean = false,
+)
+
+private class ParsedDocument(
+    val markwon: Markwon,
+    val sections: List<RenderedSection>,
+    val references: List<MarkdownReference>,
+    chapterNumbers: Map<String, String>,
+) {
+    val blocks = buildList {
+        sections.forEach { section ->
+            val nodeId = section.markdown.nodeId
+            chapterNumbers[nodeId]?.let { number ->
+                add(DocumentBlock.ChapterLabel("$nodeId:chapter-divider", nodeId, number))
+            }
+            addAll(section.blocks)
+        }
+    }
+}
 
 @Composable
 fun DocumentPreview(
@@ -238,14 +260,15 @@ fun DocumentPreview(
     bottomContentPadding: Dp = 24.dp,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val showMessage by rememberUpdatedState(onMessage)
     val base = remember(content.document.id, repository) { Uri.fromFile(File(repository.documentDirectory(content.document.id), "doc.md")).toString() }
-    val nodeMarker = remember(base) { ":::picnote-${UUID.randomUUID()}:" }
     val destinations = remember(base) { ImageDestinationProcessorRelativeToAbsolute.create(base) }
     val scheme = MaterialTheme.colorScheme
     val textColor = scheme.onSurface.toArgb()
     val linkColor = scheme.primary.toArgb()
     val codeBackground = scheme.surfaceVariant.toArgb()
+    val codeTextColor = scheme.onSurfaceVariant.toArgb()
     val quoteColors = LocalThemePalette.current.introductionContent
     val quoteTextColor = quoteColors.foreground.toArgb()
     val density = LocalDensity.current
@@ -256,9 +279,14 @@ fun DocumentPreview(
     val errorTextSize = with(density) { 14.sp.toPx() }
     val errorPadding = with(density) { 8.dp.toPx() }
     val imageCornerRadius = with(density) { 8.dp.toPx() }
+    val codeTextSize = with(density) { CodeTextSize.roundToPx() }
     val ruleColor = scheme.outlineVariant.toArgb()
     val codeHighlight = rememberCodeSyntaxHighlight()
-    val markwon = remember(context, destinations, nodeMarker, density, textColor, linkColor, codeBackground, quoteTextColor, quoteMargin, titleTextSize, titleUnderlineGap, chapterTextSize, errorTextSize, errorPadding, imageCornerRadius, ruleColor, codeHighlight) {
+    val imageError = stringResource(R.string.image_unreadable_replace)
+    val localLinkError = stringResource(R.string.local_link_unsupported)
+    val openLinkError = stringResource(R.string.open_link_failed)
+    val markwon = remember(context, destinations, density, scheme, quoteTextColor,
+        codeHighlight, imageError, localLinkError, openLinkError) {
         val linkResolver = LinkResolverDef()
         val mediaDecoder = DefaultMediaDecoder.create(context.resources)
         Markwon.builder(context)
@@ -270,28 +298,24 @@ fun DocumentPreview(
                         }.let { RoundedDocumentImageDrawable(it, imageCornerRadius) }
                         override fun supportedTypes(): Collection<String> = mediaDecoder.supportedTypes()
                     })
-                    .errorHandler { _, _ -> DocumentImageErrorDrawable(codeBackground, textColor, errorTextSize, errorPadding) }
+                    .errorHandler { _, _ -> DocumentImageErrorDrawable(imageError, codeBackground, textColor, errorTextSize, errorPadding) }
             })
             .usePlugin(object : AbstractMarkwonPlugin() {
-                override fun configureParser(builder: Parser.Builder) {
-                    builder.customBlockParserFactory(DocumentNodeBlockParser.Factory(nodeMarker))
-                }
-
                 override fun configureConfiguration(builder: MarkwonConfiguration.Builder) {
                     builder.syntaxHighlight(codeHighlight).imageDestinationProcessor(destinations)
                         .linkResolver { view, link ->
                             if (Uri.parse(link).scheme.equals("file", ignoreCase = true)) {
-                                showMessage("暂不支持直接打开本地文件链接")
+                                showMessage(localLinkError)
                             } else try { linkResolver.resolve(view, link) }
                             catch (e: SecurityException) {
                                 logEx(throwable = e, message = "Open Markdown link failed")
-                                showMessage("无法打开链接，请检查链接或系统应用")
+                                showMessage(openLinkError)
                             }
                         }
                 }
                 override fun configureTheme(builder: MarkwonTheme.Builder) {
                     builder.linkColor(linkColor).listItemColor(textColor)
-                        .codeTextColor(textColor).codeBlockTextColor(textColor)
+                        .codeTextColor(textColor).codeBlockTextColor(codeTextColor).codeBlockTextSize(codeTextSize)
                         .codeBackgroundColor(codeBackground).codeBlockBackgroundColor(codeBackground)
                         .headingBreakColor(ruleColor).thematicBreakColor(ruleColor)
                 }
@@ -311,7 +335,7 @@ fun DocumentPreview(
                         visitor.blockStart(quote)
                         val start = visitor.length()
                         visitor.visitChildren(quote)
-                        // 顶层引用的缩进由背景内边距提供，嵌套引用保留额外层级。
+                        // 顶层块在独立渲染前已解除父节点，引用嵌在列表中时也保留一层缩进。
                         if (quote.parent != null) visitor.setSpans(start, LeadingMarginSpan.Standard(quoteMargin))
                         visitor.setSpansForNodeOptional(quote, start)
                         visitor.blockEnd(quote)
@@ -319,134 +343,211 @@ fun DocumentPreview(
                 }
             }).build()
     }
-    val parsed by produceState<ParsedDocument?>(null, content, markwon, nodeMarker) {
-        value = null
-        value = try {
-            withContext(Dispatchers.Default) {
-                val sections = content.markdownNodes()
-                val source = buildString {
-                    sections.forEachIndexed { index, section ->
-                        append(nodeMarker).append(index).append("\n\n").append(section.source)
-                    }
+    val locales = LocalConfiguration.current.locales
+    var parseFailed by remember(base) { mutableStateOf(false) }
+    val parsed by key(base) {
+        produceState<ParsedDocument?>(null, content, markwon, locales) {
+            parseFailed = false
+            try {
+                val previous = value
+                value = withContext(Dispatchers.Default) {
+                    val sections = content.markdownNodes(resources)
+                    if (previous?.markwon === markwon && previous.sections.none { it.usesRawMarkdown } &&
+                        previous.sections.map { it.markdown } == sections
+                    ) previous
+                    else renderDocument(sections, content.chapterNumbers(), markwon, destinations, codeHighlight, previous)
                 }
-                val document = markwon.parse(source)
-                val images = content.nodes.flatMap { it.images }.associateBy { destinations.process("media/${it.fileName}") }
-                val reducer = MarkwonReducer.directChildren()
-                val blocks = buildList {
-                    var chapterNumber = 0
-                    reducer.reduce(document).forEach { container ->
-                        currentCoroutineContext().ensureActive()
-                        check(container is DocumentNodeBlock) { "Document node boundary was lost" }
-                        val section = sections[container.index]
-                        if (section.kind == "chapter") {
-                            chapterNumber += 1
-                            add(DocumentBlock.ChapterLabel("${section.nodeId}:chapter-divider", section.nodeId,
-                                chapterNumber.toString().padStart(2, '0')))
-                        }
-                        val textSizeSp = if (section.kind == "body" && !section.hasImages) 18 else 16
-                        reducer.reduce(container).forEachIndexed { index, node ->
-                            currentCoroutineContext().ensureActive()
-                            val key = "${section.nodeId}:$index"
-                            val child = node.firstChild
-                            if (node is Paragraph && child is Image && child.next == null) {
-                                val destination = destinations.process(child.destination)
-                                add(DocumentBlock.Picture(key, section.nodeId, destination,
-                                    markdownPlainText(child).ifBlank { "图片" }, images[destination]))
-                            } else {
-                                val rendered = markwon.render(node)
-                                val text = if (section.kind == "title") SpannableStringBuilder(rendered).apply {
-                                    setSpan(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                                } else rendered
-                                add(DocumentBlock.FormattedText(key, section.nodeId, text,
-                                    quoted = node is BlockQuote, introduction = section.kind == "introduction",
-                                    heading = node is Heading, codeBlock = node is FencedCodeBlock || node is IndentedCodeBlock,
-                                    textSizeSp = textSizeSp))
-                            }
-                        }
-                    }
-                }
-                ParsedDocument(blocks)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logEx(throwable = e, message = "Parse document Markdown failed")
+                parseFailed = true
             }
-        } catch (e: CancellationException) { throw e }
-        catch (e: Exception) {
-            logEx(throwable = e, message = "Parse document Markdown failed")
-            ParsedDocument(emptyList(), "文档预览失败，请重新打开文档")
         }
     }
+    val images = remember(content.nodes, destinations) {
+        content.nodes.flatMap { it.images }.associateBy { image -> destinations.process("media/${image.fileName}") }
+    }
     val document = parsed
-    if (document == null) Box(modifier.fillMaxSize())
-    else if (document.error != null) Box(modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) { Text(document.error) }
-    else LazyColumn(modifier.fillMaxSize(), state = scroll, contentPadding = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = bottomContentPadding)) {
-        itemsIndexed(document.blocks, key = { _, block -> block.key }, contentType = { _, block ->
-            when (block) {
-                is DocumentBlock.ChapterLabel -> "chapter-divider"
-                is DocumentBlock.Picture -> "picture"
-                is DocumentBlock.FormattedText -> when {
-                    block.quoted -> "quote"
-                    block.codeBlock -> "code"
-                    else -> "text"
-                }
-            }
-        }) { index, block ->
-            val previous = document.blocks.getOrNull(index - 1)
-            val gap = when {
-                previous == null -> 0.dp
-                previous.nodeId == block.nodeId -> 6.dp
-                else -> 12.dp
-            }
-            val headingPadding = if (block is DocumentBlock.FormattedText && block.heading) 6.dp else 0.dp
-            val blockModifier = Modifier.fillMaxWidth().padding(top = gap + headingPadding, bottom = headingPadding)
-            if (block is DocumentBlock.ChapterLabel) {
-                ChapterDivider(block.number, blockModifier)
-            }
-            else if (block is DocumentBlock.FormattedText) {
-                if (block.quoted) {
-                    Box(
-                        modifier = blockModifier.clip(RoundedCornerShape(8.dp)).background(quoteColors.background)
-                            .padding(horizontal = 24.dp, vertical = 8.dp)
-                            .heightIn(min = if (block.introduction) 36.dp else 0.dp),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() })
+    Column(modifier.fillMaxSize()) {
+        if (parseFailed) Text(
+            stringResource(R.string.document_preview_failed),
+            Modifier.fillMaxWidth().padding(24.dp),
+            color = MaterialTheme.colorScheme.error,
+        )
+        if (document != null) LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = scroll,
+            contentPadding = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = bottomContentPadding)) {
+            itemsIndexed(document.blocks, key = { _, block -> block.key }, contentType = { _, block ->
+                when (block) {
+                    is DocumentBlock.ChapterLabel -> "chapter-divider"
+                    is DocumentBlock.SectionWarning -> "section-warning"
+                    is DocumentBlock.Picture -> "picture"
+                    is DocumentBlock.FormattedText -> when {
+                        block.quoted -> "quote"
+                        block.codeLanguage != null -> "code"
+                        else -> "text"
                     }
-                } else {
-                    val textModifier = if (block.codeBlock) {
-                        val codeModifier = blockModifier.clip(RoundedCornerShape(8.dp)).background(scheme.surfaceVariant)
-                        if (wrapCode) codeModifier else {
-                            // 圆角和底色留在滚动视口，TextView 按原始行宽测量。
-                            codeModifier.horizontalScroll(rememberScrollState(), enabled = active)
-                        }
-                    } else blockModifier
-                    MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() }, textModifier)
                 }
-            }
-            else if (block is DocumentBlock.Picture) {
-                DocumentImage(block, enabled = active && enabled && block.image != null,
-                    onDownload = { block.image?.let { onDownloadImage(it.id) } }, modifier = blockModifier)
+            }) { index, block ->
+                val previous = document.blocks.getOrNull(index - 1)
+                val gap = when {
+                    previous == null -> 0.dp
+                    previous.nodeId == block.nodeId -> 6.dp
+                    else -> 12.dp
+                }
+                val headingPadding = if (block is DocumentBlock.FormattedText && block.heading) 6.dp else 0.dp
+                val blockModifier = Modifier.fillMaxWidth().padding(top = gap + headingPadding, bottom = headingPadding)
+                if (block is DocumentBlock.ChapterLabel) {
+                    ChapterDivider(block.number, blockModifier)
+                } else if (block is DocumentBlock.SectionWarning) {
+                    Text(stringResource(R.string.document_section_raw_markdown), blockModifier, color = scheme.error)
+                } else if (block is DocumentBlock.FormattedText) {
+                    if (block.quoted) {
+                        Box(
+                            modifier = blockModifier.clip(RoundedCornerShape(8.dp)).background(quoteColors.background)
+                                .padding(horizontal = 24.dp, vertical = 8.dp)
+                                .heightIn(min = if (block.introduction) 36.dp else 0.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            MarkdownBlockText(block.text, document.markwon, active, with(density) { block.textSizeSp.sp.toPx() })
+                        }
+                    } else if (block.codeLanguage != null) {
+                        val horizontalScroll = rememberScrollState()
+                        Column(blockModifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(codeLanguageLabel(block.codeLanguage), style = MaterialTheme.typography.labelSmall,
+                                color = scheme.onSurfaceVariant, maxLines = 1)
+                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(CodeCornerRadius)).background(scheme.surfaceVariant)) {
+                                val scrolling = if (wrapCode) Modifier else Modifier.horizontalScroll(horizontalScroll, enabled = active)
+                                MarkdownBlockText(block.text, document.markwon, active, codeTextSize.toFloat(),
+                                    modifier = scrolling.padding(CodeContentPadding), code = true)
+                            }
+                        }
+                    } else {
+                        MarkdownBlockText(block.text, document.markwon, active, with(density) { block.textSizeSp.sp.toPx() }, blockModifier)
+                    }
+                } else if (block is DocumentBlock.Picture) {
+                    val image = images[block.destination]
+                    val description = block.description.ifBlank { stringResource(R.string.image) }
+                    DocumentImage(block, description, image, enabled = active && enabled && image != null,
+                        onDownload = { image?.let { onDownloadImage(it.id) } }, modifier = blockModifier)
+                }
             }
         }
     }
 }
 
+private suspend fun renderDocument(
+    sections: List<NodeMarkdown>,
+    chapterNumbers: Map<String, String>,
+    markwon: Markwon,
+    destinations: ImageDestinationProcessorRelativeToAbsolute,
+    highlighter: CodeSyntaxHighlight,
+    previous: ParsedDocument?,
+): ParsedDocument {
+    val coroutineContext = currentCoroutineContext()
+    val parsed = parseMarkdownSections(sections) { coroutineContext.ensureActive() }
+    val references = parsed.references
+    // 引用在整篇文档中解析，定义变化时重新生成可能依赖这些定义的样式。
+    val cached = if (previous?.markwon === markwon && previous.references == references) {
+        previous.sections.associateBy { it.markdown.nodeId }
+    } else emptyMap()
+    val rendered = sections.mapIndexed { sectionIndex, section ->
+        coroutineContext.ensureActive()
+        if (sectionIndex in parsed.rawSections) return@mapIndexed renderRawMarkdownSection(section)
+        cached[section.nodeId]?.let { if (it.markdown == section && !it.usesRawMarkdown) return@mapIndexed it }
+        val container = parsed.documents[sectionIndex]
+        val textSize = if (section.kind == "body" && !section.hasImages) 18 else 16
+        try {
+            val blocks = generateSequence(container.firstChild) { it.next }
+                .filterNot { it is LinkReferenceDefinition }
+                .toList()
+                .mapIndexed { index, node ->
+                    coroutineContext.ensureActive()
+                    val key = "${section.nodeId}:$index"
+                    val child = node.firstChild
+                    if (node is Paragraph && child is Image && child.next == null) {
+                        DocumentBlock.Picture(key, section.nodeId, destinations.process(child.destination), markdownPlainText(child))
+                    } else {
+                        val codeLanguage = when (node) {
+                            is FencedCodeBlock -> CodeLanguageToken.find(node.info.orEmpty())?.value.orEmpty()
+                            is IndentedCodeBlock -> ""
+                            else -> null
+                        }
+                        // 独立显示的块不带相邻兄弟节点，间距由 LazyColumn 统一处理。
+                        node.unlink()
+                        val renderedText = when (node) {
+                            is FencedCodeBlock -> SpannableStringBuilder(highlighter.highlight(node.info, node.literal.removeSuffix("\n")) { coroutineContext.ensureActive() })
+                            is IndentedCodeBlock -> SpannableStringBuilder(node.literal.removeSuffix("\n"))
+                            else -> markwon.render(node)
+                        }
+                        val text = if (section.kind == "title") SpannableStringBuilder(renderedText).apply {
+                            setSpan(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        } else renderedText
+                        DocumentBlock.FormattedText(key, section.nodeId, text, quoted = node is BlockQuote,
+                            introduction = section.kind == "introduction", heading = node is Heading,
+                            codeLanguage = codeLanguage, textSizeSp = textSize)
+                    }
+                }
+            RenderedSection(section, blocks)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: StackOverflowError) {
+            logEx(throwable = e, message = "Render document section exceeded renderer stack")
+            renderRawMarkdownSection(section)
+        } catch (e: Exception) {
+            logEx(throwable = e, message = "Render document section failed")
+            renderRawMarkdownSection(section)
+        }
+    }
+    return ParsedDocument(markwon, rendered, references, chapterNumbers)
+}
+
+private fun renderRawMarkdownSection(section: NodeMarkdown) = RenderedSection(
+    markdown = section,
+    blocks = listOf(
+        DocumentBlock.SectionWarning("${section.nodeId}:raw-warning", section.nodeId),
+        DocumentBlock.FormattedText(
+            key = "${section.nodeId}:raw",
+            nodeId = section.nodeId,
+            text = SpannableStringBuilder(section.source.removeSuffix(MarkdownBlockSeparator)),
+            quoted = false,
+            introduction = false,
+            heading = false,
+            codeLanguage = "",
+            textSizeSp = 16,
+        ),
+    ),
+    usesRawMarkdown = true,
+)
+
 @Composable
-private fun DocumentImage(block: DocumentBlock.Picture, enabled: Boolean, onDownload: () -> Unit, modifier: Modifier = Modifier) {
-    var ratio by rememberSaveable(block.destination) { mutableStateOf(block.image?.let { it.width.toFloat() / it.height } ?: 1f) }
+private fun DocumentImage(
+    block: DocumentBlock.Picture,
+    description: String,
+    image: NodeImageEntity?,
+    enabled: Boolean,
+    onDownload: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val storedRatio = image?.takeIf { it.width > 0 && it.height > 0 }?.let { it.width.toFloat() / it.height }
+    var decodedRatio by rememberSaveable(block.destination) { mutableFloatStateOf(1f) }
+    val ratio = storedRatio ?: decodedRatio
     val controlsAlpha = remember(block.destination) { Animatable(0f) }
     val scope = rememberCoroutineScope()
-    var visibilityJob by remember(block.destination) { mutableStateOf<Job?>(null) }
+    val controlsJob = remember(block.destination) { ImageControlsJob() }
     val fadingVisible by remember(controlsAlpha) { derivedStateOf { controlsAlpha.value > 0f } }
     val downloadDescription = stringResource(R.string.download_image)
     LaunchedEffect(enabled, controlsAlpha) {
         if (!enabled) {
-            visibilityJob?.cancel()
+            controlsJob.job?.cancel()
             controlsAlpha.snapTo(0f)
         }
     }
-    DisposableEffect(controlsAlpha) { onDispose { visibilityJob?.cancel() } }
+    DisposableEffect(controlsAlpha) { onDispose { controlsJob.job?.cancel() } }
     Box(modifier.aspectRatio(ratio).clip(RoundedCornerShape(8.dp))
         .onClick(enabled = enabled, onClickLabel = stringResource(R.string.show_image_actions)) {
-            visibilityJob?.cancel()
-            visibilityJob = scope.launch {
+            controlsJob.job?.cancel()
+            controlsJob.job = scope.launch {
                 controlsAlpha.animateTo(1f, tween(500))
                 delay(3000.milliseconds)
                 controlsAlpha.animateTo(0f, tween(500))
@@ -454,8 +555,13 @@ private fun DocumentImage(block: DocumentBlock.Picture, enabled: Boolean, onDown
         }.semantics {
             customActions = if (enabled) listOf(CustomAccessibilityAction(downloadDescription) { onDownload(); true }) else emptyList()
         }) {
-        LocalImage(Uri.parse(block.destination), block.description, Modifier.fillMaxSize(),
-            onSize = { width, height -> if (width > 0 && height > 0) ratio = width.toFloat() / height })
+        LocalImage(Uri.parse(block.destination), description, Modifier.fillMaxSize(),
+            onSize = { width, height ->
+                if (storedRatio == null && width > 0 && height > 0) {
+                    val decoded = width.toFloat() / height
+                    if (abs(decoded / decodedRatio - 1f) > 0.01f) decodedRatio = decoded
+                }
+            })
         if (fadingVisible && enabled) {
             Box(Modifier.matchParentSize().graphicsLayer { alpha = controlsAlpha.value }
                 .background(Color.Black.copy(alpha = 0.2f)))
@@ -469,9 +575,20 @@ private fun DocumentImage(block: DocumentBlock.Picture, enabled: Boolean, onDown
     }
 }
 
+private class ImageControlsJob(var job: Job? = null)
+
 @Composable
-private fun MarkdownBlockText(text: Spanned, markwon: Markwon, active: Boolean, textSizePx: Float, modifier: Modifier = Modifier) {
-    val color = MaterialTheme.colorScheme.onSurface.toArgb()
+private fun MarkdownBlockText(
+    text: Spanned,
+    markwon: Markwon,
+    active: Boolean,
+    textSizePx: Float,
+    modifier: Modifier = Modifier,
+    code: Boolean = false,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val color = (if (code) scheme.onSurfaceVariant else scheme.onSurface).toArgb()
+    val typeface = if (code) Typeface.MONOSPACE else Typeface.DEFAULT
     val linkColor = MaterialTheme.colorScheme.primary.toArgb()
     val highlightColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f).toArgb()
     AndroidView(
@@ -482,6 +599,7 @@ private fun MarkdownBlockText(text: Spanned, markwon: Markwon, active: Boolean, 
             setTextIsSelectable(true)
             movementMethod = LinkMovementMethod.getInstance()
             setTextColor(color)
+            this.typeface = typeface
         } },
         modifier = modifier.fillMaxWidth(),
         onReset = { view ->
@@ -497,34 +615,13 @@ private fun MarkdownBlockText(text: Spanned, markwon: Markwon, active: Boolean, 
             view.isFocusable = active
             view.isFocusableInTouchMode = active
             if (view.textSize != textSizePx) view.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSizePx)
+            if (view.typeface != typeface) view.typeface = typeface
             if (view.currentTextColor != color) view.setTextColor(color)
             if (view.linkTextColors.defaultColor != linkColor) view.setLinkTextColor(linkColor)
             if (view.highlightColor != highlightColor) view.highlightColor = highlightColor
             if (view.tag !== text) { markwon.setParsedMarkdown(view, text); view.tag = text }
         },
     )
-}
-
-/** 在一次 Markdown 解析中保留节点边界，引用定义仍由整篇文档共享。 */
-private class DocumentNodeBlock(val index: Int) : CustomBlock()
-
-/** 以阅读专用标记分隔节点容器，未闭合的代码或引用不会跨入下一个节点。 */
-private class DocumentNodeBlockParser(private val node: DocumentNodeBlock, private val marker: String) : AbstractBlockParser() {
-    override fun getBlock(): Block = node
-    override fun isContainer(): Boolean = true
-    override fun canContain(childBlock: Block): Boolean = childBlock !is DocumentNodeBlock
-
-    override fun tryContinue(state: ParserState): BlockContinue? =
-        if (state.line.toString().startsWith(marker)) BlockContinue.none() else BlockContinue.atIndex(state.index)
-
-    class Factory(private val marker: String) : AbstractBlockParserFactory() {
-        override fun tryStart(state: ParserState, matchedBlockParser: MatchedBlockParser): BlockStart? {
-            val line = state.line.toString()
-            if (state.index != 0 || !line.startsWith(marker)) return BlockStart.none()
-            val index = line.substring(marker.length).toIntOrNull() ?: return BlockStart.none()
-            return BlockStart.of(DocumentNodeBlockParser(DocumentNodeBlock(index), marker)).atIndex(line.length)
-        }
-    }
 }
 
 /** 为文字或引用内的混排图片应用与独立图片一致的圆角。 */
@@ -600,8 +697,13 @@ private class DocumentTextView(context: Context) : TextView(context) {
 }
 
 /** 为混排图片提供具有有效尺寸的错误占位，避免失败后替代文字被空图覆盖。 */
-private class DocumentImageErrorDrawable(background: Int, foreground: Int, labelSize: Float, private val padding: Float) : Drawable() {
-    private val label = "图片不可读，请替换图片"
+private class DocumentImageErrorDrawable(
+    private val label: String,
+    background: Int,
+    foreground: Int,
+    labelSize: Float,
+    private val padding: Float,
+) : Drawable() {
     private val backgroundPaint = Paint().apply { color = background }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = foreground; textSize = labelSize }
     private val metrics = textPaint.fontMetrics

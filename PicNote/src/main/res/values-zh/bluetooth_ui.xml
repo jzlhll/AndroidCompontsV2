@@ -11,6 +11,7 @@
     <string name="bluetooth_enable">开启蓝牙</string>
     <string name="bluetooth_allow_discovery">允许附近设备发现</string>
     <string name="bluetooth_rescan">重新扫描</string>
+    <string name="bluetooth_choose_device_again">重新选择设备</string>
     <string name="bluetooth_settings_error">无法打开设置。请在系统设置中检查蓝牙和应用权限。</string>
     <string name="bluetooth_cancel_title">取消本次传输？</string>
     <string name="bluetooth_cancel_body">取消后传输会停止。两台设备就绪后可重新传输。</string>

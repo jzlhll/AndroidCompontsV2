@@ -26,7 +26,14 @@ import okio.buffer
 import java.io.File
 import java.io.FileNotFoundException
 
+private const val ThumbnailScaleDivisor = 20
+private const val MinThumbnailLongSide = 32
+private const val MaxThumbnailLongSide = 512
+
 data class ScrollThumbnail(val file: File, val key: String, val cacheOnly: Boolean = false)
+
+fun scrollThumbnailCacheKey(baseKey: String): String =
+    "$baseKey:scroll-$ThumbnailScaleDivisor-min$MinThumbnailLongSide-max$MaxThumbnailLongSide-rgb565-v2"
 
 /** 从正式图片生成滚动缩略图，磁盘文件与解码后的内存缓存均交给 Coil 管理。 */
 class ScrollThumbnailFetcher(
@@ -46,15 +53,16 @@ class ScrollThumbnailFetcher(
         BitmapFactory.decodeFile(data.file.absolutePath, bounds)
         check(bounds.outWidth > 0 && bounds.outHeight > 0) { "Cannot read saved image dimensions" }
         val sourceLongSide = if (bounds.outWidth > bounds.outHeight) bounds.outWidth else bounds.outHeight
-        var longSide = sourceLongSide / 20
-        if (longSide < 32) longSide = 32
+        var longSide = sourceLongSide / ThumbnailScaleDivisor
+        if (longSide < MinThumbnailLongSide) longSide = MinThumbnailLongSide
+        if (longSide > MaxThumbnailLongSide) longSide = MaxThumbnailLongSide
         val result = imageLoader.execute(decodeRequest(data.file).newBuilder().size(longSide, longSide).build())
         if (result !is SuccessResult) throw (result as coil3.request.ErrorResult).throwable
         currentCoroutineContext().ensureActive()
         val editor = cache?.openEditor(data.key)
         if (cache != null && editor != null) {
             try {
-                cache.fileSystem.write(editor.metadata) { writeUtf8("picnote-scroll-thumbnail-v1") }
+                cache.fileSystem.write(editor.metadata) { writeUtf8("picnote-scroll-thumbnail-v2") }
                 cache.fileSystem.sink(editor.data).buffer().outputStream().use { output ->
                     @Suppress("DEPRECATION")
                     check(result.image.toBitmap().compress(Bitmap.CompressFormat.WEBP, 90, output)) { "Cannot encode scroll thumbnail" }

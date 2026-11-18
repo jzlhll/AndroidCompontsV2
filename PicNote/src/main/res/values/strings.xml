@@ -89,12 +89,10 @@
     <string name="move_image_left">Move image earlier</string>
     <string name="move_image_right">Move image later</string>
     <string name="new_document">New document</string>
-    <string name="edit_node_title">Edit node</string>
     <string name="create_introduction">New introduction</string>
     <string name="create_chapter">New chapter title</string>
     <string name="create_body">New content node</string>
     <string name="add_image">Add image</string>
-    <string name="image_actions">Actions for image %1$d</string>
     <string name="replace_image">Replace</string>
     <string name="remove_image">Remove</string>
     <string name="restore_image">Cancel image removal</string>
@@ -123,7 +121,6 @@
     <string name="error_open_settings">Cannot open system settings. Enable photo access in app info.</string>
     <string name="error_request_photo_permission">Cannot request photo access. Try again or open system settings.</string>
     <string name="error_open_photo_picker">Cannot open the photo picker. Try again.</string>
-    <string name="error_create_share_uri">Cannot create a document sharing link</string>
     <string name="error_open_share_sheet">Cannot open the share sheet. Try again.</string>
     <string name="error_read_appearance">Cannot load appearance. Using Sage.</string>
     <string name="error_read_permission_history">Cannot load photo access prompt state</string>
@@ -165,7 +162,6 @@
     <string name="error_insert_before_fixed">Cannot insert before the title or main introduction</string>
     <string name="error_introduction_required">Enter an introduction</string>
     <string name="error_image_expired">Image is no longer available</string>
-    <string name="error_duplicate_existing_image">This image is already in the document. The original node was not changed.</string>
     <string name="error_image_not_ready">Image is not ready. Select it again.</string>
     <string name="error_duplicate_image">This image is already in the document. Select another image. The original node was not changed.</string>
     <string name="error_body_required">Enter text or add an image that is not already imported</string>
@@ -178,7 +174,6 @@
     <string name="error_export_image_unreadable">An image cannot be read. Cannot export the complete document.</string>
     <string name="error_create_image_draft_dir">Cannot create image draft directory</string>
     <string name="error_read_image">Cannot read the image. Select it again.</string>
-    <string name="error_image_dimensions">Image width and height must not exceed 16,383 pixels. Select another image.</string>
     <string name="error_image_codec_unavailable">Image compression is unavailable. This build supports ARM devices only.</string>
     <string name="error_image_compression">Image compression failed. Try again.</string>
     <string name="error_image_out_of_memory">Image is too large to process due to low memory</string>

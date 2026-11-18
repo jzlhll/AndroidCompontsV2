@@ -2,7 +2,9 @@ package com.allan.picnote.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import com.allan.picnote.data.entity.NodeContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -27,23 +29,29 @@ fun markdownPlainText(node: Node): String = buildString {
     })
 }.trimEnd('\n')
 
+private data class NodePreview(val markdown: String, val text: String)
+
 @Composable
 fun rememberNodePreviews(nodes: List<NodeContent>): Map<String, String> {
-    val previews by produceState<Map<String, String>>(emptyMap(), nodes) {
-        val previous = value
-        value = withContext(Dispatchers.Default) {
-            val parser = Parser.builder().build()
-            buildMap {
-                nodes.forEach { content ->
-                    currentCoroutineContext().ensureActive()
-                    if (content.node.kind == "code") return@forEach
-                    val markdown = content.node.bodyMarkdown
-                    if (markdown.isNotBlank() && !containsKey(markdown)) {
-                        put(markdown, previous[markdown] ?: markdownPlainText(parser.parse(markdown)))
+    val previews by key(nodes.firstOrNull()?.node?.documentId) {
+        produceState<Map<String, NodePreview>>(emptyMap(), nodes) {
+            val previous = value
+            value = withContext(Dispatchers.Default) {
+                val parser = Parser.builder().build()
+                buildMap {
+                    nodes.forEach { content ->
+                        currentCoroutineContext().ensureActive()
+                        val node = content.node
+                        val markdown = node.bodyMarkdown
+                        if (node.kind != "code" && markdown.isNotBlank()) {
+                            val cached = previous[node.id]
+                            put(node.id, if (cached != null && cached.markdown == markdown) cached
+                                else NodePreview(markdown, markdownPlainText(parser.parse(markdown))))
+                        }
                     }
                 }
             }
         }
     }
-    return previews
+    return remember(previews) { previews.mapValues { it.value.text } }
 }

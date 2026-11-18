@@ -2,9 +2,9 @@ package com.allan.picnote.ui
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.SystemClock
 import android.provider.Settings
 import android.text.format.DateUtils
 import android.text.format.Formatter
@@ -44,7 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
@@ -63,10 +62,13 @@ import com.au.module_androiduiex.styles.ComposeButton as Button
 import com.au.module_androiduiex.styles.ComposeOutlinedButton as OutlinedButton
 import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import java.text.NumberFormat
+import kotlin.time.Duration.Companion.milliseconds
 
 private enum class BluetoothCancelRequest { Transfer, Leave }
-private enum class BluetoothPermissionPrompt { Request, Rationale, Settings }
+private enum class BluetoothPermissionPrompt { Request, Rationale, ShowingRationale, RationaleAccepted, Settings }
 
 @Composable
 fun BluetoothTransferScreen(
@@ -86,25 +88,22 @@ fun BluetoothTransferScreen(
     var cancelRequest by rememberSaveable { mutableStateOf<BluetoothCancelRequest?>(null) }
     var leaving by rememberSaveable { mutableStateOf(false) }
     var openDocumentId by rememberSaveable { mutableStateOf<String?>(null) }
-    var permissionResultReceived by rememberSaveable { mutableStateOf(false) }
-    var showPermissionRationale by rememberSaveable { mutableStateOf(false) }
-    var permissionRationaleAccepted by rememberSaveable { mutableStateOf(false) }
     var settingsError by rememberSaveable { mutableStateOf(false) }
-    var permissionPrompt by remember { mutableStateOf(BluetoothPermissionPrompt.Request) }
-    fun missingPermissions(): List<String> = viewModel.requiredPermissions.filter {
-        ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
-    }
-    fun permissionPromptFor(missing: List<String>): BluetoothPermissionPrompt = when {
-        activity != null && missing.any { ActivityCompat.shouldShowRequestPermissionRationale(activity, it) } ->
-            BluetoothPermissionPrompt.Rationale
-        permissionResultReceived && missing.isNotEmpty() -> BluetoothPermissionPrompt.Settings
+    var permissionPrompt by rememberSaveable { mutableStateOf(BluetoothPermissionPrompt.Request) }
+    fun permissionPromptFor(missing: List<String>, requestCompleted: Boolean = false): BluetoothPermissionPrompt = when {
+        missing.isEmpty() -> BluetoothPermissionPrompt.Request
+        activity != null && missing.any { ActivityCompat.shouldShowRequestPermissionRationale(activity, it) } -> when {
+            !requestCompleted && permissionPrompt == BluetoothPermissionPrompt.ShowingRationale -> permissionPrompt
+            !requestCompleted && permissionPrompt == BluetoothPermissionPrompt.RationaleAccepted -> permissionPrompt
+            else -> BluetoothPermissionPrompt.Rationale
+        }
+        requestCompleted || permissionPrompt == BluetoothPermissionPrompt.Settings -> BluetoothPermissionPrompt.Settings
         else -> BluetoothPermissionPrompt.Request
     }
 
     val permissionsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
-        if (results.isNotEmpty()) permissionResultReceived = true
-        permissionRationaleAccepted = false
-        permissionPrompt = permissionPromptFor(missingPermissions())
+        val prompt = permissionPromptFor(viewModel.missingPermissions(), requestCompleted = results.isNotEmpty())
+        permissionPrompt = if (prompt == BluetoothPermissionPrompt.RationaleAccepted) BluetoothPermissionPrompt.Rationale else prompt
         viewModel.onPermissionsResult()
     }
     val enableLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -113,14 +112,20 @@ fun BluetoothTransferScreen(
     val discoverableLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         viewModel.onDiscoverabilityResult(result.resultCode)
     }
-    LifecycleResumeEffect(systemAction, active, permissionRationaleAccepted, leaving) {
+    val settingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        viewModel.onSettingsResult()
+    }
+    LifecycleResumeEffect(active, leaving) {
+        if (active && !leaving) viewModel.onResume()
+        onPauseOrDispose { }
+    }
+    LifecycleResumeEffect(systemAction, active, permissionPrompt, leaving) {
         if (active && !leaving) {
             val action = systemAction
-            val missing = if (action == null || action == BluetoothSystemAction.Permissions) missingPermissions() else emptyList()
+            val missing = if (action == null || action == BluetoothSystemAction.Permissions) viewModel.missingPermissions() else emptyList()
             if (action == null || action == BluetoothSystemAction.Permissions) permissionPrompt = permissionPromptFor(missing)
             val permissionPromptBlocked = action == BluetoothSystemAction.Permissions &&
-                (permissionPrompt == BluetoothPermissionPrompt.Settings ||
-                    permissionPrompt == BluetoothPermissionPrompt.Rationale && !permissionRationaleAccepted)
+                permissionPrompt in setOf(BluetoothPermissionPrompt.Settings, BluetoothPermissionPrompt.Rationale, BluetoothPermissionPrompt.ShowingRationale)
             if (action != null && !permissionPromptBlocked && viewModel.beginSystemAction(action)) {
                 try {
                     when (action) {
@@ -133,11 +138,12 @@ fun BluetoothTransferScreen(
                             Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
                                 .putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, BluetoothTransferViewModel.DiscoverableSeconds),
                         )
+                        BluetoothSystemAction.Settings -> Unit
                     }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    permissionRationaleAccepted = false
+                    if (permissionPrompt == BluetoothPermissionPrompt.RationaleAccepted) permissionPrompt = BluetoothPermissionPrompt.Rationale
                     logEx(throwable = e, message = "Launch Bluetooth system action failed action=$action")
                     viewModel.onSystemActionFailed(action)
                 }
@@ -146,12 +152,14 @@ fun BluetoothTransferScreen(
         onPauseOrDispose { }
     }
     fun openSettings(intent: Intent) {
+        if (!viewModel.beginSettingsVisit()) return
         try {
-            context.startActivity(intent)
+            settingsLauncher.launch(intent)
             settingsError = false
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            viewModel.onSettingsResult()
             logEx(throwable = e, message = "Open Bluetooth settings failed action=${intent.action}")
             settingsError = true
         }
@@ -184,18 +192,21 @@ fun BluetoothTransferScreen(
         else -> false
     }
     val awaitingReceipt = !receiving && state.awaitingReceipt
+    val discoverableSeconds = rememberDiscoverableSeconds(state.discoverabilityDeadline)
+    val discoveryExpired by remember(discoverableSeconds) { derivedStateOf { discoverableSeconds.value <= 0 } }
     LaunchedEffect(state.confirmCancel) {
         if (!state.confirmCancel) cancelRequest = null
     }
     val primaryAction = when {
         state.phase == BluetoothTransferPhase.Imported -> R.string.bluetooth_open_document
+        !receiving && state.phase == BluetoothTransferPhase.Unconfirmed -> R.string.bluetooth_choose_device_again
         state.permissionRequired && permissionPrompt == BluetoothPermissionPrompt.Settings -> R.string.bluetooth_app_settings
         state.permissionRequired -> R.string.bluetooth_permission_allow
         state.enableRequired -> R.string.bluetooth_enable
         awaitingReceipt -> R.string.bluetooth_stop_waiting
         cancelAvailable -> R.string.cancel
         receiving && state.canRetryListening -> R.string.bluetooth_retry_listening
-        receiving && state.canDiscover && state.discoverableSeconds <= 0 && state.phase != BluetoothTransferPhase.Incoming -> R.string.bluetooth_allow_discovery
+        receiving && state.canDiscover && discoveryExpired && state.phase != BluetoothTransferPhase.Incoming -> R.string.bluetooth_allow_discovery
         !receiving && state.canScan && !state.scanning -> R.string.bluetooth_rescan
         else -> null
     }
@@ -205,11 +216,12 @@ fun BluetoothTransferScreen(
                 openDocumentId = viewModel.stateFlow.value.documentId
                 if (openDocumentId != null) leaving = true
             }
+            R.string.bluetooth_choose_device_again -> viewModel.chooseDeviceAgain()
             R.string.bluetooth_app_settings -> openSettings(
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)),
             )
             R.string.bluetooth_permission_allow -> {
-                if (permissionPrompt == BluetoothPermissionPrompt.Rationale) showPermissionRationale = true
+                if (permissionPrompt == BluetoothPermissionPrompt.Rationale) permissionPrompt = BluetoothPermissionPrompt.ShowingRationale
                 else viewModel.requestPermissions()
             }
             R.string.bluetooth_enable -> viewModel.requestEnable()
@@ -243,9 +255,11 @@ fun BluetoothTransferScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 if (receiving) {
-                    receiveContent(state) { openSettings(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) }
+                    receiveContent(state, viewModel.bytesTransferredFlow, discoverableSeconds, discoveryExpired) {
+                        openSettings(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                    }
                 } else {
-                    sendContent(state, sendTitle, active && !leaving, viewModel::connect)
+                    sendContent(state, sendTitle, active && !leaving, viewModel.bytesTransferredFlow, viewModel::connect)
                 }
                 if (state.permissionRequired) item("permission_explanation") {
                     BluetoothSupportingText(stringResource(R.string.bluetooth_permission_explanation))
@@ -292,18 +306,17 @@ fun BluetoothTransferScreen(
             },
         )
     }
-    if (active && !leaving && showPermissionRationale && state.permissionRequired) {
+    if (active && !leaving && permissionPrompt == BluetoothPermissionPrompt.ShowingRationale && state.permissionRequired) {
         AlertDialog(
-            onDismissRequest = { showPermissionRationale = false },
+            onDismissRequest = { permissionPrompt = BluetoothPermissionPrompt.Rationale },
             title = { Text(stringResource(R.string.bluetooth_permission_allow)) },
             text = { Text(stringResource(R.string.bluetooth_permission_explanation)) },
             dismissButton = {
-                TextButton(onClick = { showPermissionRationale = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { permissionPrompt = BluetoothPermissionPrompt.Rationale }) { Text(stringResource(R.string.cancel)) }
             },
             confirmButton = {
                 Button(onClick = {
-                    showPermissionRationale = false
-                    permissionRationaleAccepted = true
+                    permissionPrompt = BluetoothPermissionPrompt.RationaleAccepted
                     viewModel.requestPermissions()
                 }) { Text(stringResource(R.string.bluetooth_permission_allow)) }
             },
@@ -311,10 +324,24 @@ fun BluetoothTransferScreen(
     }
 }
 
+@Composable
+private fun rememberDiscoverableSeconds(deadline: Long): State<Int> = produceState(0, deadline) {
+    while (true) {
+        val remaining = deadline - SystemClock.elapsedRealtime()
+        if (remaining <= 0) {
+            value = 0
+            break
+        }
+        value = ((remaining + 999L) / 1000L).toInt()
+        delay(((remaining - 1L) % 1000L + 1L).milliseconds)
+    }
+}
+
 private fun LazyListScope.sendContent(
     state: BluetoothTransferState,
     title: String?,
     active: Boolean,
+    bytesTransferredFlow: StateFlow<Long>,
     onDevice: (String) -> Unit,
 ) {
     item("send_archive") {
@@ -366,9 +393,9 @@ private fun LazyListScope.sendContent(
                     BluetoothTransferPhase.Connecting -> BluetoothBusyStatus(stringResource(R.string.bluetooth_connecting))
                     BluetoothTransferPhase.AwaitingApproval -> BluetoothBusyStatus(
                         stringResource(R.string.bluetooth_waiting_for_acceptance),
-                        stringResource(R.string.bluetooth_waiting_for_acceptance_help),
+                        detail = stringResource(R.string.bluetooth_waiting_for_acceptance_help),
                     )
-                    BluetoothTransferPhase.Transferring -> BluetoothProgressCard(state, stringResource(R.string.bluetooth_sending))
+                    BluetoothTransferPhase.Transferring -> BluetoothProgressCard(state.fileSize, bytesTransferredFlow, stringResource(R.string.bluetooth_sending))
                     else -> BluetoothBusyStatus(stringResource(R.string.bluetooth_waiting_for_import))
                 }
             }
@@ -380,7 +407,13 @@ private fun LazyListScope.sendContent(
     }
 }
 
-private fun LazyListScope.receiveContent(state: BluetoothTransferState, openBluetoothSettings: () -> Unit) {
+private fun LazyListScope.receiveContent(
+    state: BluetoothTransferState,
+    bytesTransferredFlow: StateFlow<Long>,
+    discoverableSeconds: State<Int>,
+    discoveryExpired: Boolean,
+    openBluetoothSettings: () -> Unit,
+) {
     when (state.phase) {
         BluetoothTransferPhase.Transferring, BluetoothTransferPhase.Importing -> {
             item("receive_archive") {
@@ -395,7 +428,7 @@ private fun LazyListScope.receiveContent(state: BluetoothTransferState, openBlue
                     BluetoothBusyStatus(stringResource(R.string.bluetooth_importing))
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        BluetoothProgressCard(state, stringResource(R.string.bluetooth_receiving))
+                        BluetoothProgressCard(state.fileSize, bytesTransferredFlow, stringResource(R.string.bluetooth_receiving))
                         BluetoothSupportingText(stringResource(R.string.bluetooth_auto_import))
                     }
                 }
@@ -403,6 +436,7 @@ private fun LazyListScope.receiveContent(state: BluetoothTransferState, openBlue
         }
         BluetoothTransferPhase.Imported -> {
             item("imported") { BluetoothSuccessHeading(stringResource(R.string.bluetooth_import_success)) }
+            if (state.mirrorFailed) item("mirror_failed") { BluetoothStatusText(stringResource(R.string.mirror_failed), error = true) }
             item("imported_document") {
                 BluetoothInfoCard(
                     icon = R.drawable.ic_bluetooth_archive,
@@ -412,7 +446,7 @@ private fun LazyListScope.receiveContent(state: BluetoothTransferState, openBlue
             }
         }
         else -> {
-            item("receiver") { BluetoothReceiverCard(state) }
+            item("receiver") { BluetoothReceiverCard(state, discoverableSeconds) }
             if (!state.permissionRequired && !state.enableRequired && state.canDiscover) {
                 item("receiver_help") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -423,7 +457,7 @@ private fun LazyListScope.receiveContent(state: BluetoothTransferState, openBlue
                             BluetoothSupportingText(stringResource(R.string.bluetooth_missing_name_help))
                             TextButton(onClick = openBluetoothSettings) { Text(stringResource(R.string.bluetooth_system_settings)) }
                         }
-                        if (state.discoverableSeconds <= 0 && state.statusRes == 0) {
+                        if (discoveryExpired && state.statusRes == 0) {
                             BluetoothSupportingText(stringResource(R.string.bluetooth_paired_can_connect))
                         }
                         BluetoothSupportingText(stringResource(R.string.bluetooth_keep_page_open))
@@ -488,9 +522,13 @@ private fun LazyListScope.bluetoothDeviceGroup(
 }
 
 @Composable
-private fun BluetoothReceiverCard(state: BluetoothTransferState) {
+private fun BluetoothReceiverCard(
+    state: BluetoothTransferState,
+    discoverableSeconds: State<Int>,
+    modifier: Modifier = Modifier,
+) {
     Surface(
-        Modifier.fillMaxWidth(),
+        modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -517,9 +555,10 @@ private fun BluetoothReceiverCard(state: BluetoothTransferState) {
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary,
                     )
-                    if (state.discoverableSeconds > 0) {
+                    val remaining = discoverableSeconds.value
+                    if (remaining > 0) {
                         BluetoothSupportingText(
-                            stringResource(R.string.bluetooth_discoverable_time, DateUtils.formatElapsedTime(state.discoverableSeconds.toLong())),
+                            stringResource(R.string.bluetooth_discoverable_time, DateUtils.formatElapsedTime(remaining.toLong())),
                         )
                     }
                 }
@@ -529,9 +568,15 @@ private fun BluetoothReceiverCard(state: BluetoothTransferState) {
 }
 
 @Composable
-private fun IncomingBluetoothDocumentDialog(state: BluetoothTransferState, onAccept: () -> Unit, onReject: () -> Unit) {
+private fun IncomingBluetoothDocumentDialog(
+    state: BluetoothTransferState,
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     AlertDialog(
         onDismissRequest = onReject,
+        modifier = modifier,
         title = { Text(stringResource(R.string.bluetooth_receive_prompt)) },
         text = {
             Column(
@@ -556,11 +601,12 @@ private fun BluetoothInfoCard(
     @DrawableRes icon: Int,
     title: String,
     detail: String?,
+    modifier: Modifier = Modifier,
     label: String? = null,
     emphasized: Boolean = true,
 ) {
     Surface(
-        Modifier.fillMaxWidth(),
+        modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = if (emphasized) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -581,9 +627,9 @@ private fun BluetoothInfoCard(
 }
 
 @Composable
-private fun BluetoothIconTile(@DrawableRes icon: Int) {
+private fun BluetoothIconTile(@DrawableRes icon: Int, modifier: Modifier = Modifier) {
     Box(
-        Modifier.size(44.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
+        modifier.size(44.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Icon(painterResource(icon), contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -591,9 +637,9 @@ private fun BluetoothIconTile(@DrawableRes icon: Int) {
 }
 
 @Composable
-private fun BluetoothBusyStatus(title: String, detail: String? = null) {
+private fun BluetoothBusyStatus(title: String, modifier: Modifier = Modifier, detail: String? = null) {
     Column(
-        Modifier.fillMaxWidth().padding(vertical = 20.dp).semantics { liveRegion = LiveRegionMode.Polite },
+        modifier.fillMaxWidth().padding(vertical = 20.dp).semantics { liveRegion = LiveRegionMode.Polite },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -606,12 +652,18 @@ private fun BluetoothBusyStatus(title: String, detail: String? = null) {
 }
 
 @Composable
-private fun BluetoothProgressCard(state: BluetoothTransferState, title: String) {
-    val progress = if (state.fileSize > 0) (state.bytesTransferred.toDouble() / state.fileSize).toFloat() else 0f
+private fun BluetoothProgressCard(
+    fileSize: Long,
+    bytesTransferredFlow: StateFlow<Long>,
+    title: String,
+    modifier: Modifier = Modifier,
+) {
+    val bytesTransferred by bytesTransferredFlow.collectAsStateWithLifecycle()
+    val progress = if (fileSize > 0) (bytesTransferred.toDouble() / fileSize).toFloat() else 0f
     val locale = LocalConfiguration.current.locales[0]
     val percentFormat = remember(locale) { NumberFormat.getPercentInstance(locale) }
     Surface(
-        Modifier.fillMaxWidth(),
+        modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
@@ -623,16 +675,16 @@ private fun BluetoothProgressCard(state: BluetoothTransferState, title: String) 
             }
             LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
             BluetoothSupportingText(
-                stringResource(R.string.bluetooth_byte_progress, bluetoothFileSize(state.bytesTransferred), bluetoothFileSize(state.fileSize)),
+                stringResource(R.string.bluetooth_byte_progress, bluetoothFileSize(bytesTransferred), bluetoothFileSize(fileSize)),
             )
         }
     }
 }
 
 @Composable
-private fun BluetoothSuccessHeading(title: String) {
+private fun BluetoothSuccessHeading(title: String, modifier: Modifier = Modifier) {
     Column(
-        Modifier.fillMaxWidth().padding(vertical = 16.dp).semantics { liveRegion = LiveRegionMode.Polite },
+        modifier.fillMaxWidth().padding(vertical = 16.dp).semantics { liveRegion = LiveRegionMode.Polite },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -647,18 +699,18 @@ private fun BluetoothSuccessHeading(title: String) {
 }
 
 @Composable
-private fun BluetoothStatusText(text: String, error: Boolean) {
+private fun BluetoothStatusText(text: String, error: Boolean, modifier: Modifier = Modifier) {
     Text(
         text,
-        Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        modifier.semantics { liveRegion = LiveRegionMode.Polite },
         style = MaterialTheme.typography.bodyMedium,
         color = if (error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
 @Composable
-private fun BluetoothSupportingText(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun BluetoothSupportingText(text: String, modifier: Modifier = Modifier) {
+    Text(text, modifier = modifier, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable

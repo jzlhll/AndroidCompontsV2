@@ -2,22 +2,25 @@ package com.allan.picnote.bluetooth
 
 import android.bluetooth.BluetoothSocket
 import android.os.SystemClock
-import android.system.ErrnoException
-import android.system.OsConstants
 import androidx.annotation.StringRes
 import com.allan.picnote.R
 import com.allan.picnote.data.BluetoothArchiveMaxBytes
-import com.allan.picnote.logdNoFile
+import com.allan.picnote.data.bluetoothStorageReason
+import com.allan.picnote.logEx
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
@@ -32,6 +35,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
 import java.security.MessageDigest
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
@@ -40,6 +44,7 @@ val PicNoteBluetoothServiceUuid: UUID = UUID.fromString("0c64dc62-4f8f-4aa5-bb58
 const val BluetoothConnectTimeoutMillis = 60_000L
 const val BluetoothApprovalTimeoutMillis = 60_000L
 const val BluetoothImportTimeoutMillis = 180_000L
+const val BluetoothFailureReceiptTimeoutMillis = 2_000L
 
 private const val ProtocolMagic = 0x504E4254
 private const val ProtocolVersion = 1
@@ -48,6 +53,8 @@ private const val MaxFileNameBytes = 255
 private const val DigestBytes = 32
 private const val ControlTimeoutMillis = 10_000L
 private const val TransferStallMillis = 30_000L
+private const val SocketIoStopped = -1L
+private const val SocketIoTimedOut = -2L
 
 private const val Hello = 1
 private const val Offer = 2
@@ -58,7 +65,13 @@ private const val BeginBody = 6
 
 data class BluetoothArchiveOffer(val name: String, val size: Long, val digest: ByteArray)
 
-class BluetoothTransferException(@StringRes val reason: Int) : IOException("Bluetooth transfer failed ($reason)")
+private data class BodyWriteResult(val complete: Boolean, val result: Result<Unit>)
+
+class BluetoothTransferException(
+    @StringRes val reason: Int,
+    val unreadBodyBytes: Long? = null,
+    cause: Throwable? = null,
+) : IOException("Bluetooth transfer failed ($reason)", cause)
 
 enum class BluetoothReceiptFailure(val code: Int, @StringRes val reason: Int) {
     Rejected(1, R.string.bluetooth_transfer_rejected),
@@ -78,7 +91,19 @@ class BluetoothTransferChannel(private val socket: BluetoothSocket) {
     private val input = DataInputStream(socket.inputStream)
     private val output = DataOutputStream(socket.outputStream)
 
-    suspend fun handshake() = runBluetoothSocketIo(socket, ControlTimeoutMillis) {
+    suspend fun negotiateSend(offer: BluetoothArchiveOffer) = runBluetoothSocketIo(socket, ControlTimeoutMillis) { heartbeat ->
+        handshake()
+        heartbeat()
+        writeOffer(offer)
+    }
+
+    suspend fun negotiateReceive(): BluetoothArchiveOffer = runBluetoothSocketIo(socket, ControlTimeoutMillis) { heartbeat ->
+        handshake()
+        heartbeat()
+        readOffer()
+    }
+
+    private fun handshake() {
         writeControl(Hello) {
             writeInt(ProtocolMagic)
             writeInt(ProtocolVersion)
@@ -90,7 +115,7 @@ class BluetoothTransferChannel(private val socket: BluetoothSocket) {
         }
     }
 
-    suspend fun sendOffer(offer: BluetoothArchiveOffer) = runBluetoothSocketIo(socket, ControlTimeoutMillis) {
+    private fun writeOffer(offer: BluetoothArchiveOffer) {
         val name = offer.name.toByteArray(Charsets.UTF_8)
         validateOffer(offer.name, name.size, offer.size)
         check(offer.digest.size == DigestBytes)
@@ -102,33 +127,26 @@ class BluetoothTransferChannel(private val socket: BluetoothSocket) {
         }
     }
 
-    suspend fun readOffer(): BluetoothArchiveOffer = runBluetoothSocketIo(socket, ControlTimeoutMillis) {
-        readControl(Offer) {
-            val nameSize = readUnsignedShort()
-            if (nameSize !in 1..MaxFileNameBytes) invalidControl()
-            val name = try {
-                val nameBytes = ByteArray(nameSize).also(::readFully)
-                Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(nameBytes)).toString()
-            } catch (_: CharacterCodingException) {
-                invalidControl()
-            }
-            val size = readLong()
-            validateOffer(name, nameSize, size)
-            BluetoothArchiveOffer(name, size, ByteArray(DigestBytes).also(::readFully))
+    private fun readOffer(): BluetoothArchiveOffer = readControl(Offer) {
+        val nameSize = readUnsignedShort()
+        if (nameSize !in 1..MaxFileNameBytes) invalidControl()
+        val name = try {
+            val nameBytes = ByteArray(nameSize).also(::readFully)
+            Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(nameBytes)).toString()
+        } catch (_: CharacterCodingException) {
+            invalidControl()
         }
+        val size = readLong()
+        validateOffer(name, nameSize, size)
+        BluetoothArchiveOffer(name, size, ByteArray(DigestBytes).also(::readFully))
     }
 
     suspend fun sendApproval() = sendStatus(Accepted)
     suspend fun sendImported() = sendStatus(Imported)
-    suspend fun sendBodyStart() = sendStatus(BeginBody)
 
     suspend fun awaitApproval() = runBluetoothSocketIo(
         socket, BluetoothApprovalTimeoutMillis + ControlTimeoutMillis, R.string.bluetooth_transfer_approval_timeout,
     ) { readControl(Accepted, allowFailure = true) {} }
-
-    suspend fun awaitImported() = runBluetoothSocketIo(
-        socket, BluetoothImportTimeoutMillis, R.string.bluetooth_transfer_unconfirmed,
-    ) { readControl(Imported, allowFailure = true) {} }
 
     suspend fun awaitBodyStart() = runBluetoothSocketIo(
         socket, BluetoothApprovalTimeoutMillis + 2 * ControlTimeoutMillis,
@@ -138,13 +156,85 @@ class BluetoothTransferChannel(private val socket: BluetoothSocket) {
         writeControl(Failure) { writeByte(failure.code) }
     }
 
-    suspend fun sendFile(file: File, length: Long, onBodyWritten: () -> Unit, onProgress: (Long) -> Unit) {
-        runBluetoothSocketIo(socket, TransferStallMillis) { heartbeat ->
-            file.inputStream().buffered().use { source ->
-                copyFile(source, output, length, heartbeat, onComplete = onBodyWritten, onProgress = onProgress)
+    suspend fun sendFileAndAwaitImport(
+        file: File,
+        length: Long,
+        onBodyWritten: suspend () -> Unit,
+        onAwaitingImport: () -> Unit,
+        onProgress: (Long) -> Unit,
+    ) = supervisorScope {
+        // 批准帧已经读完，正文发送期间只有这个协程读取回执。导入超时从正文发送完成后计时。
+        val finalWriteStarted = AtomicBoolean(false)
+        val receipt = async(start = CoroutineStart.UNDISPATCHED) {
+            transferIoResult {
+                runBluetoothSocketIo(socket) {
+                    readControl(Imported, allowFailure = true) {}
+                    if (!finalWriteStarted.get()) invalidControl()
+                }
             }
-            output.flush()
         }
+        val writer = async {
+            var complete = false
+            val result = transferIoResult {
+                sendStatus(BeginBody)
+                runBluetoothSocketIo(socket, TransferStallMillis) { heartbeat ->
+                    file.inputStream().buffered().use { source ->
+                        copyFile(
+                            source, output, length, heartbeat,
+                            // 最后一块正在写入时，对端可能已读到全部正文，但写入协程尚未来得及更新界面。
+                            onFinalWrite = { finalWriteStarted.set(true) },
+                            onComplete = {
+                                complete = true
+                                onBodyWritten()
+                            },
+                            onProgress = onProgress,
+                        )
+                    }
+                    output.flush()
+                }
+            }
+            BodyWriteResult(complete, result)
+        }
+        val (written, received) = select<Pair<BodyWriteResult?, Result<Unit>?>> {
+            receipt.onAwait { received ->
+                received.throwReceiptFailure()
+                val written = if (received.isSuccess) {
+                    writer.await()
+                } else {
+                    withTimeoutOrNull(BluetoothFailureReceiptTimeoutMillis.milliseconds) { writer.await() }
+                }
+                written to received
+            }
+            writer.onAwait { written ->
+                val waitMillis = if (written.result.isSuccess) {
+                    onAwaitingImport()
+                    BluetoothImportTimeoutMillis
+                } else {
+                    // 写端可能先收到断链，给正在读的回执一次短暂机会，保留明确的对端拒绝原因。
+                    BluetoothFailureReceiptTimeoutMillis
+                }
+                written to withTimeoutOrNull(waitMillis.milliseconds) { receipt.await() }
+            }
+        }
+        received?.throwReceiptFailure()
+        if (received?.isSuccess == true && written?.complete == true) return@supervisorScope
+        throw written?.result?.exceptionOrNull() ?: received?.exceptionOrNull()
+            ?: BluetoothTransferException(R.string.bluetooth_transfer_unconfirmed)
+    }
+
+    suspend fun awaitFailureReceiptRead(unreadBodyBytes: Long = 0L) = runBluetoothSocketIo<Unit>(socket, BluetoothFailureReceiptTimeoutMillis) {
+        // 旧版发送端写完定长正文才读回执。限时丢弃尚未读取的正文，随后等待对方关断。
+        if (unreadBodyBytes > 0L) {
+            val buffer = ByteArray(32 * 1024)
+            var remaining = unreadBodyBytes
+            while (remaining > 0L) {
+                currentCoroutineContext().ensureActive()
+                val count = input.read(buffer, 0, min(remaining, buffer.size.toLong()).toInt())
+                if (count <= 0) return@runBluetoothSocketIo
+                remaining -= count
+            }
+        }
+        input.read()
     }
 
     suspend fun receiveFile(file: File, offer: BluetoothArchiveOffer, onProgress: (Long) -> Unit) {
@@ -153,7 +243,7 @@ class BluetoothTransferChannel(private val socket: BluetoothSocket) {
             val stream = try {
                 file.outputStream()
             } catch (e: IOException) {
-                throw BluetoothTransferException(bluetoothStorageReason(e))
+                throw BluetoothTransferException(bluetoothStorageReason(e), unreadBodyBytes = offer.size, cause = e)
             }
             stream.use { target ->
                 copyFile(input, target, offer.size, heartbeat, digest, onProgress = onProgress)
@@ -202,6 +292,18 @@ class BluetoothTransferChannel(private val socket: BluetoothSocket) {
 
 class BluetoothPeerException(val failure: BluetoothReceiptFailure) : IOException()
 
+private suspend fun transferIoResult(block: suspend () -> Unit): Result<Unit> = try {
+    block()
+    Result.success(Unit)
+} catch (e: IOException) {
+    Result.failure(e)
+}
+
+private fun Result<Unit>.throwReceiptFailure() {
+    val error = exceptionOrNull()
+    if (error is BluetoothPeerException || error is BluetoothTransferException) throw error
+}
+
 private fun validateOffer(name: String, nameSize: Int, size: Long) {
     if (nameSize !in 1..MaxFileNameBytes ||
         !name.endsWith(".zip", ignoreCase = true) ||
@@ -219,7 +321,8 @@ private suspend fun copyFile(
     length: Long,
     heartbeat: () -> Unit,
     digest: MessageDigest? = null,
-    onComplete: () -> Unit = {},
+    onFinalWrite: () -> Unit = {},
+    onComplete: suspend () -> Unit = {},
     onProgress: (Long) -> Unit,
 ) {
     val buffer = ByteArray(32 * 1024)
@@ -229,10 +332,13 @@ private suspend fun copyFile(
         currentCoroutineContext().ensureActive()
         val count = source.read(buffer, 0, min(length - copied, buffer.size.toLong()).toInt())
         if (count <= 0) throw EOFException()
+        if (count.toLong() == length - copied) onFinalWrite()
         try {
             target.write(buffer, 0, count)
         } catch (e: IOException) {
-            if (digest != null) throw BluetoothTransferException(bluetoothStorageReason(e))
+            if (digest != null) {
+                throw BluetoothTransferException(bluetoothStorageReason(e), unreadBodyBytes = length - copied - count, cause = e)
+            }
             throw e
         }
         digest?.update(buffer, 0, count)
@@ -253,33 +359,39 @@ suspend fun <T> runBluetoothSocketIo(
     @StringRes timeoutReason: Int = R.string.bluetooth_transfer_timeout,
     block: suspend (heartbeat: () -> Unit) -> T,
 ): T = coroutineScope {
-    val lastProgress = AtomicLong(SystemClock.elapsedRealtime())
-    var operationFinished = false
-    var timedOut = false
+    val progress = AtomicLong(SystemClock.elapsedRealtime())
     val abort = launch(start = CoroutineStart.UNDISPATCHED) {
         try {
             if (timeoutMillis == null) awaitCancellation()
-            else {
-                var remaining: Long = timeoutMillis
-                while (remaining > 0L) {
+            else while (true) {
+                val checkpoint = progress.get()
+                if (checkpoint < 0) break
+                val remaining = timeoutMillis - (SystemClock.elapsedRealtime() - checkpoint)
+                if (remaining > 0) {
                     delay(remaining.milliseconds)
-                    remaining = timeoutMillis - (SystemClock.elapsedRealtime() - lastProgress.get())
+                } else if (progress.compareAndSet(checkpoint, SocketIoTimedOut)) {
+                    closeBluetoothSocket(socket)
+                    break
                 }
-                timedOut = true
             }
         } finally {
-            if (!operationFinished) closeBluetoothSocket(socket)
+            if (progress.getAndUpdate { if (it >= 0) SocketIoStopped else it } >= 0) closeBluetoothSocket(socket)
         }
     }
     try {
-        val result = withContext(Dispatchers.IO) { block { lastProgress.set(SystemClock.elapsedRealtime()) } }
-        if (timedOut) throw BluetoothTransferException(timeoutReason)
+        val result = withContext(Dispatchers.IO) {
+            try {
+                block { progress.getAndUpdate { if (it >= 0) SystemClock.elapsedRealtime() else it } }
+            } finally {
+                progress.getAndUpdate { if (it >= 0) SocketIoStopped else it }
+            }
+        }
+        if (progress.get() == SocketIoTimedOut) throw BluetoothTransferException(timeoutReason)
         result
     } catch (e: IOException) {
-        if (timedOut) throw BluetoothTransferException(timeoutReason)
+        if (progress.get() == SocketIoTimedOut) throw BluetoothTransferException(timeoutReason)
         throw e
     } finally {
-        operationFinished = true
         abort.cancel()
     }
 }
@@ -290,15 +402,7 @@ suspend fun closeBluetoothSocket(socket: Closeable?) {
         try {
             socket.close()
         } catch (e: IOException) {
-            logdNoFile("Close Bluetooth socket failed: ${e.javaClass.simpleName}")
+            logEx(throwable = e, message = "Close Bluetooth socket failed")
         }
     }
-}
-
-@StringRes
-fun bluetoothStorageReason(error: Exception): Int {
-    val outOfSpace = generateSequence<Throwable>(error) { it.cause }
-        .filterIsInstance<ErrnoException>()
-        .any { it.errno == OsConstants.ENOSPC || it.errno == OsConstants.EDQUOT }
-    return if (outOfSpace) R.string.error_bluetooth_archive_no_space else R.string.error_bluetooth_archive_io
 }

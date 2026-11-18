@@ -9,6 +9,9 @@ import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
 import com.allan.picnote.data.PicNoteDatabase
+import com.allan.picnote.data.MIGRATION_1_2
+import com.allan.picnote.data.MIGRATION_2_3
+import com.allan.picnote.data.MIGRATION_3_4
 import com.allan.picnote.data.PermissionPreferences
 import com.allan.picnote.data.AppearancePreferences
 import com.allan.picnote.data.NodeGuidePreferences
@@ -38,10 +41,15 @@ class PicNoteApplication : CommonInitApplication(), SingletonImageLoader.Factory
     val processId: Int = Process.myPid()
     var foregroundOrdinal: Int = 0
         private set
+    var startupNodeGuideResolved = false
     private val foregroundEvents = Channel<Int>(Channel.UNLIMITED)
     private val startupCleanup = CompletableDeferred<CleanupResult>()
     val foregroundEntries = foregroundEvents.receiveAsFlow()
-    val database by lazy { Room.databaseBuilder(this, PicNoteDatabase::class.java, "picnote.db").fallbackToDestructiveMigration(dropAllTables = true).build() }
+    val database by lazy {
+        Room.databaseBuilder(this, PicNoteDatabase::class.java, "picnote.db")
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .build()
+    }
     val documents by lazy { DocumentRepository(this, database) }
     val scanner by lazy { MediaScanner(this, database) }
     val mediaDeletion by lazy { MediaDeletion(this) }

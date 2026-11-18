@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -22,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,8 +46,9 @@ import kotlinx.coroutines.CancellationException
 fun EditorScreen(
     viewModel: EditorViewModel,
     repository: DocumentRepository,
+    wrapCode: Boolean,
+    active: Boolean,
     onBack: () -> Unit,
-    onSaved: (String, Boolean) -> Unit,
 ) {
     val state by viewModel.stateFlow.collectAsStateWithLifecycle()
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -71,13 +76,15 @@ fun EditorScreen(
         catch (e: CancellationException) { throw e }
         catch (e: Exception) { viewModel.imagePickerFailed(e) }
     }
-    val close = { if (!state.busy && state.savedId == null) { if (state.dirty) discard = true else onBack() } }
-    val editable = state.loaded && !state.loading && !state.busy && state.savedId == null
-    val backState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
-    NavigationBackHandler(state = backState, isBackEnabled = state.dirty || state.busy || state.savedId != null, onBackCompleted = close)
-    LaunchedEffect(state.savedId) {
-        state.savedId?.let { onSaved(it, state.mirrorFailed) }
+    val close = {
+        val current = viewModel.stateFlow.value
+        if (active && !current.busy) {
+            if (current.dirty && current.saved == null) discard = true else onBack()
+        }
     }
+    val editable = active && state.loaded && !state.loading && !state.busy && state.saved == null
+    val backState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(state = backState, isBackEnabled = active, onBackCompleted = close)
     val valid = when {
         creatingDocument || titleNode || chapter -> state.title.trim().isNotEmpty()
         introduction -> state.fixed || state.body.isNotBlank()
@@ -102,7 +109,7 @@ fun EditorScreen(
         title = editorTitle,
         onBack = close,
         backContentDescription = stringResource(R.string.back),
-        backEnabled = !state.busy && state.savedId == null,
+        backEnabled = !state.busy,
         titleStyle = MaterialTheme.typography.titleLarge,
         primaryActionLabel = saveLabel,
         onPrimaryAction = save,
@@ -116,99 +123,120 @@ fun EditorScreen(
             }
         },
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = imageScroll,
-            contentPadding = PaddingValues(bottom = 24.dp),
-        ) {
-            if (creatingDocument || titleNode || chapter) item(key = "title-input") {
-                OutlinedTextField(
-                    value = state.title, onValueChange = viewModel::setTitle, enabled = editable,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), singleLine = true,
-                    label = { Text(if (chapter) "章节标题" else "标题") },
-                )
-            }
-            if (!creatingDocument && state.kind == "body") {
-                itemsIndexed(state.images, key = { _, draft -> draft.id }) { index, draft ->
-                    val existing = draft.existing
-                    val source = existing?.fileName ?: draft.prepared?.file?.path
-                    var ratio by rememberSaveable(source) { mutableStateOf(existing?.let { it.width.toFloat() / it.height }
-                        ?: draft.prepared?.let { it.width.toFloat() / it.height } ?: 1f) }
-                    val model: Any? = if (existing != null) repository.imageFile(route.documentId!!, existing.fileName) else draft.prepared?.file
-                    Row(Modifier.fillMaxWidth().padding(top = 16.dp, end = 24.dp, bottom = 16.dp), verticalAlignment = Alignment.Top) {
-                        Column(Modifier.width(imageContentStartPadding), horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(Modifier.size(20.dp).border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                                contentAlignment = Alignment.Center) {
-                                Text((index + 1).toString(), style = MaterialTheme.typography.labelMedium,
-                                    fontSize = 10.sp, color = MaterialTheme.colorScheme.primary, maxLines = 1, softWrap = false)
-                            }
-                            ImageIconButton(onClick = { viewModel.moveImage(draft.id, -1) }, enabled = editable && index > 0,
-                                modifier = Modifier.size(imageActionSize)) {
-                                Icon(Icons.Default.KeyboardArrowUp, stringResource(R.string.move_up))
-                            }
-                            ImageIconButton(onClick = { viewModel.moveImage(draft.id, 1) }, enabled = editable && index < state.images.lastIndex,
-                                modifier = Modifier.size(imageActionSize)) {
-                                Icon(Icons.Default.KeyboardArrowDown, stringResource(R.string.move_down))
-                            }
-                            ImageIconButton(onClick = {
-                                if (replaceImageId == null) {
-                                    replaceImageId = draft.id
-                                    try { replacer.launch(maxItems = 1) }
-                                    catch (e: CancellationException) { replaceImageId = null; throw e }
-                                    catch (e: Exception) { replaceImageId = null; viewModel.imagePickerFailed(e) }
-                                }
-                            }, enabled = editable, modifier = Modifier.size(imageActionSize)) {
-                                Icon(Icons.Default.Refresh, stringResource(R.string.replace_image))
-                            }
-                            ImageIconButton(onClick = { viewModel.toggleImageRemoval(draft.id) }, enabled = editable,
-                                modifier = Modifier.size(imageActionSize),
-                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) {
-                                Icon(Icons.Default.Delete, stringResource(if (draft.pendingRemoval) R.string.restore_image else R.string.remove_image))
-                            }
-                        }
-                        Box(Modifier.weight(1f)
-                            .composeOffsetBlurShadow(cornerRadius = 2.dp, blurRadius = 16.dp, offsetY = 6.dp,
-                                shadowColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f))
-                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(2.dp))) {
-                            LocalImage(model, "图片 ${index + 1}", Modifier.fillMaxWidth().aspectRatio(ratio), cacheKey = draft.id,
-                                onSize = { width, height -> if (width > 0 && height > 0) ratio = width.toFloat() / height })
-                            if (draft.pendingRemoval) {
-                                Box(Modifier.matchParentSize().background(Color.White.copy(alpha = 0.5f), RoundedCornerShape(2.dp)))
-                            }
+        Column(Modifier.fillMaxSize()) {
+            val error = state.error ?: state.codeLanguageUsageError
+            if (error != null) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)
+                        .background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(8.dp))
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(error, Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer)
+                    if (!state.loaded && !state.loading) {
+                        TextButton(onClick = viewModel::load) { Text(stringResource(R.string.retry_load_node)) }
+                    } else if (state.loaded) {
+                        ImageIconButton(onClick = viewModel::dismissError) {
+                            Icon(Icons.Default.Close, stringResource(R.string.close), tint = MaterialTheme.colorScheme.onErrorContainer)
                         }
                     }
                 }
             }
-            if (!creatingDocument && state.kind == "body") item(key = "add-image-button") {
-                Box(Modifier.fillMaxWidth().padding(start = bodyContentStartPadding, end = 24.dp, bottom = 12.dp), contentAlignment = Alignment.Center) {
-                    TextButton(onClick = addImages, enabled = editable) { Text(stringResource(R.string.add_image), fontSize = 16.sp) }
+            if (!state.loaded) return@Column
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = imageScroll,
+                contentPadding = PaddingValues(bottom = 24.dp),
+            ) {
+                if (creatingDocument || titleNode || chapter) item(key = "title-input") {
+                    OutlinedTextField(
+                        value = state.title, onValueChange = viewModel::setTitle, enabled = editable,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp), singleLine = true,
+                        label = { Text(stringResource(if (chapter) R.string.chapter_title else R.string.title)) },
+                    )
                 }
-            }
-            if (creatingDocument || introduction || state.kind == "body") item(key = "body-input") {
-                OutlinedTextField(
-                    value = state.body, onValueChange = viewModel::setBody, enabled = editable,
-                    modifier = Modifier.fillMaxWidth().padding(start = bodyContentStartPadding, end = 24.dp).heightIn(min = if (creatingDocument) 180.dp else 240.dp),
-                    label = { Text(when { creatingDocument -> "引言（可选）"; introduction -> "引言"; state.images.isEmpty() -> "文字内容"; else -> "备注" }) },
-                )
-            }
-            if (!creatingDocument && codeBlock) item(key = "code-input") {
-                val languageOrder by viewModel.codeLanguagesFlow.collectAsStateWithLifecycle()
-                CodeBlockEditor(state, editable, languageOrder, viewModel::setBody, viewModel::setCode, viewModel::setCodeLanguage,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp))
-            }
-            state.error?.let { error -> item(key = "error") { Text(error, Modifier.padding(24.dp), color = MaterialTheme.colorScheme.error) } }
-            if (!state.loaded && !state.loading) item(key = "load-retry") {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    TextButton(onClick = viewModel::load) { Text("重试读取节点") }
+                if (!creatingDocument && state.kind == "body") {
+                    itemsIndexed(state.images, key = { _, draft -> draft.id }) { index, draft ->
+                        val existing = draft.existing
+                        val source = existing?.fileName ?: draft.prepared?.file?.path
+                        var ratio by rememberSaveable(source) { mutableStateOf(existing?.let { it.width.toFloat() / it.height }
+                            ?: draft.prepared?.let { it.width.toFloat() / it.height } ?: 1f) }
+                        val model: Any? = if (existing != null) repository.imageFile(route.documentId!!, existing.fileName) else draft.prepared?.file
+                        Row(Modifier.fillMaxWidth().padding(top = 16.dp, end = 24.dp, bottom = 16.dp), verticalAlignment = Alignment.Top) {
+                            Column(Modifier.width(imageContentStartPadding), horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(Modifier.size(20.dp).border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                                    contentAlignment = Alignment.Center) {
+                                    Text((index + 1).toString(), style = MaterialTheme.typography.labelMedium,
+                                        fontSize = 10.sp, color = MaterialTheme.colorScheme.primary, maxLines = 1, softWrap = false)
+                                }
+                                ImageIconButton(onClick = { viewModel.moveImage(draft.id, -1) }, enabled = editable && index > 0,
+                                    modifier = Modifier.size(imageActionSize)) {
+                                    Icon(Icons.Default.KeyboardArrowUp, stringResource(R.string.move_up))
+                                }
+                                ImageIconButton(onClick = { viewModel.moveImage(draft.id, 1) }, enabled = editable && index < state.images.lastIndex,
+                                    modifier = Modifier.size(imageActionSize)) {
+                                    Icon(Icons.Default.KeyboardArrowDown, stringResource(R.string.move_down))
+                                }
+                                ImageIconButton(onClick = {
+                                    if (replaceImageId == null) {
+                                        replaceImageId = draft.id
+                                        try { replacer.launch(maxItems = 1) }
+                                        catch (e: CancellationException) { replaceImageId = null; throw e }
+                                        catch (e: Exception) { replaceImageId = null; viewModel.imagePickerFailed(e) }
+                                    }
+                                }, enabled = editable, modifier = Modifier.size(imageActionSize)) {
+                                    Icon(Icons.Default.Refresh, stringResource(R.string.replace_image))
+                                }
+                                ImageIconButton(onClick = { viewModel.toggleImageRemoval(draft.id) }, enabled = editable,
+                                    modifier = Modifier.size(imageActionSize),
+                                    colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) {
+                                    Icon(Icons.Default.Delete, stringResource(if (draft.pendingRemoval) R.string.restore_image else R.string.remove_image))
+                                }
+                            }
+                            Box(Modifier.weight(1f)
+                                .composeOffsetBlurShadow(cornerRadius = 2.dp, blurRadius = 16.dp, offsetY = 6.dp,
+                                    shadowColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.25f))
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(2.dp))) {
+                                LocalImage(model, stringResource(R.string.image_number, index + 1), Modifier.fillMaxWidth().aspectRatio(ratio), cacheKey = draft.id,
+                                    onSize = { width, height -> if (width > 0 && height > 0) ratio = width.toFloat() / height })
+                                if (draft.pendingRemoval) {
+                                    Box(Modifier.matchParentSize().background(Color.White.copy(alpha = 0.5f), RoundedCornerShape(2.dp)))
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!creatingDocument && state.kind == "body") item(key = "add-image-button") {
+                    Box(Modifier.fillMaxWidth().padding(start = bodyContentStartPadding, end = 24.dp, bottom = 12.dp), contentAlignment = Alignment.Center) {
+                        TextButton(onClick = addImages, enabled = editable) { Text(stringResource(R.string.add_image), fontSize = 16.sp) }
+                    }
+                }
+                if (creatingDocument || introduction || state.kind == "body") item(key = "body-input") {
+                    OutlinedTextField(
+                        value = state.body, onValueChange = viewModel::setBody, enabled = editable,
+                        modifier = Modifier.fillMaxWidth().padding(start = bodyContentStartPadding, end = 24.dp).heightIn(min = if (creatingDocument) 180.dp else 240.dp),
+                        label = { Text(stringResource(when {
+                            creatingDocument -> R.string.introduction_optional
+                            introduction -> R.string.introduction
+                            state.images.isEmpty() -> R.string.text_content
+                            else -> R.string.note
+                        })) },
+                    )
+                }
+                if (!creatingDocument && codeBlock) item(key = "code-input") {
+                    val languageOrder by viewModel.codeLanguagesFlow.collectAsStateWithLifecycle()
+                    CodeBlockEditor(state, editable, wrapCode, languageOrder, viewModel::setBody, viewModel::setCode, viewModel::setCodeLanguage,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp))
                 }
             }
         }
     }
     if (discard) AlertDialog(
-        onDismissRequest = { discard = false }, title = { Text("放弃未保存的修改？") },
-        confirmButton = { TextButton(onClick = { discard = false; onBack() }) { Text("放弃修改") } },
-        dismissButton = { TextButton(onClick = { discard = false }) { Text("继续编辑") } },
+        onDismissRequest = { discard = false }, title = { Text(stringResource(R.string.discard_changes_title)) },
+        confirmButton = { TextButton(onClick = { discard = false; onBack() }) { Text(stringResource(R.string.discard_changes)) } },
+        dismissButton = { TextButton(onClick = { discard = false }) { Text(stringResource(R.string.continue_editing)) } },
     )
     if (deleting && !state.fixed) AlertDialog(
         onDismissRequest = { deleting = false }, title = { Text(stringResource(R.string.delete_node_question), color = MaterialTheme.colorScheme.error) },

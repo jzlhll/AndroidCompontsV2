@@ -284,7 +284,7 @@ class BluetoothDocumentArchive(private val root: File) {
             requireValidArchive(index < 2 || node.kind in EditableNodeKinds)
             requireValidArchive(index == 1 || node.kind != "introduction" || node.bodyMarkdown.isNotBlank())
             requireValidArchive(node.kind != "chapter" || node.title.isNotBlank())
-            requireValidArchive(node.kind != "code" || parseCodeBlock(node.bodyMarkdown)?.code?.isNotBlank() == true)
+            requireValidArchive(node.kind != "code" || (parseCodeBlock(node.bodyMarkdown)?.code ?: node.bodyMarkdown).isNotBlank())
             requireValidArchive(node.kind != "body" || node.bodyMarkdown.isNotBlank() || node.images.isNotEmpty())
             requireValidArchive(node.kind == "body" || node.images.isEmpty())
             node.images.forEach { image ->
@@ -388,14 +388,17 @@ class BluetoothDocumentArchive(private val root: File) {
     }
 }
 
-fun bluetoothArchiveStorageFailure(error: Exception): BluetoothArchiveException {
+fun bluetoothArchiveStorageFailure(error: Exception): BluetoothArchiveException =
+    BluetoothArchiveException(bluetoothStorageReason(error), error)
+
+@StringRes
+fun bluetoothStorageReason(error: Exception): Int {
     val noSpace = generateSequence<Throwable>(error) { it.cause }.any {
         it is SQLiteFullException || it is ErrnoException && (it.errno == OsConstants.ENOSPC || it.errno == OsConstants.EDQUOT) ||
             it.message?.contains("No space left on device", ignoreCase = true) == true ||
             it.message?.contains("Disk quota exceeded", ignoreCase = true) == true
     }
-    val message = if (noSpace) R.string.error_bluetooth_archive_no_space else R.string.error_bluetooth_archive_io
-    return BluetoothArchiveException(message, error)
+    return if (noSpace) R.string.error_bluetooth_archive_no_space else R.string.error_bluetooth_archive_io
 }
 
 fun deleteBluetoothArchiveFiles(directory: File) {

@@ -1,7 +1,9 @@
 package com.allan.picnote.ui;
 
+import com.allan.picnote.data.CodeLanguagesKt;
+
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +26,8 @@ public final class CodeGrammar implements GrammarLocator {
 
     @Override
     public Prism4j.Grammar grammar(Prism4j prism4j, String language) {
-        if ("typescript".equals(language) || "ts".equals(language)) {
+        String normalized = CodeLanguagesKt.normalizeCodeLanguage(language);
+        if ("typescript".equals(normalized)) {
             if (typescript == null) {
                 List<Prism4j.Token> tokens = new ArrayList<>();
                 Prism4j.Grammar javascript = prism4j.grammar("javascript");
@@ -42,7 +45,7 @@ public final class CodeGrammar implements GrammarLocator {
             }
             return typescript;
         }
-        if ("bash".equals(language) || "sh".equals(language) || "shell".equals(language)) {
+        if ("bash".equals(normalized)) {
             if (bash == null) {
                 bash = Prism4j.grammar("bash",
                         token("comment", pattern(compile("(^|[\\s;])#[^\\r\\n]*"), true)),
@@ -59,13 +62,9 @@ public final class CodeGrammar implements GrammarLocator {
             return bash;
         }
         String name;
-        switch (language) {
-            case "js": name = "javascript"; break;
-            case "c#": case "cs": case "dotnet": name = "csharp"; break;
-            case "rs": name = "rust"; break;
-            case "ps1": case "ps": name = "powershell"; break;
+        switch (normalized) {
             case "xml": case "html": case "svg": case "mathml": name = "markup"; break;
-            default: name = language;
+            default: name = normalized;
         }
         if (bundled.containsKey(name)) return bundled.get(name);
         Prism4j.Grammar result;
@@ -111,15 +110,6 @@ public final class CodeGrammar implements GrammarLocator {
 
     @Override
     public Set<String> languages() {
-        Set<String> result = new HashSet<>(java.util.Arrays.asList(
-                "clike", "java", "kotlin", "c", "cpp", "markup", "xml", "html", "svg", "mathml",
-                "swift", "go", "javascript", "js", "python", "json", "css", "sql", "yaml",
-                "csharp", "c#", "cs", "dotnet", "dart", "rust", "rs", "php", "powershell", "ps1", "ps", "lua", "jsx", "tsx"));
-        result.add("typescript");
-        result.add("ts");
-        result.add("bash");
-        result.add("sh");
-        result.add("shell");
-        return result;
+        return Collections.unmodifiableSet(CodeLanguagesKt.getCodeLanguages().keySet());
     }
 }

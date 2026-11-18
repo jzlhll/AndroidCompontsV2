@@ -30,9 +30,9 @@ fun MergeNodesDialog(
         title = { Text(stringResource(R.string.merge_nodes)) },
         text = {
             Text(if (valid) {
-                val numbers = selected.joinToString(", ") { (it.index + 1).toString().padStart(2, '0') }
+                val numbers = selected.joinToString(", ") { nodeNumber(it.index) }
                 val imageCount = selected.sumOf { it.value.images.size }
-                val firstNumber = (selected.first().index + 1).toString().padStart(2, '0')
+                val firstNumber = nodeNumber(selected.first().index)
                 stringResource(R.string.merge_nodes_message, numbers, imageCount, firstNumber)
             } else stringResource(R.string.merge_nodes_changed),
                 modifier = Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState()))

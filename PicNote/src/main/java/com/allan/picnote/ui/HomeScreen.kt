@@ -55,6 +55,7 @@ import com.allan.picnote.R
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.NodeGuideKind
 import com.allan.picnote.data.ImportMode
+import com.allan.picnote.data.entity.PendingMediaEntity
 import com.allan.picnote.logEx
 import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.photoAccess
@@ -87,7 +88,7 @@ fun HomeScreen(
     onCreate: () -> Unit,
     onEdit: (EditRoute) -> Unit,
     onPickImages: () -> Unit,
-    onCandidates: (List<String>) -> Unit,
+    onCandidates: (String?, List<PendingMediaEntity>) -> Boolean,
     onImportMode: () -> Unit,
     onAppearance: () -> Unit,
     onSettings: () -> Unit,
@@ -104,7 +105,7 @@ fun HomeScreen(
             context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
         } catch (e: Exception) {
             logEx(throwable = e, message = "Open image permission settings failed")
-            viewModel.showMessage(Globals.getString(R.string.error_open_settings))
+            viewModel.showMessage(Globals.app.getString(R.string.error_open_settings))
         }
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -120,7 +121,7 @@ fun HomeScreen(
                 } catch (e: CancellationException) { throw e }
                 catch (e: Exception) {
                     logEx(throwable = e, message = "Launch image permission request failed")
-                    viewModel.showMessage(Globals.getString(R.string.error_request_photo_permission))
+                    viewModel.showMessage(Globals.app.getString(R.string.error_request_photo_permission))
                 }
             }
         }
@@ -143,23 +144,31 @@ fun HomeScreen(
     }
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val documentStates = rememberSaveableStateHolder()
+    var knownDocumentIds by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    LaunchedEffect(state.loading, state.documents, documentStates) {
+        if (!state.loading) {
+            val ids = state.documents.map { it.id }.toSet()
+            knownDocumentIds.filter { it !in ids }.forEach(documentStates::removeState)
+            knownDocumentIds = ids.toList()
+        }
+    }
     val scope = rememberCoroutineScope()
     val ready = active && !state.busy && !state.loading && state.candidateImportConfirmation == null
     var more by rememberSaveable { mutableStateOf(false) }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     var ribbon by rememberSaveable { mutableStateOf(false) }
-    var selected by rememberSaveable { mutableStateOf(emptyList<String>()) }
     val content = state.content
     val document = content?.document
-    var mergeSelection by rememberSaveable(document?.id) { mutableStateOf<List<String>?>(null) }
-    var merging by remember(document?.id) { mutableStateOf<List<String>?>(null) }
+    val selected = state.candidateSelection
+    val mergeSelection = state.mergeSelection
+    var merging by rememberSaveable(document?.id) { mutableStateOf<List<String>?>(null) }
     val bodyNodeIds = remember(content?.nodes) {
         content?.nodes.orEmpty().filter { it.node.kind == "body" }.map { it.node.id }.toSet()
     }
     val selectedNodeIds = remember(mergeSelection) { mergeSelection?.toSet() }
     val currentSelection = mergeSelection
     if (currentSelection != null && currentSelection.any { it !in bodyNodeIds }) {
-        SideEffect { mergeSelection = currentSelection.filter { it in bodyNodeIds } }
+        SideEffect { viewModel.setMergeSelection(currentSelection.filter { it in bodyNodeIds }) }
     }
     val guide = state.nodeGuide
     val guideAnchor = remember(guide) { guide?.let { NodeGuideAnchor() } }
@@ -167,8 +176,11 @@ fun HomeScreen(
     val showMediaActions = document?.id != WelcomeDocumentId
     val showEditingMediaActions = showMediaActions && mergeSelection == null
     val latestPending = state.pending.firstOrNull()
-    val showLoading = state.loading || state.busy || state.scanning
-    val imported = remember(state.content) { state.content?.nodes.orEmpty().flatMap { it.images }.mapNotNull { it.sourceUri }.toSet() }
+    val showLoading = state.loading || state.busy || state.scanning || state.codeWrapSettings == null
+    val imported = content?.importedSourceUris.orEmpty()
+    LaunchedEffect(guide, guideNodeId) {
+        if (guide?.kind == NodeGuideKind.Menu && guideNodeId == null) viewModel.dismissNodeGuide()
+    }
     val locale = context.resources.configuration.locales[0]
     val dateFormatter = remember(locale) { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale) }
     val openDocumentListDescription = stringResource(R.string.open_document_list)
@@ -179,17 +191,15 @@ fun HomeScreen(
     NavigationBackHandler(
         state = mergeBackState,
         isBackEnabled = active && mergeSelection != null && merging == null && drawer.isClosed,
-        onBackCompleted = { mergeSelection = null },
+        onBackCompleted = { viewModel.setMergeSelection(null) },
     )
-    LaunchedEffect(state.pending, imported) {
-        selected = selected.filter { id -> state.pending.any { it.uri == id } && id !in imported }
+    LaunchedEffect(state.pending) {
         if (state.pending.isEmpty()) ribbon = false
     }
     LaunchedEffect(active) {
         if (!active) {
             ribbon = false
-            selected = emptyList()
-            mergeSelection = null
+            viewModel.setMergeSelection(null)
             merging = null
         }
     }
@@ -207,7 +217,7 @@ fun HomeScreen(
                             onClick = {
                                 more = false
                                 ribbon = false
-                                mergeSelection = emptyList()
+                                viewModel.setMergeSelection(emptyList())
                             },
                             enabled = ready && bodyNodeIds.size >= 2,
                         )
@@ -263,6 +273,12 @@ fun HomeScreen(
             Text(stringResource(R.string.mirror_failed), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = viewModel::retryMirror, enabled = ready) { Text(stringResource(R.string.retry)) }
         }
+        if (state.exportShareRequest?.openRequested == false) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.error_open_share_sheet), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = viewModel::retryExportShare, enabled = ready) { Text(stringResource(R.string.retry)) }
+            }
+        }
     }
 
     ModalNavigationDrawer(
@@ -272,8 +288,8 @@ fun HomeScreen(
         drawerContent = {
             ModalDrawerSheet(Modifier.fillMaxWidth(if (landscape) 0.65f else 0.86f)) {
                 Column(Modifier.fillMaxHeight()) {
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.my_documents), Modifier.weight(1f),
                                 style = MaterialTheme.typography.titleLarge, fontSize = 21.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -368,20 +384,20 @@ fun HomeScreen(
             val tabs = listOf(stringResource(R.string.tab_nodes), stringResource(R.string.tab_document))
             val onTabSelected: (Int) -> Unit = { index ->
                 if (active && content != null) {
-                    mergeSelection = null
+                    viewModel.setMergeSelection(null)
                     merging = null
                     scope.launch { pager.animateScrollToPage(index) }
                 }
             }
             val openDocumentList: () -> Unit = {
-                mergeSelection = null
+                viewModel.setMergeSelection(null)
                 merging = null
                 scope.launch { drawer.open() }
             }
             val mergeActions: @Composable () -> Unit = {
                 val selection = mergeSelection
                 if (selection != null) {
-                    TextButton(onClick = { mergeSelection = null }, enabled = ready) {
+                    TextButton(onClick = { viewModel.setMergeSelection(null) }, enabled = ready) {
                         Text(stringResource(R.string.cancel))
                     }
                     TextButton(onClick = { merging = selection }, enabled = ready && selection.size >= 2) {
@@ -460,7 +476,7 @@ fun HomeScreen(
                                 }
                             }
                             if (!useSidePanel) {
-                                Box(Modifier.fillMaxWidth().padding(top = 2.dp)) {
+                                Box(Modifier.fillMaxWidth().padding(top = 4.dp)) {
                                     ComposeLineTabLayout(
                                         tabs = tabs, selectedIndex = pager.currentPage,
                                         modifier = Modifier.background(MaterialTheme.colorScheme.surface),
@@ -482,7 +498,8 @@ fun HomeScreen(
                                 statusMessages()
                             }
                             Box(Modifier.weight(1f).fillMaxWidth()) {
-                                if (content != null) {
+                                val wrapSettings = state.codeWrapSettings
+                                if (content != null && wrapSettings != null) {
                                     HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), userScrollEnabled = false, beyondViewportPageCount = 1, key = { it }) { page ->
                                         if (page == 0) NodeList(
                                             content = content, repository = viewModel.repository, listState = nodeScroll, enabled = ready, active = active && pager.currentPage == 0,
@@ -492,19 +509,19 @@ fun HomeScreen(
                                             onSelectNode = { id ->
                                                 val selection = mergeSelection
                                                 if (ready && selection != null && id in bodyNodeIds) {
-                                                    mergeSelection = if (id in selection) selection - id else selection + id
+                                                    viewModel.setMergeSelection(if (id in selection) selection - id else selection + id)
                                                 }
                                             },
                                             onMoveImage = viewModel::moveImage,
                                             onNodeMenuOpened = { viewModel.recordNodeClick(NodeGuideKind.Menu) },
                                             onNodeCardClicked = { viewModel.recordNodeClick(NodeGuideKind.Card) },
-                                            wrapCode = state.codeWrapSettings?.nodeCard == true,
+                                            wrapCode = wrapSettings.nodeCard,
                                             selectedNodeIds = selectedNodeIds,
                                             bottomContentPadding = if (!useSidePanel && showEditingMediaActions) 96.dp else 24.dp,
                                             guideNodeId = guideNodeId, guideKind = guide?.kind,
                                             guideAnchor = if (guide != null && pager.currentPage == 0) guideAnchor else null,
                                         ) else DocumentPreview(content, viewModel.repository, documentScroll, onMessage = viewModel::showMessage,
-                                            onDownloadImage = viewModel::downloadImage, wrapCode = state.codeWrapSettings?.document == true,
+                                            onDownloadImage = viewModel::downloadImage, wrapCode = wrapSettings.document,
                                             active = active && pager.currentPage == 1, enabled = ready,
                                             bottomContentPadding = if (!useSidePanel && showEditingMediaActions) 96.dp else 24.dp)
                                     }
@@ -522,7 +539,6 @@ fun HomeScreen(
             onDismiss = { merging = null },
             onConfirm = {
                 merging = null
-                mergeSelection = null
                 viewModel.mergeNodes(ids)
             },
         )
@@ -546,10 +562,8 @@ fun HomeScreen(
                     items(state.pending, key = { it.uri }, contentType = { "candidate" }) { candidate ->
                         CandidateTile(
                             uri = candidate.uri, name = candidate.name, imported = candidate.uri in imported,
-                            checked = candidate.uri in selected, enabled = ready,
-                            onClick = {
-                                selected = if (candidate.uri in selected) selected - candidate.uri else selected + candidate.uri
-                            },
+                            checked = candidate in selected, enabled = ready,
+                            onClick = { viewModel.toggleCandidate(document?.id, candidate) },
                         )
                     }
                 }
@@ -568,7 +582,7 @@ fun HomeScreen(
                         }
                         Spacer(Modifier.width(8.dp))
                     }
-                    Button(onClick = { dismiss(); onCandidates(selected); selected = emptyList() },
+                    Button(onClick = { if (onCandidates(document?.id, selected.toList())) dismiss() },
                         enabled = selected.isNotEmpty() && ready && state.importMode != null && !state.importModeSaving) {
                         Text(stringResource(R.string.add))
                     }
@@ -589,8 +603,11 @@ fun HomeScreen(
             dismissButton = { TextButton(onClick = viewModel::dismissCandidateImportConfirmation) { Text(stringResource(R.string.cancel)) } },
         )
     }
-    if (active && guide != null && guideAnchor != null && guide.documentId == document?.id) NodeGuideOverlay(
-        anchor = guideAnchor, kind = guide.kind, saving = state.nodeGuideSaving, onAcknowledge = viewModel::acknowledgeNodeGuide,
+    if (active && guide != null && guideAnchor != null && guide.documentId == document?.id &&
+        (guide.kind != NodeGuideKind.Menu || guideNodeId != null)
+    ) NodeGuideOverlay(
+        anchor = guideAnchor, kind = guide.kind, saving = state.nodeGuideSaving, saveFailed = state.nodeGuideSaveFailed,
+        onAcknowledge = viewModel::acknowledgeNodeGuide, onDismiss = viewModel::dismissNodeGuide,
     )
     if (active && guide == null && state.permissionPromptVisible) AlertDialog(
         onDismissRequest = viewModel::dismissPermissionPrompt,

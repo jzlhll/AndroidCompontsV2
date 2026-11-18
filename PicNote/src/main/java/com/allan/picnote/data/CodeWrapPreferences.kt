@@ -19,12 +19,13 @@ class CodeWrapPreferences(context: Context) {
 
     suspend fun read(): CodeWrapSettings = readSettings(store.data.first())
 
-    suspend fun save(previous: CodeWrapSettings, updated: CodeWrapSettings): CodeWrapSettings {
-        val preferences = store.edit {
-            if (updated.nodeCard != previous.nodeCard) it[nodeCardKey] = updated.nodeCard
-            if (updated.document != previous.document) it[documentKey] = updated.document
-        }
-        return readSettings(preferences)
+    suspend fun toggleNodeCard(): Boolean = toggle(nodeCardKey)
+
+    suspend fun toggleDocument(): Boolean = toggle(documentKey)
+
+    private suspend fun toggle(key: Preferences.Key<Boolean>): Boolean {
+        val preferences = store.edit { it[key] = !(it[key] ?: false) }
+        return preferences[key] == true
     }
 
     private fun readSettings(preferences: Preferences) = CodeWrapSettings(

@@ -1,0 +1,10 @@
+<resources>
+    <string name="error_initialize_welcome">Cannot create the tutorial document.</string>
+    <string name="document_duplicated">Document duplicated</string>
+    <string name="document_operation_in_progress">Another document operation is in progress.</string>
+    <string name="error_export_document">Cannot export the document. Try again.</string>
+    <string name="candidate_selection_expired">Document created. Reopen suggested images and select the images again.</string>
+    <string name="imported_image_nodes_with_duplicates">Added %1$d image nodes and skipped %2$d duplicate images</string>
+    <string name="skipped_duplicate_images">Skipped %1$d duplicate images</string>
+    <string name="import_saved_delete_failed_with_reason">Saved in the app, but system gallery deletion failed. %1$s</string>
+</resources>

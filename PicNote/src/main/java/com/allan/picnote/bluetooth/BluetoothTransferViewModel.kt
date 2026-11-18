@@ -23,6 +23,8 @@ import com.allan.picnote.PicNoteApplication
 import com.allan.picnote.R
 import com.allan.picnote.data.BluetoothArchiveDirectory
 import com.allan.picnote.data.BluetoothArchiveException
+import com.allan.picnote.data.bluetoothStorageReason
+import com.allan.picnote.data.deleteBluetoothArchiveFiles
 import com.allan.picnote.logd
 import com.allan.picnote.logEx
 import com.au.module_android.init.GlobalBackgroundCallback
@@ -46,13 +48,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.security.MessageDigest
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 
 enum class BluetoothTransferPhase {
@@ -60,7 +62,7 @@ enum class BluetoothTransferPhase {
     Imported, Sent, Failed, Unconfirmed,
 }
 
-enum class BluetoothSystemAction { Permissions, Enable, Discoverable }
+enum class BluetoothSystemAction { Permissions, Enable, Discoverable, Settings }
 
 data class BluetoothTransferDevice(val address: String, val name: String?)
 
@@ -69,12 +71,12 @@ data class BluetoothTransferState(
     @StringRes val statusRes: Int = 0,
     val fileName: String? = null,
     val fileSize: Long = 0,
-    val bytesTransferred: Long = 0,
+    val bodyWritten: Boolean = false,
     val localName: String? = null,
     val remoteName: String? = null,
     val pairedDevices: List<BluetoothTransferDevice> = emptyList(),
     val nearbyDevices: List<BluetoothTransferDevice> = emptyList(),
-    val discoverableSeconds: Int = 0,
+    val discoverabilityDeadline: Long = 0,
     val scanning: Boolean = false,
     val documentId: String? = null,
     val documentTitle: String? = null,
@@ -87,7 +89,7 @@ data class BluetoothTransferState(
     val mirrorFailed: Boolean = false,
 ) {
     val awaitingReceipt: Boolean
-        get() = sendOutcomeUnknown(fileSize > 0 && bytesTransferred == fileSize)
+        get() = phase == BluetoothTransferPhase.AwaitingImport || (phase == BluetoothTransferPhase.Transferring && bodyWritten)
     val confirmCancel: Boolean
         get() = phase == BluetoothTransferPhase.Transferring || phase == BluetoothTransferPhase.AwaitingImport
 }
@@ -103,12 +105,11 @@ class BluetoothTransferViewModel(
     private val app: PicNoteApplication,
     private val sourceDocumentId: String?,
 ) : ViewModel() {
-    val requiredPermissions: Array<String>
-        get() = if (sourceDocumentId == null) {
-            arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE)
-        } else {
-            arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN)
-        }
+    private val requiredPermissions = if (sourceDocumentId == null) {
+        listOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE)
+    } else {
+        listOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN)
+    }
 
     private val adapter = app.getSystemService(BluetoothManager::class.java)?.adapter
     private val supported = adapter != null && app.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
@@ -119,6 +120,8 @@ class BluetoothTransferViewModel(
         ),
     )
     val stateFlow = mutableStateFlow.asStateFlow()
+    private val mutableBytesTransferredFlow = MutableStateFlow(0L)
+    val bytesTransferredFlow = mutableBytesTransferredFlow.asStateFlow()
     private val mutableActionFlow = MutableStateFlow<BluetoothSystemAction?>(null)
     val actionFlow = mutableActionFlow.asStateFlow()
     private val foregroundFlow = MutableStateFlow(GlobalBackgroundCallback.isForeground)
@@ -128,7 +131,6 @@ class BluetoothTransferViewModel(
     private var bluetoothReceiver: BroadcastReceiver? = null
     private var pairingAddress: String? = null
     private var activePeerAddress: String? = null
-    private var outgoingBodyWritten: AtomicBoolean? = null
 
     private var packageJob: Job? = null
     private var senderScope: CoroutineScope? = null
@@ -137,7 +139,8 @@ class BluetoothTransferViewModel(
     private var listenJob: Job? = null
     private var transferJob: Job? = null
     private var consent: CompletableDeferred<Boolean>? = null
-    private var discoverabilityJob: Job? = null
+    private var refreshJob: Job? = null
+    private var retrySendJob: Job? = null
     private var stopJob: Job? = null
     private var backgroundJob: Job? = null
     private var autoScanPending = true
@@ -186,10 +189,31 @@ class BluetoothTransferViewModel(
         if (stateFlow.value.canDiscover) queueAction(BluetoothSystemAction.Discoverable)
     }
 
-    fun retryListening() {
-        if (!stateFlow.value.canRetryListening) return
-        mutableStateFlow.update { it.copy(canRetryListening = false, statusRes = 0) }
+    fun beginSettingsVisit(): Boolean {
+        if (leaving || !foregroundFlow.value || systemActionInFlight != null) return false
+        refreshJob?.cancel()
+        mutableActionFlow.value = null
+        systemActionInFlight = BluetoothSystemAction.Settings
+        return true
+    }
+
+    fun onSettingsResult() {
+        if (completeAction(BluetoothSystemAction.Settings)) refresh()
+    }
+
+    fun onResume() {
+        completeAction(BluetoothSystemAction.Settings)
         refresh()
+    }
+
+    fun retryListening() {
+        if (!stateFlow.value.canRetryListening || !foregroundFlow.value || leaving) return
+        val failedListener = listenJob
+        mutableStateFlow.update { it.copy(canRetryListening = false, statusRes = 0) }
+        viewModelScope.launch {
+            failedListener?.cancelAndJoin()
+            refresh()
+        }
     }
 
     fun onPermissionsResult() {
@@ -208,17 +232,8 @@ class BluetoothTransferViewModel(
             return
         }
         if (stateFlow.value.statusRes == R.string.bluetooth_transfer_discoverability_denied) showStatus(0)
-        discoverabilityJob?.cancel()
         val deadline = SystemClock.elapsedRealtime() + resultCode.toLong() * 1000L
-        discoverabilityJob = viewModelScope.launch {
-            while (true) {
-                val remaining = deadline - SystemClock.elapsedRealtime()
-                if (remaining <= 0) break
-                mutableStateFlow.update { it.copy(discoverableSeconds = ((remaining + 999L) / 1000L).toInt()) }
-                delay(((remaining - 1L) % 1000L + 1L).milliseconds)
-            }
-            mutableStateFlow.update { it.copy(discoverableSeconds = 0) }
-        }
+        mutableStateFlow.update { it.copy(discoverabilityDeadline = deadline) }
     }
 
     fun onSystemActionFailed(action: BluetoothSystemAction) {
@@ -243,12 +258,26 @@ class BluetoothTransferViewModel(
         backgroundJob = viewModelScope.launch {
             if (graceMillis > 0L) delay(graceMillis.milliseconds)
             stopJob?.join()
-            if (!foregroundFlow.value) stopBluetooth(R.string.bluetooth_transfer_background, discardArchive = true)
+            if (!foregroundFlow.value) {
+                val action = systemActionInFlight
+                val state = stateFlow.value
+                val hasActiveWork = scanJob?.isActive == true || transferJob?.isActive == true || listenJob?.isActive == true ||
+                    retrySendJob?.isActive == true ||
+                    (state.phase == BluetoothTransferPhase.Preparing && packageJob?.isActive == true)
+                if (hasActiveWork || action != null) {
+                    val reason = if (action == BluetoothSystemAction.Settings || !hasActiveWork) 0 else R.string.bluetooth_transfer_background
+                    stopBluetooth(reason, discardArchive = true)
+                }
+            }
         }
     }
 
+    private fun canRefreshBluetooth(): Boolean = !leaving && foregroundFlow.value && stopJob?.isActive != true &&
+        !stateFlow.value.isTerminal() && systemActionInFlight != BluetoothSystemAction.Settings
+
     private fun refresh() {
-        if (leaving || !foregroundFlow.value || stopJob?.isActive == true || stateFlow.value.isTerminal()) return
+        if (!canRefreshBluetooth() || retrySendJob?.isActive == true) return
+        refreshJob?.cancel()
         if (!supported) {
             setPhase(BluetoothTransferPhase.Failed, R.string.bluetooth_transfer_unsupported)
             return
@@ -257,7 +286,7 @@ class BluetoothTransferViewModel(
             prepareArchive(sourceDocumentId)
             return
         }
-        if (!hasPermissions()) {
+        if (missingPermissions().isNotEmpty()) {
             if (bluetoothReceiver != null) stopBluetooth(R.string.bluetooth_transfer_permission_required, discardArchive = false)
             mutableStateFlow.update {
                 it.copy(
@@ -269,37 +298,45 @@ class BluetoothTransferViewModel(
             return
         }
         val localAdapter = checkNotNull(adapter)
-        try {
-            registerBluetoothReceiver()
-            if (!localAdapter.isEnabled) {
+        refreshJob = viewModelScope.launch {
+            try {
+                registerBluetoothReceiver()
+                val (enabled, name) = withContext(Dispatchers.IO) {
+                    val enabled = localAdapter.isEnabled
+                    enabled to if (enabled && sourceDocumentId == null) localAdapter.name?.ifBlank { null } else null
+                }
+                if (!canRefreshBluetooth()) return@launch
+                if (!enabled) {
+                    mutableStateFlow.update {
+                        it.copy(
+                            statusRes = R.string.bluetooth_transfer_enable_required,
+                            permissionRequired = false, enableRequired = true, canDiscover = false, canScan = false,
+                        )
+                    }
+                    requestAutomatically(BluetoothSystemAction.Enable)
+                    return@launch
+                }
                 mutableStateFlow.update {
+                    val status = when (it.statusRes) {
+                        R.string.bluetooth_transfer_permission_required, R.string.bluetooth_transfer_enable_required -> 0
+                        else -> it.statusRes
+                    }
                     it.copy(
-                        statusRes = R.string.bluetooth_transfer_enable_required,
-                        permissionRequired = false, enableRequired = true, canDiscover = false, canScan = false,
+                        statusRes = status,
+                        localName = name,
+                        permissionRequired = false, enableRequired = false,
+                        canScan = sourceDocumentId != null && it.phase == BluetoothTransferPhase.Ready,
                     )
                 }
-                requestAutomatically(BluetoothSystemAction.Enable)
-                return
-            }
-            mutableStateFlow.update {
-                val status = when (it.statusRes) {
-                    R.string.bluetooth_transfer_permission_required, R.string.bluetooth_transfer_enable_required -> 0
-                    else -> it.statusRes
+                if (sourceDocumentId == null) {
+                    if (!stateFlow.value.canRetryListening) startListening(localAdapter)
+                } else if (autoScanPending && transferJob?.isCompleted != false) {
+                    autoScanPending = false
+                    scan()
                 }
-                it.copy(
-                    statusRes = status,
-                    localName = if (sourceDocumentId == null) localAdapter.name?.ifBlank { null } else null,
-                    permissionRequired = false, enableRequired = false,
-                    canScan = sourceDocumentId != null && it.phase == BluetoothTransferPhase.Ready,
-                )
+            } catch (_: SecurityException) {
+                handlePermissionLoss()
             }
-            if (sourceDocumentId == null && !stateFlow.value.canRetryListening) startListening(localAdapter)
-            else if (autoScanPending && transferJob?.isActive != true) {
-                autoScanPending = false
-                scan()
-            }
-        } catch (_: SecurityException) {
-            handlePermissionLoss()
         }
     }
 
@@ -307,12 +344,12 @@ class BluetoothTransferViewModel(
         if (action !in requestedActions) queueAction(action)
     }
 
-    private fun hasPermissions(): Boolean = requiredPermissions.all {
-        ContextCompat.checkSelfPermission(app, it) == PackageManager.PERMISSION_GRANTED
+    fun missingPermissions(): List<String> = requiredPermissions.filter {
+        ContextCompat.checkSelfPermission(app, it) != PackageManager.PERMISSION_GRANTED
     }
 
     private fun prepareArchive(documentId: String) {
-        if (packageJob?.isActive == true) return
+        if (packageJob?.isCompleted == false) return
         packageJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             var file: File? = null
             try {
@@ -354,7 +391,7 @@ class BluetoothTransferViewModel(
     fun scan() {
         val localAdapter = adapter ?: return
         if (!foregroundFlow.value || !stateFlow.value.canScan || leaving ||
-            transferJob?.isActive == true || scanJob?.isActive == true
+            transferJob?.isCompleted == false || scanJob?.isCompleted == false
         ) return
         scanJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             doScan(localAdapter)
@@ -362,48 +399,93 @@ class BluetoothTransferViewModel(
         scanJob?.start()
     }
 
+    fun chooseDeviceAgain() {
+        val documentId = sourceDocumentId ?: return
+        if (stateFlow.value.phase != BluetoothTransferPhase.Unconfirmed ||
+            !foregroundFlow.value || leaving || stopJob?.isActive == true || retrySendJob?.isActive == true
+        ) return
+        mutableStateFlow.update {
+            it.copy(phase = BluetoothTransferPhase.Preparing, statusRes = 0, bodyWritten = false,
+                fileName = null, fileSize = 0, pairedDevices = emptyList(), nearbyDevices = emptyList())
+        }
+        mutableBytesTransferredFlow.value = 0L
+        val previousScan = scanJob
+        retrySendJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
+            previousScan?.cancelAndJoin()
+            packageJob?.cancelAndJoin()
+            retrySendJob = null
+            if (!leaving && foregroundFlow.value && stopJob?.isActive != true) {
+                autoScanPending = true
+                prepareArchive(documentId)
+            }
+        }
+        retrySendJob?.start()
+    }
+
     private suspend fun doScan(localAdapter: BluetoothAdapter) {
+        val scanContext = currentCoroutineContext()
+        val callbackJob = Job(scanContext[Job])
+        val callbacks = CoroutineScope(scanContext + callbackJob)
         var receiver: BroadcastReceiver? = null
         var started = false
         try {
-            val devices = localAdapter.bondedDevices.orEmpty().map { it.toTransferDevice() }
-                .sortedBy { it.name.orEmpty() }
+            val devices = withContext(Dispatchers.IO) {
+                localAdapter.bondedDevices.orEmpty().map { it.toTransferDevice() }.sortedBy { it.name.orEmpty() }
+            }
             val pairedAddresses = devices.map { it.address }.toSet()
             mutableStateFlow.update {
                 it.copy(pairedDevices = devices, nearbyDevices = emptyList(), scanning = true, statusRes = 0)
             }
-            if (localAdapter.isDiscovering) {
-                localAdapter.cancelDiscovery()
-                val stopped = withTimeoutOrNull(2_000L.milliseconds) {
-                    while (localAdapter.isDiscovering) delay(50L.milliseconds)
-                    true
+            withContext(Dispatchers.IO) {
+                if (localAdapter.isDiscovering) {
+                    localAdapter.cancelDiscovery()
+                    val stopped = withTimeoutOrNull(2_000L.milliseconds) {
+                        while (localAdapter.isDiscovering) delay(50L.milliseconds)
+                        true
+                    }
+                    if (stopped != true) throw BluetoothTransferException(R.string.bluetooth_transfer_scan_failed)
                 }
-                if (stopped != true) throw BluetoothTransferException(R.string.bluetooth_transfer_scan_failed)
             }
             val finished = CompletableDeferred<Unit>()
             var discoveryStarted = false
             val callback = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
+                    if (receiver !== this || leaving || !foregroundFlow.value) return
+                    val callback = this
                     try {
                         when (intent.action) {
                             BluetoothAdapter.ACTION_DISCOVERY_STARTED -> discoveryStarted = true
-                            BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> if (
-                                discoveryStarted && !localAdapter.isDiscovering
-                            ) finished.complete(Unit)
+                            BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> if (discoveryStarted) {
+                                callbacks.launch {
+                                    try {
+                                        if (!withContext(Dispatchers.IO) { localAdapter.isDiscovering }) finished.complete(Unit)
+                                    } catch (e: SecurityException) {
+                                        finished.completeExceptionally(e)
+                                    }
+                                }
+                            }
                             BluetoothDevice.ACTION_FOUND -> {
                                 val device = intent.bluetoothDevice() ?: return
                                 if (device.address in pairedAddresses) return
-                                if (device.type == BluetoothDevice.DEVICE_TYPE_LE) return
-                                val item = device.toTransferDevice()
-                                mutableStateFlow.update { state ->
-                                    val nearby = state.nearbyDevices
-                                    val matching = nearby.indexOfFirst { it.address == item.address }
-                                    val updated = when {
-                                        matching < 0 -> nearby + item
-                                        item.name == null -> nearby
-                                        else -> nearby.toMutableList().apply { set(matching, item) }
+                                callbacks.launch {
+                                    try {
+                                        val item = withContext(Dispatchers.IO) {
+                                            if (device.type == BluetoothDevice.DEVICE_TYPE_LE) null else device.toTransferDevice()
+                                        } ?: return@launch
+                                        if (receiver !== callback || leaving || !foregroundFlow.value || !stateFlow.value.canScan) return@launch
+                                        mutableStateFlow.update { state ->
+                                            val nearby = state.nearbyDevices
+                                            val matching = nearby.indexOfFirst { it.address == item.address }
+                                            val updated = when {
+                                                matching < 0 -> nearby + item
+                                                item.name == null -> nearby
+                                                else -> nearby.toMutableList().apply { set(matching, item) }
+                                            }
+                                            state.copy(nearbyDevices = updated)
+                                        }
+                                    } catch (e: SecurityException) {
+                                        finished.completeExceptionally(e)
                                     }
-                                    state.copy(nearbyDevices = updated)
                                 }
                             }
                         }
@@ -423,9 +505,9 @@ class BluetoothTransferViewModel(
                 ContextCompat.RECEIVER_EXPORTED,
             )
             receiver = callback
-            started = localAdapter.startDiscovery()
+            withContext(Dispatchers.IO) { started = localAdapter.startDiscovery() }
             if (!started) throw BluetoothTransferException(R.string.bluetooth_transfer_scan_failed)
-            discoveryStarted = localAdapter.isDiscovering
+            discoveryStarted = discoveryStarted || withContext(Dispatchers.IO) { localAdapter.isDiscovering }
             if (withTimeoutOrNull(ScanTimeoutMillis.milliseconds) { finished.await() } == null) {
                 showStatus(R.string.bluetooth_transfer_scan_timeout)
             }
@@ -437,15 +519,23 @@ class BluetoothTransferViewModel(
             logEx(throwable = e, message = "Scan Bluetooth devices failed")
             showStatus(R.string.bluetooth_transfer_scan_failed)
         } finally {
-            receiver?.let(app::unregisterReceiver)
-            if (started) {
-                try {
-                    localAdapter.cancelDiscovery()
-                } catch (_: SecurityException) {
-                    // 权限已撤销时由系统结束扫描。
+            val registeredReceiver = receiver
+            receiver = null
+            try {
+                registeredReceiver?.let(app::unregisterReceiver)
+            } finally {
+                withContext(NonCancellable) {
+                    callbackJob.cancelAndJoin()
+                    if (started) {
+                        try {
+                            withContext(Dispatchers.IO) { localAdapter.cancelDiscovery() }
+                        } catch (_: SecurityException) {
+                            // 权限已撤销时由系统结束扫描。
+                        }
+                    }
                 }
+                mutableStateFlow.update { it.copy(scanning = false) }
             }
-            mutableStateFlow.update { it.copy(scanning = false) }
         }
     }
 
@@ -454,46 +544,51 @@ class BluetoothTransferViewModel(
         val scope = senderScope ?: return
         val (file, offer) = archive ?: return
         val state = stateFlow.value
+        val packageAtConnect = packageJob
         if (!state.canScan || !foregroundFlow.value || leaving || transferJob?.isActive == true) return
         val selected = (state.pairedDevices + state.nearbyDevices).firstOrNull { it.address == address } ?: return
-        val bodyWritten = AtomicBoolean(false)
-        outgoingBodyWritten = bodyWritten
         activePeerAddress = address
+        mutableBytesTransferredFlow.value = 0L
         mutableStateFlow.update {
             it.copy(
                 phase = BluetoothTransferPhase.Connecting, remoteName = selected.name, canScan = false,
-                bytesTransferred = 0, statusRes = 0,
+                bodyWritten = false, statusRes = 0,
             )
         }
         transferJob = scope.launch(start = CoroutineStart.LAZY) {
             var socket: BluetoothSocket? = null
             try {
                 scanJob?.cancelAndJoin()
-                localAdapter.cancelDiscovery()
-                val device = localAdapter.getRemoteDevice(address)
                 val connected = withContext(Dispatchers.IO) {
+                    localAdapter.cancelDiscovery()
+                    val device = localAdapter.getRemoteDevice(address)
                     device.createRfcommSocketToServiceRecord(PicNoteBluetoothServiceUuid).also { socket = it }
                 }
                 runBluetoothSocketIo(connected, BluetoothConnectTimeoutMillis, R.string.bluetooth_transfer_connect_timeout) {
                     connected.connect()
                 }
                 waitForForeground()
-                val channel = BluetoothTransferChannel(connected)
-                channel.handshake()
-                channel.sendOffer(offer)
+                val channel = withContext(Dispatchers.IO) { BluetoothTransferChannel(connected) }
+                channel.negotiateSend(offer)
                 setPhase(BluetoothTransferPhase.AwaitingApproval)
                 channel.awaitApproval()
                 setPhase(BluetoothTransferPhase.Transferring)
-                channel.sendBodyStart()
-                channel.sendFile(file, offer.size, { bodyWritten.set(true) }, ::setProgress)
-                setPhase(BluetoothTransferPhase.AwaitingImport)
-                channel.awaitImported()
+                channel.sendFileAndAwaitImport(
+                    file, offer.size,
+                    onBodyWritten = {
+                        withContext(NonCancellable + Dispatchers.Main.immediate) {
+                            mutableStateFlow.update { it.copy(bodyWritten = true) }
+                        }
+                    },
+                    onAwaitingImport = { setPhase(BluetoothTransferPhase.AwaitingImport) },
+                    onProgress = ::setProgress,
+                )
                 setPhase(BluetoothTransferPhase.Sent)
                 logd("Bluetooth archive import confirmed")
             } catch (e: CancellationException) {
                 throw e
             } catch (_: SecurityException) {
-                if (stateFlow.value.sendOutcomeUnknown(bodyWritten.get())) {
+                if (stateFlow.value.awaitingReceipt) {
                     setPhase(BluetoothTransferPhase.Unconfirmed, R.string.bluetooth_transfer_unconfirmed)
                 } else handlePermissionLoss()
             } catch (e: BluetoothPeerException) {
@@ -508,14 +603,14 @@ class BluetoothTransferViewModel(
             }
         }
         transferJob?.invokeOnCompletion {
-            if (stateFlow.value.isTerminal()) packageJob?.cancel()
+            if (stateFlow.value.isTerminal()) packageAtConnect?.cancel()
         }
         transferJob?.start()
     }
 
     private fun failSend(error: Exception) {
         val state = stateFlow.value
-        if (state.sendOutcomeUnknown(outgoingBodyWritten?.get() == true)) {
+        if (state.awaitingReceipt) {
             setPhase(BluetoothTransferPhase.Unconfirmed, R.string.bluetooth_transfer_unconfirmed)
             return
         }
@@ -530,10 +625,11 @@ class BluetoothTransferViewModel(
     }
 
     private fun resetSender(@StringRes reason: Int) {
+        mutableBytesTransferredFlow.value = 0L
         mutableStateFlow.update {
             it.copy(
-                phase = BluetoothTransferPhase.Ready, bytesTransferred = 0, remoteName = null,
-                canScan = hasPermissions(), statusRes = reason,
+                phase = BluetoothTransferPhase.Ready, bodyWritten = false, remoteName = null,
+                canScan = missingPermissions().isEmpty(), statusRes = reason,
             )
         }
     }
@@ -545,7 +641,7 @@ class BluetoothTransferViewModel(
     }
 
     private fun startListening(localAdapter: BluetoothAdapter) {
-        if (listenJob?.isActive == true) return
+        if (stateFlow.value.phase != BluetoothTransferPhase.Ready || listenJob?.isCompleted == false || transferJob?.isCompleted == false) return
         listenJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             while (foregroundFlow.value && !leaving) {
                 if (listenOnce(localAdapter)) break
@@ -569,7 +665,7 @@ class BluetoothTransferViewModel(
             closeBluetoothSocket(listening)
             server = null
             waitForForeground()
-            activePeerAddress = incoming.remoteDevice.address
+            activePeerAddress = withContext(Dispatchers.IO) { incoming.remoteDevice.address }
             val imported = coroutineScope {
                 val receiver = async(start = CoroutineStart.LAZY) { receive(incoming) }
                 transferJob = receiver
@@ -611,20 +707,22 @@ class BluetoothTransferViewModel(
         var directory: File? = null
         var channel: BluetoothTransferChannel? = null
         try {
-            val peer = BluetoothTransferChannel(socket)
+            val (peer, peerName) = withContext(Dispatchers.IO) {
+                BluetoothTransferChannel(socket) to socket.remoteDevice.name?.ifBlank { null }
+            }
             channel = peer
-            peer.handshake()
-            val offer = peer.readOffer()
+            val offer = peer.negotiateReceive()
             val answer = CompletableDeferred<Boolean>()
             consent = answer
+            mutableBytesTransferredFlow.value = 0L
             mutableStateFlow.update {
                 it.copy(
-                    phase = BluetoothTransferPhase.Incoming, remoteName = socket.remoteDevice.name?.ifBlank { null },
-                    fileName = offer.name, fileSize = offer.size, bytesTransferred = 0,
+                    phase = BluetoothTransferPhase.Incoming, remoteName = peerName,
+                    fileName = offer.name, fileSize = offer.size,
                     canDiscover = false, statusRes = 0,
                 )
             }
-            val zip = coroutineScope {
+            val zip = supervisorScope {
                 // 等待本地确认时就开始读下一帧，发送端断开可立即撤销旧确认。
                 val bodyStart = async { peer.awaitBodyStart() }
                 try {
@@ -637,18 +735,22 @@ class BluetoothTransferViewModel(
                     consent = null
                     if (accepted != true) {
                         val failure = if (accepted == null) BluetoothReceiptFailure.Timeout else BluetoothReceiptFailure.Rejected
-                        replyFailure(peer, failure)
                         resetReceiver(if (accepted == null) failure.reason else 0)
-                        return@coroutineScope null
+                        replyFailure(peer, failure) {
+                            withTimeoutOrNull(BluetoothFailureReceiptTimeoutMillis.milliseconds) { bodyStart.join() }
+                        }
+                        return@supervisorScope null
                     }
                     setPhase(BluetoothTransferPhase.Transferring)
                     val staged = try {
                         stageReceiveDirectory(offer.size) { directory = it }
                     } catch (e: BluetoothTransferException) {
                         val failure = e.receiptFailure(e.reason) ?: throw e
-                        replyFailure(peer, failure)
+                        replyFailure(peer, failure) {
+                            withTimeoutOrNull(BluetoothFailureReceiptTimeoutMillis.milliseconds) { bodyStart.join() }
+                        }
                         resetReceiver(e.reason)
-                        return@coroutineScope null
+                        return@supervisorScope null
                     }
                     peer.sendApproval()
                     bodyStart.await()
@@ -668,10 +770,9 @@ class BluetoothTransferViewModel(
             mutableStateFlow.update {
                 it.copy(
                     phase = BluetoothTransferPhase.Imported, documentId = imported.value, documentTitle = title,
-                    mirrorFailed = imported.mirrorFailed, canDiscover = false, discoverableSeconds = 0, statusRes = 0,
+                    mirrorFailed = imported.mirrorFailed, canDiscover = false, discoverabilityDeadline = 0, statusRes = 0,
                 )
             }
-            discoverabilityJob?.cancel()
             try {
                 peer.sendImported()
             } catch (e: CancellationException) {
@@ -695,7 +796,13 @@ class BluetoothTransferViewModel(
                 else -> R.string.bluetooth_transfer_receive_failed
             }
             val failure = e.receiptFailure(reason)
-            if (channel != null && failure != null) replyFailure(channel, failure)
+            if (channel != null && failure != null) {
+                val unreadBodyBytes = (e as? BluetoothTransferException)?.unreadBodyBytes
+                val wholeBodyReceived = stateFlow.value.fileSize > 0 && bytesTransferredFlow.value == stateFlow.value.fileSize
+                replyFailure(channel, failure) {
+                    if (unreadBodyBytes != null || wholeBodyReceived) channel.awaitFailureReceiptRead(unreadBodyBytes ?: 0L)
+                }
+            }
             resetReceiver(reason)
             return false
         } finally {
@@ -707,6 +814,7 @@ class BluetoothTransferViewModel(
     }
 
     private suspend fun stageReceiveDirectory(size: Long, onCreated: (File) -> Unit): File = try {
+        app.awaitStartupCleanup()
         withContext(Dispatchers.IO) {
             val root = File(app.filesDir, BluetoothArchiveDirectory)
             Files.createDirectories(root.toPath())
@@ -730,13 +838,23 @@ class BluetoothTransferViewModel(
         null
     }
 
-    private suspend fun replyFailure(channel: BluetoothTransferChannel, failure: BluetoothReceiptFailure) {
+    private suspend fun replyFailure(
+        channel: BluetoothTransferChannel,
+        failure: BluetoothReceiptFailure,
+        awaitRead: suspend () -> Unit,
+    ) {
         try {
             channel.sendFailure(failure)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             logEx(throwable = e, message = "Send Bluetooth failure receipt failed")
+            return
+        }
+        try {
+            awaitRead()
+        } catch (_: IOException) {
+            // 对端读完回执后主动关断，Android 可能用 IOException 表示 EOF。
         }
     }
 
@@ -756,7 +874,7 @@ class BluetoothTransferViewModel(
             current.cancelAndJoin()
             if (leaving || stopJob?.isActive == true || stateFlow.value.isTerminal()) return@launch
             if (sourceDocumentId != null) {
-                if (state.sendOutcomeUnknown(outgoingBodyWritten?.get() == true)) {
+                if (stateFlow.value.awaitingReceipt) {
                     setPhase(BluetoothTransferPhase.Unconfirmed, R.string.bluetooth_transfer_unconfirmed)
                     packageJob?.cancel()
                 } else resetSender(R.string.bluetooth_transfer_cancelled)
@@ -793,7 +911,7 @@ class BluetoothTransferViewModel(
         stopJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
             stopTasks(discardArchive)
             if (!oldState.leaveBlocked && !stateFlow.value.isTerminal()) {
-                if (oldState.sendOutcomeUnknown(outgoingBodyWritten?.get() == true)) {
+                if (stateFlow.value.awaitingReceipt) {
                     setPhase(BluetoothTransferPhase.Unconfirmed, R.string.bluetooth_transfer_unconfirmed)
                 } else if (sourceDocumentId == null) resetReceiver(reason)
                 else resetSender(reason)
@@ -801,7 +919,7 @@ class BluetoothTransferViewModel(
             mutableStateFlow.update {
                 it.copy(
                     canScan = false, canDiscover = false, canRetryListening = false,
-                    discoverableSeconds = 0, scanning = false,
+                    discoverabilityDeadline = 0, scanning = false,
                 )
             }
         }
@@ -813,7 +931,7 @@ class BluetoothTransferViewModel(
 
     private suspend fun stopTasks(discardArchive: Boolean) {
         val jobs = listOfNotNull(
-            scanJob, discoverabilityJob,
+            scanJob, refreshJob, retrySendJob,
             if (stateFlow.value.leaveBlocked) null else if (sourceDocumentId == null) listenJob else transferJob,
             if (discardArchive) packageJob else null,
         )
@@ -826,7 +944,7 @@ class BluetoothTransferViewModel(
     }
 
     private fun setProgress(bytes: Long) {
-        mutableStateFlow.update { it.copy(bytesTransferred = bytes) }
+        mutableBytesTransferredFlow.value = bytes
     }
 
     private fun showStatus(@StringRes message: Int) {
@@ -834,10 +952,11 @@ class BluetoothTransferViewModel(
     }
 
     private fun resetReceiver(@StringRes reason: Int) {
+        mutableBytesTransferredFlow.value = 0L
         mutableStateFlow.update {
             it.copy(
                 phase = BluetoothTransferPhase.Ready, statusRes = reason, fileName = null, fileSize = 0,
-                bytesTransferred = 0, remoteName = null, canDiscover = false,
+                remoteName = null, canDiscover = false,
             )
         }
     }
@@ -846,6 +965,7 @@ class BluetoothTransferViewModel(
         if (bluetoothReceiver != null) return
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
+                if (bluetoothReceiver !== this || leaving) return
                 when (intent.action) {
                     BluetoothAdapter.ACTION_STATE_CHANGED -> when (
                         intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
@@ -860,8 +980,7 @@ class BluetoothTransferViewModel(
                         intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, BluetoothAdapter.ERROR) !=
                         BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
                     ) {
-                        discoverabilityJob?.cancel()
-                        mutableStateFlow.update { it.copy(discoverableSeconds = 0) }
+                        mutableStateFlow.update { it.copy(discoverabilityDeadline = 0) }
                     }
                     BluetoothDevice.ACTION_BOND_STATE_CHANGED -> handleBondState(intent)
                 }
@@ -913,8 +1032,9 @@ class BluetoothTransferViewModel(
     }
 
     private fun unregisterBluetoothReceiver() {
-        bluetoothReceiver?.let(app::unregisterReceiver)
+        val receiver = bluetoothReceiver
         bluetoothReceiver = null
+        receiver?.let(app::unregisterReceiver)
     }
 
     override fun onCleared() {
@@ -952,10 +1072,6 @@ private fun BluetoothTransferState.isTerminal(): Boolean = when (phase) {
     else -> false
 }
 
-private fun BluetoothTransferState.sendOutcomeUnknown(bodyWritten: Boolean): Boolean =
-    phase == BluetoothTransferPhase.AwaitingImport ||
-        phase == BluetoothTransferPhase.Transferring && bodyWritten
-
 private fun Exception.receiptFailure(@StringRes reason: Int): BluetoothReceiptFailure? =
     when (reason) {
         R.string.bluetooth_transfer_integrity -> BluetoothReceiptFailure.Integrity
@@ -970,10 +1086,6 @@ private fun Exception.receiptFailure(@StringRes reason: Int): BluetoothReceiptFa
 
 private suspend fun deleteDirectory(directory: File?) {
     if (directory != null) withContext(NonCancellable + Dispatchers.IO) {
-        try {
-            if (!directory.deleteRecursively()) logd("Remove Bluetooth session directory failed")
-        } catch (e: SecurityException) {
-            logEx(throwable = e, message = "Remove Bluetooth session directory failed")
-        }
+        deleteBluetoothArchiveFiles(directory)
     }
 }

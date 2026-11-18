@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_duplicate_unreadable_image">Cannot duplicate “%1$s”. Image %2$d in the original document cannot be read.</string>
+</resources>

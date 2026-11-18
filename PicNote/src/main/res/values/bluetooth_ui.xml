@@ -11,6 +11,7 @@
     <string name="bluetooth_enable">Turn on Bluetooth</string>
     <string name="bluetooth_allow_discovery">Make device discoverable</string>
     <string name="bluetooth_rescan">Scan again</string>
+    <string name="bluetooth_choose_device_again">Choose a device again</string>
     <string name="bluetooth_settings_error">Could not open settings. Open system settings to check Bluetooth and app permissions.</string>
     <string name="bluetooth_cancel_title">Cancel this transfer?</string>
     <string name="bluetooth_cancel_body">The transfer will stop. You can start a new transfer when both devices are ready.</string>

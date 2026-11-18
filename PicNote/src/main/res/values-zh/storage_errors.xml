@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_duplicate_unreadable_image">无法复制“%1$s”。源文档中的图片 %2$d 无法读取。</string>
+</resources>

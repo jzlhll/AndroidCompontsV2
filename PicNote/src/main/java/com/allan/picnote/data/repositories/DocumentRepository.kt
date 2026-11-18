@@ -1,29 +1,44 @@
 package com.allan.picnote.data.repositories
 
 import android.content.Context
-import android.content.ContentUris
 import android.content.res.Resources
-import android.provider.MediaStore
-import android.util.Base64
+import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.room.withTransaction
 import com.allan.picnote.R
 import com.allan.picnote.data.BluetoothArchiveDirectory
 import com.allan.picnote.data.BluetoothArchiveException
 import com.allan.picnote.data.BluetoothDocumentArchive
+import com.allan.picnote.data.DocumentsDirectory
+import com.allan.picnote.data.ExportDraftsDirectory
+import com.allan.picnote.data.ImageDraftsDirectory
 import com.allan.picnote.data.PicNoteDatabase
 import com.allan.picnote.data.PicNoteCleaner
+import com.allan.picnote.data.PicNoteStorageException
+import com.allan.picnote.data.MarkdownBlockSeparator
+import com.allan.picnote.data.SharedExportsDirectory
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.WelcomeDocumentTemplate
+import com.allan.picnote.data.WebDocumentHtml
 import com.allan.picnote.data.bluetoothArchiveStorageFailure
 import com.allan.picnote.data.deleteBluetoothArchiveFiles
 import com.allan.picnote.data.entity.*
+import com.allan.picnote.data.htmlEscape
 import com.allan.picnote.data.markdown
+import com.allan.picnote.data.markdownNodes
 import com.allan.picnote.data.parseCodeBlock
+import com.allan.picnote.data.unreferencedMedia
 import com.allan.picnote.logEx
 import com.allan.picnote.loge
 import com.allan.picnote.media.ImagePreparation
+import com.allan.picnote.media.MediaQueryBatchSize
+import com.allan.picnote.media.MediaSourceStamp
+import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.PreparedImage
-import com.au.module_android.Globals
+import com.allan.picnote.media.currentMediaVersions
+import com.allan.picnote.media.mediaAddedTimes
+import com.allan.picnote.media.mediaSource
+import com.allan.picnote.media.photoAccess
 import com.au.module_android.utils.withIOThread
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -34,12 +49,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import org.commonmark.parser.Parser
-import org.commonmark.renderer.html.HtmlRenderer
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.io.OutputStreamWriter
-import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
@@ -49,22 +63,33 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-data class Saved<T>(val value: T, val mirrorFailed: Boolean = false)
+data class Saved<T>(val value: T, val mirrorFailed: Boolean = false, val skippedImages: Int = 0)
 data class ImageDraft(val existing: NodeImageEntity? = null, val prepared: PreparedImage? = null, val id: String = existing?.id ?: UUID.randomUUID().toString(), val pendingRemoval: Boolean = false)
 data class HomeDocuments(val documents: List<DocumentSummary>, val content: DocumentContent?)
+
+private const val NodeSortKeyStep = 1024L
+
+private fun requireStorage(condition: Boolean, @StringRes messageRes: Int) {
+    if (!condition) throw PicNoteStorageException(messageRes)
+}
 
 /** 串行维护文档结构、WebP 副本、源 URI 映射与可重建的 Markdown 镜像。 */
 class DocumentRepository(private val context: Context, private val database: PicNoteDatabase) {
     private val dao = database.dao()
     private val mutex = Mutex()
-    private val root = File(context.filesDir, "documents")
-    private val draftRoot = File(context.filesDir, "image_drafts")
-    private val exportRoot = File(context.cacheDir, "shared/exports")
+    private val preparationMutex = Mutex()
+    private val root = File(context.filesDir, DocumentsDirectory)
+    private val draftRoot = File(context.filesDir, ImageDraftsDirectory)
+    private val exportDraftRoot = File(context.cacheDir, ExportDraftsDirectory)
+    private val exportRoot = File(context.cacheDir, SharedExportsDirectory)
     private val activeDrafts = ConcurrentHashMap.newKeySet<String>()
+    private val activeExports = ConcurrentHashMap.newKeySet<String>()
+    // 只在 mutex 内维护文档素材的保留计数，清理同样在锁内读取。
+    private val retainedExportMedia = mutableMapOf<String, MutableMap<String, Int>>()
     private val preparation = ImagePreparation(context)
     private val bluetoothArchive = BluetoothDocumentArchive(File(context.filesDir, BluetoothArchiveDirectory))
     private val preferences = context.getSharedPreferences("picnote", Context.MODE_PRIVATE)
-    val cleaner = PicNoteCleaner(context, database, mutex, activeDrafts, ::writeMirror)
+    val cleaner = PicNoteCleaner(context, database, mutex, activeDrafts, activeExports, retainedExportMedia, ::writeMirror)
 
     fun imageFile(documentId: String, fileName: String): File = File(root, "$documentId/media/$fileName")
 
@@ -73,33 +98,30 @@ class DocumentRepository(private val context: Context, private val database: Pic
     fun openDraftSession(): String = UUID.randomUUID().toString().also { activeDrafts.add(it) }
 
     suspend fun closeDraftSession(session: String) = withContext(Dispatchers.IO) {
-        mutex.withLock {
-            activeDrafts.remove(session)
-            try {
-                if (!File(draftRoot, session).deleteRecursively()) loge("Delete image draft files failed")
-            } catch (e: Exception) { logEx(throwable = e, message = "Delete image draft files failed") }
+        preparationMutex.withLock {
+            mutex.withLock {
+                activeDrafts.remove(session)
+                try {
+                    if (!File(draftRoot, session).deleteRecursively()) loge("Delete image draft files failed")
+                } catch (e: Exception) { logEx(throwable = e, message = "Delete image draft files failed") }
+            }
         }
     }
 
     suspend fun prepareImages(session: String, uris: List<String>): List<PreparedImage> = withContext(Dispatchers.IO) {
-        mutex.withLock { prepareBatch(session, uris) }
+        preparationMutex.withLock { prepareBatch(session, uris) }
     }
 
-    private suspend fun prepareBatch(session: String, uris: List<String>): List<PreparedImage> {
-        check(session in activeDrafts) { Globals.app.getString(R.string.error_draft_closed) }
+    private suspend fun prepareBatch(session: String, uris: List<String>, candidates: List<PendingMediaEntity> = emptyList()): List<PreparedImage> {
+        if (session !in activeDrafts) throw PicNoteStorageException(R.string.error_draft_closed)
         val directory = File(draftRoot, session)
-        val states = dao.scanStates()
+        val sourceStamps = readSourceStamps(uris)
+        validateCandidates(candidates, sourceStamps)
         val prepared = mutableListOf<PreparedImage>()
         try {
             uris.forEach { raw ->
                 currentCoroutineContext().ensureActive()
-                val source = states.firstOrNull { state ->
-                    val collection = MediaStore.Images.Media.getContentUri(state.volume)
-                    val prefix = "$collection/"
-                    val id = if (raw.startsWith(prefix)) raw.substring(prefix.length).toLongOrNull() else null
-                    state.available && id != null && ContentUris.withAppendedId(collection, id).toString() == raw
-                }
-                prepared += preparation.prepare(raw, directory).copy(queryVolume = source?.volume, queryVersion = source?.version)
+                prepared += preparation.prepare(raw, directory).copy(sourceStamp = sourceStamps[raw])
             }
             return prepared
         } catch (e: Throwable) {
@@ -113,10 +135,11 @@ class DocumentRepository(private val context: Context, private val database: Pic
     suspend fun home(requestedId: String? = null): HomeDocuments = withContext(Dispatchers.IO) {
         mutex.withLock {
             val documents = dao.documents()
-            val selected = requestedId ?: preferences.getString("last_document", null)
+            val previous = preferences.getString("last_document", null)
+            val selected = requestedId ?: previous
             val id = documents.firstOrNull { it.id == selected }?.id ?: documents.firstOrNull()?.id
-            if (id != null) preferences.edit().putString("last_document", id).apply()
-            HomeDocuments(documents, id?.let { snapshot(it) })
+            if (id != null && id != previous) preferences.edit().putString("last_document", id).apply()
+            HomeDocuments(documents, id?.let { withImportedSources(snapshot(it)) })
         }
     }
 
@@ -125,11 +148,11 @@ class DocumentRepository(private val context: Context, private val database: Pic
     }
 
     suspend fun contentIfExists(id: String): DocumentContent? = withContext(Dispatchers.IO) {
-        mutex.withLock { if (dao.document(id) == null) null else snapshot(id) }
+        mutex.withLock { dao.document(id)?.let { withImportedSources(snapshot(it)) } }
     }
 
     private suspend fun snapshot(id: String): DocumentContent {
-        val document = dao.document(id) ?: error(Globals.app.getString(R.string.error_document_deleted_reselect))
+        val document = dao.document(id) ?: throw PicNoteStorageException(R.string.error_document_deleted_reselect)
         return snapshot(document)
     }
 
@@ -139,12 +162,24 @@ class DocumentRepository(private val context: Context, private val database: Pic
         return DocumentContent(document, dao.nodes(id).map { NodeContent(it, images[it.id].orEmpty()) })
     }
 
+    private suspend fun withImportedSources(content: DocumentContent): DocumentContent {
+        if (photoAccess(context) != PhotoAccess.Full) return content
+        val sources = dao.activeSourceImages(content.document.id)
+        if (sources.isEmpty()) return content
+        val versions = observedMediaVersions()
+        val activeUris = sources.mapNotNullTo(mutableSetOf()) { image ->
+            val volume = mediaSource(image.sourceUri)?.volume
+            image.sourceUri.takeIf { volume != null && image.sourceVersion == versions[volume] }
+        }
+        return content.copy(importedSourceUris = activeUris)
+    }
+
     suspend fun initializeWelcome(): Saved<String>? = withIOThread {
         mutex.withLock {
             if (preferences.getBoolean("welcome_initialized", false)) return@withLock null
             // 已有文档的安装不补插教程，用户删除教程后也不再重建。
             if (dao.documents().isNotEmpty()) {
-                check(preferences.edit().putBoolean("welcome_initialized", true).commit()) { Globals.app.getString(R.string.error_save_welcome_state) }
+                requireStorage(preferences.edit().putBoolean("welcome_initialized", true).commit(), R.string.error_save_welcome_state)
                 return@withLock null
             }
             val language = if (Resources.getSystem().configuration.locales[0].language == "zh") "zh-CN" else "en"
@@ -155,14 +190,19 @@ class DocumentRepository(private val context: Context, private val database: Pic
             val id = WelcomeDocumentId
             val imageNodeId = "$id-image"
             val directory = File(root, "$id/media")
-            val image = File(directory, template.imageFileName)
+            val imageName = if (template.imageFileName in retainedExportMedia[id].orEmpty()) {
+                "${UUID.randomUUID()}.webp"
+            } else template.imageFileName
+            val image = File(directory, imageName)
+            val temporaryImage = File(directory, ".welcome.tmp")
             var committed = false
             try {
-                check(directory.isDirectory || directory.mkdirs()) { Globals.app.getString(R.string.error_create_welcome_media_dir) }
+                requireStorage(directory.isDirectory || directory.mkdirs(), R.string.error_create_welcome_media_dir)
                 context.assets.open("$assetDirectory/${template.imageFileName}").use { input ->
-                    FileOutputStream(image).use { output -> input.copyTo(output); output.fd.sync() }
+                    FileOutputStream(temporaryImage).use { output -> input.copyTo(output); output.fd.sync() }
                 }
                 currentCoroutineContext().ensureActive()
+                Files.move(temporaryImage.toPath(), image.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
                 withContext(NonCancellable) {
                     database.withTransaction {
                         dao.putDocument(DocumentEntity(id, template.title, System.currentTimeMillis()))
@@ -173,24 +213,29 @@ class DocumentRepository(private val context: Context, private val database: Pic
                             NodeEntity("$id-instruction", id, 4096, "body", template.instruction),
                             NodeEntity("$id-todo", id, 5120, "chapter", title = template.todoTitle),
                         ))
-                        dao.putImages(listOf(NodeImageEntity("$id-launcher", imageNodeId, id, 0, template.imageFileName,
+                        dao.putImages(listOf(NodeImageEntity("$id-launcher", imageNodeId, id, 0, imageName,
                             template.imageSha256, template.imageWidth, template.imageHeight)))
                     }
                     committed = true
-                    check(preferences.edit().putBoolean("welcome_initialized", true).putString("last_document", id).commit()) {
-                        Globals.app.getString(R.string.error_save_welcome_state)
-                    }
+                    requireStorage(preferences.edit().putBoolean("welcome_initialized", true).putString("last_document", id).commit(),
+                        R.string.error_save_welcome_state)
                     Saved(id, !writeMirror(id))
                 }
             } finally {
-                if (!committed) File(root, id).deleteRecursively()
+                if (!committed) {
+                    if (retainedExportMedia[id].isNullOrEmpty()) File(root, id).deleteRecursively()
+                    else {
+                        temporaryImage.delete()
+                        image.delete()
+                    }
+                }
             }
         }
     }
 
     suspend fun create(title: String, firstBody: String): Saved<String> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            require(title.trim().isNotEmpty()) { Globals.app.getString(R.string.error_title_required) }
+            requireStorage(title.trim().isNotEmpty(), R.string.error_title_required)
             val id = UUID.randomUUID().toString()
             currentCoroutineContext().ensureActive()
             withContext(NonCancellable) {
@@ -210,7 +255,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
     suspend fun deleteDocument(id: String) = withContext(Dispatchers.IO) {
         mutex.withLock {
             database.withTransaction { dao.deleteDocument(id) }
-            if (!File(root, id).deleteRecursively()) loge("Delete document files failed")
+            removeDeletedDocumentFiles(id)
         }
     }
 
@@ -218,18 +263,22 @@ class DocumentRepository(private val context: Context, private val database: Pic
     suspend fun duplicate(id: String): Saved<String> = withContext(Dispatchers.IO) {
         mutex.withLock {
             val source = snapshot(id)
+            fun unreadable(number: Int, cause: IOException?): PicNoteStorageException = PicNoteStorageException(
+                R.string.error_duplicate_unreadable_image, cause, listOf(source.document.title, number),
+            )
+            val files = trustedMedia(source, ::unreadable)
             val newId = UUID.randomUUID().toString()
             val title = "${source.document.title}(V2)"
             val directory = File(root, newId)
             var committed = false
             try {
-                val media = File(root, "$id/media")
-                if (media.isDirectory) {
+                if (files.isNotEmpty()) {
                     val target = File(directory, "media")
-                    check(target.isDirectory || target.mkdirs()) { Globals.app.getString(R.string.error_create_image_dir) }
-                    media.listFiles()?.filter { it.isFile && !it.name.startsWith(".") }?.forEach { file ->
-                        currentCoroutineContext().ensureActive()
-                        file.copyTo(File(target, file.name), overwrite = true)
+                    requireStorage(target.isDirectory || target.mkdirs(), R.string.error_create_image_dir)
+                    files.forEach { (file, number) ->
+                        File(target, file.name).outputStream().use { output ->
+                            file.copyBytesTo(output) { e -> unreadable(number, e) }
+                        }
                     }
                 }
                 currentCoroutineContext().ensureActive()
@@ -247,7 +296,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
                             }
                         }
                         dao.putImages(images)
-                        dao.putSourceImages(images.mapNotNull { image -> image.sourceUri?.let { SourceImageEntity(it, newId, image.fileName) } })
+                        dao.putSourceImages(dao.sourceImages(id).map { it.copy(documentId = newId) })
                     }
                     committed = true
                     preferences.edit().putString("last_document", newId).apply()
@@ -261,49 +310,54 @@ class DocumentRepository(private val context: Context, private val database: Pic
 
     suspend fun deleteNode(documentId: String, nodeId: String): Saved<Unit> = mutate(documentId) {
         val index = dao.nodes(documentId).indexOfFirst { it.id == nodeId }
-        require(index >= 0) { Globals.app.getString(R.string.error_node_deleted) }
-        require(index >= 2) { Globals.app.getString(R.string.error_fixed_node_delete) }
+        requireStorage(index >= 0, R.string.error_node_deleted)
+        requireStorage(index >= 2, R.string.error_fixed_node_delete)
         dao.deleteNode(nodeId)
     }
 
-    suspend fun move(documentId: String, nodeId: String, beforeId: String?): Saved<Unit> = mutate(documentId) {
-        val nodes = dao.nodes(documentId).toMutableList()
-        val sourceIndex = nodes.indexOfFirst { it.id == nodeId }
-        require(sourceIndex >= 0) { Globals.app.getString(R.string.error_node_deleted) }
-        require(sourceIndex >= 2) { Globals.app.getString(R.string.error_fixed_node_move) }
-        val node = nodes[sourceIndex]
-        if (beforeId == nodeId) return@mutate
-        nodes.remove(node)
-        val index = if (beforeId == null) nodes.size else nodes.indexOfFirst { it.id == beforeId }
-        require(index >= 2) { Globals.app.getString(R.string.error_move_before_fixed) }
-        nodes.add(index, node)
-        placeKey(documentId, nodes.map { it.id }, index)
+    suspend fun move(documentId: String, nodeId: String, beforeId: String?): Saved<Unit>? {
+        if (beforeId == nodeId) return null
+        return mutate(documentId) {
+            val nodes = dao.nodes(documentId).toMutableList()
+            val sourceIndex = nodes.indexOfFirst { it.id == nodeId }
+            requireStorage(sourceIndex >= 0, R.string.error_node_deleted)
+            requireStorage(sourceIndex >= 2, R.string.error_fixed_node_move)
+            val node = nodes.removeAt(sourceIndex)
+            val index = if (beforeId == null) nodes.size else nodes.indexOfFirst { it.id == beforeId }
+            requireStorage(index >= 0, R.string.error_node_deleted)
+            requireStorage(index >= 2, R.string.error_move_before_fixed)
+            nodes.add(index, node)
+            placeKey(nodes, index)
+        }
     }
 
-    private suspend fun placeKey(documentId: String, order: List<String>, index: Int) {
-        val keys = dao.nodes(documentId).associate { it.id to it.sortKey }
-        val previous = order.getOrNull(index - 1)?.let { keys[it] }
-        val next = order.getOrNull(index + 1)?.let { keys[it] }
+    private suspend fun placeKey(order: List<NodeEntity>, index: Int) {
+        val previous = order[index - 1].sortKey
+        val next = order.getOrNull(index + 1)?.sortKey
         val key = when {
-            previous == null && next == null -> 1024L
-            previous == null && next!! > Long.MIN_VALUE + 1024 -> next - 1024
-            next == null && previous!! < Long.MAX_VALUE - 1024 -> previous + 1024
-            previous != null && next != null && next - previous > 1 -> previous + (next - previous) / 2
+            next == null && previous <= Long.MAX_VALUE - NodeSortKeyStep -> previous + NodeSortKeyStep
+            // 计算有符号中点时避免相减溢出。
+            next != null && next > Long.MIN_VALUE && previous < next - 1 -> (previous and next) + ((previous xor next) shr 1)
             else -> null
         }
-        if (key == null) order.forEachIndexed { i, id -> dao.setSortKey(id, (i + 1L) * 1024) }
-        else dao.setSortKey(order[index], key)
+        if (key == null) renumber(order)
+        else dao.setSortKey(order[index].id, key)
+    }
+
+    private suspend fun renumber(order: List<NodeEntity>): Long {
+        order.forEachIndexed { index, node -> dao.setSortKey(node.id, (index + 1L) * NodeSortKeyStep) }
+        return order.size * NodeSortKeyStep
     }
 
     suspend fun mergeNodes(documentId: String, nodeIds: List<String>): Saved<String> = mutate(documentId) {
         val ids = nodeIds.toSet()
-        require(ids.size >= 2 && ids.size == nodeIds.size) { Globals.app.getString(R.string.error_select_body_nodes) }
+        requireStorage(ids.size >= 2 && ids.size == nodeIds.size, R.string.error_select_body_nodes)
         val content = snapshot(documentId)
         val selected = content.nodes.filter { it.node.id in ids }
-        require(selected.size == ids.size && selected.all { it.node.kind == "body" }) { Globals.app.getString(R.string.error_merge_nodes_changed) }
+        requireStorage(selected.size == ids.size && selected.all { it.node.kind == "body" }, R.string.error_merge_nodes_changed)
         // 以当前文档顺序为准，先转移引用，再删除较后节点，避免级联删除图片。
         val earlier = selected.first()
-        val body = selected.map { it.node.bodyMarkdown }.filter { it.isNotBlank() }.joinToString("\n")
+        val body = selected.map { it.node.bodyMarkdown }.filter { it.isNotBlank() }.joinToString(MarkdownBlockSeparator)
         dao.updateNode(earlier.node.id, "body", body, "")
         dao.putImages(selected.flatMap { it.images }.mapIndexed { index, image ->
             image.copy(nodeId = earlier.node.id, sortIndex = index)
@@ -313,11 +367,11 @@ class DocumentRepository(private val context: Context, private val database: Pic
     }
 
     suspend fun moveImage(documentId: String, nodeId: String, imageId: String, direction: Int): Saved<Unit> = mutate(documentId) {
-        require(direction == -1 || direction == 1) { Globals.app.getString(R.string.error_invalid_image_direction) }
-        val node = snapshot(documentId).nodes.firstOrNull { it.node.id == nodeId } ?: error(Globals.app.getString(R.string.error_node_deleted))
+        requireStorage(direction == -1 || direction == 1, R.string.error_invalid_image_direction)
+        val node = snapshot(documentId).nodes.firstOrNull { it.node.id == nodeId } ?: throw PicNoteStorageException(R.string.error_node_deleted)
         val index = node.images.indexOfFirst { it.id == imageId }
-        require(index >= 0) { Globals.app.getString(R.string.error_image_deleted) }
-        val adjacent = node.images.getOrNull(index + direction) ?: error(Globals.app.getString(R.string.error_image_at_edge))
+        requireStorage(index >= 0, R.string.error_image_deleted)
+        val adjacent = node.images.getOrNull(index + direction) ?: throw PicNoteStorageException(R.string.error_image_at_edge)
         val image = node.images[index]
         dao.putImages(listOf(image.copy(sortIndex = adjacent.sortIndex), adjacent.copy(sortIndex = image.sortIndex)))
     }
@@ -332,83 +386,92 @@ class DocumentRepository(private val context: Context, private val database: Pic
         images: List<ImageDraft>,
     ): Saved<String> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            val sourceVersions = dao.scanStates().associate { it.volume to it.version }
             val original = snapshot(documentId)
             val currentIndex = original.nodes.indexOfFirst { it.node.id == nodeId }
             val current = original.nodes.getOrNull(currentIndex)
-            if (nodeId != null) require(current != null) { Globals.app.getString(R.string.error_node_deleted_retry) }
+            if (nodeId != null) requireStorage(current != null, R.string.error_node_deleted_retry)
             val savedKind = current?.node?.kind ?: kind
-            require(savedKind in listOf("title", "introduction", "chapter", "body", "code")) { Globals.app.getString(R.string.error_invalid_node_type) }
-            require(nodeId != null || savedKind != "title") { Globals.app.getString(R.string.error_only_one_title) }
-            require(nodeId != null || savedKind != "introduction") { Globals.app.getString(R.string.error_create_introduction) }
-            require(current == null || savedKind == kind) { Globals.app.getString(R.string.error_change_node_type) }
-            require(savedKind == "body" || images.isEmpty()) { Globals.app.getString(R.string.error_node_images_not_allowed) }
+            requireStorage(savedKind in listOf("title", "introduction", "chapter", "body", "code"), R.string.error_invalid_node_type)
+            requireStorage(nodeId != null || savedKind != "title", R.string.error_only_one_title)
+            requireStorage(nodeId != null || savedKind != "introduction", R.string.error_create_introduction)
+            requireStorage(current == null || savedKind == kind, R.string.error_change_node_type)
+            requireStorage(savedKind == "body" || images.isEmpty(), R.string.error_node_images_not_allowed)
             val anchorIndex = if (anchorId == null) original.nodes.size else original.nodes.indexOfFirst { it.node.id == anchorId }
-            if (nodeId == null) require(anchorIndex >= 2) { Globals.app.getString(R.string.error_insert_before_fixed) }
-            require(savedKind !in listOf("title", "chapter") || title.trim().isNotEmpty()) { Globals.app.getString(R.string.error_title_required) }
-            require(savedKind != "introduction" || currentIndex == 1 || body.isNotBlank()) { Globals.app.getString(R.string.error_introduction_required) }
-            require(savedKind != "code" || parseCodeBlock(body)?.code?.isNotBlank() == true) { Globals.app.getString(R.string.error_code_required) }
+            if (nodeId == null) requireStorage(anchorIndex >= 2, R.string.error_insert_before_fixed)
+            requireStorage(savedKind !in listOf("title", "chapter") || title.trim().isNotEmpty(), R.string.error_title_required)
+            requireStorage(savedKind != "introduction" || currentIndex == 1 || body.isNotBlank(), R.string.error_introduction_required)
+            val code = if (savedKind == "code") parseCodeBlock(body) else null
+            val oldBody = current?.node?.bodyMarkdown
+            requireStorage(savedKind != "code" || code?.code?.isNotBlank() == true ||
+                (code == null && oldBody != null && parseCodeBlock(oldBody) == null && body.isNotBlank()), R.string.error_code_required)
             val createdFiles = mutableListOf<File>()
             var committed = false
             try {
                 val id = nodeId ?: UUID.randomUUID().toString()
                 val byHash = original.nodes.filter { it.node.id != nodeId }.flatMap { it.images }.associateBy { it.hash }.toMutableMap()
+                val currentImages = current?.images.orEmpty().associateBy { it.id }
+                val retained = images.mapNotNull { it.existing }.map { existing ->
+                    currentImages[existing.id] ?: throw PicNoteStorageException(R.string.error_image_expired)
+                }.associateBy { it.hash }
+                val previousByHash = currentImages.values.associateBy { it.hash }
                 val savedImages = mutableListOf<NodeImageEntity>()
-                val mappings = mutableListOf<SourceImageEntity>()
-                val consumedUris = mutableSetOf<String>()
+                val mappings = mutableListOf<Pair<PreparedImage, String>>()
+                var skippedImages = 0
                 images.forEach { draft ->
                     currentCoroutineContext().ensureActive()
                     val existing = draft.existing
                     if (existing != null) {
-                        val image = current?.images?.firstOrNull { it.id == existing.id } ?: error(Globals.app.getString(R.string.error_image_expired))
-                        require(image.hash !in byHash) { Globals.app.getString(R.string.error_duplicate_existing_image) }
-                        val saved = image.copy(sortIndex = savedImages.size)
-                        savedImages += saved
-                        byHash[saved.hash] = saved
+                        val image = currentImages.getValue(existing.id)
+                        savedImages += image.copy(sortIndex = savedImages.size)
                     } else {
-                        val prepared = draft.prepared ?: error(Globals.app.getString(R.string.error_image_not_ready))
-                        val duplicate = byHash[prepared.hash]
-                        require(nodeId == null || duplicate == null) { Globals.app.getString(R.string.error_duplicate_image) }
-                        val image = duplicate ?: copyPreparedImage(documentId, id, prepared, savedImages.size, createdFiles, sourceVersions)
+                        val prepared = draft.prepared ?: throw PicNoteStorageException(R.string.error_image_not_ready)
+                        val duplicate = retained[prepared.hash] ?: byHash[prepared.hash]
+                        val reusable = previousByHash[prepared.hash]?.takeIf { imageFile(documentId, it.fileName).isReadableMedia() }
+                        val image = duplicate ?: reusable?.copy(sourceUri = prepared.sourceUri, sortIndex = savedImages.size)
+                            ?: copyPreparedImage(documentId, id, prepared, savedImages.size, createdFiles)
                         if (duplicate == null) {
                             savedImages += image
                             byHash[image.hash] = image
+                        } else {
+                            requireStorage(imageFile(documentId, duplicate.fileName).isReadableMedia(), R.string.image_unreadable_replace)
+                            skippedImages++
                         }
-                        mappings += SourceImageEntity(prepared.sourceUri, documentId, image.fileName)
-                        sourceUri(prepared, sourceVersions)?.let { consumedUris += it }
+                        mappings += prepared to image.fileName
                     }
                 }
-                require(savedKind != "body" || body.isNotBlank() || savedImages.isNotEmpty()) { Globals.app.getString(R.string.error_body_required) }
+                requireStorage(
+                    savedKind != "body" || body.isNotBlank() || savedImages.isNotEmpty(),
+                    if (skippedImages > 0) R.string.error_duplicate_image else R.string.error_body_required,
+                )
+                val sources = checkSourceMappings(documentId, mappings)
                 currentCoroutineContext().ensureActive()
                 withContext(NonCancellable) {
                     database.withTransaction {
-                        require(dao.document(documentId) != null) { Globals.app.getString(R.string.error_document_deleted) }
+                        requireStorage(dao.document(documentId) != null, R.string.error_document_deleted)
                         val currentNodes = dao.nodes(documentId)
-                        val validSources = validSourceUris(consumedUris + savedImages.mapNotNull { it.sourceUri }, sourceVersions)
                         val savedTitle = if (savedKind == "title" || savedKind == "chapter") title.trim() else ""
                         val savedBody = if (savedKind in listOf("body", "introduction", "code")) body else ""
                         if (nodeId == null) {
                             val index = if (anchorId == null) currentNodes.size else currentNodes.indexOfFirst { it.id == anchorId }
-                            require(index >= 2) { Globals.app.getString(R.string.error_insert_anchor_changed) }
-                            dao.putNodes(listOf(NodeEntity(id, documentId, 0, savedKind, savedBody, savedTitle)))
-                            val order = currentNodes.map { it.id }.toMutableList()
-                            order.add(index, id)
-                            placeKey(documentId, order, index)
+                            requireStorage(index >= 2, R.string.error_insert_anchor_changed)
+                            val node = NodeEntity(id, documentId, 0, savedKind, savedBody, savedTitle)
+                            dao.putNodes(listOf(node))
+                            val order = currentNodes.toMutableList()
+                            order.add(index, node)
+                            placeKey(order, index)
                         } else {
-                            require(currentNodes.any { it.id == nodeId && it.kind == savedKind }) { Globals.app.getString(R.string.error_node_changed_retry) }
+                            requireStorage(currentNodes.any { it.id == nodeId && it.kind == savedKind }, R.string.error_node_changed_retry)
                             dao.updateNode(id, savedKind, savedBody, savedTitle)
                             dao.deleteImages(id)
                             if (savedKind == "title") dao.updateDocumentTitle(documentId, savedTitle, System.currentTimeMillis())
                         }
-                        dao.putImages(savedImages.map { if (it.sourceUri != null && it.sourceUri !in validSources) it.copy(sourceUri = null) else it })
-                        dao.putSourceImages(mappings)
+                        dao.putImages(savedImages)
+                        saveSourceMappings(sources)
                         dao.cleanSourceImages(documentId)
-                        dao.consumePending((consumedUris + savedImages.mapNotNull { it.sourceUri }).filter { it in validSources })
                         dao.touchDocument(documentId, System.currentTimeMillis())
                     }
                     committed = true
-                    cleanMedia(documentId)
-                    Saved(id, !writeMirror(documentId))
+                    afterCommit(documentId, id, skippedImages = skippedImages)
                 }
             } finally {
                 if (!committed) createdFiles.forEach { it.delete() }
@@ -416,55 +479,63 @@ class DocumentRepository(private val context: Context, private val database: Pic
         }
     }
 
-    suspend fun importImages(documentId: String, uris: List<String>, candidateUris: List<String>): Saved<Int> = withContext(Dispatchers.IO) {
+    suspend fun importImages(
+        documentId: String,
+        uris: List<String>,
+        candidateImages: List<PendingMediaEntity> = emptyList(),
+        batchToConsume: List<PendingMediaEntity> = candidateImages,
+    ): Saved<Int> = withContext(Dispatchers.IO) {
+        requireStorage(dao.document(documentId) != null, R.string.error_document_deleted_reselect)
+        val selected = uris.distinct()
+        if (candidateImages.isNotEmpty() && candidateImages.map { it.uri }.toSet() != selected.toSet()) {
+            throw PicNoteStorageException(R.string.pending_images_changed)
+        }
         val session = openDraftSession()
         try {
+            // 这次导入独占草稿会话，正式文档在转码后重新读取。
+            val prepared = preparationMutex.withLock { prepareBatch(session, selected, candidateImages) }
             mutex.withLock {
-                val sourceVersions = dao.scanStates().associate { it.volume to it.version }
                 val original = snapshot(documentId)
                 val byHash = original.nodes.flatMap { it.images }.associateBy { it.hash }.toMutableMap()
-                val prepared = prepareBatch(session, uris)
                 val createdFiles = mutableListOf<File>()
                 var committed = false
                 try {
                     val nodes = mutableListOf<NodeEntity>()
                     val images = mutableListOf<NodeImageEntity>()
-                    val mappings = mutableListOf<SourceImageEntity>()
-                    val consumedUris = candidateUris.toMutableSet()
+                    val mappings = mutableListOf<Pair<PreparedImage, String>>()
                     prepared.forEach { source ->
                         currentCoroutineContext().ensureActive()
                         val nodeId = UUID.randomUUID().toString()
                         val duplicate = byHash[source.hash]
-                        val image = duplicate ?: copyPreparedImage(documentId, nodeId, source, 0, createdFiles, sourceVersions)
-                        mappings += SourceImageEntity(source.sourceUri, documentId, image.fileName)
-                        sourceUri(source, sourceVersions)?.let { consumedUris += it }
+                        if (duplicate != null) {
+                            requireStorage(imageFile(documentId, duplicate.fileName).isReadableMedia(), R.string.image_unreadable_replace)
+                        }
+                        val image = duplicate ?: copyPreparedImage(documentId, nodeId, source, 0, createdFiles)
+                        mappings += source to image.fileName
                         if (duplicate == null) {
                             nodes += NodeEntity(nodeId, documentId, 0, "body")
                             images += image
                             byHash[image.hash] = image
                         }
                     }
+                    val sources = checkSourceMappings(documentId, mappings, candidateImages)
                     currentCoroutineContext().ensureActive()
                     withContext(NonCancellable) {
                         database.withTransaction {
-                            require(dao.document(documentId) != null) { Globals.app.getString(R.string.error_document_deleted_reselect) }
-                            val validSources = validSourceUris(consumedUris, sourceVersions)
-                            val current = dao.nodes(documentId)
-                            dao.putNodes(nodes)
-                            dao.putImages(images.map { if (it.sourceUri != null && it.sourceUri !in validSources) it.copy(sourceUri = null) else it })
-                            dao.putSourceImages(mappings)
-                            dao.cleanSourceImages(documentId)
-                            val order = current.map { it.id }.toMutableList()
-                            nodes.forEach { node ->
-                                order += node.id
-                                placeKey(documentId, order, order.lastIndex)
+                            if (dao.document(documentId) == null) throw PicNoteStorageException(R.string.error_document_deleted_reselect)
+                            val current = original.nodes.map { it.node }
+                            if (nodes.isNotEmpty()) {
+                                val previous = current.last().sortKey
+                                val end = if (previous > Long.MAX_VALUE - nodes.size * NodeSortKeyStep) renumber(current) else previous
+                                dao.putNodes(nodes.mapIndexed { index, node -> node.copy(sortKey = end + (index + 1L) * NodeSortKeyStep) })
                             }
-                            dao.consumePending(consumedUris.filter { it in validSources })
-                            dao.touchDocument(documentId, System.currentTimeMillis())
+                            dao.putImages(images)
+                            saveSourceMappings(sources, candidateImages, batchToConsume)
+                            dao.cleanSourceImages(documentId)
+                            if (nodes.isNotEmpty()) dao.touchDocument(documentId, System.currentTimeMillis())
                         }
                         committed = true
-                        cleanMedia(documentId)
-                        Saved(nodes.size, !writeMirror(documentId))
+                        afterCommit(documentId, nodes.size, cleanupMedia = nodes.isNotEmpty(), skippedImages = prepared.size - nodes.size)
                     }
                 } finally {
                     if (!committed) createdFiles.forEach { it.delete() }
@@ -473,47 +544,105 @@ class DocumentRepository(private val context: Context, private val database: Pic
         } finally { withContext(NonCancellable) { closeDraftSession(session) } }
     }
 
-    private fun sourceUri(image: PreparedImage, versions: Map<String, String>): String? {
-        val volume = image.queryVolume ?: return null
-        return if (image.queryVersion == versions[volume]) image.sourceUri else null
+    private suspend fun readSourceStamps(uris: Collection<String>): Map<String, MediaSourceStamp> {
+        if (photoAccess(context) != PhotoAccess.Full) return emptyMap()
+        val sources = uris.distinct().mapNotNull { uri -> mediaSource(uri)?.let { uri to it } }.groupBy { it.second.volume }
+        if (sources.isEmpty()) return emptyMap()
+        val versions = observedMediaVersions(sources.keys)
+        val stamps = buildMap {
+            for ((volume, references) in sources) {
+                val version = versions[volume] ?: continue
+                val times = try {
+                    mediaAddedTimes(context, volume, references.map { it.second.id })
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logEx(throwable = e, message = "Read MediaStore image identities failed")
+                    continue
+                }
+                for ((uri, source) in references) {
+                    times[source.id]?.let { put(uri, MediaSourceStamp(volume, version, it)) }
+                }
+            }
+        }
+        if (photoAccess(context) != PhotoAccess.Full || stamps.isEmpty()) return emptyMap()
+        val currentVersions = observedMediaVersions(stamps.values.mapTo(mutableSetOf()) { it.volume })
+        return stamps.filterValues { it.version == currentVersions[it.volume] }
     }
 
-    private suspend fun validSourceUris(uris: Collection<String>, versions: Map<String, String>): Set<String> {
-        val currentVersions = dao.scanStates().associate { it.volume to it.version }
-        return uris.filter { uri ->
-            versions.any { (volume, version) ->
-                uri.startsWith(MediaStore.Images.Media.getContentUri(volume).toString() + "/") && version == currentVersions[volume]
-            }
-        }.toSet()
+    private fun observedMediaVersions(volumes: Set<String>? = null): Map<String, String> = try {
+        currentMediaVersions(context, volumes)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        logEx(throwable = e, message = "Read MediaStore volume versions failed")
+        emptyMap()
+    }
+
+    private fun validateCandidates(candidates: List<PendingMediaEntity>, stamps: Map<String, MediaSourceStamp>) {
+        if (candidates.isEmpty()) return
+        if (photoAccess(context) != PhotoAccess.Full) throw PicNoteStorageException(R.string.error_photo_access_changed)
+        if (candidates.any { stamps[it.uri] != MediaSourceStamp(it.volume, it.version, it.addedAt) }) {
+            throw PicNoteStorageException(R.string.error_media_library_changed)
+        }
+    }
+
+    private data class SourceMappings(val history: List<SourceImageEntity>, val verified: List<SourceImageEntity>)
+
+    private suspend fun checkSourceMappings(
+        documentId: String,
+        mappings: List<Pair<PreparedImage, String>>,
+        candidates: List<PendingMediaEntity> = emptyList(),
+    ): SourceMappings {
+        val withStamps = mappings.filter { it.first.sourceStamp != null }
+        val stamps = readSourceStamps(withStamps.map { it.first.sourceUri })
+        validateCandidates(candidates, stamps)
+        val verified = withStamps.mapNotNull { (image, fileName) ->
+            val stamp = stamps[image.sourceUri]
+            if (stamp == null || stamp != image.sourceStamp) null
+            else SourceImageEntity(image.sourceUri, documentId, fileName, stamp.version, stamp.addedAt)
+        }
+        val history = mappings.map { (image, fileName) -> SourceImageEntity(image.sourceUri, documentId, fileName) }
+        return SourceMappings(history, verified)
+    }
+
+    private suspend fun saveSourceMappings(
+        sources: SourceMappings,
+        candidates: List<PendingMediaEntity> = emptyList(),
+        batchToConsume: List<PendingMediaEntity> = candidates,
+    ) {
+        if (sources.history.isNotEmpty()) dao.keepSourceImages(sources.history)
+        if (sources.verified.isNotEmpty()) dao.putSourceImages(sources.verified)
+        if (sources.verified.isEmpty() && batchToConsume.isEmpty() && candidates.isEmpty()) return
+        val pending = dao.pending().associateBy { it.uri }
+        if (candidates.any { pending[it.uri] != it }) throw PicNoteStorageException(R.string.pending_images_changed)
+        val kept = sources.verified.mapNotNull { source ->
+            val candidate = pending[source.sourceUri]
+            source.sourceUri.takeIf { candidate != null && source.sourceVersion == candidate.version && source.sourceAddedAt == candidate.addedAt }
+        }
+        val consumed = kept + batchToConsume.filter { pending[it.uri] == it }.map { it.uri }
+        consumed.distinct().chunked(MediaQueryBatchSize).forEach { dao.consumePending(it) }
     }
 
     private suspend fun copyPreparedImage(documentId: String, nodeId: String, image: PreparedImage, index: Int,
-        createdFiles: MutableList<File>, versions: Map<String, String>): NodeImageEntity {
-        require(image.file.isFile && image.file.canRead()) { Globals.app.getString(R.string.error_image_draft_unreadable) }
-        val directory = File(root, "$documentId/media").apply { check(isDirectory || mkdirs()) { Globals.app.getString(R.string.error_create_image_dir) } }
-        val fileName = "${image.hash}.webp"
+        createdFiles: MutableList<File>): NodeImageEntity {
+        if (!image.file.isFile || !image.file.canRead()) throw PicNoteStorageException(R.string.error_image_draft_unreadable)
+        val directory = File(root, "$documentId/media")
+        if (!directory.isDirectory && !directory.mkdirs()) throw PicNoteStorageException(R.string.error_create_image_dir)
+        val canonicalName = "${image.hash}.webp"
+        val fileName = if (File(directory, canonicalName).exists()) "${UUID.randomUUID()}.webp" else canonicalName
         val target = File(directory, fileName)
-        if (!target.exists()) {
-            val temporary = File(directory, ".${UUID.randomUUID()}.tmp")
-            try {
-                image.file.inputStream().use { input ->
-                    FileOutputStream(temporary).use { output ->
-                        val buffer = ByteArray(64 * 1024)
-                        while (true) {
-                            currentCoroutineContext().ensureActive()
-                            val count = input.read(buffer)
-                            if (count < 0) break
-                            output.write(buffer, 0, count)
-                        }
-                        output.fd.sync()
-                    }
-                }
-                Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
-                createdFiles += target
-            } finally { temporary.delete() }
-        }
+        val temporary = File(directory, ".${UUID.randomUUID()}.tmp")
+        try {
+            FileOutputStream(temporary).use { output ->
+                image.file.copyBytesTo(output)
+                output.fd.sync()
+            }
+            Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
+            createdFiles += target
+        } finally { temporary.delete() }
         return NodeImageEntity(UUID.randomUUID().toString(), nodeId, documentId, index, fileName, image.hash,
-            image.width, image.height, sourceUri(image, versions))
+            image.width, image.height, image.sourceUri)
     }
 
     private suspend fun <T> mutate(id: String, block: suspend () -> T): Saved<T> = withContext(Dispatchers.IO) {
@@ -521,16 +650,20 @@ class DocumentRepository(private val context: Context, private val database: Pic
             currentCoroutineContext().ensureActive()
             withContext(NonCancellable) {
                 val value = database.withTransaction {
-                    require(dao.document(id) != null) { Globals.app.getString(R.string.error_document_deleted) }
+                    requireStorage(dao.document(id) != null, R.string.error_document_deleted)
                     val result = block()
                     dao.touchDocument(id, System.currentTimeMillis())
                     dao.cleanSourceImages(id)
                     result
                 }
-                cleanMedia(id)
-                Saved(value, !writeMirror(id))
+                afterCommit(id, value)
             }
         }
+    }
+
+    private suspend fun <T> afterCommit(id: String, value: T, cleanupMedia: Boolean = true, skippedImages: Int = 0): Saved<T> {
+        if (cleanupMedia) cleanMedia(id)
+        return Saved(value, !writeMirror(id), skippedImages)
     }
 
     suspend fun retryMirror(id: String): Boolean = withContext(Dispatchers.IO) { mutex.withLock { writeMirror(id) } }
@@ -640,88 +773,176 @@ class DocumentRepository(private val context: Context, private val database: Pic
     }
 
     /** 完整导出：Markdown 与图片素材分别成文件的 ZIP，便于继续编辑。 */
-    suspend fun exportFull(id: String): File = withContext(Dispatchers.IO) {
-        mutex.withLock {
-            val content = snapshot(id)
-            check(exportRoot.isDirectory || exportRoot.mkdirs()) { Globals.app.getString(R.string.error_create_export_dir) }
-            val output = File(exportRoot, "picnote-${UUID.randomUUID()}.zip")
-            val temporary = File(exportRoot, ".${output.name}.tmp")
-            try {
-                ZipOutputStream(FileOutputStream(temporary)).use { zip ->
-                    zip.putNextEntry(ZipEntry(exportFileName(content.document.title, "md")))
-                    zip.write(content.markdown().toByteArray(Charsets.UTF_8))
-                    zip.closeEntry()
-                    content.nodes.flatMap { it.images }.distinctBy { it.fileName }.forEach { image ->
-                        currentCoroutineContext().ensureActive()
-                        val file = imageFile(id, image.fileName)
-                        require(file.isFile && file.canRead()) { Globals.app.getString(R.string.error_export_image_unreadable) }
-                        zip.putNextEntry(ZipEntry("media/${image.fileName}"))
-                        file.inputStream().use { it.copyTo(zip) }
-                        zip.closeEntry()
-                    }
-                }
-                Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.ATOMIC_MOVE)
-                output
-            } finally {
-                temporary.delete()
+    suspend fun exportFull(id: String): File = exportArtifact(id, "zip") { snapshot, temporary ->
+        ZipOutputStream(FileOutputStream(temporary)).use { zip ->
+            zip.putNextEntry(ZipEntry("${snapshot.fileName.removeSuffix(".zip")}.md"))
+            zip.write(snapshot.content.markdown().toByteArray(Charsets.UTF_8))
+            zip.closeEntry()
+            snapshot.media.forEach { (path, file) ->
+                currentCoroutineContext().ensureActive()
+                zip.putNextEntry(ZipEntry(path))
+                file.copyBytesTo(zip)
+                zip.closeEntry()
             }
         }
     }
 
     /** 网页导出：单文件 HTML，图片以 base64 内嵌，直接用浏览器打开即可阅读。 */
-    suspend fun exportWeb(id: String): File = withContext(Dispatchers.IO) {
-        mutex.withLock {
-            val content = snapshot(id)
-            check(exportRoot.isDirectory || exportRoot.mkdirs()) { Globals.app.getString(R.string.error_create_export_dir) }
-            val output = File(exportRoot, "picnote-${UUID.randomUUID()}.html")
-            val temporary = File(exportRoot, ".${output.name}.tmp")
-            try {
-                FileOutputStream(temporary).use { stream ->
-                    val writer = OutputStreamWriter(stream, Charsets.UTF_8)
-                    writer.write(htmlHeader(content.document.title))
-                    content.nodes.forEach { node ->
+    suspend fun exportWeb(id: String): File = exportArtifact(id, "html") { snapshot, temporary ->
+        val html = WebDocumentHtml(snapshot.media, currentCoroutineContext())
+        FileOutputStream(temporary).use { stream ->
+            val writer = OutputStreamWriter(stream, Charsets.UTF_8)
+            writer.write(htmlHeader(snapshot.content.document.title))
+            html.write(snapshot.content.markdownNodes(), writer)
+            writer.write("</main></body></html>\n")
+            writer.flush()
+            stream.fd.sync()
+        }
+    }
+
+    private data class ExportSnapshot(val content: DocumentContent, val media: Map<String, File>, val fileName: String)
+
+    private suspend fun exportArtifact(
+        id: String,
+        extension: String,
+        write: suspend (ExportSnapshot, File) -> Unit,
+    ): File = withContext(Dispatchers.IO) {
+        // 暂存与最终文件同在 cacheDir，只把完成的文件移入 FileProvider 共享目录。
+        val draft = File(exportDraftRoot, UUID.randomUUID().toString())
+        val temporary = File(draft, "export.tmp")
+        val stagedMedia = File(draft, "media")
+        val retainedNames = mutableListOf<String>()
+        var registered = false
+        try {
+            val frozen = mutex.withLock {
+                val content = snapshot(id)
+                val media = trustedMedia(content)
+                requireStorage(draft.mkdirs(), R.string.error_create_export_dir)
+                activeExports.add(draft.name)
+                registered = true
+                val staged = if (media.isEmpty()) emptyMap() else {
+                    requireStorage(stagedMedia.mkdir(), R.string.error_create_export_dir)
+                    media.keys.associate { source ->
                         currentCoroutineContext().ensureActive()
-                        when (node.node.kind) {
-                            "title" -> writer.write("<h1>${htmlEscape(content.document.title)}</h1>\n")
-                            "chapter" -> writer.write("<h2>${htmlEscape(node.node.title)}</h2>\n")
-                            else -> {
-                                node.images.forEach { image -> writeInlineImage(writer, id, image.fileName) }
-                                if (node.node.bodyMarkdown.isNotBlank()) {
-                                    val body = htmlRenderer.render(markdownParser.parse(node.node.bodyMarkdown))
-                                    if (node.node.kind == "introduction") writer.write("<blockquote>\n$body</blockquote>\n") else writer.write(body)
-                                }
-                            }
+                        val target = File(stagedMedia, source.name)
+                        val file = if (linkExportMedia(source, target)) target
+                        else {
+                            // 保留原路径到导出完成，写入阶段逐张读，不在锁内复制或同时打开所有文件。
+                            val retained = retainedExportMedia.getOrPut(id) { mutableMapOf() }
+                            retained[source.name] = (retained[source.name] ?: 0) + 1
+                            retainedNames += source.name
+                            source
                         }
+                        "media/${source.name}" to file
                     }
-                    writer.write("</main></body></html>\n")
-                    writer.flush()
-                    stream.fd.sync()
                 }
-                Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.ATOMIC_MOVE)
-                output
-            } finally {
-                temporary.delete()
+                ExportSnapshot(content, staged, exportFileName(content.document.title, extension))
+            }
+            write(frozen, temporary)
+            currentCoroutineContext().ensureActive()
+            mutex.withLock {
+                val directory = File(exportRoot, draft.name)
+                requireStorage(directory.mkdirs(), R.string.error_create_export_dir)
+                val output = File(directory, frozen.fileName)
+                try {
+                    Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.ATOMIC_MOVE)
+                    output
+                } finally {
+                    if (!output.isFile) directory.deleteRecursively()
+                }
+            }
+        } finally {
+            if (registered) {
+                try {
+                    if (!draft.deleteRecursively()) loge("Delete temporary export files failed")
+                } finally {
+                    activeExports.remove(draft.name)
+                    if (retainedNames.isNotEmpty()) releaseExportMedia(id, retainedNames)
+                }
             }
         }
     }
 
-    private val markdownParser by lazy { Parser.builder().build() }
-    private val htmlRenderer by lazy { HtmlRenderer.builder().escapeHtml(true).softbreak("<br>").build() }
-
-    private fun writeInlineImage(writer: Writer, documentId: String, fileName: String) {
-        val file = imageFile(documentId, fileName)
-        require(file.isFile && file.canRead()) { Globals.app.getString(R.string.error_export_image_unreadable) }
-        val mime = when (file.extension.lowercase()) {
-            "png" -> "image/png"
-            "jpg", "jpeg" -> "image/jpeg"
-            else -> "image/webp"
+    private fun linkExportMedia(source: File, target: File): Boolean {
+        // 素材以新文件替换，硬链接可在正式目录删除后继续读出原字节。
+        return try {
+            Files.createLink(target.toPath(), source.toPath())
+            true
+        } catch (_: IOException) {
+            false
+        } catch (_: UnsupportedOperationException) {
+            false
         }
-        val data = Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)
-        writer.write("<p><img alt=\"\" src=\"data:$mime;base64,$data\"></p>\n")
+    }
+
+    private suspend fun releaseExportMedia(id: String, names: List<String>) = withContext(NonCancellable) {
+        mutex.withLock {
+            val retained = retainedExportMedia.getValue(id)
+            var canClean = false
+            for (name in names) {
+                val count = retained.getValue(name)
+                if (count == 1) {
+                    retained.remove(name)
+                    canClean = true
+                } else retained[name] = count - 1
+            }
+            if (retained.isEmpty()) retainedExportMedia.remove(id)
+            if (!canClean) return@withLock
+            try {
+                if (dao.document(id) == null) removeDeletedDocumentFiles(id) else cleanMedia(id)
+            } catch (e: Exception) {
+                logEx(throwable = e, message = "Clean released export media failed")
+            }
+        }
+    }
+
+    private suspend fun File.copyBytesTo(output: OutputStream, onReadError: (IOException) -> Exception = { it }) {
+        val input = try { inputStream() } catch (e: IOException) { throw onReadError(e) }
+        input.use {
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                currentCoroutineContext().ensureActive()
+                val count = try { input.read(buffer) } catch (e: IOException) { throw onReadError(e) }
+                if (count < 0) break
+                output.write(buffer, 0, count)
+            }
+        }
+    }
+
+    private fun File.isReadableMedia(): Boolean = isFile && canRead() && length() > 0
+
+    private fun trustedMedia(
+        content: DocumentContent,
+        unreadable: (Int, IOException?) -> PicNoteStorageException = { _, cause ->
+            PicNoteStorageException(R.string.error_export_image_unreadable, cause)
+        },
+    ): Map<File, Int> {
+        val files = content.nodes.flatMap { it.images }
+        if (files.isEmpty()) return emptyMap()
+        val media = try {
+            File(root.canonicalFile, "${content.document.id}/media")
+        } catch (e: IOException) {
+            throw unreadable(1, e)
+        }
+        val validName = Regex("[A-Za-z0-9][A-Za-z0-9._-]*\\.webp")
+        return buildMap {
+            files.forEachIndexed { index, image ->
+                if (!validName.matches(image.fileName)) throw unreadable(index + 1, null)
+                val file = File(media, image.fileName)
+                if (file in this) return@forEachIndexed
+                val readable = try {
+                    file.canonicalFile == file && file.isReadableMedia()
+                } catch (e: IOException) {
+                    throw unreadable(index + 1, e)
+                }
+                if (!readable) throw unreadable(index + 1, null)
+                put(file, index + 1)
+            }
+        }
     }
 
     private fun htmlHeader(title: String): String {
-        val lang = context.resources.configuration.locales[0].toLanguageTag()
+        val lang = ContextCompat.getContextForLanguage(context).resources.configuration.locales[0].toLanguageTag()
         return """<!DOCTYPE html>
 <html lang="$lang">
 <head>
@@ -756,9 +977,6 @@ pre code { font: 14px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
 """
     }
 
-    private fun htmlEscape(value: String) = value.replace("&", "&amp;").replace("<", "&lt;")
-        .replace(">", "&gt;").replace("\"", "&quot;")
-
     private fun exportFileName(title: String, extension: String): String {
         val cleaned = Normalizer.normalize(title, Normalizer.Form.NFC)
             .replace(Regex("""[<>:"/\\|?*\p{Cc}\p{Cs}()\[\]{},，（）【】]+"""), "-")
@@ -786,9 +1004,14 @@ pre code { font: 14px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
         return name.substring(0, end).trimEnd('.', '-') + ".$extension"
     }
 
+    private fun removeDeletedDocumentFiles(id: String) {
+        if (retainedExportMedia[id].isNullOrEmpty() && !File(root, id).deleteRecursively()) loge("Delete document files failed")
+    }
+
     private suspend fun cleanMedia(id: String) {
         val referenced = dao.referencedFiles(id).toSet()
-        File(root, "$id/media").listFiles()?.filter { it.name !in referenced }?.forEach {
+        val retained = retainedExportMedia[id].orEmpty().keys
+        unreferencedMedia(File(root, id), referenced, retained).forEach {
             if (!it.delete()) loge("Delete unreferenced image failed")
         }
     }

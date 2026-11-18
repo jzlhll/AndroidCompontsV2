@@ -29,11 +29,16 @@ val codeGrammarBundle by configurations.creating {
     isCanBeConsumed = false
     isTransitive = false
 }
-val codeGrammarSources = codeGrammarBundle.elements.map { artifacts ->
+val usedCodeGrammars = providers.fileContents(
+    layout.projectDirectory.file("src/main/java/com/allan/picnote/ui/CodeGrammar.java"),
+).asText.map { locator ->
+    Regex("\\bPrism_([A-Za-z0-9_]+)\\b").findAll(locator)
+        .map { "languages/Prism_${it.groupValues[1]}.java" }.toSet()
+}
+val codeGrammarSources = codeGrammarBundle.elements.zip(usedCodeGrammars) { artifacts, sources ->
     artifacts.map { artifact ->
         zipTree(artifact.asFile).matching {
-            include(listOf("clike", "java", "kotlin", "c", "cpp", "csharp", "dart", "markup", "swift", "go", "javascript", "python", "json", "css", "sql", "yaml")
-                .map { "languages/Prism_$it.java" })
+            include(sources)
         }
     }
 }

@@ -10,10 +10,9 @@ import android.provider.MediaStore
 import androidx.core.content.ContextCompat
 import androidx.room.withTransaction
 import com.allan.picnote.data.PicNoteDatabase
+import com.allan.picnote.data.PicNoteStorageException
 import com.allan.picnote.data.entity.*
 import com.allan.picnote.R
-import com.au.module_android.Globals
-import com.au.module_android.utils.withIOThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -40,8 +39,6 @@ fun photoPermissions(): Array<String> = when {
     else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 }
 
-data class ScanSummary(val baseline: Boolean, val added: Int, val scannedAt: Long)
-
 /** 仅比较完整授权下最新时间段的新图片，卷重建与权限恢复只建立基线。 */
 class MediaScanner(private val context: Context, private val database: PicNoteDatabase) {
     private val dao = database.dao()
@@ -49,98 +46,63 @@ class MediaScanner(private val context: Context, private val database: PicNoteDa
     suspend fun permissionLost() = withContext(Dispatchers.IO) { dao.invalidateBaselines() }
 
     suspend fun pending(): List<PendingMediaEntity> = withContext(Dispatchers.IO) {
-        if (photoAccess(context) == PhotoAccess.Full) dao.pending() else emptyList()
+        if (photoAccess(context) != PhotoAccess.Full) return@withContext emptyList()
+        val versions = currentMediaVersions(context)
+        dao.pending().filter { it.version == versions[it.volume] }
     }
 
-    /** 忽略全部提示：onStart 扫描已把全量列表写成基线，这里只需清空待选与变化记录。 */
-    suspend fun ignoreAll() = withContext(Dispatchers.IO) {
-        database.withTransaction {
-            dao.clearPending()
-            dao.clearChanges()
-        }
-    }
-
-    suspend fun ignoreBatch(uris: List<String>) = withIOThread {
-        val consumed = uris.toSet()
-        database.withTransaction {
-            uris.distinct().chunked(900).forEach { dao.consumePending(it) }
-            val remaining = dao.changes().filter { it.uri !in consumed }
-            dao.clearChanges()
-            dao.putChanges(remaining)
-        }
-    }
-
-    suspend fun deletionBatch(images: List<PendingMediaEntity>): MediaDeletionBatch = withIOThread {
-        check(photoAccess(context) == PhotoAccess.Full) { Globals.app.getString(R.string.error_photo_access_changed) }
-        val pending = dao.pending().associateBy { it.uri }
-        check(images.all { pending[it.uri] == it }) { Globals.app.getString(R.string.pending_images_changed) }
-        val states = dao.scanStates().associateBy { it.volume }
-        val versions = images.map { it.volume }.distinct().associateWith { volume ->
-            val state = states[volume]
-            check(state != null && state.available && state.baselineValid && state.version == MediaStore.getVersion(context, volume)) {
-                Globals.app.getString(R.string.error_media_library_changed)
-            }
-            state.version
-        }
-        MediaDeletionBatch(images, versions)
-    }
-
-    suspend fun previousSummary(): ScanSummary? = withContext(Dispatchers.IO) {
-        val states = dao.scanStates().filter { it.available && it.baselineValid }
-        if (states.isEmpty()) null else {
-            val changes = dao.changes()
-            ScanSummary(changes.isEmpty(), changes.size, states.map { it.scannedAt }.sortedDescending().first())
-        }
-    }
+    suspend fun ignoreAll() = withContext(Dispatchers.IO) { dao.clearPending() }
 
     private fun volumes(): Set<String> = MediaStore.getExternalVolumeNames(context)
 
-    suspend fun scan(): ScanSummary = withContext(Dispatchers.IO) {
-        check(photoAccess(context) == PhotoAccess.Full) { "需要完整图片权限才能扫描" }
+    suspend fun scan(): Int = withContext(Dispatchers.IO) {
+        if (photoAccess(context) != PhotoAccess.Full) throw PicNoteStorageException(R.string.error_full_photo_access_required)
         val beforeVolumes = volumes()
         val versions = beforeVolumes.associateWith { MediaStore.getVersion(context, it) }
         val queried = beforeVolumes.associateWith { queryVolume(it) }
         currentCoroutineContext().ensureActive()
         fun validate() {
-            check(photoAccess(context) == PhotoAccess.Full) { "图片权限已变化，请重新授权" }
-            check(volumes() == beforeVolumes && beforeVolumes.all { MediaStore.getVersion(context, it) == versions[it] }) { "图片库已变化，下次进入时重试" }
+            if (photoAccess(context) != PhotoAccess.Full) throw PicNoteStorageException(R.string.error_photo_access_changed)
+            if (volumes() != beforeVolumes || beforeVolumes.any { MediaStore.getVersion(context, it) != versions[it] }) {
+                throw PicNoteStorageException(R.string.error_media_library_changed)
+            }
         }
         validate()
         database.withTransaction {
             currentCoroutineContext().ensureActive()
             validate()
             val states = dao.scanStates().associateBy { it.volume }
-            val changes = mutableListOf<MediaChangeEntity>()
-            var rebuilt = false
+            var addedCount = 0
             val time = System.currentTimeMillis()
             beforeVolumes.forEach { volume ->
                 val current = queried.getValue(volume)
+                val version = versions.getValue(volume)
                 val prefix = MediaStore.Images.Media.getContentUri(volume).toString() + "/"
                 val previousState = states[volume]
-                val rebaseline = previousState == null || !previousState.baselineValid || !previousState.available || previousState.version != versions[volume]
+                val previous = dao.snapshots(prefix)
+                val rebaseline = previousState == null || !previousState.baselineValid || !previousState.available || previousState.version != version
                 if (rebaseline) {
-                    rebuilt = true
-                    if (previousState == null || previousState.version != versions[volume]) dao.clearPendingVolume(volume)
-                    if (previousState != null && previousState.version != versions[volume]) dao.clearSourceUris(prefix)
+                    if (previousState == null || previousState.version != version) dao.clearPendingVolume(volume)
                 } else {
-                    val previous = dao.snapshots(prefix)
-                    val oldUris = previous.map { it.uri }.toSet()
+                    val oldUris = previous.associate { it.uri to it.time }
                     val latest = previous.firstOrNull()?.time ?: Long.MIN_VALUE
-                    val added = current.takeWhile { it.snapshot.time >= latest }.filter { it.snapshot.uri !in oldUris }
-                    changes += added.map { MediaChangeEntity(it.snapshot.uri, volume) }
-                    dao.putPending(added.map { PendingMediaEntity(it.snapshot.uri, volume, it.name, it.snapshot.time) })
+                    val added = current.takeWhile { it.snapshot.time >= latest }.filter { oldUris[it.snapshot.uri] != it.snapshot.time }
+                    addedCount += added.size
+                    dao.putPending(added.map { PendingMediaEntity(it.snapshot.uri, volume, it.name, it.snapshot.time, version) })
                 }
-                dao.clearSnapshots(prefix)
-                dao.putSnapshots(current.map { it.snapshot })
+                val snapshots = current.map { it.snapshot }
+                if (previous != snapshots) {
+                    dao.clearSnapshots(prefix)
+                    dao.putSnapshots(snapshots)
+                }
                 dao.cleanMissingPending(volume)
-                dao.putScanStates(listOf(MediaScanStateEntity(volume, versions.getValue(volume), time, true, true)))
+                dao.putScanStates(listOf(MediaScanStateEntity(volume, version, time, true, true)))
             }
-            dao.putScanStates(states.values.filter { it.volume !in beforeVolumes }.map { it.copy(available = false, baselineValid = false) })
-            dao.clearChanges()
-            dao.putChanges(changes)
+            dao.putScanStates(states.values.filter { it.volume !in beforeVolumes && (it.available || it.baselineValid) }
+                .map { it.copy(available = false, baselineValid = false) })
             currentCoroutineContext().ensureActive()
             validate()
-            ScanSummary(rebuilt && changes.isEmpty(), changes.size, time)
+            addedCount
         }
     }
 
@@ -156,7 +118,7 @@ class MediaScanner(private val context: Context, private val database: PicNoteDa
             try {
                 val cursor = context.contentResolver.query(uri, projection, null, null,
                     "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media._ID}", signal)
-                    ?: error("无法读取图片列表，请重试")
+                    ?: throw PicNoteStorageException(R.string.error_read_image_list)
                 val result = cursor.use {
                     val images = mutableListOf<QueriedImage>()
                     while (it.moveToNext()) {

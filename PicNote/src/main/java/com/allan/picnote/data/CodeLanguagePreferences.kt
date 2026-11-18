@@ -19,7 +19,7 @@ class CodeLanguagePreferences(context: Context) {
 
     val languageOrderFlow = store.data.map { preferences ->
         DefaultCodeLanguageOrder.sortedByDescending { language ->
-            preferences[longPreferencesKey("weight_$language")] ?: defaultWeights.getValue(language)
+            preferences[weightKey(language)] ?: defaultWeights.getValue(language)
         }
     }
 
@@ -28,11 +28,13 @@ class CodeLanguagePreferences(context: Context) {
         // 点击即保存，离开编辑页时仍完成这一次短事务。
         withContext(NonCancellable) {
             store.edit { preferences ->
-                val key = longPreferencesKey("weight_$language")
+                val key = weightKey(language)
                 val weight = preferences[key] ?: defaultWeight
                 val increment = if (weight > 1000L) 100L else 1000L
                 preferences[key] = if (weight > Long.MAX_VALUE - increment) Long.MAX_VALUE else weight + increment
             }
         }
     }
+
+    private fun weightKey(language: String) = longPreferencesKey("weight_$language")
 }

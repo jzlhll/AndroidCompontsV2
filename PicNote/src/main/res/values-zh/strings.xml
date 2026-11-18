@@ -89,12 +89,10 @@
     <string name="move_image_left">图片前移一位</string>
     <string name="move_image_right">图片后移一位</string>
     <string name="new_document">新建文档</string>
-    <string name="edit_node_title">节点编辑</string>
     <string name="create_introduction">创建引言</string>
     <string name="create_chapter">创建章节标题</string>
     <string name="create_body">创建图文</string>
     <string name="add_image">添加图片</string>
-    <string name="image_actions">图片 %1$d 的操作</string>
     <string name="replace_image">替换</string>
     <string name="remove_image">移除</string>
     <string name="restore_image">取消移除图片</string>
@@ -123,7 +121,6 @@
     <string name="error_open_settings">无法打开系统设置，请从应用信息中开启图片权限</string>
     <string name="error_request_photo_permission">无法发起图片权限申请，请重试或进入系统设置</string>
     <string name="error_open_photo_picker">无法打开系统相册，请重试</string>
-    <string name="error_create_share_uri">无法生成文档分享链接</string>
     <string name="error_open_share_sheet">无法打开分享面板，请重试</string>
     <string name="error_read_appearance">读取外观失败，已使用 Sage</string>
     <string name="error_read_permission_history">读取权限提示状态失败</string>
@@ -165,7 +162,6 @@
     <string name="error_insert_before_fixed">不能插入到标题或主引言之前</string>
     <string name="error_introduction_required">请填写引言</string>
     <string name="error_image_expired">图片已失效</string>
-    <string name="error_duplicate_existing_image">这张图片已存在于当前文档，原节点尚未修改。</string>
     <string name="error_image_not_ready">图片尚未准备完成，请重新选择</string>
     <string name="error_duplicate_image">这张图片已存在于当前文档，请选择其他图片。原节点尚未修改。</string>
     <string name="error_body_required">请填写文字或添加尚未导入的图片</string>
@@ -178,7 +174,6 @@
     <string name="error_export_image_unreadable">图片不可读，无法导出完整文档</string>
     <string name="error_create_image_draft_dir">无法创建图片草稿目录</string>
     <string name="error_read_image">无法读取图片，请重新选择</string>
-    <string name="error_image_dimensions">图片宽高不能超过 16383 像素，请选择其他图片</string>
     <string name="error_image_codec_unavailable">图片压缩组件不可用，当前安装包仅支持 ARM 设备</string>
     <string name="error_image_compression">图片压缩失败，请重新选择</string>
     <string name="error_image_out_of_memory">图片过大，内存不足，无法处理</string>

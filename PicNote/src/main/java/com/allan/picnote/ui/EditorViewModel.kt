@@ -8,9 +8,11 @@ import com.allan.picnote.R
 import com.allan.picnote.data.CodeBlockContent
 import com.allan.picnote.data.CodeLanguagePreferences
 import com.allan.picnote.data.DefaultCodeLanguageOrder
+import com.allan.picnote.data.PicNoteStorageException
 import com.allan.picnote.data.parseCodeBlock
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.data.repositories.ImageDraft
+import com.allan.picnote.data.repositories.Saved
 import com.allan.picnote.logEx
 import com.au.module_android.Globals
 import kotlinx.coroutines.CancellationException
@@ -40,13 +42,13 @@ data class EditorState(
     val body: String = "",
     val code: String = "",
     val codeLanguage: String = "",
+    val rawCodeMarkdown: Boolean = false,
     val images: List<ImageDraft> = emptyList(),
     val dirty: Boolean = false,
     val busy: Boolean = false,
     val error: String? = null,
     val codeLanguageUsageError: String? = null,
-    val savedId: String? = null,
-    val mirrorFailed: Boolean = false,
+    val saved: Saved<String>? = null,
     val savedImageCount: Int = 0,
 )
 
@@ -71,14 +73,11 @@ class EditorViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), DefaultCodeLanguageOrder)
     private var originalDraft = mutableStateFlow.value
-    private val draftSession = repository.openDraftSession()
+    private var originalCodeBlock: CodeBlockContent? = null
+    private var originalCodeMarkdown: String? = null
+    private var draftSession: String? = null
 
     init {
-        // 会话跟随目的地 ViewModel，旋转保留草稿，真正离开后再清理文件。
-        viewModelScope.launch {
-            try { awaitCancellation() }
-            finally { withContext(NonCancellable) { repository.closeDraftSession(draftSession) } }
-        }
         if (route.nodeId != null) load()
     }
 
@@ -91,27 +90,31 @@ class EditorViewModel(
             try {
                 val nodes = repository.content(documentId).nodes
                 val index = nodes.indexOfFirst { it.node.id == nodeId }
-                val node = nodes.getOrNull(index) ?: error("节点已删除")
-                val codeBlock = if (node.node.kind == "code") parseCodeBlock(node.node.bodyMarkdown) else null
+                val node = nodes.getOrNull(index) ?: throw PicNoteStorageException(R.string.error_node_deleted)
+                val isCode = node.node.kind == "code"
+                val codeBlock = if (isCode) withContext(Dispatchers.Default) { parseCodeBlock(node.node.bodyMarkdown) } else null
+                originalCodeBlock = codeBlock
+                originalCodeMarkdown = if (isCode) node.node.bodyMarkdown else null
                 originalDraft = EditorState(title = node.node.title, kind = node.node.kind, fixed = index < 2,
-                    body = codeBlock?.description ?: if (node.node.kind == "code") "" else node.node.bodyMarkdown,
-                    code = codeBlock?.code ?: if (node.node.kind == "code") node.node.bodyMarkdown else "",
+                    body = codeBlock?.description ?: if (isCode) "" else node.node.bodyMarkdown,
+                    code = codeBlock?.code ?: if (isCode) node.node.bodyMarkdown else "",
                     codeLanguage = codeBlock?.language.orEmpty(),
+                    rawCodeMarkdown = isCode && codeBlock == null,
                     images = node.images.map { ImageDraft(existing = it) }, savedImageCount = node.images.size)
                 mutableStateFlow.value = originalDraft
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
                 logEx(throwable = e, message = "Load node draft failed")
-                mutableStateFlow.update { it.copy(loading = false, loaded = false, error = e.message ?: "无法打开节点") }
+                mutableStateFlow.update { it.copy(loading = false, loaded = false, error = failureMessage(e, R.string.error_load_node)) }
             }
         }
     }
 
     private fun updateDraft(transform: (EditorState) -> EditorState) {
         val current = stateFlow.value
-        if (!current.loaded || current.loading || current.busy || current.savedId != null) return
+        if (!current.loaded || current.loading || current.busy || current.saved != null) return
         val draft = transform(current)
-        mutableStateFlow.value = changed(draft)
+        if (draft != current) mutableStateFlow.value = changed(draft.copy(error = null))
     }
 
     private fun changed(draft: EditorState): EditorState = draft.copy(
@@ -125,29 +128,38 @@ class EditorViewModel(
     fun setCode(value: String) { updateDraft { it.copy(code = value) } }
     fun setCodeLanguage(value: String) {
         val current = stateFlow.value
-        if (current.kind != "code" || route.documentId == null || !current.loaded || current.loading ||
-            current.busy || current.savedId != null || value !in DefaultCodeLanguageOrder
+        if (current.kind != "code" || current.rawCodeMarkdown || route.documentId == null || !current.loaded || current.loading ||
+            current.busy || current.saved != null || value !in DefaultCodeLanguageOrder
         ) return
-        mutableStateFlow.value = changed(current.copy(codeLanguage = value, codeLanguageUsageError = null))
+        mutableStateFlow.value = changed(current.copy(codeLanguage = value, error = null, codeLanguageUsageError = null))
         viewModelScope.launch {
             try {
                 codeLanguagePreferences.recordSelection(value)
                 ensureActive()
-                mutableStateFlow.update { it.copy(codeLanguageUsageError = null) }
+                mutableStateFlow.update { if (it.codeLanguage == value) it.copy(codeLanguageUsageError = null) else it }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 logEx(throwable = e, message = "Save code language weight failed")
                 ensureActive()
                 val message = Globals.app.getString(R.string.error_save_code_language_usage)
-                mutableStateFlow.update { it.copy(codeLanguageUsageError = message) }
+                mutableStateFlow.update { if (it.codeLanguage == value) it.copy(codeLanguageUsageError = message) else it }
             }
         }
     }
     fun imagePickerFailed(e: Exception) {
         logEx(throwable = e, message = "Launch editor image picker failed")
-        mutableStateFlow.update { it.copy(error = "无法打开系统相册，请重试") }
+        mutableStateFlow.update { it.copy(error = Globals.app.getString(R.string.error_open_photo_picker)) }
     }
+
+    fun dismissError() {
+        mutableStateFlow.update {
+            if (!it.loaded) it
+            else if (it.error != null) it.copy(error = null)
+            else it.copy(codeLanguageUsageError = null)
+        }
+    }
+
     fun addImages(uris: List<String>) { prepareImages(uris) }
     fun toggleImageRemoval(imageId: String) {
         updateDraft { draft ->
@@ -177,49 +189,64 @@ class EditorViewModel(
 
     private fun prepareImages(uris: List<String>, replacementId: String? = null) {
         val draft = stateFlow.value
-        if (uris.isEmpty() || route.documentId == null || draft.kind != "body" || !draft.loaded || draft.loading || draft.busy || draft.savedId != null) return
+        if (uris.isEmpty() || route.documentId == null || draft.kind != "body" || !draft.loaded || draft.loading || draft.busy || draft.saved != null) return
         mutableStateFlow.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             try {
-                val prepared = repository.prepareImages(draftSession, uris)
+                val session = draftSession ?: repository.openDraftSession().also { opened ->
+                    draftSession = opened
+                    // 会话跟随目的地 ViewModel，旋转保留草稿，真正离开后清理文件。
+                    viewModelScope.launch {
+                        try { awaitCancellation() }
+                        finally { withContext(NonCancellable) { repository.closeDraftSession(opened) } }
+                    }
+                }
+                val prepared = repository.prepareImages(session, uris)
                 val images = if (replacementId == null) draft.images + prepared.map { ImageDraft(prepared = it) }
                 else draft.images.map { if (it.id == replacementId) ImageDraft(prepared = prepared.single()) else it }
                 mutableStateFlow.value = changed(draft.copy(busy = false, images = images, error = null))
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
                 logEx(throwable = e, message = "Prepare selected images failed")
-                mutableStateFlow.update { it.copy(busy = false, error = e.message ?: "图片处理失败，请重试") }
+                mutableStateFlow.update { it.copy(busy = false, error = failureMessage(e, R.string.error_prepare_images)) }
             }
         }
     }
 
     fun save() {
         val draft = stateFlow.value
-        if (draft.busy || draft.loading || !draft.loaded || draft.savedId != null || (route.nodeId != null && !draft.dirty && draft.kind != "code")) return
+        if (draft.busy || draft.loading || !draft.loaded || draft.saved != null || (route.nodeId != null && !draft.dirty && draft.kind != "code")) return
         mutableStateFlow.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             try {
-                val body = if (draft.kind == "code") withContext(Dispatchers.Default) {
-                    val code = try { formatCodeForSave(draft.code, draft.codeLanguage) }
-                    catch (e: CancellationException) { throw e }
-                    catch (e: StackOverflowError) {
-                        logEx(throwable = e, message = "Format code exceeded tokenizer stack")
-                        draft.code
+                val body = when {
+                    draft.rawCodeMarkdown -> draft.code
+                    draft.kind != "code" -> draft.body
+                    else -> withContext(Dispatchers.Default) {
+                        val code = try { formatCodeForSave(draft.code, draft.codeLanguage) }
+                        catch (e: CancellationException) { throw e }
+                        catch (e: StackOverflowError) {
+                            logEx(throwable = e, message = "Format code exceeded tokenizer stack")
+                            draft.code
+                        }
+                        catch (e: Exception) {
+                            logEx(throwable = e, message = "Format code failed")
+                            draft.code
+                        }
+                        val original = originalCodeBlock
+                        val updated = (original ?: CodeBlockContent()).withLanguage(draft.codeLanguage)
+                            .copy(description = draft.body, code = code)
+                        if (updated == original) originalCodeMarkdown ?: updated.markdown() else updated.markdown()
                     }
-                    catch (e: Exception) {
-                        logEx(throwable = e, message = "Format code failed")
-                        draft.code
-                    }
-                    CodeBlockContent(draft.body, code, draft.codeLanguage).markdown()
-                } else draft.body
+                }
                 val result = if (route.documentId == null) repository.create(draft.title, body)
                 else repository.saveNode(route.documentId, route.nodeId, route.anchorId, draft.kind,
                     draft.title, body, draft.images.filterNot { it.pendingRemoval })
-                mutableStateFlow.update { it.copy(busy = false, dirty = false, savedId = result.value, mirrorFailed = result.mirrorFailed) }
+                mutableStateFlow.update { it.copy(busy = false, dirty = false, saved = result) }
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
                 logEx(throwable = e, message = "Save draft failed")
-                mutableStateFlow.update { it.copy(busy = false, error = e.message ?: "保存失败，请重试") }
+                mutableStateFlow.update { it.copy(busy = false, error = failureMessage(e, R.string.error_save)) }
             }
         }
     }
@@ -228,19 +255,22 @@ class EditorViewModel(
         val documentId = route.documentId ?: return
         val nodeId = route.nodeId ?: return
         val draft = stateFlow.value
-        if (!draft.loaded || draft.fixed || draft.loading || draft.busy || draft.savedId != null) return
+        if (!draft.loaded || draft.fixed || draft.loading || draft.busy || draft.saved != null) return
         mutableStateFlow.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             try {
                 val result = repository.deleteNode(documentId, nodeId)
-                mutableStateFlow.update { it.copy(busy = false, dirty = false, savedId = nodeId, mirrorFailed = result.mirrorFailed) }
+                mutableStateFlow.update { it.copy(busy = false, dirty = false, saved = Saved(nodeId, result.mirrorFailed)) }
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {
                 logEx(throwable = e, message = "Delete node failed")
-                mutableStateFlow.update { it.copy(busy = false, error = e.message ?: "删除失败，请重试") }
+                mutableStateFlow.update { it.copy(busy = false, error = failureMessage(e, R.string.error_delete)) }
             }
         }
     }
+
+    private fun failureMessage(error: Exception, fallback: Int): String =
+        Globals.app.getString((error as? PicNoteStorageException)?.messageRes ?: fallback)
 
     class Factory(
         private val repository: DocumentRepository,

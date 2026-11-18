@@ -11,3 +11,17 @@ val CodeLanguages: Map<String, String> = linkedMapOf(
 )
 
 val DefaultCodeLanguageOrder = listOf("") + CodeLanguages.keys
+
+val CodeLanguageToken = Regex("[^\\s\\p{Z}]+")
+
+/** 将围栏语言转为语法处理使用的名称，保留原围栏和各标记语言的格式化语义。 */
+fun normalizeCodeLanguage(info: String?): String = when (val language = CodeLanguageToken.find(info.orEmpty())?.value?.lowercase().orEmpty()) {
+    "js" -> "javascript"
+    "ts" -> "typescript"
+    "c++" -> "cpp"
+    "c#", "cs", "dotnet" -> "csharp"
+    "rs" -> "rust"
+    "ps1", "ps" -> "powershell"
+    "sh", "shell" -> "bash"
+    else -> language
+}

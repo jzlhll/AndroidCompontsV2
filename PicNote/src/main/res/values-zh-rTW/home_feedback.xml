@@ -1,0 +1,10 @@
+<resources>
+    <string name="error_initialize_welcome">無法建立教學文件。</string>
+    <string name="document_duplicated">已複製文件</string>
+    <string name="document_operation_in_progress">正在處理文件，請稍後再試。</string>
+    <string name="error_export_document">無法匯出文件，請再試一次。</string>
+    <string name="candidate_selection_expired">文件已建立，請重新開啟候選圖片面板並選擇圖片。</string>
+    <string name="imported_image_nodes_with_duplicates">已加入 %1$d 個圖片節點，略過 %2$d 張重複圖片</string>
+    <string name="skipped_duplicate_images">已略過 %1$d 張重複圖片</string>
+    <string name="import_saved_delete_failed_with_reason">已在應用程式內儲存，但無法從系統相簿刪除圖片。%1$s</string>
+</resources>

@@ -1,0 +1,6 @@
+<resources>
+    <string name="code_markdown_source">Markdown 原文</string>
+    <string name="code_preview_loading">正在加载代码…</string>
+    <string name="code_markdown_source_hint">此代码块使用旧格式，可直接编辑 Markdown 原文。</string>
+    <string name="document_section_raw_markdown">此节点显示为 Markdown 原文。</string>
+</resources>
