@@ -394,6 +394,11 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         }
     }
 
+    fun refreshDocumentList() = operation(waitForLoading = true, cancelScan = false) {
+        val documents = repository.documentSummaries()
+        mutableStateFlow.update { it.copy(documents = documents) }
+    }
+
     private suspend fun reload(id: String? = null) {
         val data = repository.home(id)
         val pending = app.scanner.pending()
@@ -628,13 +633,13 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
             message = if (result.mirrorFailed) "已保存，文档镜像更新失败" else it.message) }
     }
 
-    private fun operation(waitForLoading: Boolean = false, block: suspend () -> Unit) {
+    private fun operation(waitForLoading: Boolean = false, cancelScan: Boolean = true, block: suspend () -> Unit) {
         if (stateFlow.value.busy) return
         if (stateFlow.value.loading && !waitForLoading) { showMessage("文档正在加载，请稍后重试"); return }
         val pendingReload = reloadJob
-        val pendingScan = scanJob
+        val pendingScan = if (cancelScan) scanJob else null
         pendingScan?.cancel()
-        mutableStateFlow.update { it.copy(busy = true, scanning = false) }
+        mutableStateFlow.update { it.copy(busy = true, scanning = it.scanning && !cancelScan) }
         viewModelScope.launch {
             try {
                 withContext(NonCancellable) { pendingScan?.cancelAndJoin() }

@@ -35,6 +35,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.allan.picnote.PicNoteApplication
 import com.allan.picnote.R
+import com.allan.picnote.bluetooth.BluetoothTransferViewModel
 import com.allan.picnote.logEx
 import com.allan.picnote.data.ImportMode
 import com.allan.picnote.media.PhotoAccess
@@ -62,6 +63,12 @@ data object LanguageRoute : NavKey
 
 @Serializable
 data object ImportModeRoute : NavKey
+
+@Serializable
+data class BluetoothSendRoute(val documentId: String) : NavKey
+
+@Serializable
+data object BluetoothReceiveRoute : NavKey
 
 @Serializable
 data class EditRoute(
@@ -213,6 +220,12 @@ fun PicNoteApp(app: PicNoteApplication) {
                             onSettings = {
                                 if (backStack.lastOrNull() == HomeRoute) backStack.add(SettingsRoute)
                             },
+                            onBluetoothShare = { id ->
+                                if (backStack.lastOrNull() == HomeRoute) backStack.add(BluetoothSendRoute(id))
+                            },
+                            onBluetoothReceive = {
+                                if (backStack.lastOrNull() == HomeRoute) backStack.add(BluetoothReceiveRoute)
+                            },
                             active = homeActive,
                         )
                         }
@@ -251,6 +264,35 @@ fun PicNoteApp(app: PicNoteApplication) {
                             onSelect = home::setImportMode,
                             onBack = { if (backStack.lastOrNull() == ImportModeRoute) navigateBack() },
                             enabled = state.importMode != null && !state.importModeSaving && !state.busy && state.access == PhotoAccess.Full,
+                        )
+                    }
+                    entry<BluetoothSendRoute> { route ->
+                        val transfer: BluetoothTransferViewModel = viewModel(factory = BluetoothTransferViewModel.Factory(app, route.documentId))
+                        BluetoothTransferScreen(
+                            viewModel = transfer,
+                            receiving = false,
+                            sendTitle = state.documents.firstOrNull { it.id == route.documentId }?.title,
+                            active = backStack.lastOrNull() == route,
+                            onClose = { _, _ ->
+                                if (backStack.lastOrNull() == route) navigateBack()
+                            },
+                        )
+                    }
+                    entry<BluetoothReceiveRoute> {
+                        val transfer: BluetoothTransferViewModel = viewModel(factory = BluetoothTransferViewModel.Factory(app, null))
+                        BluetoothTransferScreen(
+                            viewModel = transfer,
+                            receiving = true,
+                            sendTitle = null,
+                            active = backStack.lastOrNull() == BluetoothReceiveRoute,
+                            onClose = { openDocumentId, importedDocument ->
+                                if (backStack.lastOrNull() == BluetoothReceiveRoute) {
+                                    if (importedDocument?.mirrorFailed == true) home.mirrorResult(importedDocument.value, true)
+                                    if (openDocumentId != null) home.reloadDocument(openDocumentId)
+                                    else if (importedDocument != null) home.refreshDocumentList()
+                                    navigateBack()
+                                }
+                            },
                         )
                     }
                     entry<EditRoute> { route ->

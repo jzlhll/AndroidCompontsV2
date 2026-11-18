@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="bluetooth_transfer_approval_timeout">The time to confirm receipt has expired.</string>
+    <string name="bluetooth_transfer_background">Bluetooth transfer ended because PicNote went into the background.</string>
+    <string name="bluetooth_transfer_cancelled">Bluetooth transfer canceled.</string>
+    <string name="bluetooth_transfer_connect_timeout">Connection timed out. Check pairing and ask the other device to open Bluetooth Receive.</string>
+    <string name="bluetooth_transfer_disconnected">The Bluetooth connection was lost.</string>
+    <string name="bluetooth_transfer_discoverability_denied">Nearby devices cannot discover this phone. Paired devices can still try to connect.</string>
+    <string name="bluetooth_transfer_enable_required">Turn on Bluetooth to continue.</string>
+    <string name="bluetooth_transfer_integrity">The file failed its integrity check.</string>
+    <string name="bluetooth_transfer_invalid_control">The Bluetooth transfer request was invalid.</string>
+    <string name="bluetooth_transfer_listen_failed">Could not start Bluetooth Receive. Check Bluetooth and try again.</string>
+    <string name="bluetooth_transfer_pairing_cancelled">Bluetooth pairing was canceled or failed.</string>
+    <string name="bluetooth_transfer_peer_storage">The receiving device could not save or import the file.</string>
+    <string name="bluetooth_transfer_permission_required">Allow access to nearby devices to continue.</string>
+    <string name="bluetooth_transfer_protocol_version">The devices use incompatible Bluetooth sharing versions. Update PicNote on both devices.</string>
+    <string name="bluetooth_transfer_receive_failed">Could not receive and import the file.</string>
+    <string name="bluetooth_transfer_receiver_unavailable">Could not connect. Ask the other device to update PicNote and open Bluetooth Receive.</string>
+    <string name="bluetooth_transfer_rejected">The other device declined the file.</string>
+    <string name="bluetooth_transfer_scan_failed">Could not scan for nearby Bluetooth devices.</string>
+    <string name="bluetooth_transfer_scan_timeout">The Bluetooth scan timed out. You can scan again.</string>
+    <string name="bluetooth_transfer_system_action_failed">Could not open the Bluetooth system prompt.</string>
+    <string name="bluetooth_transfer_timeout">Bluetooth transfer timed out.</string>
+    <string name="bluetooth_transfer_unconfirmed">Could not confirm the import. Check the receiving device.</string>
+    <string name="bluetooth_transfer_unsupported">This device does not support classic Bluetooth.</string>
+</resources>

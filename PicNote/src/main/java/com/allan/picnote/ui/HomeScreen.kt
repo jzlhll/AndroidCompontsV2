@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -58,6 +59,7 @@ import com.allan.picnote.logEx
 import com.allan.picnote.media.PhotoAccess
 import com.allan.picnote.media.photoAccess
 import com.allan.picnote.media.photoPermissions
+import com.allan.picnote.ui.components.BluetoothReceiveButton
 import com.allan.picnote.ui.components.CreateDocumentButton
 import com.allan.picnote.ui.components.ImportModeIcon
 import com.au.module_android.Globals
@@ -89,6 +91,8 @@ fun HomeScreen(
     onImportMode: () -> Unit,
     onAppearance: () -> Unit,
     onSettings: () -> Unit,
+    onBluetoothShare: (String) -> Unit,
+    onBluetoothReceive: () -> Unit,
     modifier: Modifier = Modifier,
     active: Boolean = true,
 ) {
@@ -208,6 +212,10 @@ fun HomeScreen(
                             enabled = ready && bodyNodeIds.size >= 2,
                         )
                     }
+                    BluetoothShareMenuItem(
+                        onClick = { more = false; onBluetoothShare(document.id) },
+                        enabled = ready,
+                    )
                     DropdownMenuItem(text = { Text(stringResource(R.string.export_full), style = ComposeTypography.Font16, color = LocalContentColor.current) },
                         onClick = { more = false; viewModel.exportFull(document.id) }, enabled = ready)
                     DropdownMenuItem(text = { Text(stringResource(R.string.export_web), style = ComposeTypography.Font16, color = LocalContentColor.current) },
@@ -267,8 +275,17 @@ fun HomeScreen(
                     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.my_documents), Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge, fontSize = 21.sp)
-                            CreateDocumentButton(stringResource(R.string.new_document_button),
+                                style = MaterialTheme.typography.titleLarge, fontSize = 21.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            val newDocumentLabel = stringResource(R.string.new_document_button)
+                            BluetoothReceiveButton(
+                                newDocumentLabel,
+                                stringResource(R.string.bluetooth_receive),
+                                onClick = { scope.launch { drawer.snapTo(DrawerValue.Closed); onBluetoothReceive() } },
+                                enabled = ready,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            CreateDocumentButton(newDocumentLabel,
                                 onClick = { scope.launch { drawer.snapTo(DrawerValue.Closed); onCreate() } }, enabled = ready)
                         }
                         if (landscape) {
@@ -305,6 +322,13 @@ fun HomeScreen(
                                     IconButton(onClick = { menu = true }, enabled = ready,
                                         modifier = Modifier.semantics { contentDescription = itemActionsDescription }) { Text("⋯") }
                                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                                        BluetoothShareMenuItem(
+                                            onClick = {
+                                                menu = false
+                                                scope.launch { drawer.snapTo(DrawerValue.Closed); onBluetoothShare(item.id) }
+                                            },
+                                            enabled = ready,
+                                        )
                                         DropdownMenuItem(text = { Text(stringResource(R.string.export_full)) }, enabled = ready,
                                             onClick = { menu = false; viewModel.exportFull(item.id) })
                                         DropdownMenuItem(text = { Text(stringResource(R.string.export_web)) }, enabled = ready,
@@ -580,6 +604,22 @@ fun HomeScreen(
         text = { Text(stringResource(R.string.delete_document_message, state.documents.firstOrNull { it.id == deleteId }?.title.orEmpty())) },
         confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { deleteId = null }) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+@Composable
+private fun BluetoothShareMenuItem(onClick: () -> Unit, enabled: Boolean) {
+    DropdownMenuItem(
+        text = { Text(stringResource(R.string.bluetooth_share), style = ComposeTypography.Font16) },
+        onClick = onClick,
+        modifier = Modifier.padding(horizontal = 4.dp).clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        leadingIcon = { Icon(painterResource(R.drawable.ic_bluetooth), contentDescription = null) },
+        enabled = enabled,
+        colors = MenuDefaults.itemColors(
+            textColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            leadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
     )
 }
 

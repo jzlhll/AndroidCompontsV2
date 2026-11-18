@@ -29,6 +29,7 @@ class PicNoteCleaner(
     private val dao = database.dao()
     private val root = File(context.filesDir, "documents")
     private val draftRoot = File(context.filesDir, "image_drafts")
+    private val bluetoothArchiveRoot = File(context.filesDir, BluetoothArchiveDirectory)
     private val exportRoot = File(context.cacheDir, "shared/exports")
 
     suspend fun clean(clearAllCache: Boolean): CleanupResult = withContext(Globals.backgroundScope.coroutineContext.minusKey(Job)) {
@@ -72,6 +73,12 @@ class PicNoteCleaner(
                     .forEach { file ->
                         ignoreCleanupError("export:${file.name}", failures) { removeFile(file) }
                     }
+            }
+            ignoreCleanupError("bluetooth_archives", failures) {
+                val expiry = System.currentTimeMillis() - 1.days.inWholeMilliseconds
+                bluetoothArchiveRoot.listFiles().orEmpty().filter { it.lastModified() < expiry }.forEach { file ->
+                    ignoreCleanupError("bluetooth_archive:${file.name}", failures) { removeFile(file) }
+                }
             }
             if (clearAllCache) {
                 ignoreCleanupError("coil_disk_cache", failures) { SingletonImageLoader.get(context).diskCache?.clear() }

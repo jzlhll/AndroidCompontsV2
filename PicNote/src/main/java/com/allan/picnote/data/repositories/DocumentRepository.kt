@@ -7,10 +7,15 @@ import android.provider.MediaStore
 import android.util.Base64
 import androidx.room.withTransaction
 import com.allan.picnote.R
+import com.allan.picnote.data.BluetoothArchiveDirectory
+import com.allan.picnote.data.BluetoothArchiveException
+import com.allan.picnote.data.BluetoothDocumentArchive
 import com.allan.picnote.data.PicNoteDatabase
 import com.allan.picnote.data.PicNoteCleaner
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.WelcomeDocumentTemplate
+import com.allan.picnote.data.bluetoothArchiveStorageFailure
+import com.allan.picnote.data.deleteBluetoothArchiveFiles
 import com.allan.picnote.data.entity.*
 import com.allan.picnote.data.markdown
 import com.allan.picnote.data.parseCodeBlock
@@ -37,6 +42,7 @@ import java.io.OutputStreamWriter
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
 import java.text.Normalizer
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -56,6 +62,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
     private val exportRoot = File(context.cacheDir, "shared/exports")
     private val activeDrafts = ConcurrentHashMap.newKeySet<String>()
     private val preparation = ImagePreparation(context)
+    private val bluetoothArchive = BluetoothDocumentArchive(File(context.filesDir, BluetoothArchiveDirectory))
     private val preferences = context.getSharedPreferences("picnote", Context.MODE_PRIVATE)
     val cleaner = PicNoteCleaner(context, database, mutex, activeDrafts, ::writeMirror)
 
@@ -101,6 +108,8 @@ class DocumentRepository(private val context: Context, private val database: Pic
         }
     }
 
+    suspend fun documentSummaries(): List<DocumentSummary> = dao.documents()
+
     suspend fun home(requestedId: String? = null): HomeDocuments = withContext(Dispatchers.IO) {
         mutex.withLock {
             val documents = dao.documents()
@@ -121,6 +130,11 @@ class DocumentRepository(private val context: Context, private val database: Pic
 
     private suspend fun snapshot(id: String): DocumentContent {
         val document = dao.document(id) ?: error(Globals.app.getString(R.string.error_document_deleted_reselect))
+        return snapshot(document)
+    }
+
+    private suspend fun snapshot(document: DocumentEntity): DocumentContent {
+        val id = document.id
         val images = dao.images(id).groupBy { it.nodeId }
         return DocumentContent(document, dao.nodes(id).map { NodeContent(it, images[it.id].orEmpty()) })
     }
@@ -538,6 +552,90 @@ class DocumentRepository(private val context: Context, private val database: Pic
             false
         } finally {
             temporary.delete()
+        }
+    }
+
+    /** 返回私有会话目录中的 ZIP，调用方在会话结束后清理文件和父目录。 */
+    suspend fun prepareBluetoothArchive(documentId: String, digest: MessageDigest? = null): File {
+        var sessionDirectory: File? = null
+        try {
+            return withIOThread {
+                val session = bluetoothArchive.openSession("send-")
+                sessionDirectory = session
+                val media = Files.createDirectory(File(session, "snapshot").toPath()).toFile()
+                val snapshot = mutex.withLock {
+                    val document = dao.document(documentId) ?: throw BluetoothArchiveException(R.string.error_document_deleted_reselect)
+                    bluetoothArchive.copySnapshot(media, snapshot(document)) { imageFile(documentId, it) }
+                }
+                val file = File(session, exportFileName(snapshot.manifest.title, "zip"))
+                bluetoothArchive.write(file, snapshot, digest)
+                deleteBluetoothArchiveFiles(media)
+                file
+            }
+        } catch (e: Exception) {
+            // 切回调用线程时被取消也需要释放尚未交给调用方的文件。
+            withContext(NonCancellable + Dispatchers.IO) {
+                sessionDirectory?.let(::deleteBluetoothArchiveFiles)
+            }
+            if (e is CancellationException || e is BluetoothArchiveException) throw e
+            logEx(throwable = e, message = "Prepare Bluetooth archive failed")
+            throw bluetoothArchiveStorageFailure(e)
+        }
+    }
+
+    /** 验证独立暂存目录后，按清单顺序提交文档和素材。 */
+    suspend fun importBluetoothArchive(archive: File, onCommitting: suspend () -> Unit = {}): Saved<String> = withIOThread {
+        try {
+            val session = bluetoothArchive.openSession("import-")
+            try {
+                val media = File(session, "media")
+                val imported = bluetoothArchive.read(archive, media)
+                val documentId = UUID.randomUUID().toString()
+                val images = mutableListOf<NodeImageEntity>()
+                val nodes = imported.nodes.mapIndexed { index, node ->
+                    currentCoroutineContext().ensureActive()
+                    val nodeId = UUID.randomUUID().toString()
+                    node.images.forEachIndexed { sortIndex, image ->
+                        images += NodeImageEntity(
+                            UUID.randomUUID().toString(), nodeId, documentId, sortIndex,
+                            image.fileName, image.hash, image.width, image.height,
+                        )
+                    }
+                    NodeEntity(nodeId, documentId, (index + 1L) * 1024, node.kind, node.bodyMarkdown, node.title)
+                }
+                mutex.withLock {
+                    onCommitting()
+                    currentCoroutineContext().ensureActive()
+                    withContext(NonCancellable) {
+                        val directory = documentDirectory(documentId)
+                        var committed = false
+                        var createdDirectory = false
+                        try {
+                            if (images.isNotEmpty()) {
+                                Files.createDirectories(root.toPath())
+                                Files.createDirectory(directory.toPath())
+                                createdDirectory = true
+                                Files.move(media.toPath(), File(directory, "media").toPath(), StandardCopyOption.ATOMIC_MOVE)
+                            }
+                            database.withTransaction {
+                                dao.putDocument(DocumentEntity(documentId, imported.title, System.currentTimeMillis()))
+                                dao.putNodes(nodes)
+                                dao.putImages(images)
+                            }
+                            committed = true
+                            Saved(documentId, !writeMirror(documentId))
+                        } finally {
+                            if (!committed && createdDirectory) deleteBluetoothArchiveFiles(directory)
+                        }
+                    }
+                }
+            } finally {
+                deleteBluetoothArchiveFiles(session)
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException || e is BluetoothArchiveException) throw e
+            logEx(throwable = e, message = "Import Bluetooth archive failed")
+            throw bluetoothArchiveStorageFailure(e)
         }
     }
 

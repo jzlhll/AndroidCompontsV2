@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_bluetooth_archive_legacy">请在发送手机选择蓝牙分享</string>
+    <string name="error_bluetooth_archive_version">请更新竹节笔记后再导入此文档</string>
+    <string name="error_bluetooth_archive_invalid">文档包不完整或无效</string>
+    <string name="error_bluetooth_archive_limit">文档包超出支持的大小或数量上限</string>
+    <string name="error_bluetooth_archive_no_space">存储空间不足，无法处理文档包</string>
+    <string name="error_bluetooth_archive_io">无法读取或保存文档包，请重试</string>
+</resources>

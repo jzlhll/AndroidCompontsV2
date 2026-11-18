@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="bluetooth_transfer_approval_timeout">等待接收确认超时。</string>
+    <string name="bluetooth_transfer_background">竹节笔记已进入后台，蓝牙传输已结束。</string>
+    <string name="bluetooth_transfer_cancelled">已取消蓝牙传输。</string>
+    <string name="bluetooth_transfer_connect_timeout">连接超时。请检查配对，并确认对方已打开「蓝牙接收」。</string>
+    <string name="bluetooth_transfer_disconnected">蓝牙连接已断开。</string>
+    <string name="bluetooth_transfer_discoverability_denied">附近设备暂时无法发现本机，已配对的设备仍可尝试连接。</string>
+    <string name="bluetooth_transfer_enable_required">开启蓝牙后继续。</string>
+    <string name="bluetooth_transfer_integrity">文件校验失败。</string>
+    <string name="bluetooth_transfer_invalid_control">蓝牙传输请求无效。</string>
+    <string name="bluetooth_transfer_listen_failed">无法开始蓝牙接收。请检查蓝牙后重试。</string>
+    <string name="bluetooth_transfer_pairing_cancelled">蓝牙配对已取消或失败。</string>
+    <string name="bluetooth_transfer_peer_storage">接收设备无法保存或导入文件。</string>
+    <string name="bluetooth_transfer_permission_required">允许访问附近设备后继续。</string>
+    <string name="bluetooth_transfer_protocol_version">两台设备的蓝牙分享版本不兼容。请更新两台设备上的竹节笔记。</string>
+    <string name="bluetooth_transfer_receive_failed">无法接收并导入文件。</string>
+    <string name="bluetooth_transfer_receiver_unavailable">无法连接。请对方更新竹节笔记并打开「蓝牙接收」。</string>
+    <string name="bluetooth_transfer_rejected">对方已拒绝接收。</string>
+    <string name="bluetooth_transfer_scan_failed">无法扫描附近的蓝牙设备。</string>
+    <string name="bluetooth_transfer_scan_timeout">蓝牙扫描超时，可以重新扫描。</string>
+    <string name="bluetooth_transfer_system_action_failed">无法打开蓝牙系统弹窗。</string>
+    <string name="bluetooth_transfer_timeout">蓝牙传输超时。</string>
+    <string name="bluetooth_transfer_unconfirmed">未能确认导入结果，请在接收手机查看。</string>
+    <string name="bluetooth_transfer_unsupported">此设备不支持经典蓝牙。</string>
+</resources>

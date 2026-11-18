@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_bluetooth_archive_legacy">On the sending phone, choose Bluetooth share.</string>
+    <string name="error_bluetooth_archive_version">Update PicNote to import this document.</string>
+    <string name="error_bluetooth_archive_invalid">The document package is incomplete or invalid.</string>
+    <string name="error_bluetooth_archive_limit">The document package exceeds the supported size or quantity limits.</string>
+    <string name="error_bluetooth_archive_no_space">There’s insufficient storage space for the document package.</string>
+    <string name="error_bluetooth_archive_io">Couldn’t read or save the document package. Try again.</string>
+</resources>
