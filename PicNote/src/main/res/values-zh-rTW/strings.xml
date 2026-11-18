@@ -1,4 +1,5 @@
 <resources>
+    <string name="error_save_code_language_usage">語言使用記錄儲存失敗，請重新選擇</string>
     <string name="app_name">竹節筆記</string>
     <string name="tab_nodes">節點</string>
     <string name="tab_document">文檔</string>
@@ -7,6 +8,11 @@
     <string name="appearance">外觀</string>
     <string name="settings">設定</string>
     <string name="language">語言</string>
+    <string name="advanced">進階</string>
+    <string name="wrap_code_node_card">程式碼區塊卡片自動換行</string>
+    <string name="wrap_document_code">文檔中的程式碼片段自動換行</string>
+    <string name="error_read_code_wrap_settings">讀取程式碼換行設定失敗</string>
+    <string name="error_save_code_wrap_settings">儲存程式碼換行設定失敗，請重試</string>
     <string name="clear_cache">清理快取</string>
     <string name="cache_cleared">快取已清理</string>
     <string name="cache_clear_incomplete">部分快取無法清理，請稍後重試</string>

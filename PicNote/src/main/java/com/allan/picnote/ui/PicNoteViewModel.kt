@@ -9,6 +9,7 @@ import com.allan.picnote.PicNoteApplication
 import com.allan.picnote.R
 import com.allan.picnote.logEx
 import com.allan.picnote.logd
+import com.allan.picnote.data.CodeWrapSettings
 import com.allan.picnote.data.PermissionHistory
 import com.allan.picnote.data.WelcomeDocumentId
 import com.allan.picnote.data.NodeGuideKind
@@ -24,6 +25,7 @@ import com.au.module_androidui.toast.ToastUtil
 import com.au.module_androiduiex.styles.ComposeTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
@@ -65,6 +67,7 @@ data class HomeState(
     val nodeGuideSaving: Boolean = false,
     val importMode: ImportMode? = null,
     val importModeSaving: Boolean = false,
+    val codeWrapSettings: CodeWrapSettings? = null,
     val candidateImportConfirmation: CandidateImportConfirmation? = null,
     val mediaDeleteRequest: IntentSender? = null,
 )
@@ -76,12 +79,27 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
     val stateFlow = mutableStateFlow.asStateFlow()
     private var scanJob: Job? = null
     private var reloadJob: Job? = null
+    private var codeWrapSettingsSaveJob: Job? = null
+    private var savedCodeWrapSettings = CodeWrapSettings()
     private val pendingForegroundChecks = ArrayDeque<Int>()
     private val mirrorFailures = mutableSetOf<String>()
     private var preparedCandidateImport: CandidateImportRequest? = null
     private var mediaDeleteResult: CompletableDeferred<Boolean>? = null
 
     init {
+        viewModelScope.launch {
+            try {
+                val settings = app.codeWrapPreferences.read()
+                savedCodeWrapSettings = settings
+                mutableStateFlow.update { it.copy(codeWrapSettings = settings) }
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                logEx(throwable = e, message = "Read code wrap settings failed")
+                mutableStateFlow.update {
+                    it.copy(codeWrapSettings = CodeWrapSettings(), message = Globals.app.getString(R.string.error_read_code_wrap_settings))
+                }
+            }
+        }
         viewModelScope.launch {
             try {
                 val mode = app.importModePreferences.readMode()
@@ -210,6 +228,38 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
                     message = Globals.app.getString(R.string.error_save_import_mode)) }
             }
         }
+    }
+
+    fun toggleNodeCardCodeWrap() {
+        updateCodeWrapSettings { it.copy(nodeCard = !it.nodeCard) }
+    }
+
+    fun toggleDocumentCodeWrap() {
+        updateCodeWrapSettings { it.copy(document = !it.document) }
+    }
+
+    private fun updateCodeWrapSettings(update: (CodeWrapSettings) -> CodeWrapSettings) {
+        val previous = stateFlow.value.codeWrapSettings ?: return
+        val settings = update(previous)
+        mutableStateFlow.update { it.copy(codeWrapSettings = settings) }
+        val previousSave = codeWrapSettingsSaveJob
+        // 每次只写当前开关，最后一次保存完成后再将磁盘状态同步到界面。
+        val saveJob = viewModelScope.launch(start = CoroutineStart.LAZY) {
+            previousSave?.join()
+            try {
+                savedCodeWrapSettings = app.codeWrapPreferences.save(previous, settings)
+            } catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
+                logEx(throwable = e, message = "Save code wrap settings failed")
+                showMessage(Globals.app.getString(R.string.error_save_code_wrap_settings))
+            }
+            if (codeWrapSettingsSaveJob === coroutineContext[Job]) {
+                codeWrapSettingsSaveJob = null
+                mutableStateFlow.update { it.copy(codeWrapSettings = savedCodeWrapSettings) }
+            }
+        }
+        codeWrapSettingsSaveJob = saveJob
+        saveJob.start()
     }
 
     fun showPermissionPrompt() {

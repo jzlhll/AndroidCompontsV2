@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.Map;
 
 import io.noties.prism4j.GrammarLocator;
+import io.noties.prism4j.GrammarUtils;
 import io.noties.prism4j.Prism4j;
 import io.noties.prism4j.languages.*;
 
@@ -15,7 +16,7 @@ import static java.util.regex.Pattern.compile;
 import static io.noties.prism4j.Prism4j.pattern;
 import static io.noties.prism4j.Prism4j.token;
 
-/** 加载常用语言语法，并补充 TypeScript 与 Bash 的着色规则。 */
+/** 加载语言语法，补充脚本、系统语言与 JSX/TSX 的着色规则。 */
 public final class CodeGrammar implements GrammarLocator {
     private final Map<String, Prism4j.Grammar> bundled = new HashMap<>();
     private Prism4j.Grammar typescript;
@@ -60,6 +61,9 @@ public final class CodeGrammar implements GrammarLocator {
         String name;
         switch (language) {
             case "js": name = "javascript"; break;
+            case "c#": case "cs": case "dotnet": name = "csharp"; break;
+            case "rs": name = "rust"; break;
+            case "ps1": case "ps": name = "powershell"; break;
             case "xml": case "html": case "svg": case "mathml": name = "markup"; break;
             default: name = language;
         }
@@ -71,6 +75,21 @@ public final class CodeGrammar implements GrammarLocator {
             case "kotlin": result = Prism_kotlin.create(prism4j); break;
             case "c": result = Prism_c.create(prism4j); break;
             case "cpp": result = Prism_cpp.create(prism4j); break;
+            case "csharp":
+                result = Prism_csharp.create(prism4j);
+                GrammarUtils.findToken(result, "keyword").patterns().add(pattern(compile("\\b(?:and|file|init|managed|nameof|nint|not|notnull|nuint|or|record|required|scoped|unmanaged|when|with)\\b")));
+                GrammarUtils.findToken(result, "string").patterns().add(0, pattern(compile("\\$*(\"{3,})[\\s\\S]*?\\1"), false, true));
+                break;
+            case "dart":
+                result = Prism_dart.create(prism4j);
+                GrammarUtils.findToken(result, "keyword").patterns().add(pattern(compile("\\b(?:base|covariant|extension|interface|late|mixin|required|sealed|when)\\b")));
+                break;
+            case "rust": result = ExtendedCodeGrammars.rust(); break;
+            case "php": result = ExtendedCodeGrammars.php(); break;
+            case "php-markup": result = ExtendedCodeGrammars.phpMarkup(prism4j); break;
+            case "powershell": result = ExtendedCodeGrammars.powershell(); break;
+            case "lua": result = ExtendedCodeGrammars.lua(); break;
+            case "jsx": case "tsx": result = ExtendedCodeGrammars.jsx(prism4j, name); break;
             case "markup": result = Prism_markup.create(prism4j); break;
             case "swift": result = Prism_swift.create(prism4j); break;
             case "go": result = Prism_go.create(prism4j); break;
@@ -94,7 +113,8 @@ public final class CodeGrammar implements GrammarLocator {
     public Set<String> languages() {
         Set<String> result = new HashSet<>(java.util.Arrays.asList(
                 "clike", "java", "kotlin", "c", "cpp", "markup", "xml", "html", "svg", "mathml",
-                "swift", "go", "javascript", "js", "python", "json", "css", "sql", "yaml"));
+                "swift", "go", "javascript", "js", "python", "json", "css", "sql", "yaml",
+                "csharp", "c#", "cs", "dotnet", "dart", "rust", "rs", "php", "powershell", "ps1", "ps", "lua", "jsx", "tsx"));
         result.add("typescript");
         result.add("ts");
         result.add("bash");

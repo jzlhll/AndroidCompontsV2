@@ -7,6 +7,10 @@
     <string name="appearance">Appearance</string>
     <string name="settings">Settings</string>
     <string name="language">Language</string>
+    <string name="wrap_code_node_card">Wrap code in node cards</string>
+    <string name="wrap_document_code">Wrap code in documents</string>
+    <string name="error_read_code_wrap_settings">Cannot load code wrapping settings.</string>
+    <string name="error_save_code_wrap_settings">Cannot save code wrapping settings. Try again.</string>
     <string name="clear_cache">Clear cache</string>
     <string name="cache_cleared">Cache cleared</string>
     <string name="cache_clear_incomplete">Some cache files could not be cleared. Try again later.</string>
@@ -32,6 +36,7 @@
     <string name="body">Content</string>
     <string name="advanced">Advanced</string>
     <string name="code_block">Code block</string>
+    <string name="error_save_code_language_usage">Cannot save language usage. Try selecting it again.</string>
     <string name="create_code_block">New code block</string>
     <string name="code_description">Description (optional)</string>
     <string name="code_language_value">Language: %1$s</string>

@@ -107,6 +107,7 @@ fun NodeList(
     onMoveImage: (String, String, Int) -> Unit,
     onNodeMenuOpened: () -> Unit,
     onNodeCardClicked: () -> Unit,
+    wrapCode: Boolean,
     modifier: Modifier = Modifier,
     selectedNodeIds: Set<String>? = null,
     bottomContentPadding: Dp = 24.dp,
@@ -266,6 +267,7 @@ fun NodeList(
                         onEdit = { onEdit(item) },
                         onMoveImage = { imageId, direction -> onMoveImage(item.node.id, imageId, direction) },
                         onCardClick = onNodeCardClicked,
+                        wrapCode = wrapCode,
                         sectionLabel = sectionLabel,
                         guideAnchor = if (guideKind == NodeGuideKind.Card) guideAnchor else null,
                         guideIndex = index,
@@ -386,6 +388,7 @@ private fun NodeCard(
     onEdit: () -> Unit,
     onMoveImage: (String, Int) -> Unit,
     onCardClick: () -> Unit,
+    wrapCode: Boolean,
     modifier: Modifier = Modifier,
     selectionMode: Boolean = false,
     selected: Boolean = false,
@@ -471,7 +474,7 @@ private fun NodeCard(
     }) {
         NodeCardSection(sectionLabel, backgroundColor = colors.background) {
             Box(Modifier.fillMaxWidth().then(when {
-                content.node.kind == "code" -> Modifier.height(240.dp)
+                content.node.kind == "code" -> Modifier.heightIn(max = 280.dp)
                 image == null -> Modifier.height(72.dp)
                 else -> Modifier.aspectRatio(4f / 3f)
             })
@@ -483,13 +486,14 @@ private fun NodeCard(
                     Box(Modifier.matchParentSize().padding(start = 8.dp, top = 8.dp).background(colors.foreground.copy(alpha = 0.3f), shape))
                     Box(Modifier.matchParentSize().padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 4.dp).background(colors.foreground.copy(alpha = 0.15f), shape))
                 }
-                Box(Modifier.fillMaxSize().padding(end = if (multiImage) 8.dp else 0.dp, bottom = if (multiImage) 8.dp else 0.dp)
+                Box((if (content.node.kind == "code") Modifier.fillMaxWidth() else Modifier.fillMaxSize())
+                    .padding(end = if (multiImage) 8.dp else 0.dp, bottom = if (multiImage) 8.dp else 0.dp)
                     .clip(shape).background(colors.background).then(if (image != null) Modifier.padding(imageFramePadding).clip(RoundedCornerShape(8.dp)) else Modifier)
                     .then(if (!selectionMode) Modifier.onClick(enabled = enabled && !dragging, onClickLabel = "显示节点设置") {
                         showSettings(); onCardClick()
                     } else Modifier)) {
                     if (content.node.kind == "code") {
-                        CodeNodePreview(content.node.bodyMarkdown, enabled && !dragging && !selectionMode, Modifier.fillMaxSize())
+                        CodeNodePreview(content.node.bodyMarkdown, enabled && !dragging && !selectionMode, wrapCode, Modifier.fillMaxWidth())
                     } else if (image == null) {
                         val text = when {
                             content.node.kind == "title" || content.node.kind == "chapter" -> content.node.title

@@ -193,7 +193,8 @@ fun EditorScreen(
                 )
             }
             if (!creatingDocument && codeBlock) item(key = "code-input") {
-                CodeBlockEditor(state, editable, viewModel::setBody, viewModel::setCode, viewModel::setCodeLanguage,
+                val languageOrder by viewModel.codeLanguagesFlow.collectAsStateWithLifecycle()
+                CodeBlockEditor(state, editable, languageOrder, viewModel::setBody, viewModel::setCode, viewModel::setCodeLanguage,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp))
             }
             state.error?.let { error -> item(key = "error") { Text(error, Modifier.padding(24.dp), color = MaterialTheme.colorScheme.error) } }

@@ -7,6 +7,10 @@
     <string name="appearance">外观</string>
     <string name="settings">设置</string>
     <string name="language">语言</string>
+    <string name="wrap_code_node_card">代码块卡片自动换行</string>
+    <string name="wrap_document_code">文档中的代码片段自动换行</string>
+    <string name="error_read_code_wrap_settings">读取代码换行设置失败</string>
+    <string name="error_save_code_wrap_settings">保存代码换行设置失败，请重试</string>
     <string name="clear_cache">清理缓存</string>
     <string name="cache_cleared">缓存已清理</string>
     <string name="cache_clear_incomplete">部分缓存未能清理，请稍后重试</string>
@@ -32,6 +36,7 @@
     <string name="body">图文</string>
     <string name="advanced">高级</string>
     <string name="code_block">代码块</string>
+    <string name="error_save_code_language_usage">语言使用记录保存失败，请重新选择</string>
     <string name="create_code_block">创建代码块</string>
     <string name="code_description">描述（可选）</string>
     <string name="code_language_value">语言：%1$s</string>

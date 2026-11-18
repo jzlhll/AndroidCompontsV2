@@ -189,7 +189,7 @@ fun HomeScreen(
             merging = null
         }
     }
-    val documentActions: @Composable () -> Unit = {
+    val documentActions: @Composable (Boolean) -> Unit = { showMerge ->
         Box {
             IconButton(onClick = { more = true }, enabled = document != null && ready && mergeSelection == null,
                 modifier = Modifier.semantics { contentDescription = documentActionsDescription }) {
@@ -197,6 +197,17 @@ fun HomeScreen(
             }
             DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
                 if (document != null) {
+                    if (showMerge) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.merge), style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                            onClick = {
+                                more = false
+                                ribbon = false
+                                mergeSelection = emptyList()
+                            },
+                            enabled = ready && bodyNodeIds.size >= 2,
+                        )
+                    }
                     DropdownMenuItem(text = { Text(stringResource(R.string.export_full), style = ComposeTypography.Font16, color = LocalContentColor.current) },
                         onClick = { more = false; viewModel.exportFull(document.id) }, enabled = ready)
                     DropdownMenuItem(text = { Text(stringResource(R.string.export_web), style = ComposeTypography.Font16, color = LocalContentColor.current) },
@@ -344,22 +355,13 @@ fun HomeScreen(
                 scope.launch { drawer.open() }
             }
             val mergeActions: @Composable () -> Unit = {
-                if (pager.currentPage == 0 && document != null) {
-                    if (mergeSelection != null) {
-                        TextButton(onClick = { mergeSelection = null }, enabled = ready) {
-                            Text(stringResource(R.string.cancel))
-                        }
-                        TextButton(onClick = { merging = mergeSelection }, enabled = ready && mergeSelection.orEmpty().size >= 2) {
-                            Text(stringResource(R.string.merge_selected_count, mergeSelection.orEmpty().size))
-                        }
-                    } else {
-                        TextButton(onClick = {
-                            more = false
-                            ribbon = false
-                            mergeSelection = emptyList()
-                        }, enabled = ready && bodyNodeIds.size >= 2) {
-                            Text(stringResource(R.string.merge))
-                        }
+                val selection = mergeSelection
+                if (selection != null) {
+                    TextButton(onClick = { mergeSelection = null }, enabled = ready) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                    TextButton(onClick = { merging = selection }, enabled = ready && selection.size >= 2) {
+                        Text(stringResource(R.string.merge_selected_count, selection.size))
                     }
                 }
             }
@@ -384,7 +386,10 @@ fun HomeScreen(
                                     Icon(Icons.Default.Menu, contentDescription = null)
                                 }
                             },
-                            actions = { mergeActions(); if (mergeSelection == null) documentActions() },
+                            actions = {
+                                if (mergeSelection == null) documentActions(pager.currentPage == 0)
+                                else mergeActions()
+                            },
                         )
                     },
                     floatingActionButtonPosition = FabPosition.Center,
@@ -408,7 +413,7 @@ fun HomeScreen(
                                         Text(stringResource(R.string.app_name), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis,
                                             style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         if (showLoading) CircularProgressIndicator(Modifier.padding(horizontal = 4.dp).size(18.dp), strokeWidth = 2.dp)
-                                        documentActions()
+                                        documentActions(pager.currentPage == 0)
                                     }
                                     Text(document?.title ?: stringResource(R.string.app_name),
                                         Modifier.fillMaxWidth().padding(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 20.dp),
@@ -425,7 +430,7 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
                     ) {
                         Column(Modifier.fillMaxSize()) {
-                            if (useSidePanel && pager.currentPage == 0 && document != null) {
+                            if (useSidePanel && mergeSelection != null) {
                                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.End) {
                                     mergeActions()
                                 }
@@ -469,12 +474,14 @@ fun HomeScreen(
                                             onMoveImage = viewModel::moveImage,
                                             onNodeMenuOpened = { viewModel.recordNodeClick(NodeGuideKind.Menu) },
                                             onNodeCardClicked = { viewModel.recordNodeClick(NodeGuideKind.Card) },
+                                            wrapCode = state.codeWrapSettings?.nodeCard == true,
                                             selectedNodeIds = selectedNodeIds,
                                             bottomContentPadding = if (!useSidePanel && showEditingMediaActions) 96.dp else 24.dp,
                                             guideNodeId = guideNodeId, guideKind = guide?.kind,
                                             guideAnchor = if (guide != null && pager.currentPage == 0) guideAnchor else null,
                                         ) else DocumentPreview(content, viewModel.repository, documentScroll, onMessage = viewModel::showMessage,
-                                            onDownloadImage = viewModel::downloadImage, active = active && pager.currentPage == 1, enabled = ready,
+                                            onDownloadImage = viewModel::downloadImage, wrapCode = state.codeWrapSettings?.document == true,
+                                            active = active && pager.currentPage == 1, enabled = ready,
                                             bottomContentPadding = if (!useSidePanel && showEditingMediaActions) 96.dp else 24.dp)
                                     }
                                 }

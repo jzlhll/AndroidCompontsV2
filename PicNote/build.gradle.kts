@@ -32,7 +32,7 @@ val codeGrammarBundle by configurations.creating {
 val codeGrammarSources = codeGrammarBundle.elements.map { artifacts ->
     artifacts.map { artifact ->
         zipTree(artifact.asFile).matching {
-            include(listOf("clike", "java", "kotlin", "c", "cpp", "markup", "swift", "go", "javascript", "python", "json", "css", "sql", "yaml")
+            include(listOf("clike", "java", "kotlin", "c", "cpp", "csharp", "dart", "markup", "swift", "go", "javascript", "python", "json", "css", "sql", "yaml")
                 .map { "languages/Prism_$it.java" })
         }
     }

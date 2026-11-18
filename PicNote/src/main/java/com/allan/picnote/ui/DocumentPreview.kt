@@ -28,10 +28,12 @@ import android.view.ViewGroup
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -105,6 +107,8 @@ import org.commonmark.node.Image
 import org.commonmark.node.Paragraph
 import org.commonmark.node.BlockQuote
 import org.commonmark.node.Heading
+import org.commonmark.node.FencedCodeBlock
+import org.commonmark.node.IndentedCodeBlock
 import org.commonmark.node.Block
 import org.commonmark.node.CustomBlock
 import org.commonmark.parser.Parser
@@ -205,6 +209,7 @@ private sealed interface DocumentBlock {
         val quoted: Boolean,
         val introduction: Boolean,
         val heading: Boolean,
+        val codeBlock: Boolean,
         val textSizeSp: Int,
     ) : DocumentBlock
 
@@ -220,7 +225,18 @@ private sealed interface DocumentBlock {
 private data class ParsedDocument(val blocks: List<DocumentBlock>, val error: String? = null)
 
 @Composable
-fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, scroll: LazyListState, onMessage: (String) -> Unit, onDownloadImage: (String) -> Unit, modifier: Modifier = Modifier, active: Boolean = true, enabled: Boolean = true, bottomContentPadding: Dp = 24.dp) {
+fun DocumentPreview(
+    content: DocumentContent,
+    repository: DocumentRepository,
+    scroll: LazyListState,
+    onMessage: (String) -> Unit,
+    onDownloadImage: (String) -> Unit,
+    wrapCode: Boolean,
+    modifier: Modifier = Modifier,
+    active: Boolean = true,
+    enabled: Boolean = true,
+    bottomContentPadding: Dp = 24.dp,
+) {
     val context = LocalContext.current
     val showMessage by rememberUpdatedState(onMessage)
     val base = remember(content.document.id, repository) { Uri.fromFile(File(repository.documentDirectory(content.document.id), "doc.md")).toString() }
@@ -343,7 +359,8 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                                 } else rendered
                                 add(DocumentBlock.FormattedText(key, section.nodeId, text,
                                     quoted = node is BlockQuote, introduction = section.kind == "introduction",
-                                    heading = node is Heading, textSizeSp = textSizeSp))
+                                    heading = node is Heading, codeBlock = node is FencedCodeBlock || node is IndentedCodeBlock,
+                                    textSizeSp = textSizeSp))
                             }
                         }
                     }
@@ -364,7 +381,11 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
             when (block) {
                 is DocumentBlock.ChapterLabel -> "chapter-divider"
                 is DocumentBlock.Picture -> "picture"
-                is DocumentBlock.FormattedText -> if (block.quoted) "quote" else "text"
+                is DocumentBlock.FormattedText -> when {
+                    block.quoted -> "quote"
+                    block.codeBlock -> "code"
+                    else -> "text"
+                }
             }
         }) { index, block ->
             val previous = document.blocks.getOrNull(index - 1)
@@ -388,7 +409,16 @@ fun DocumentPreview(content: DocumentContent, repository: DocumentRepository, sc
                     ) {
                         MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() })
                     }
-                } else MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() }, blockModifier)
+                } else {
+                    val textModifier = if (block.codeBlock) {
+                        val codeModifier = blockModifier.clip(RoundedCornerShape(8.dp)).background(scheme.surfaceVariant)
+                        if (wrapCode) codeModifier else {
+                            // 圆角和底色留在滚动视口，TextView 按原始行宽测量。
+                            codeModifier.horizontalScroll(rememberScrollState(), enabled = active)
+                        }
+                    } else blockModifier
+                    MarkdownBlockText(block.text, markwon, active, with(density) { block.textSizeSp.sp.toPx() }, textModifier)
+                }
             }
             else if (block is DocumentBlock.Picture) {
                 DocumentImage(block, enabled = active && enabled && block.image != null,

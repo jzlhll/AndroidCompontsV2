@@ -1,22 +1,35 @@
 package com.allan.picnote.ui
 
+import androidx.datastore.core.CorruptionException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.allan.picnote.R
 import com.allan.picnote.data.CodeBlockContent
+import com.allan.picnote.data.CodeLanguagePreferences
+import com.allan.picnote.data.DefaultCodeLanguageOrder
 import com.allan.picnote.data.parseCodeBlock
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.data.repositories.ImageDraft
 import com.allan.picnote.logEx
+import com.au.module_android.Globals
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.retryWhen
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
 
 data class EditorState(
     val loading: Boolean = false,
@@ -31,15 +44,32 @@ data class EditorState(
     val dirty: Boolean = false,
     val busy: Boolean = false,
     val error: String? = null,
+    val codeLanguageUsageError: String? = null,
     val savedId: String? = null,
     val mirrorFailed: Boolean = false,
     val savedImageCount: Int = 0,
 )
 
 /** 保存当前目的地的编辑草稿，配置变化时保留尚未提交的内容。 */
-class EditorViewModel(private val repository: DocumentRepository, val route: EditRoute) : ViewModel() {
+class EditorViewModel(
+    private val repository: DocumentRepository,
+    private val codeLanguagePreferences: CodeLanguagePreferences,
+    val route: EditRoute,
+) : ViewModel() {
     private val mutableStateFlow = MutableStateFlow(EditorState(loaded = route.nodeId == null, kind = route.kind))
     val stateFlow = mutableStateFlow.asStateFlow()
+    val codeLanguagesFlow = codeLanguagePreferences.languageOrderFlow
+        .retryWhen { e, attempt ->
+            if (e !is IOException || e is CorruptionException) return@retryWhen false
+            if (attempt == 0L) logEx(throwable = e, message = "Read code language weights failed")
+            delay(if (attempt < 2) 500.milliseconds else 5000.milliseconds)
+            true
+        }
+        .catch { e ->
+            if (e is CancellationException) throw e
+            logEx(throwable = e, message = "Read code language weights failed")
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), DefaultCodeLanguageOrder)
     private var originalDraft = mutableStateFlow.value
     private val draftSession = repository.openDraftSession()
 
@@ -93,7 +123,27 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
     fun setTitle(value: String) { updateDraft { it.copy(title = value) } }
     fun setBody(value: String) { updateDraft { it.copy(body = value) } }
     fun setCode(value: String) { updateDraft { it.copy(code = value) } }
-    fun setCodeLanguage(value: String) { updateDraft { it.copy(codeLanguage = value) } }
+    fun setCodeLanguage(value: String) {
+        val current = stateFlow.value
+        if (current.kind != "code" || route.documentId == null || !current.loaded || current.loading ||
+            current.busy || current.savedId != null || value !in DefaultCodeLanguageOrder
+        ) return
+        mutableStateFlow.value = changed(current.copy(codeLanguage = value, codeLanguageUsageError = null))
+        viewModelScope.launch {
+            try {
+                codeLanguagePreferences.recordSelection(value)
+                ensureActive()
+                mutableStateFlow.update { it.copy(codeLanguageUsageError = null) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logEx(throwable = e, message = "Save code language weight failed")
+                ensureActive()
+                val message = Globals.app.getString(R.string.error_save_code_language_usage)
+                mutableStateFlow.update { it.copy(codeLanguageUsageError = message) }
+            }
+        }
+    }
     fun imagePickerFailed(e: Exception) {
         logEx(throwable = e, message = "Launch editor image picker failed")
         mutableStateFlow.update { it.copy(error = "无法打开系统相册，请重试") }
@@ -152,6 +202,10 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
                 val body = if (draft.kind == "code") withContext(Dispatchers.Default) {
                     val code = try { formatCodeForSave(draft.code, draft.codeLanguage) }
                     catch (e: CancellationException) { throw e }
+                    catch (e: StackOverflowError) {
+                        logEx(throwable = e, message = "Format code exceeded tokenizer stack")
+                        draft.code
+                    }
                     catch (e: Exception) {
                         logEx(throwable = e, message = "Format code failed")
                         draft.code
@@ -188,11 +242,15 @@ class EditorViewModel(private val repository: DocumentRepository, val route: Edi
         }
     }
 
-    class Factory(private val repository: DocumentRepository, private val route: EditRoute) : ViewModelProvider.Factory {
+    class Factory(
+        private val repository: DocumentRepository,
+        private val codeLanguagePreferences: CodeLanguagePreferences,
+        private val route: EditRoute,
+    ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(EditorViewModel::class.java))
             @Suppress("UNCHECKED_CAST")
-            return EditorViewModel(repository, route) as T
+            return EditorViewModel(repository, codeLanguagePreferences, route) as T
         }
     }
 }

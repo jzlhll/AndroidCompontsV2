@@ -2,11 +2,13 @@ package com.allan.picnote.ui
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -20,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.allan.picnote.R
+import com.allan.picnote.data.CodeWrapSettings
 import com.au.module_androiduiex.landscape.SecondaryPageScaffold
 import com.au.module_android.appLocaleLabel
 import com.au.module_android.supportedAppLocales
@@ -32,6 +35,7 @@ import java.util.Locale
 fun SettingsScreen(
     onBack: () -> Unit,
     onLanguage: () -> Unit,
+    onAdvanced: () -> Unit,
     onClearCache: () -> Unit,
     modifier: Modifier = Modifier,
     busy: Boolean = false,
@@ -57,6 +61,13 @@ fun SettingsScreen(
             }
             item {
                 ListItem(
+                    headlineContent = { Text(stringResource(R.string.advanced), style = ComposeTypography.Font16, color = MaterialTheme.colorScheme.onSurface) },
+                    trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+                    modifier = Modifier.clickable(onClick = onAdvanced),
+                )
+            }
+            item {
+                ListItem(
                     headlineContent = {
                         Text(stringResource(R.string.clear_cache), style = ComposeTypography.Font16,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (busy) 0.38f else 1f))
@@ -65,6 +76,44 @@ fun SettingsScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AdvancedSettingsScreen(
+    settings: CodeWrapSettings?,
+    onToggleNodeCardWrap: () -> Unit,
+    onToggleDocumentWrap: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val enabled = settings != null
+    SecondaryPageScaffold(stringResource(R.string.advanced), onBack, stringResource(R.string.back), modifier) {
+        LazyColumn(Modifier.fillMaxSize()) {
+            item {
+                CodeWrapSettingRow(stringResource(R.string.wrap_code_node_card), settings?.nodeCard == true, enabled, onToggleNodeCardWrap)
+            }
+            item {
+                CodeWrapSettingRow(stringResource(R.string.wrap_document_code), settings?.document == true, enabled, onToggleDocumentWrap)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CodeWrapSettingRow(label: String, checked: Boolean, enabled: Boolean, onToggle: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch,
+                interactionSource = interactionSource, indication = null, onValueChange = { onToggle() })
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, modifier = Modifier.weight(1f), style = ComposeTypography.Font16,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f))
+        Switch(checked = checked, onCheckedChange = null, enabled = enabled, interactionSource = interactionSource)
     }
 }
 

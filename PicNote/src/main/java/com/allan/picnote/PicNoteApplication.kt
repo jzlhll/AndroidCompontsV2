@@ -13,6 +13,8 @@ import com.allan.picnote.data.PermissionPreferences
 import com.allan.picnote.data.AppearancePreferences
 import com.allan.picnote.data.NodeGuidePreferences
 import com.allan.picnote.data.ImportModePreferences
+import com.allan.picnote.data.CodeLanguagePreferences
+import com.allan.picnote.data.CodeWrapPreferences
 import com.allan.picnote.data.CleanupResult
 import com.allan.picnote.data.repositories.DocumentRepository
 import com.allan.picnote.media.MediaScanner
@@ -47,6 +49,8 @@ class PicNoteApplication : CommonInitApplication(), SingletonImageLoader.Factory
     val appearancePreferences by lazy { AppearancePreferences(this) }
     val nodeGuidePreferences by lazy { NodeGuidePreferences(this) }
     val importModePreferences by lazy { ImportModePreferences(this) }
+    val codeLanguagePreferences by lazy { CodeLanguagePreferences(this) }
+    val codeWrapPreferences by lazy { CodeWrapPreferences(this) }
 
     override fun config() = FirstInitialConfig(tag = "PicNote")
 

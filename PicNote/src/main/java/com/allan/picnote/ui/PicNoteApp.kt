@@ -52,6 +52,9 @@ data object HomeRoute : NavKey
 data object SettingsRoute : NavKey
 
 @Serializable
+data object AdvancedSettingsRoute : NavKey
+
+@Serializable
 data object AppearanceRoute : NavKey
 
 @Serializable
@@ -218,8 +221,17 @@ fun PicNoteApp(app: PicNoteApplication) {
                         SettingsScreen(
                             onBack = { if (backStack.lastOrNull() == SettingsRoute) navigateBack() },
                             onLanguage = { if (backStack.lastOrNull() == SettingsRoute) backStack.add(LanguageRoute) },
+                            onAdvanced = { if (backStack.lastOrNull() == SettingsRoute) backStack.add(AdvancedSettingsRoute) },
                             onClearCache = home::clearCache,
                             busy = state.loading || state.busy,
+                        )
+                    }
+                    entry<AdvancedSettingsRoute> {
+                        AdvancedSettingsScreen(
+                            settings = state.codeWrapSettings,
+                            onToggleNodeCardWrap = home::toggleNodeCardCodeWrap,
+                            onToggleDocumentWrap = home::toggleDocumentCodeWrap,
+                            onBack = { if (backStack.lastOrNull() == AdvancedSettingsRoute) navigateBack() },
                         )
                     }
                     entry<AppearanceRoute> {
@@ -242,7 +254,7 @@ fun PicNoteApp(app: PicNoteApplication) {
                         )
                     }
                     entry<EditRoute> { route ->
-                        val editor: EditorViewModel = viewModel(factory = EditorViewModel.Factory(home.repository, route))
+                        val editor: EditorViewModel = viewModel(factory = EditorViewModel.Factory(home.repository, app.codeLanguagePreferences, route))
                         EditorScreen(
                             viewModel = editor,
                             repository = home.repository,

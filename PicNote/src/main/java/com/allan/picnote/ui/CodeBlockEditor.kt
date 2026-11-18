@@ -15,12 +15,14 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.allan.picnote.R
+import com.allan.picnote.data.CodeLanguages
 import com.au.module_androiduiex.styles.ComposeTextButton as TextButton
 
 @Composable
 fun CodeBlockEditor(
     state: EditorState,
     enabled: Boolean,
+    languageOrder: List<String>,
     onDescriptionChange: (String) -> Unit,
     onCodeChange: (String) -> Unit,
     onLanguageChange: (String) -> Unit,
@@ -44,13 +46,15 @@ fun CodeBlockEditor(
                 }
                 DropdownMenu(expanded = choosingLanguage && enabled, onDismissRequest = { choosingLanguage = false },
                     modifier = Modifier.heightIn(max = 360.dp)) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.plain_text)) },
-                        onClick = { onLanguageChange(""); choosingLanguage = false })
-                    CodeLanguages.forEach { (value, label) ->
-                        DropdownMenuItem(text = { Text(label) }, onClick = { onLanguageChange(value); choosingLanguage = false })
+                    languageOrder.forEach { value ->
+                        DropdownMenuItem(text = { Text(CodeLanguages[value] ?: stringResource(R.string.plain_text)) },
+                            onClick = { onLanguageChange(value); choosingLanguage = false })
                     }
                 }
             }
+        }
+        state.codeLanguageUsageError?.let { message ->
+            Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
         OutlinedTextField(
             value = state.body,
