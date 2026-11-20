@@ -20,7 +20,7 @@ import com.au.module_android.utils.getScreenFullSize
 import com.au.module_android.log.logd
 import com.au.module_android.utils.ViewBackgroundBuilder
 import com.au.module_android.utils.dp
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.widget.BgBuildCustomFontText
 import com.au.module_androidui.widget.CustomButton
 import com.google.android.material.button.MaterialButton
@@ -106,9 +106,9 @@ object NetworkHelperToastMgr {
         val isSuc = mTargetSuccess!! //到了这里必定已经设置过值了
         if (mStableIsSuccess != isSuc) {
             if (isSuc) {
-                toastOnTop("wifi suc!")
+                MyToastUtil.toastOnBottom("wifi suc!")
             } else {
-                toastOnTop("wifi fail!")
+                MyToastUtil.toastOnTopError("wifi fail!")
             }
             Log.d("allan", "发生变化")
         } else {

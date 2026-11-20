@@ -15,7 +15,7 @@ import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.visible
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_simplepermission.createPermissionForResult
 import kotlinx.coroutines.Job
@@ -99,9 +99,9 @@ class AsrAndTtsFragment : BindingFragment<FragmentAsrAndTtsBinding>() {
             }
         }
         permissionHelper.safeRun(notGivePermissionBlock = {
-            toastOnTop("录音权限，授权未通过！")
+            MyToastUtil.toastOnTopError("录音权限，授权未通过！")
         }){
-            toastOnTop("录音权限，授权通过！")
+            MyToastUtil.toastOnBottom("录音权限，授权通过！")
         }
 
         initTts()

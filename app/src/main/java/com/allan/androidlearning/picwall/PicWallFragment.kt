@@ -14,7 +14,7 @@ import com.au.module_android.log.logdNoFile
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utils.dp
-import com.au.module_androidui.toast.ToastUtil
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_simplepermission.PermissionMediaType
@@ -61,7 +61,7 @@ class PicWallFragment : BindingFragment<FragmentPicWallBinding>() {
         }
 
         mediaUtil.safeRun(notGivePermissionBlock = {
-            ToastUtil.toastOnTop("请先授权媒体权限")
+            MyToastUtil.toastOnTopError("请先授权媒体权限")
         }) {
             // 触发本地图片加载
             mViewModel.dispatch(PicWallViewModel.RequestLocalAction(requireActivity()))

@@ -10,7 +10,7 @@ import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.log.logd
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import com.github.lzyzsd.jsbridge.BridgeUtil
 import com.github.lzyzsd.jsbridge.DefaultHandler
 import com.google.gson.Gson
@@ -82,7 +82,7 @@ class WebBridgeFragment : BindingFragment<ActivityJsHtmlBinding>() {
                         Uri.parse("myapp://app")
                     ).also { it.flags = it.flags or Intent.FLAG_ACTIVITY_NEW_TASK }
                 )
-                toastOnTop("start app!")
+                MyToastUtil.toastOnBottom("start app!")
             }, 3000)
         }
     }

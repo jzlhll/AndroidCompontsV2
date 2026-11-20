@@ -82,7 +82,10 @@ fun AGitNavHost(
                 }
                 entry<AuthorKey> { key ->
                     if (key.tokenGroupSetup && model.tokenGroupInput() == null && savedForm?.kind != "token_author") {
-                        LaunchedEffect(key) { model.notify(appString(R.string.token_reenter)); navigation.back() }
+                        LaunchedEffect(key) {
+                            model.notify(appString(R.string.token_reenter), isError = true)
+                            navigation.back()
+                        }
                     } else AuthorScreen(catalog.author, actionBusy, onBack = navigation::back,
                         onSave = if (key.tokenGroupSetup) model::saveTokenGroupWithAuthor else model::saveAuthor)
                 }

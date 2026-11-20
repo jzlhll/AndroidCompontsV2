@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.au.module_androidui.widget.BgBuildFrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingHorizontal="20dp"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    tools:background="@color/my_color_primary_bg"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
+        app:backgroundNormal="@color/my_toast_surface"
+        app:strokeColor="@color/my_toast_stroke"
+        app:shadowBlur="24dp"
+        app:shadowSpread="2dp"
+        app:shadowColor="@color/my_color_shadow_default"
+        app:cornerRadius="16dp"
+        app:strokeWidth="1dp"
+        android:layout_marginVertical="62dp"
+        android:paddingVertical="9dp"
+        android:paddingHorizontal="16dp"
+        android:minHeight="60dp"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/text"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:paddingStart="4dp"
+            android:paddingEnd="8dp"
+            app:layout_constraintEnd_toStartOf="@id/textBtn"
+            style="@style/StyleAuTextNormal"
+            android:maxLines="3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            tools:text="test toast" />
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/textBtn"
+            style="@style/StyleAuTextThin"
+            android:textColor="@color/my_color_orange"
+            app:layout_constraintStart_toEndOf="@id/text"
+            app:layout_constraintEnd_toStartOf="@id/closeBtn"
+            android:layout_marginEnd="8dp"
+            android:padding="2dp"
+            android:text="@string/retry"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/closeBtn"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:src="@drawable/my_toast_close"
+            android:tint="@color/my_toast_close_tint"
+            android:layout_width="28dp"
+            android:layout_height="28dp"/>
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
+</com.au.module_androidui.widget.BgBuildFrameLayout>

@@ -16,7 +16,7 @@ import com.au.module_android.utils.launchOnThread
 import com.au.module_android.utils.visible
 import com.au.module_android.utilsmedia.shareFile
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -67,7 +67,7 @@ class LogSystemFragment : BindingFragment<FragmentLogSystemBinding>(), LogViewAc
         binding.uploadBtn.onClick {
             val selectedData = adapter.datas.filter { it.isSelected }
             if (selectedData.count() > 3) {
-                toastOnTop("请最多选择3个文件")
+                MyToastUtil.toastOnTopError("请最多选择3个文件")
             } else if(selectedData.count() > 0) {
                 val files = selectedData.map { it.file }
                 switchSelectMode()

@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
@@ -23,7 +24,8 @@ import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.changeBarsColor
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
+import com.au.module_androidui.R as AndroidUiR
 import com.au.module_androidui.ui.ToolbarMenuManager
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.bindings.BindingFragment
@@ -100,7 +102,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 throw e
             } catch (e: Exception) {
                 logEx(throwable = e) { "Delete shared items failed" }
-                ToastBuilder().setOnTopLater().setMessage(Globals.app.getString(R.string.something_error)).toast()
+                MyToastUtil.toastOnTopErrorLater(Globals.app.getString(R.string.something_error))
             } finally {
                 deleteJob = null
                 if (view != null) updateSelectionActions()
@@ -137,8 +139,11 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                             jumpIntoMyDroidSend()
                         }
                         else -> {
-                            ToastBuilder().setOnActivity(requireActivity()).setMessage(
-                                getString(R.string.empty_file_prompt)).setIcon("info").toast()
+                            MyToastUtil.toastOnBottom(
+                                getString(R.string.empty_file_prompt),
+                                iconResId = AndroidUiR.drawable.ic_warning,
+                                viewGroup = requireActivity().window.decorView as? ViewGroup,
+                            )
                         }
                     }
                 }
@@ -196,7 +201,7 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
                 throw e
             } catch (e: Exception) {
                 logEx(throwable = e) { "Add selected files failed" }
-                ToastBuilder().setOnTopLater().setMessage(Globals.getString(R.string.something_error)).toast()
+                MyToastUtil.toastOnTopErrorLater(Globals.getString(R.string.something_error))
             }
         }
     }

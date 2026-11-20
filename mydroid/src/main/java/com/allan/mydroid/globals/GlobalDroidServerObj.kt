@@ -17,7 +17,7 @@ import com.au.module_android.utils.launchOnIOThread
 import com.au.module_android.log.logd
 import com.au.module_android.log.loge
 import com.au.module_android.log.logt
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
 import fi.iki.elonen.NanoHTTPD
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.launchIn
@@ -113,11 +113,7 @@ class GlobalDroidServerObj(
             networkMonitor.networkFlow.value is GlobalNetworkMonitorObj.NetworkStatus.Connected) {
             startServer { msg ->
                 mainScope.launch {
-                    ToastBuilder()
-                        .setOnTop()
-                        .setIcon("error")
-                        .setMessage(msg)
-                        .toast()
+                    MyToastUtil.toastOnTopError(msg)
                 }
             }
         }

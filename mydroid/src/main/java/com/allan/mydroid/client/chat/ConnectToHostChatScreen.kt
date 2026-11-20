@@ -1,5 +1,7 @@
 package com.allan.mydroid.client.chat
 
+import com.au.module_androidui.toast.MyToastUtil
+import com.au.module_androidui.R as AndroidUiR
 import androidx.compose.foundation.layout.*
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -233,8 +235,10 @@ private fun MessageRow(msg: ChatMessage, onLongPress: () -> Unit) {
 private fun copyToClipboard(context: Context, text: String) {
     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     cm.setPrimaryClip(ClipData.newPlainText("text", text))
-    com.au.module_androidui.toast.ToastBuilder().setOnTop().setIcon("success")
-        .setMessage(context.getString(R.string.text_chat_copy_success)).toast()
+    MyToastUtil.toastOnBottom(
+        context.getString(R.string.text_chat_copy_success),
+        iconResId = AndroidUiR.drawable.ic_successful,
+    )
 }
 
 

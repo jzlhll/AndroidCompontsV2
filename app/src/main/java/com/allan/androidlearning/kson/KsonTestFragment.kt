@@ -18,7 +18,7 @@ import com.au.module_androidui.databinding.KsonTemprorayViewBinding
 import com.au.module_androidui.dialogs.AbsCenterFakeDialog
 import com.au.module_androidui.selectlist.SimpleItem
 import com.au.module_androidui.selectlist.SimpleListFragment
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_gson.fromGson
 import com.au.module_kson.fromKson
 import com.au.module_kson.kson
@@ -532,12 +532,12 @@ class KsonTestFragment(
 //            val list = listOf(bean1, bean2)
 //            val str = list.toKsonString()
 //            logdNoFile { "list $str" }
-//            toastOnTop("list $str")
+//            MyToastUtil.toastOnBottom("list $str")
 
             val listType = listOf(listOf("a", "b"), listOf("c", "d"))
            // val listSerializer = ListSerializer(ListSerializer(String.serializer()))
             val jsonStr1 = kson.encodeToString(listType)
-            toastOnTop("jsonStr1 $jsonStr1")
+            MyToastUtil.toastOnBottom("jsonStr1 $jsonStr1")
         }
     }
 

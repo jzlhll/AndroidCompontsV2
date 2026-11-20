@@ -103,7 +103,7 @@ GitHub 支持 fine-grained 和 classic Personal Access Token；优先引导使�
 
 clone、commit、fetch、更新、push、临时分支操作记录开始、步骤、结果和失败分类，通过 `Module-AndroidCommon` 的 `logd` / `loge` 落盘。操作以 trace ID 和 project ID 关联；目录扫描、项目切换、外部打开与编辑结束也记录必要状态。日志目录沿用 `FileLog.logDir`，保留策略沿用模块的七天清理机制，不另建共享日志目录。
 
-用户反馈通过 `Module-AndroidUi` 的 `ToastBuilder` 展示；进度弹窗打开时附着当前弹窗窗口，避免提示被遮挡。进度弹窗保留失败步骤、原因及未执行步骤，关闭结果不触发重试。
+用户反馈通过 `Module-AndroidUi` 的 `MyToastUtil` 展示；进度弹窗打开时附着当前弹窗窗口，避免提示被遮挡。进度弹窗保留失败步骤、原因及未执行步骤，关闭结果不触发重试。
 
 日志查看沿用 `Module-AndroidLogSystem` 的展示方式：按日期分组的文件列表显示文件名和大小，支持查看、确认删除及最多三份日志压缩分享。内容页使用等宽文字和级别颜色，可切换换行、时间、进程/线程、级别、标签。入口统一为 `Settings → Operation logs`，不新增悬浮入口或全局监听；读取日志不会暂停正常落盘。
 

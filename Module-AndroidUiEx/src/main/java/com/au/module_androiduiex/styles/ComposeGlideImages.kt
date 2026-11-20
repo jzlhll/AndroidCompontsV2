@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,7 @@ fun GlideRoundedImage(
     requestKey: Any? = null,
     requestWidth: Dp = width,
     requestHeight: Dp = height,
+    onHasImageChanged: ((Boolean) -> Unit)? = null,
     onResourceReady: ((Drawable) -> Unit)? = null,
     onResourceFailed: (() -> Unit)? = null,
     onResourceCleared: ((Drawable?) -> Unit)? = null,
@@ -80,6 +82,7 @@ fun GlideRoundedImage(
     val currentCanDisplayResource by rememberUpdatedState(canDisplayResource)
 
     val displayedResource = if (model == null) null else state.displayedResource
+    SideEffect { onHasImageChanged?.invoke(displayedResource != null) }
     val displayedTarget = displayedResource?.target
     LaunchedEffect(displayedResource) {
         if (displayedTarget != null) {
@@ -90,6 +93,11 @@ fun GlideRoundedImage(
     DisposableEffect(displayedTarget, requestManager) {
         onDispose {
             displayedTarget?.let(requestManager::clear)
+        }
+    }
+    DisposableEffect(state, requestManager) {
+        onDispose {
+            state.displayedResource?.target?.let(requestManager::clear)
         }
     }
 
@@ -106,13 +114,13 @@ fun GlideRoundedImage(
         if (model == null) {
             onDispose {}
         } else {
-            state.pendingTarget?.let(requestManager::clear)
+            state.activeTarget?.let(requestManager::clear)
             val target = object : CustomTarget<Drawable>() {
                 override fun onResourceReady(
                     resource: Drawable,
                     transition: Transition<in Drawable>?,
                 ) {
-                    if (state.pendingTarget !== this && state.displayedResource?.target !== this) return
+                    if (state.activeTarget !== this) return
                     if (currentCanDisplayResource?.invoke(resource) == false) {
                         val rejectedTarget = this
                         // 等 Glide 结束当前回调后释放被拒绝的最终资源，不打断仍在升级的过渡图。
@@ -130,17 +138,13 @@ fun GlideRoundedImage(
                     }
                     state.displayedResource = DisplayedGlideResource(resource, this)
                     state.failed = false
-                    if (state.pendingTarget === this) {
-                        state.pendingTarget = null
-                    }
                 }
 
                 override fun onLoadFailed(errorDrawable: Drawable?) {
-                    if (state.pendingTarget !== this) return
+                    if (state.activeTarget !== this) return
                     if (state.displayedResource == null) {
                         state.failed = true
                     }
-                    state.pendingTarget = null
                     currentOnResourceFailed?.invoke()
                 }
 
@@ -150,16 +154,13 @@ fun GlideRoundedImage(
                     } else {
                         null
                     }
-                    if (state.pendingTarget === this) {
-                        state.pendingTarget = null
-                    }
                     if (state.displayedResource?.target === this) {
                         state.displayedResource = null
                     }
                     currentOnResourceCleared?.invoke(clearedDrawable)
                 }
             }
-            state.pendingTarget = target
+            state.activeTarget = target
             val scaleBuilder = when (contentScale) {
                 ContentScale.Crop -> requestManager.load(model).optionalCenterCrop()
                 ContentScale.Inside,
@@ -170,16 +171,17 @@ fun GlideRoundedImage(
                 .diskCacheStrategy(diskCacheStrategy)
                 .override(widthPx, heightPx)
             val transformedBuilder = currentRequestBuilderTransform?.invoke(builder) ?: builder
-            val requestJob = scope.launch(Dispatchers.Main) {
+            val requestJob = scope.launch(Dispatchers.Main.immediate) {
                 transformedBuilder.into(target)
             }
 
             onDispose {
                 requestJob.cancel()
-                if (state.pendingTarget === target) {
-                    state.pendingTarget = null
+                if (state.activeTarget === target) {
+                    state.activeTarget = null
                 }
-                if (target.request?.isComplete != true || state.displayedResource?.target !== target) {
+                // 在途请求也可能已经显示缩略图，持有到替代图片就绪或组件销毁。
+                if (state.displayedResource?.target !== target) {
                     requestManager.clear(target)
                 }
             }
@@ -211,5 +213,6 @@ private data class DisplayedGlideResource(
 private class GlideRoundedImageState {
     var displayedResource by mutableStateOf<DisplayedGlideResource?>(null)
     var failed by mutableStateOf(false)
-    var pendingTarget: CustomTarget<Drawable>? = null
+    // 请求归属保留到 DisposableEffect 结束，允许 Glide 暂停或失败后复用同一 Target。
+    var activeTarget: CustomTarget<Drawable>? = null
 }

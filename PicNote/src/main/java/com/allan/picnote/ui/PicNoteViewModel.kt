@@ -24,7 +24,7 @@ import com.allan.picnote.media.*
 import com.au.module_android.utils.withIOThread
 import com.au.module_android.Globals
 import com.au.module_android.utilsmedia.saveFileToPublicDirectory
-import com.au.module_androidui.toast.ToastUtil
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androiduiex.styles.ComposeTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -476,7 +476,7 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
     fun duplicateDocument(id: String) = operation {
         val result = repository.duplicate(id)
         reload(result.value)
-        ToastUtil.toastOnTop(Globals.app.getString(R.string.document_duplicated))
+        MyToastUtil.toastOnBottom(Globals.app.getString(R.string.document_duplicated))
         saved(result.value, result)
     }
 
@@ -640,7 +640,7 @@ class PicNoteViewModel(private val app: PicNoteApplication) : ViewModel() {
         } else {
             Globals.app.getString(R.string.imported_image_nodes, result.value)
         }
-        ToastUtil.toastOnTop(message)
+        MyToastUtil.toastOnBottom(message)
     }
 
     fun showSkippedImages(count: Int) {

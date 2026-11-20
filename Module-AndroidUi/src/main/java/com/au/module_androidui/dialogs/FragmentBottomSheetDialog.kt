@@ -7,6 +7,10 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.annotation.ColorInt
 import androidx.annotation.IntRange
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsAnimationCompat
+import androidx.core.view.WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.FragmentManager
@@ -14,6 +18,7 @@ import androidx.fragment.app.FragmentResultListener
 import com.au.module_android.utils.*
 import com.au.module_androidui.R
 import com.au.module_androidui.ui.base.AbsBottomDialog
+import com.au.module_androidui.ui.base.BeforeDismissBottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlin.math.max
 import kotlin.math.min
@@ -45,6 +50,8 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
          * @param backgroundColor 弹窗根布局背景色；为null时不额外设置
          * @param paddingMode 是否需要padding模式, 指的是没有横杠，左右两边有padding
          * @param showHeadLine 是否需要显示headLine
+         * @param dragOnlyFromTop 是否只允许从顶部 80dp 开始拖动弹窗
+         * @param dispatchInsetsAnimation 是否向弹窗内容分发 Insets 动画事件
          */
         inline fun <reified T : Fragment> show(
             manager: FragmentManager,
@@ -56,6 +63,8 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
             paddingMode:Boolean = false,
             canCancel:Boolean = true,
             showHeadLine: Boolean = true,
+            dragOnlyFromTop: Boolean = false,
+            dispatchInsetsAnimation: Boolean = true,
         ): FragmentBottomSheetDialog {
             if (height < 0) {
                 throw IllegalArgumentException("height must be >= 0")
@@ -73,6 +82,8 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
                 }
                 it.putBoolean("canCancel", canCancel)
                 it.putBoolean("showHeadLine", showHeadLine)
+                it.putBoolean("dragOnlyFromTop", dragOnlyFromTop)
+                it.putBoolean("dispatchInsetsAnimation", dispatchInsetsAnimation)
             }
             dialog.show(manager, "FragmentContainBottomSheetDialog")
             return dialog
@@ -85,6 +96,8 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
          * @param backgroundColor 弹窗根布局背景色；为null时不额外设置
          * @param paddingMode 是否需要padding模式, 指的是没有横杠，左右两边有padding
          * @param showHeadLine 是否需要显示headLine
+         * @param dragOnlyFromTop 是否只允许从顶部 80dp 开始拖动弹窗
+         * @param dispatchInsetsAnimation 是否向弹窗内容分发 Insets 动画事件
          */
         inline fun <reified T : Fragment> showWithMaxHeightInset(
             manager: FragmentManager,
@@ -96,6 +109,8 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
             paddingMode:Boolean = false,
             canCancel:Boolean = true,
             showHeadLine: Boolean = true,
+            dragOnlyFromTop: Boolean = false,
+            dispatchInsetsAnimation: Boolean = true,
         ): FragmentBottomSheetDialog {
             if (maxHeightInset < 0) {
                 throw IllegalArgumentException("maxHeightInset must be >= 0")
@@ -115,6 +130,8 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
                 }
                 it.putBoolean("canCancel", canCancel)
                 it.putBoolean("showHeadLine", showHeadLine)
+                it.putBoolean("dragOnlyFromTop", dragOnlyFromTop)
+                it.putBoolean("dispatchInsetsAnimation", dispatchInsetsAnimation)
             }
             dialog.show(manager, "FragmentContainBottomSheetDialog")
             return dialog
@@ -137,10 +154,12 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
     private val paddingMode by unsafeLazy { arguments?.getBoolean("paddingMode", false) ?: false}
 
     private val showHeadLine by unsafeLazy { arguments?.getBoolean("showHeadLine", true) ?: true}
+    private val dragOnlyFromTop by unsafeLazy { arguments?.getBoolean("dragOnlyFromTop", false) ?: false }
 
     override fun onCreatingView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layoutId = if (paddingMode) { R.layout.dialog_bottomsheet_padding } else { R.layout.dialog_bottomsheet }
         val root = inflater.inflate(layoutId, container, false)
+        (dialog as? BeforeDismissBottomSheetDialog)?.dragOnlyFromTop = dragOnlyFromTop
         backgroundColor?.let {
             val bg = ViewBackgroundBuilder()
                 .setBackground(it)
@@ -192,6 +211,24 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
         }
 
         return root
+    }
+
+    override fun onStart() {
+        if (arguments?.getBoolean("dispatchInsetsAnimation", true) == false) {
+            window?.decorView?.let { decorView ->
+                // 显示前拦截动画事件，避免 Material 临时平移弹窗。系统栏间距由 AbsBottomDialog 应用。
+                ViewCompat.setWindowInsetsAnimationCallback(
+                    decorView,
+                    object : WindowInsetsAnimationCompat.Callback(DISPATCH_MODE_STOP) {
+                        override fun onProgress(
+                            insets: WindowInsetsCompat,
+                            runningAnimations: MutableList<WindowInsetsAnimationCompat>,
+                        ): WindowInsetsCompat = insets
+                    },
+                )
+            }
+        }
+        super.onStart()
     }
 
     override fun onResume() {

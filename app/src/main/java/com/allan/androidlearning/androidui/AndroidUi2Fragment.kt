@@ -30,7 +30,8 @@ import com.au.module_androidui.dialogs.ConfirmCenterDialog
 import com.au.module_androidui.dialogs.ConfirmCenterImgDialog
 import com.au.module_androidui.dialogs.ConfirmImgBottomDialog
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
+import com.au.module_androidui.R as AndroidUiR
 
 class AndroidUi2Fragment : BindingFragment<FragmentAndroidUi2Binding>() {
     override fun onBindingCreated(savedInstanceState: Bundle?) {
@@ -153,15 +154,23 @@ class AndroidUi2Fragment : BindingFragment<FragmentAndroidUi2Binding>() {
 
     fun toast() {
         binding.androidUiToast1.onClick {
-            ToastBuilder().setMessage("This is a line toast.").setOnTop().toast()
+            MyToastUtil.toastOnBottom("This is a line toast.")
         }
 
         binding.androidUiToast2.onClick {
-            ToastBuilder().setMessage("This is a line toast with icon.").setIcon("success").setOnViewGroup(requireActivity().window.decorView as ViewGroup).toast()
+            MyToastUtil.toastOnBottom(
+                "This is a line toast with icon.",
+                iconResId = AndroidUiR.drawable.ic_successful,
+                viewGroup = requireActivity().window.decorView as? ViewGroup,
+            )
         }
 
         binding.androidUiToast3.onClick {
-            ToastBuilder().setDesc("This is desc for this title.").setMessage("The news for today").setIcon("info").setOnViewGroup(requireActivity().window.decorView as ViewGroup).toast()
+            MyToastUtil.toastOnBottom(
+                "The news for today\nThis is desc for this title.",
+                iconResId = AndroidUiR.drawable.ic_warning,
+                viewGroup = requireActivity().window.decorView as? ViewGroup,
+            )
         }
     }
 
@@ -177,15 +186,15 @@ class AndroidUi2Fragment : BindingFragment<FragmentAndroidUi2Binding>() {
         }
 
         binding.androidUiDarkmode1.onClick {
-            ToastBuilder().setOnTop().setMessage(getDarkStrFunc()).setIcon("info").toast()
+            MyToastUtil.toastOnBottom(getDarkStrFunc(), iconResId = AndroidUiR.drawable.ic_warning)
         }
         binding.androidUiSysLocale.onClick {
             val locale = Resources.getSystem().configuration.locales.get(0)
-            ToastBuilder().setOnTop().setMessage("locale: " + locale).toast()
+            MyToastUtil.toastOnBottom("locale: " + locale)
         }
         binding.androidUiSysUimode.onClick {
             val uiMode = Resources.getSystem().configuration.uiMode
-            ToastBuilder().setOnTop().setMessage("uiMode: $uiMode").toast()
+            MyToastUtil.toastOnBottom("uiMode: $uiMode")
         }
     }
 }

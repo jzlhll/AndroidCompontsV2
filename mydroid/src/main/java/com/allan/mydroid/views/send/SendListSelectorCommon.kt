@@ -8,7 +8,7 @@ import com.au.module_android.utils.gone
 import com.au.module_android.utils.visible
 import kotlinx.coroutines.CancellationException
 import com.au.module_android.log.logEx
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.allan.mydroid.R
@@ -93,7 +93,7 @@ abstract class SendListSelectorCommon(val isNoDeleteBtn: Boolean) : KoinComponen
         } catch (e: Exception) {
             logEx(throwable = e) { "Load shared files failed" }
             withContext(Dispatchers.Main) {
-                ToastBuilder().setOnTop().setMessage(Globals.getString(R.string.something_error)).toast()
+                MyToastUtil.toastOnTopError(Globals.getString(R.string.something_error))
             }
         }
     }

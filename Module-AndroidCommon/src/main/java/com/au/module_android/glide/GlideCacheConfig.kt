@@ -15,8 +15,8 @@ import com.bumptech.glide.load.engine.cache.MemorySizeCalculator
 data class GlideCacheConfig(
     val heapBudgetDivisor: Int = 4,
     val memoryCacheMaxBytes: Long = 128L * 1024 * 1024,
-    val tinyWeight: Int = 7,
-    val normalWeight: Int = 4,
+    val tinyWeight: Int = 21,
+    val normalWeight: Int = 29,
     val bitmapPoolMaxBytes: Long = 16L * 1024 * 1024,
     val bitmapPoolScreens: Float = 1f,
     val diskCacheDirectory: String = "imageCache",

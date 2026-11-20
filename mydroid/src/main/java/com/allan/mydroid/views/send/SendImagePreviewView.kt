@@ -10,7 +10,7 @@ import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.views.compose.SendImagePreviewScreen
 import com.au.module_android.Globals
 import com.au.module_android.log.loge
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.widget.AbsFullScreenPreviewView
 
 /** 发送列表的沉浸式图片预览，承载等比前景、模糊背景和图片手势，关闭时释放组合及加载请求。 */
@@ -38,8 +38,7 @@ class SendImagePreviewView @JvmOverloads constructor(
                 onLoadFailed = {
                     loge { "Load image preview failed" }
                     hide(activity)
-                    ToastBuilder().setOnTopLater()
-                        .setMessage(Globals.app.getString(R.string.something_error)).toast()
+                    MyToastUtil.toastOnTopErrorLater(Globals.app.getString(R.string.something_error))
                 },
             )
         }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="my_toast_surface">#F0232323</color>
+    <color name="my_toast_stroke">#454545</color>
+    <color name="my_toast_close_tint">#DDDDDD</color>
+</resources>

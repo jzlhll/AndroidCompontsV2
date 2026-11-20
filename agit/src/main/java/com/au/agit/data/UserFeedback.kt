@@ -5,13 +5,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 
-data class Notice(val id: String = UUID.randomUUID().toString(), val message: String)
+data class Notice(
+    val id: String = UUID.randomUUID().toString(),
+    val message: String,
+    val isError: Boolean = false,
+)
 
 /** 保存尚未展示的反馈；由当前可见窗口调用模块 Toast，避免弹窗遮挡提示。 */
 class UserFeedback {
     private val mutableNotice = MutableStateFlow<Notice?>(null)
     val noticeFlow = mutableNotice.asStateFlow()
-    fun notify(message: String) { mutableNotice.value = Notice(message = message) }
+    fun notify(message: String, isError: Boolean = false) {
+        mutableNotice.value = Notice(message = message, isError = isError)
+    }
     fun acknowledge(id: String) { if (mutableNotice.value?.id == id) mutableNotice.value = null }
     fun failure(kind: String, error: Throwable, projectId: String? = null, traceId: String = "none") {
         val failure = safeFailure(error)
@@ -24,6 +30,6 @@ class UserFeedback {
             }
             loge { "engine linkage failed trace=$traceId userCode=${AGitErrorCode.ENGINE_UNAVAILABLE.code} stack=$stack" }
         }
-        notify(failure.message)
+        notify(failure.message, isError = true)
     }
 }

@@ -257,7 +257,7 @@ fun RepositoryRoute(
                 app.logd { "external file opened project=${key.projectId} edit=$edit" }
             } catch (error: CancellationException) { throw error } catch (error: android.content.ActivityNotFoundException) {
                 if (edit) app.repository.finishEditing(key.projectId)
-                app.notify(appString(R.string.no_handler))
+                app.notify(appString(R.string.no_handler), isError = true)
                 app.failure("external file open", AGitException(appString(R.string.no_handler), "NO_HANDLER"), key.projectId)
             } catch (error: Exception) { app.failure("external file open", error, key.projectId) }
         }

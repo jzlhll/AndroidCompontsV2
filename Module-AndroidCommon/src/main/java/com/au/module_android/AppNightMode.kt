@@ -3,6 +3,7 @@ package com.au.module_android
 import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 
 enum class AppNightMode(val delegateMode: Int) {
     FollowSystem(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
@@ -26,8 +27,9 @@ fun restoreAppNightMode(context: Context) {
 }
 
 fun setAppNightMode(context: Context, mode: AppNightMode) {
-    context.getSharedPreferences(APPEARANCE_PREFERENCES, Context.MODE_PRIVATE).edit()
-        .putString(NIGHT_MODE_KEY, mode.name).apply()
+    context.getSharedPreferences(APPEARANCE_PREFERENCES, Context.MODE_PRIVATE).edit {
+        putString(NIGHT_MODE_KEY, mode.name)
+    }
     AppCompatDelegate.setDefaultNightMode(mode.delegateMode)
 }
 

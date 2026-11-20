@@ -15,7 +15,8 @@ import com.au.module_android.utils.launchOnThread
 import com.au.module_android.log.logdNoFile
 import com.au.module_android.log.logt
 import com.au.module_android.utilsmedia.getExternalFreeSpace
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
+import com.au.module_androidui.R as AndroidUiR
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoWSD
 import kotlinx.coroutines.CoroutineScope
@@ -142,9 +143,7 @@ class ServerWebsocketClient(httpSession: NanoHTTPD.IHTTPSession,
     private fun clientInit() {
         //通过later则不需要注意线程
         val message = String.format(Globals.getString(R.string.new_webpage_access), clientName)
-        ToastBuilder().setMessage(message)
-            .setIcon("success")
-            .setOnTopLater(200).toast()
+        MyToastUtil.toastOnBottomLater(message, iconResId = AndroidUiR.drawable.ic_successful, laterTs = 200)
 
         val mode = server.serverRuntimeObj.currentDroidModeFlow.value.toName()
         val json = WSResultBox(

@@ -32,7 +32,8 @@ import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_android.utils.visible
 import com.au.module_androidui.ui.base.ImmersiveMode
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
+import com.au.module_androidui.R as AndroidUiR
 import com.au.module_androidui.ui.views.YourToolbarInfo
 import eightbitlab.com.blurview.BlurView3Util
 import org.koin.android.ext.android.get
@@ -248,11 +249,10 @@ class TextChatRoomFragment : AbsLiveFragment<FragmentTextChatRoomBinding>() {
     // 复制消息文案到剪贴板。
     private fun copyMessageText(text: String) {
         clipBoardHelp.copyToClipBoard(requireActivity(), text)
-        ToastBuilder()
-            .setOnTop()
-            .setIcon("success")
-            .setMessage(getString(R.string.text_chat_copy_success))
-            .toast()
+        MyToastUtil.toastOnBottom(
+            getString(R.string.text_chat_copy_success),
+            iconResId = AndroidUiR.drawable.ic_successful,
+        )
     }
 
     // 更新根布局的底部安全区。

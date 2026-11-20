@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.au.module_androidui.widget.BgBuildFrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingHorizontal="24dp"
+    android:layout_marginBottom="84dp"
+    android:layout_gravity="bottom|center_horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
+        style="@style/StyleToastBottomActionBackground"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp"
+        android:minHeight="48dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_width="20dp"
+            android:layout_height="20dp" />
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/text"
+            style="@style/StyleAuTextThin"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="12dp"
+            android:paddingVertical="12dp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/icon"
+            app:layout_constraintEnd_toStartOf="@id/toastActionTv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" />
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/toastActionTv"
+            style="@style/StyleToastBottomActionText"
+            android:gravity="center"
+            android:minWidth="56dp"
+            android:minHeight="48dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
+</com.au.module_androidui.widget.BgBuildFrameLayout>

@@ -9,7 +9,7 @@ import com.au.module_cached.AppDataStore
 import com.au.module_android.click.onClick
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.log.logt
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_cached.delegate.AppDataStoreIntCache
 import com.au.module_cached.delegate.AppDataStoreStringCache
 import kotlinx.coroutines.Dispatchers
@@ -42,30 +42,30 @@ class DataStoreFragment : BindingFragment<FragmentDatastoreBinding>() {
         viewBinding.readBtn.onClick {
             lifecycleScope.launch {
                 val data = AppDataStore.readString("info", "default_info")
-                toastOnTop("data: $data")
+                MyToastUtil.toastOnBottom("data: $data")
             }
         }
 
         viewBinding.containsBtn.onClick {
             lifecycleScope.launch {
                 val isContains = AppDataStore.containsStringKey("info")
-                toastOnTop("isContains: $isContains")
+                MyToastUtil.toastOnBottom("isContains: $isContains")
             }
         }
 
         viewBinding.removeKeyBtn.onClick {
             lifecycleScope.launch {
                 val r = AppDataStore.removeStringSuspend("info")
-                toastOnTop("removed: $r")
+                MyToastUtil.toastOnBottom("removed: $r")
             }
         }
         viewBinding.updateIntBtn.onClick {
             delegateInt += 1
-            toastOnTop("updateInt: $delegateInt")
+            MyToastUtil.toastOnBottom("updateInt: $delegateInt")
         }
         viewBinding.updateStringBtn.onClick {
             delegateStr += "a,"
-            toastOnTop("updateStr: $delegateStr")
+            MyToastUtil.toastOnBottom("updateStr: $delegateStr")
         }
     }
 }

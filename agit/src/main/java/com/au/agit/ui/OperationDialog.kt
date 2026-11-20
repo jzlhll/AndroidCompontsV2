@@ -32,7 +32,7 @@ import com.au.agit.ui.components.formatFileSize
 import com.au.module_androiduiex.preview.AppPreview
 import com.au.module_androiduiex.styles.ComposeColors
 import com.au.module_androiduiex.styles.ComposeTypography
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -41,7 +41,12 @@ fun NoticeHost(notice: Notice?, onConsumed: (String) -> Unit) {
     val view = LocalView.current
     LaunchedEffect(notice?.id) {
         if (notice != null) {
-            ToastBuilder().setOnViewGroup(view.rootView as? ViewGroup).setMessage(notice.message).toast()
+            val viewGroup = view.rootView as? ViewGroup
+            if (notice.isError) {
+                MyToastUtil.toastOnTopError(notice.message, viewGroup = viewGroup)
+            } else {
+                MyToastUtil.toastOnBottom(notice.message, viewGroup = viewGroup)
+            }
             onConsumed(notice.id)
         }
     }

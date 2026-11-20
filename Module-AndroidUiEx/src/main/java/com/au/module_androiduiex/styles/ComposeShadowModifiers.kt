@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -23,13 +24,17 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
@@ -82,7 +87,7 @@ fun ComposeImmersiveImageBackground(
     }
 }
 
-/** 对应 XML StyleShadowWhiteBlock 的 Compose 阴影白底块。 */
+/** 对应 XML StyleI8oShadowWhiteBlock 的 Compose 阴影白底块。 */
 @Composable
 fun Modifier.composeShadowWhiteBlock(
     cornerRadius: Dp = 16.dp,
@@ -106,13 +111,14 @@ fun Modifier.composeShadowWhiteBlock(
     )
 }
 
-/** 绘制无偏移的模糊阴影。 */
+/** 绘制无偏移的模糊阴影；[shape] 默认使用 [cornerRadius] 定义的圆角。 */
 fun Modifier.composeCenteredBlurShadow(
     cornerRadius: Dp = 24.dp,
     shadowColor: Color = Color(0x14000000),
     blurRadius: Dp = 32.dp,
     shadowSpread: Dp = 0.dp,
     shadowInset: Dp = 0.dp,
+    shape: CornerBasedShape = RoundedCornerShape(cornerRadius),
 ): Modifier {
     return composeOffsetBlurShadow(
         cornerRadius = cornerRadius,
@@ -120,10 +126,11 @@ fun Modifier.composeCenteredBlurShadow(
         blurRadius = blurRadius,
         shadowSpread = shadowSpread,
         shadowInset = shadowInset,
+        shape = shape,
     )
 }
 
-/** 绘制可配置偏移、扩散与模糊半径的阴影。 */
+/** 绘制可配置偏移、扩散与模糊半径的阴影；[shape] 默认使用 [cornerRadius] 定义的圆角。 */
 fun Modifier.composeOffsetBlurShadow(
     cornerRadius: Dp = 24.dp,
     shadowColor: Color = ComposeColors.RoundedCardShadow,
@@ -132,14 +139,22 @@ fun Modifier.composeOffsetBlurShadow(
     offsetY: Dp = 12.dp,
     shadowSpread: Dp = 0.dp,
     shadowInset: Dp = 0.dp,
+    shape: CornerBasedShape = RoundedCornerShape(cornerRadius),
 ): Modifier {
     return drawWithCache {
-        val radiusPx = cornerRadius.toPx()
         val blurPx = blurRadius.toPx()
         val offsetXPx = offsetX.toPx()
         val offsetYPx = offsetY.toPx()
         val spreadPx = shadowSpread.toPx()
         val insetPx = shadowInset.toPx()
+        val shadowSize = Size(
+            max(size.width + 2 * (spreadPx - insetPx), 0f),
+            max(size.height + 2 * (spreadPx - insetPx), 0f),
+        )
+        val shadowPath = Path().apply {
+            addOutline(shape.createOutline(shadowSize, layoutDirection, this@drawWithCache))
+            translate(Offset(offsetXPx + insetPx - spreadPx, offsetYPx + insetPx - spreadPx))
+        }.asAndroidPath()
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             style = android.graphics.Paint.Style.FILL
             color = shadowColor.toArgb()
@@ -153,15 +168,7 @@ fun Modifier.composeOffsetBlurShadow(
 
         onDrawBehind {
             drawIntoCanvas { canvas ->
-                canvas.nativeCanvas.drawRoundRect(
-                    offsetXPx + insetPx - spreadPx,
-                    offsetYPx + insetPx - spreadPx,
-                    size.width + offsetXPx - insetPx + spreadPx,
-                    size.height + offsetYPx - insetPx + spreadPx,
-                    radiusPx,
-                    radiusPx,
-                    paint,
-                )
+                canvas.nativeCanvas.drawPath(shadowPath, paint)
             }
         }
     }

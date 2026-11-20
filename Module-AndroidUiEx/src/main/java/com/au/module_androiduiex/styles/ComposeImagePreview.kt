@@ -54,6 +54,10 @@ private const val EdgeTolerancePx = 0.5f
 class ComposeImagePreviewState internal constructor() {
     var imageScale by mutableFloatStateOf(MinPreviewScale)
         internal set
+    /** 手势结束时记录预览允许的放大倍率，供当前页准备高清位图。 */
+    var settledZoomLimit by mutableFloatStateOf(MinPreviewScale)
+        internal set
+
     var imageOffset by mutableStateOf(Offset.Zero)
         internal set
 
@@ -169,6 +173,7 @@ fun ComposeImagePreviewContainer(
         if (!gesturesEnabled) {
             singleTapJob?.cancel()
             previewState.imageScale = MinPreviewScale
+            previewState.settledZoomLimit = MinPreviewScale
             previewState.imageOffset = Offset.Zero
             lastTapUpTime = 0L
         }
@@ -234,6 +239,7 @@ fun ComposeImagePreviewContainer(
             imageCenter,
         ) {
             previewState.imageScale = MinPreviewScale
+            previewState.settledZoomLimit = MinPreviewScale
             previewState.imageOffset = Offset.Zero
         }
 
@@ -427,6 +433,10 @@ fun ComposeImagePreviewContainer(
                         }
                     } else {
                         lastTapUpTime = 0L
+                    }
+                    if (!canceled && (hadMultiplePointers || isSecondTap)) {
+                        currentPreviewState.settledZoomLimit =
+                            if (currentPreviewState.imageScale > MinPreviewScale) currentMaximumImageScale else MinPreviewScale
                     }
                 } finally {
                     if ((dismissDragging || expandDragging) && !externalDragTerminalDispatched) {

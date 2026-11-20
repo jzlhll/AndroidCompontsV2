@@ -15,10 +15,11 @@ import com.allan.mydroid.client.api.ClientApi
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.allan.mydroid.views.compose.MyDroidAllScreen
 import com.allan.mydroid.views.compose.MyDroidAllUiState
+import com.au.module_android.Globals
 import com.au.module_android.log.loge
 import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androiduiex.ui.ComposeViewFragment
 import com.au.module_simplepermission.gotoMgrAll
 import com.au.module_simplepermission.ifGotoMgrAll
@@ -44,9 +45,7 @@ class MyDroidAllFragment : ComposeViewFragment() {
         if (!mIp.isNullOrEmpty()) {
             workBlock()
         } else {
-            ToastBuilder().setMessage(getString(R.string.connect_wifi_or_hotspot))
-                .setOnTop()
-                .toast()
+            MyToastUtil.toastOnBottom(getString(R.string.connect_wifi_or_hotspot))
         }
     }
 
@@ -168,10 +167,7 @@ class MyDroidAllFragment : ComposeViewFragment() {
     }
 
     private fun showToastAndRescan() {
-        ToastBuilder()
-            .setOnTop()
-            .setMessage(getString(R.string.host_info_outdated_rescanning))
-            .toast()
+        MyToastUtil.toastOnBottom(Globals.app.getString(R.string.host_info_outdated_rescanning))
         bleIpScanner.startScan()
     }
 

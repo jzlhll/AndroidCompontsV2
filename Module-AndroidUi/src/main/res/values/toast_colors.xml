@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="my_color_orange">#FF8C00</color>
+    <color name="my_color_shadow_default">#10000000</color>
+    <color name="my_color_primary_bg">#FAF6F1</color>
+    <color name="my_toast_surface">#F0FFFFFF</color>
+    <color name="my_toast_stroke">#FFFFFF</color>
+    <color name="my_toast_close_tint">#404040</color>
+</resources>

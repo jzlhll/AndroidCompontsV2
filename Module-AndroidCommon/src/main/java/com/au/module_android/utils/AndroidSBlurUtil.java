@@ -89,9 +89,20 @@ public final class AndroidSBlurUtil {
 
         beBlurView.setClipToOutline(true); //保持形状，如果不添加圆角将模糊后丢失
 
+        applyContentBlurEffect(beBlurView, radiusX, radiusY, tileMode);
+    }
+
+    /** 仅模糊 View 内容，保留已有前景和裁剪设置。 */
+    public static void applyContentBlurEffect(View view, float radiusX, float radiusY, Shader.TileMode tileMode) {
         if (isS) {
-            var blurEffect = RenderEffect.createBlurEffect(radiusX, radiusY, tileMode);
-            beBlurView.setRenderEffect(blurEffect);
+            view.setRenderEffect(RenderEffect.createBlurEffect(radiusX, radiusY, tileMode));
+        }
+    }
+
+    /** 清除内容模糊，保留已有前景。 */
+    public static void clearContentBlurEffect(View view) {
+        if (isS) {
+            view.setRenderEffect(null);
         }
     }
 
@@ -100,8 +111,6 @@ public final class AndroidSBlurUtil {
      */
     public static void clearBlurEffect(View beBlurView) {
         beBlurView.setForeground(null);
-        if (isS) {
-            beBlurView.setRenderEffect(null);
-        }
+        clearContentBlurEffect(beBlurView);
     }
 }

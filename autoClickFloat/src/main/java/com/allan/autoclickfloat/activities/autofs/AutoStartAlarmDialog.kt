@@ -9,6 +9,7 @@ import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_androidui.fontutil.getOrCreateFontFace
 import com.au.module_androidui.ui.FragmentShellActivity
+import com.au.module_androidui.ui.base.IBaseDialog
 import com.au.module_androidui.ui.base.findDialog
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_android.utils.asOrNull
@@ -18,7 +19,7 @@ import com.au.module_android.utils.visible
 import com.au.module_androidui.BuildConfig.FONT_NUMBER_PATH
 import com.au.module_androidui.widget.ViewStubPro
 import com.au.module_androidui.dialogs.FragmentBottomSheetDialog
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.widget.NumberPickerCompat
 import com.au.module_androidui.widget.SimpleNumberPicker
 import com.au.module_androidui.widget.SimpleNumberPickerCompat
@@ -172,7 +173,10 @@ class AutoStartAlarmDialog : BindingFragment<FragmentAutoStartupNewAddBinding>()
                 oldId)
 
             if (!isGood) {
-                ToastBuilder().setOnFragmentDialog(this).setMessage("时间已经过期，请重新选择或者加天。").toast()
+                MyToastUtil.toastOnTopError(
+                    "时间已经过期，请重新选择或者加天。",
+                    viewGroup = (findDialog(this) as? IBaseDialog)?.findToastViewGroup(),
+                )
                 return@onClick
             }
             findDialog(this)?.dismissAllowingStateLoss()

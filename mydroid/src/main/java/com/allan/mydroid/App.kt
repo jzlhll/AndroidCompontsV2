@@ -25,7 +25,7 @@ import com.au.module_android.log.loge
 import com.au.module_androidui.InitApplication
 import com.au.module_android.utils.clearDirOldFiles
 import com.au.module_android.utils.launchOnIOThread
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_cached.AppDataStore
 import com.au.module_okhttp.OkhttpGlobal
 import com.au.module_okhttp.beans.OkhttpInitParams
@@ -86,7 +86,7 @@ class App : InitApplication() {
                         //填充。将timestampOffset进行存储。用于后续请求传参使用。
                     },
                     tokenExpiredBlock = { msg->
-                        ToastBuilder().setMessage(msg).setOnTopLater().toast()
+                        MyToastUtil.toastOnTopErrorLater(msg)
                         true
                         //填充。仅仅是一个提醒。tokenExpire过期的时候，给出一个全局的通知。具体的那个请求还是抛异常。
                     }

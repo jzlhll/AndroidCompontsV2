@@ -29,7 +29,8 @@ import com.au.module_android.utils.unsafeLazy
 import com.au.module_android.utils.useSimpleHtmlText
 import com.au.module_android.utils.visible
 import com.au.module_androidui.widget.FontMode
-import com.au.module_androidui.toast.ToastBuilder
+import com.au.module_androidui.toast.MyToastUtil
+import com.au.module_androidui.R as AndroidUiR
 import com.au.module_nested.decoration.VertPaddingItemDecoration
 import com.au.module_nested.tab.AuTabLayout
 import com.google.android.material.tabs.TabLayout
@@ -99,14 +100,16 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
 
     val fileExportFailCallback:(String)->Unit = { info->
         Globals.mainScope.launchOnUi {
-            ToastBuilder().setOnTop().setMessage(info).setIcon("error").toast()
+            MyToastUtil.toastOnTopError(info)
         }
     }
 
     val fileExportSuccessCallback:(info:String, exportFileStr:String)->Unit = { info, exportFileStr->
         Globals.mainScope.launchOnUi {
-            ToastBuilder().setOnTop().setMessage(info.replace("/storage/emulated/0/", "/sdcard/"))
-                .setIcon("success").toast()
+            MyToastUtil.toastOnBottom(
+                info.replace("/storage/emulated/0/", "/sdcard/"),
+                iconResId = AndroidUiR.drawable.ic_successful,
+            )
             mViewModel.dispatch(ReceiveFromH5ViewModel.WriteHistoryAction(exportFileStr))
         }
     }
@@ -135,12 +138,12 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
 
         launchRepeatOnStarted {
             receiverFlowsObj.fileMergedFlow.collect { file->
-            val strFmt = getString(R.string.file_received_success_fmt)
-            ToastBuilder().setOnTop()
-                .setMessage(String.format(strFmt, file.name))
-                .setIcon("success").toast()
+                MyToastUtil.toastOnBottom(
+                    Globals.app.getString(R.string.file_received_success_fmt, file.name),
+                    iconResId = AndroidUiR.drawable.ic_successful,
+                )
 
-            refreshFileListCallback()
+                refreshFileListCallback()
             }
         }
 
@@ -161,7 +164,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                         updateReceiveListTabTitle(false)
                     },
                     onError = {
-                        ToastBuilder().setOnTop().setMessage(getString(R.string.something_error)).toast()
+                        MyToastUtil.toastOnTopError(Globals.app.getString(R.string.something_error))
                     }
                 )
             }

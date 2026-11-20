@@ -20,7 +20,7 @@ import com.au.module_androidui.ui.startOutActivity
 import com.au.module_android.utils.visible
 import com.au.module_androidui.BuildConfig.FONT_NUMBER_PATH
 import com.au.module_androidui.widget.ViewStubPro
-import com.au.module_androidui.toast.ToastUtil
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.widget.NumberPickerCompat
 import com.au.module_androidui.widget.SimpleNumberPicker
 import com.au.module_androidui.widget.SimpleNumberPickerCompat
@@ -160,7 +160,7 @@ class AutoStartFragment : BindingFragment<FragmentAutoStartupBinding>(), ISeekHe
             Globals.mainHandler.removeCallbacks(doItRun)
             postToMainHandler(doItRun, targetTimeMillis - System.currentTimeMillis())
         } else {
-            if(!tryLast) ToastUtil.toastOnTop("时间错误！")
+            if(!tryLast) MyToastUtil.toastOnTopError("时间错误！")
             targetTimeMillis = -1
         }
     }
@@ -294,13 +294,13 @@ class AutoStartFragment : BindingFragment<FragmentAutoStartupBinding>(), ISeekHe
         val pm = requireActivity().packageManager
         val intent = pm.getLaunchIntentForPackage("com.ss.android.lark")
         if (intent != null) {
-            ToastUtil.toastOnTop("Time is up launch apk in 3s...")
+            MyToastUtil.toastOnBottom("Time is up launch apk in 3s...")
             lifecycleScope.launch {
                 delay(3000)
                 requireContext().startOutActivity(intent)
             }
         } else {
-            ToastUtil.toastOnTop("Time is up! No target apk!")
+            MyToastUtil.toastOnTopError("Time is up! No target apk!")
         }
     }
 
@@ -317,7 +317,7 @@ class AutoStartFragment : BindingFragment<FragmentAutoStartupBinding>(), ISeekHe
             if (mCanBack || targetTimeMillis == -1L) {
                 true
             } else {
-                ToastUtil.toastOnTop("再次点击返回才能退出，且定时失效。")
+                MyToastUtil.toastOnBottom("再次点击返回才能退出，且定时失效。")
                 false
             }
         }

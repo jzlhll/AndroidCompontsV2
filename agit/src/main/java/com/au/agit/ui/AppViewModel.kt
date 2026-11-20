@@ -66,7 +66,7 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
         }
     }
 
-    fun notify(message: String) { feedback.notify(message) }
+    fun notify(message: String, isError: Boolean = false) { feedback.notify(message, isError) }
     fun acknowledgeNotice(id: String) { feedback.acknowledge(id) }
 
     fun saveGroup(name: String, token: String, id: String?) = quiet("credential save") {
@@ -84,7 +84,7 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
 
     fun prepareTokenGroup(name: String, token: String): Boolean {
         if (name.isBlank() || token.isBlank() || token.any { it.isWhitespace() }) {
-            notify(appString(R.string.invalid_token))
+            notify(appString(R.string.invalid_token), isError = true)
             return false
         }
         clearTokenGroupDraft()
@@ -178,7 +178,7 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
             result = if (plan.blocked) appString(R.string.remote_ahead) else null,
             steps = mutableOperation.value!!.steps.map { if (it.status == StepStatus.Pending) it.copy(status = StepStatus.Skipped) else it },
         )
-        if (plan.blocked) notify(appString(R.string.remote_ahead))
+        if (plan.blocked) notify(appString(R.string.remote_ahead), isError = true)
         null
     }
 

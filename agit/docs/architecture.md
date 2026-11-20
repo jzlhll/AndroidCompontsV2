@@ -49,7 +49,7 @@ Clone 页面和执行弹窗的标题固定为 `Clone Repository`。`GitDownloadC
 
 日志读取先等待 `FileLog.logHandler` 中已入队的写入完成，再在 IO 线程读取快照，不设置 `FileLog.ignoreWrite`。内容按 256KB 分页，从最新一页进入并允许加载更早记录；刷新取消并等待上一任务。压缩分享仅包含用户选中的最多三份 `.log` 文件，输出位于 `cacheDir/shared/logs/`，使用既有 FileProvider 临时只读授权，不扩大共享根目录。
 
-实际异常通过 `safeFailure` 转成英中字符串资源和受控英文错误码。用户错误编号由 `AGitErrorCode` 集中定义，`appString` 和 `errorStringResource` 统一在正文末尾追加编号；资源只保留可翻译正文。内部英文错误码继续用于业务判断，不与用户编号混用。Toast 复用模块 `ToastBuilder`，操作日志复用 `FileLog`。不记录原始异常正文、凭据、文件内容或提交说明。应用级操作状态跨配置变化保存；进程结束后只从磁盘恢复仓库与编辑记录，不恢复或自动重跑旧 Job。
+实际异常通过 `safeFailure` 转成英中字符串资源和受控英文错误码。用户错误编号由 `AGitErrorCode` 集中定义，`appString` 和 `errorStringResource` 统一在正文末尾追加编号；资源只保留可翻译正文。内部英文错误码继续用于业务判断，不与用户编号混用。Toast 复用模块 `MyToastUtil`，操作日志复用 `FileLog`。不记录原始异常正文、凭据、文件内容或提交说明。应用级操作状态跨配置变化保存；进程结束后只从磁盘恢复仓库与编辑记录，不恢复或自动重跑旧 Job。
 
 ## 兼容性边界
 

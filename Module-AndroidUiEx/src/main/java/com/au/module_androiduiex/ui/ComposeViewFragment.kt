@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.au.module_androidui.ui.base.ImmersiveMode
 import com.au.module_androidui.ui.views.ViewFragment
+import com.au.module_androiduiex.ui.ExportTestTags
 
 /**
  * Compose 页面的统一承载 Fragment：固定 FullImmersive，inset 由 Compose 界面自行处理。
@@ -28,7 +29,9 @@ abstract class ComposeViewFragment : ViewFragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                ScreenContent()
+                ExportTestTags {
+                    ScreenContent()
+                }
             }
         }
     }

@@ -13,7 +13,7 @@ import com.au.module_android.glide.preInitGlide
 /**
  * @author allan
  * @date :2023/11/7 14:32
- * @description: 使用InitApplication做为基础的application父类或者直接使用
+ * @description: 使用CommonInitApplication做为基础的application父类或者直接使用
  */
 open class CommonInitApplication : Application() {
     data class FirstInitialConfig(

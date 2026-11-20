@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.au.module_androidui.widget.BgBuildFrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="32dp"
+    android:layout_marginBottom="84dp"
+    android:layout_gravity="bottom|center_horizontal"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.au.module_androidui.widget.BgBuildConstraintLayout
+        android:layout_marginHorizontal="16dp"
+        app:backgroundNormal="@color/my_toast_surface"
+        app:strokeColor="@color/my_toast_stroke"
+        app:cornerRadius="16dp"
+        app:strokeWidth="1dp"
+        app:shadowBlur="24dp"
+        app:shadowSpread="1dp"
+        app:shadowColor="@color/my_color_shadow_default"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="16dp"
+        android:minWidth="120dp"
+        android:minHeight="48dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/text"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            android:layout_width="28dp"
+            android:layout_height="28dp"/>
+
+        <com.au.module_androidui.widget.CustomFontText
+            android:id="@+id/text"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/icon"
+            android:layout_marginStart="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            style="@style/StyleAuTextNormal"
+            android:maxLines="3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            app:layout_constrainedWidth="true"
+            tools:text="dfjksdafh2891 dskjf\nadfjkadsjf" />
+
+    </com.au.module_androidui.widget.BgBuildConstraintLayout>
+</com.au.module_androidui.widget.BgBuildFrameLayout>

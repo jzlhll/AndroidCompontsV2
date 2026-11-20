@@ -11,7 +11,7 @@ import com.au.module_android.click.onClick
 import com.au.module_android.utils.dp
 import com.au.module_androidui.dialogs.AbsCenterFakeDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.ui.views.ViewFragment
 import com.au.module_androidui.widget.FlowLayout
 import com.google.android.material.button.MaterialButton
@@ -70,7 +70,7 @@ class DialogsTestFragment : ViewFragment() {
                 hide()
             }
             binding.sureButton.onClick {
-                toastOnTop("点击了确定: " + binding.edit.text)
+                MyToastUtil.toastOnBottom("点击了确定: " + binding.edit.text)
                 hide()
             }
         }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="StyleToastBottomActionBackground">
+        <item name="backgroundNormal">@color/my_toast_surface</item>
+        <item name="strokeColor">@color/my_toast_stroke</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="shadowBlur">24dp</item>
+        <item name="shadowSpread">1dp</item>
+        <item name="shadowColor">@color/my_color_shadow_default</item>
+    </style>
+
+    <style name="StyleToastBottomActionText" parent="StyleAuTextThin">
+        <item name="android:textColor">@color/my_color_orange</item>
+        <item name="customFontMode">normal</item>
+    </style>
+</resources>

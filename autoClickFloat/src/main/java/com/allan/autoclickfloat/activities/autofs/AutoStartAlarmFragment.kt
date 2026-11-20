@@ -16,7 +16,7 @@ import com.au.module_android.utils.visible
 import com.au.module_android.utils.withMainThread
 import com.au.module_androidui.dialogs.ConfirmBottomDialog
 import com.au.module_androidui.dialogs.ConfirmCenterDialog
-import com.au.module_androidui.toast.ToastUtil
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_androidui.ui.FragmentShellActivity
 import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_cached.AppDataStore
@@ -151,7 +151,7 @@ class AutoStartAlarmFragment : BindingFragment<FragmentAutoStartupNewBinding>(),
                         if (goToAutoStartSettings(requireContext())) {
                             binding.dingInfoHost.gone()
                         } else {
-                            ToastUtil.toastOnTop("暂时无法跳转到自启动设置界面，请手动去系统中设置。")
+                            MyToastUtil.toastOnTopError("暂时无法跳转到自启动设置界面，请手动去系统中设置。")
                         }
                     }
                 } else {

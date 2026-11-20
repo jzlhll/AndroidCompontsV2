@@ -156,6 +156,6 @@ fun ImmersiveMode.applyWindowInsets(root: View, insets: WindowInsetsCompat): Win
     val top = if (isPaddingStatusBar()) bars.top else 0
     val bottom = if (isPaddingNavigationBar()) bars.bottom else 0
     root.updatePadding(left = bars.left, top = top, right = bars.right, bottom = bottom)
-    // 只扣除容器已经避让的区域，IME 等剩余 Insets 继续交给内容处理。
+    // 按容器已避让的距离缩减所有类型的 Insets（含 IME），子级应直接使用剩余值，避免重复扣除导航栏。
     return insets.inset(bars.left, top, bars.right, bottom)
 }

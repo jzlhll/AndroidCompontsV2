@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
@@ -14,6 +15,7 @@ import androidx.core.view.updatePadding
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.utils.applyWindowInsets
 import com.au.module_android.utils.asOrNull
+import com.au.module_android.utils.dp
 import com.au.module_android.utils.immersive
 import com.au.module_android.utils.isAppearanceLightForBars
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -83,8 +85,7 @@ abstract class AbsBottomDialog(private val hasEditText:Boolean)
     }
 
     override fun onStart() {
-        super.onStart()
-
+        // 在 show 前完成窗口配置，让 Material 按最终导航栏颜色初始化布局，避免显示后切换 inset。
         //抬起底部间距, 让navBar与布局颜色一致
         // warn1: 不能忽略dialog?window的条件，否则就变成了处理activity，而不是本dialog的window
         // warn2: 设置了transparentStatusBar后，键盘无法弹起。
@@ -104,6 +105,7 @@ abstract class AbsBottomDialog(private val hasEditText:Boolean)
                 controller.isAppearanceLightNavigationBars = false
             }
         }
+        super.onStart()
     }
 
     override fun onDestroyView() {
@@ -141,9 +143,33 @@ open class BeforeDismissBottomSheetDialog : BottomSheetDialog {
     }
 
     var beforeDismissCallback: BeforeDismissCallback? = null
+    /** 是否只允许从顶部 80dp 发起拖动。 */
+    var dragOnlyFromTop = false
+        set(value) {
+            field = value
+            behavior.isDraggable = !value
+            behavior.isDraggableOnNestedScroll = !value
+        }
     constructor(context: Context) : super(context)
     constructor(context: Context, theme: Int) : super(context, theme)
     protected constructor(context: Context, cancelable: Boolean, cancelListener: DialogInterface.OnCancelListener?) : super(context, cancelable, cancelListener)
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (dragOnlyFromTop && ev.actionMasked == MotionEvent.ACTION_DOWN) {
+            val sheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+            val location = IntArray(2)
+            sheet?.getLocationOnScreen(location)
+            val distanceFromTop = ev.rawY - location[1]
+            // setCancelable(false) 会关闭 hideable，提交期间不能重新启用拖动。
+            behavior.isDraggable = behavior.isHideable && sheet != null &&
+                distanceFromTop >= 0 && distanceFromTop < 80f.dp
+        }
+        val handled = super.dispatchTouchEvent(ev)
+        if (dragOnlyFromTop && (ev.actionMasked == MotionEvent.ACTION_UP || ev.actionMasked == MotionEvent.ACTION_CANCEL)) {
+            behavior.isDraggable = false
+        }
+        return handled
+    }
 
     override fun dismiss() {
         beforeDismissCallback?.onBeforeDismiss(this)

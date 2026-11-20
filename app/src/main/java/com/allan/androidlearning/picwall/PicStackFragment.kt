@@ -9,7 +9,7 @@ import com.allan.androidlearning.databinding.FragmentPicStackBinding
 import com.allan.classnameanno.EntryFrgName
 import com.au.module_android.simpleflow.collectStatusState
 import com.au.module_androidui.ui.bindings.BindingFragment
-import com.au.module_androidui.toast.ToastUtil
+import com.au.module_androidui.toast.MyToastUtil
 import com.au.module_simplepermission.PermissionMediaType
 import com.au.module_simplepermission.createMediaPermissionForResult
 import kotlinx.coroutines.launch
@@ -38,7 +38,7 @@ class PicStackFragment : BindingFragment<FragmentPicStackBinding>() {
         }
 
         mediaPermissionHelper.safeRun(notGivePermissionBlock = {
-            ToastUtil.toastOnTop("请先授权媒体权限")
+            MyToastUtil.toastOnTopError("请先授权媒体权限")
         }) {
             viewModel.dispatch(PicWallViewModel.RequestLocalAction(requireActivity()))
         }

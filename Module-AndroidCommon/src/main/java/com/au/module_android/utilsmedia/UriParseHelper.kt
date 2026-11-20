@@ -9,7 +9,8 @@ import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.au.module_android.Globals
-import com.au.module_android.utils.ignoreError
+import com.au.module_android.log.logdNoFile
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import java.io.File
 
@@ -90,7 +91,7 @@ internal class UriParseHelper {
     ///////////////必须先调用 parse
     fun parse(file: File, fileItsUri: Uri?=null) : UriParsedInfo{
         val extension = file.extension.lowercase()
-        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"
+        val mimeType = resolveMimeType(file.name).ifEmpty { "*/*" }
         val fileLength = file.length()
         val videoDuration = VideoDurationHelper().getDurationNormally(file.absolutePath, mimeType)
         val lastModified = file.lastModified()
@@ -115,8 +116,9 @@ internal class UriParseHelper {
         var name = ""
         var videoDuration:Long? = null
         var lastModified:Long? = null
-        var size: Size? = null
-        ignoreError {
+        var width = 0
+        var height = 0
+        try {
             val projection = if (uri.authority == MediaStore.AUTHORITY) {
                 arrayOf(
                     MediaStore.MediaColumns.MIME_TYPE,
@@ -133,21 +135,25 @@ internal class UriParseHelper {
             } else {
                 null
             }
-            val cursor = ignoreError {
-                cr.query(uri, projection, null, null, null)
-            } ?: if (projection == null) {
-                null
-            } else {
-                ignoreError {
-                    cr.query(uri, null, null, null, null)
+            val projectedCursor = if (projection != null) {
+                try {
+                    cr.query(uri, projection, null, null, null)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logdNoFile { "query URI metadata with projection failed: provider=${uri.authority}, error=${e.message}" }
+                    null
                 }
+            } else {
+                null
             }
-            cursor?.use { cursor->
+            val cursor = projectedCursor ?: cr.query(uri, null, null, null, null)
+            cursor?.use { cursor ->
                 if (cursor.moveToFirst()) {
                     //解析 mimeType
                     val mimeTypeIndex = cursor.getColumnIndex(MediaStore.MediaColumns.MIME_TYPE)
                     if (mimeTypeIndex != -1) {
-                        mimeType = cursor.getString(mimeTypeIndex)
+                        mimeType = cursor.getString(mimeTypeIndex).orEmpty()
                     }
 
                     //解析 relative path / full path
@@ -163,7 +169,7 @@ internal class UriParseHelper {
 
                     //解析 name
                     val displayNameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
-                    name = if (displayNameIndex == -1) "" else cursor.getString(displayNameIndex)
+                    name = if (displayNameIndex == -1) "" else cursor.getString(displayNameIndex).orEmpty()
 
                     //解析 video duration
                     val durationIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DURATION)
@@ -182,32 +188,38 @@ internal class UriParseHelper {
                     // 解析图片像素尺寸
                     val widthIndex = cursor.getColumnIndex(MediaStore.MediaColumns.WIDTH)
                     val heightIndex = cursor.getColumnIndex(MediaStore.MediaColumns.HEIGHT)
-                    if (mimeType.startsWith("image/") && widthIndex != -1 && heightIndex != -1) {
-                        val width = cursor.getInt(widthIndex)
-                        val height = cursor.getInt(heightIndex)
-                        if (width > 0 && height > 0) {
-                            size = Size(width, height)
-                        }
+                    if (widthIndex != -1 && heightIndex != -1) {
+                        width = cursor.getInt(widthIndex)
+                        height = cursor.getInt(heightIndex)
                     }
                 }
             }
-        }
-
-        val extension = if (mimeType.isNotEmpty()) {
-            MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: ""
-        } else {
-            ""
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logdNoFile { "read URI metadata failed: provider=${uri.authority}, error=${e.message}" }
         }
 
         if (name.isEmpty()) {
-            val n = fullPath ?: relativePath
-            if (n == null) {
-                val uriStr = uri.toString()
-                val last = uriStr.lastIndexOf("/")
-                name = uriStr.substring(last + 1)
-            } else {
-                name = n.substring(n.lastIndexOf("/") + 1)
-            }
+            val path = fullPath ?: relativePath
+            name = path?.substringAfterLast('/') ?: uri.lastPathSegment.orEmpty()
+        }
+
+        val providerMimeType = try {
+            cr.getType(uri).orEmpty()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logdNoFile { "read URI MIME type failed: provider=${uri.authority}, error=${e.message}" }
+            ""
+        }
+        mimeType = resolveMimeType(name, mimeType, providerMimeType)
+        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+            ?: name.substringAfterLast('.', "").lowercase()
+        val size = if (mimeType.startsWith("image/") && width > 0 && height > 0) {
+            Size(width, height)
+        } else {
+            null
         }
 
         val r = UriParsedInfo(uri,
@@ -224,6 +236,17 @@ internal class UriParseHelper {
 
 //        logdNoFile { "parseAsContent parsed Info: $r" }
         return r
+    }
+
+    private fun resolveMimeType(fileName: String, vararg mimeTypes: String): String {
+        val mimeType = mimeTypes.asSequence()
+            .map { it.substringBefore(';').trim().lowercase() }
+            .firstOrNull { it.isNotEmpty() && it != "*/*" && it != "application/octet-stream" }
+        if (mimeType != null) return mimeType
+
+        val extension = fileName.substringAfterLast('/').substringAfterLast('\\')
+            .substringAfterLast('.', "").lowercase()
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension).orEmpty()
     }
 
 }

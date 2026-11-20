@@ -9,7 +9,7 @@ import com.au.module_android.simpleflow.ActionDispatcherImpl
 import com.au.module_android.simpleflow.IActionDispatcher
 import com.au.module_android.simpleflow.IStateAction
 import com.au.module_android.simpleflow.StatusState
-import com.au.module_androidui.toast.ToastUtil.toastOnTop
+import com.au.module_androidui.toast.MyToastUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,7 +67,7 @@ class AsrAndTtsViewModel : ViewModel(), IActionDispatcher by ActionDispatcherImp
                 _currentAsrFlow.value = StatusState.Success(InitUiBean())
             },
             {
-                toastOnTop("解压vosk ASR模型失败。")
+                MyToastUtil.toastOnTopError("解压vosk ASR模型失败。")
             }
         )
     }
