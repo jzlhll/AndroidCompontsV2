@@ -9,7 +9,9 @@
     <string name="bluetooth_permission_allow">Allow nearby devices</string>
     <string name="bluetooth_permission_explanation">Nearby devices permission lets PicNote find and connect to the other device for this transfer.</string>
     <string name="bluetooth_enable">Turn on Bluetooth</string>
-    <string name="bluetooth_allow_discovery">Make device discoverable</string>
+    <string name="bluetooth_retry_discovery">Make this device discoverable again</string>
+    <string name="bluetooth_wait_discovery_confirmation">Confirm in Bluetooth dialog</string>
+    <string name="bluetooth_preparing_receiver">Getting ready to receive…</string>
     <string name="bluetooth_rescan">Scan again</string>
     <string name="bluetooth_choose_device_again">Choose a device again</string>
     <string name="bluetooth_settings_error">Could not open settings. Open system settings to check Bluetooth and app permissions.</string>
@@ -31,6 +33,8 @@
     <string name="bluetooth_preparing">Packaging document…</string>
     <string name="bluetooth_unknown_device">Unknown device</string>
     <string name="bluetooth_receiving_device">Receiving device</string>
+    <string name="bluetooth_pairing">Pairing…</string>
+    <string name="bluetooth_pairing_help">Follow the system prompts on both phones to confirm pairing.</string>
     <string name="bluetooth_connecting">Connecting…</string>
     <string name="bluetooth_waiting_for_acceptance">Waiting for approval</string>
     <string name="bluetooth_waiting_for_acceptance_help">The file will transfer once the recipient accepts.</string>
@@ -49,7 +53,6 @@
     <string name="bluetooth_missing_name_help">Check or set this phone’s name in system Bluetooth settings.</string>
     <string name="bluetooth_system_settings">Bluetooth settings</string>
     <string name="bluetooth_paired_can_connect">Paired devices can still try to connect.</string>
-    <string name="bluetooth_keep_page_open">Keep this screen open until the transfer finishes.</string>
     <string name="bluetooth_listening">Waiting to receive</string>
     <string name="bluetooth_discoverable_time">Discoverable for %1$s</string>
     <string name="bluetooth_receive_prompt">Receive document?</string>

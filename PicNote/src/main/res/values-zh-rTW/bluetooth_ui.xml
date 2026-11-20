@@ -9,7 +9,9 @@
     <string name="bluetooth_permission_allow">允許存取附近裝置</string>
     <string name="bluetooth_permission_explanation">允許存取附近裝置後，竹節筆記才能探索並連線至對方裝置。</string>
     <string name="bluetooth_enable">開啟藍牙</string>
-    <string name="bluetooth_allow_discovery">允許附近裝置探索</string>
+    <string name="bluetooth_retry_discovery">再次允許附近裝置探索</string>
+    <string name="bluetooth_wait_discovery_confirmation">等待系統確認</string>
+    <string name="bluetooth_preparing_receiver">正在準備接收…</string>
     <string name="bluetooth_rescan">重新掃描</string>
     <string name="bluetooth_choose_device_again">重新選擇裝置</string>
     <string name="bluetooth_settings_error">無法開啟設定。請在系統設定中檢查藍牙與應用程式權限。</string>
@@ -31,6 +33,8 @@
     <string name="bluetooth_preparing">正在打包…</string>
     <string name="bluetooth_unknown_device">未知裝置</string>
     <string name="bluetooth_receiving_device">接收裝置</string>
+    <string name="bluetooth_pairing">正在配對…</string>
+    <string name="bluetooth_pairing_help">請依照系統提示，在兩支手機上確認配對。</string>
     <string name="bluetooth_connecting">正在連線…</string>
     <string name="bluetooth_waiting_for_acceptance">等待對方接收</string>
     <string name="bluetooth_waiting_for_acceptance_help">對方確認後，檔案會開始傳輸。</string>
@@ -49,7 +53,6 @@
     <string name="bluetooth_missing_name_help">請在系統藍牙設定中查看或設定本機名稱。</string>
     <string name="bluetooth_system_settings">藍牙設定</string>
     <string name="bluetooth_paired_can_connect">已配對裝置仍可嘗試連線。</string>
-    <string name="bluetooth_keep_page_open">接收完成前，請保持此頁面開啟。</string>
     <string name="bluetooth_listening">等待接收</string>
     <string name="bluetooth_discoverable_time">可探索剩餘 %1$s</string>
     <string name="bluetooth_receive_prompt">接收文件？</string>

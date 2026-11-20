@@ -36,7 +36,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -222,10 +221,8 @@ fun HomeScreen(
                             enabled = ready && bodyNodeIds.size >= 2,
                         )
                     }
-                    BluetoothShareMenuItem(
-                        onClick = { more = false; onBluetoothShare(document.id) },
-                        enabled = ready,
-                    )
+                    DropdownMenuItem(text = { Text(stringResource(R.string.bluetooth_share), style = ComposeTypography.Font16, color = LocalContentColor.current) },
+                        onClick = { more = false; onBluetoothShare(document.id) }, enabled = ready)
                     DropdownMenuItem(text = { Text(stringResource(R.string.export_full), style = ComposeTypography.Font16, color = LocalContentColor.current) },
                         onClick = { more = false; viewModel.exportFull(document.id) }, enabled = ready)
                     DropdownMenuItem(text = { Text(stringResource(R.string.export_web), style = ComposeTypography.Font16, color = LocalContentColor.current) },
@@ -338,7 +335,8 @@ fun HomeScreen(
                                     IconButton(onClick = { menu = true }, enabled = ready,
                                         modifier = Modifier.semantics { contentDescription = itemActionsDescription }) { Text("⋯") }
                                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                                        BluetoothShareMenuItem(
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.bluetooth_share)) },
                                             onClick = {
                                                 menu = false
                                                 scope.launch { drawer.snapTo(DrawerValue.Closed); onBluetoothShare(item.id) }
@@ -621,22 +619,6 @@ fun HomeScreen(
         text = { Text(stringResource(R.string.delete_document_message, state.documents.firstOrNull { it.id == deleteId }?.title.orEmpty())) },
         confirmButton = { TextButton(onClick = { viewModel.deleteDocument(deleteId!!); deleteId = null }, enabled = ready) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { deleteId = null }) { Text(stringResource(R.string.cancel)) } },
-    )
-}
-
-@Composable
-private fun BluetoothShareMenuItem(onClick: () -> Unit, enabled: Boolean) {
-    DropdownMenuItem(
-        text = { Text(stringResource(R.string.bluetooth_share), style = ComposeTypography.Font16) },
-        onClick = onClick,
-        modifier = Modifier.padding(horizontal = 4.dp).clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        leadingIcon = { Icon(painterResource(R.drawable.ic_bluetooth), contentDescription = null) },
-        enabled = enabled,
-        colors = MenuDefaults.itemColors(
-            textColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            leadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
     )
 }
 

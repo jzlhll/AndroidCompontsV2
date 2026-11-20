@@ -11,6 +11,8 @@
     <string name="bluetooth_transfer_invalid_control">The Bluetooth transfer request was invalid.</string>
     <string name="bluetooth_transfer_listen_failed">Could not start Bluetooth Receive. Check Bluetooth and try again.</string>
     <string name="bluetooth_transfer_pairing_cancelled">Bluetooth pairing was canceled or failed.</string>
+    <string name="bluetooth_transfer_pairing_start_failed">Could not start Bluetooth pairing. Select the device again to retry.</string>
+    <string name="bluetooth_transfer_pairing_timeout">Bluetooth pairing timed out. Select the device again and confirm the system prompt on both phones.</string>
     <string name="bluetooth_transfer_peer_storage">The receiving device could not save or import the file.</string>
     <string name="bluetooth_transfer_permission_required">Allow access to nearby devices to continue.</string>
     <string name="bluetooth_transfer_protocol_version">The devices use incompatible Bluetooth sharing versions. Update PicNote on both devices.</string>

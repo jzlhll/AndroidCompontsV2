@@ -144,8 +144,9 @@ class BluetoothTransferChannel(private val socket: BluetoothSocket) {
     suspend fun sendApproval() = sendStatus(Accepted)
     suspend fun sendImported() = sendStatus(Imported)
 
-    suspend fun awaitApproval() = runBluetoothSocketIo(
-        socket, BluetoothApprovalTimeoutMillis + ControlTimeoutMillis, R.string.bluetooth_transfer_approval_timeout,
+    suspend fun awaitApproval(returnGraceMillis: Long) = runBluetoothSocketIo(
+        socket, BluetoothApprovalTimeoutMillis + ControlTimeoutMillis + returnGraceMillis,
+        R.string.bluetooth_transfer_approval_timeout,
     ) { readControl(Accepted, allowFailure = true) {} }
 
     suspend fun awaitBodyStart() = runBluetoothSocketIo(

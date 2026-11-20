@@ -11,6 +11,8 @@
     <string name="bluetooth_transfer_invalid_control">藍牙傳輸要求無效。</string>
     <string name="bluetooth_transfer_listen_failed">無法開始藍牙接收。請檢查藍牙後再試一次。</string>
     <string name="bluetooth_transfer_pairing_cancelled">藍牙配對已取消或失敗。</string>
+    <string name="bluetooth_transfer_pairing_start_failed">無法開始藍牙配對，請重新選取裝置後再試一次。</string>
+    <string name="bluetooth_transfer_pairing_timeout">藍牙配對逾時。請重新選取裝置，並在兩台手機上確認系統提示。</string>
     <string name="bluetooth_transfer_peer_storage">接收裝置無法儲存或匯入檔案。</string>
     <string name="bluetooth_transfer_permission_required">允許存取附近裝置後繼續。</string>
     <string name="bluetooth_transfer_protocol_version">兩台裝置的藍牙分享版本不相容。請更新兩台裝置上的竹節筆記。</string>

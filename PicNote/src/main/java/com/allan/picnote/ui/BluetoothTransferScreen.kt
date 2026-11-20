@@ -32,24 +32,35 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.allan.picnote.R
+import com.allan.picnote.bluetooth.BluetoothDiscoverability
 import com.allan.picnote.bluetooth.BluetoothSystemAction
 import com.allan.picnote.bluetooth.BluetoothTransferDevice
 import com.allan.picnote.bluetooth.BluetoothTransferPhase
@@ -57,6 +68,7 @@ import com.allan.picnote.bluetooth.BluetoothTransferState
 import com.allan.picnote.bluetooth.BluetoothTransferViewModel
 import com.allan.picnote.data.repositories.Saved
 import com.allan.picnote.logEx
+import com.allan.picnote.ui.theme.LocalThemePalette
 import com.au.module_androiduiex.landscape.SecondaryPageScaffold
 import com.au.module_androiduiex.styles.ComposeButton as Button
 import com.au.module_androiduiex.styles.ComposeOutlinedButton as OutlinedButton
@@ -90,6 +102,14 @@ fun BluetoothTransferScreen(
     var openDocumentId by rememberSaveable { mutableStateOf<String?>(null) }
     var settingsError by rememberSaveable { mutableStateOf(false) }
     var permissionPrompt by rememberSaveable { mutableStateOf(BluetoothPermissionPrompt.Request) }
+    if (receiving) {
+        val view = LocalView.current
+        LifecycleResumeEffect(view, active, leaving) {
+            val turnOn = active && !leaving && !view.keepScreenOn
+            if (turnOn) view.keepScreenOn = true
+            onPauseOrDispose { if (turnOn) view.keepScreenOn = false }
+        }
+    }
     fun permissionPromptFor(missing: List<String>, requestCompleted: Boolean = false): BluetoothPermissionPrompt = when {
         missing.isEmpty() -> BluetoothPermissionPrompt.Request
         activity != null && missing.any { ActivityCompat.shouldShowRequestPermissionRationale(activity, it) } -> when {
@@ -187,13 +207,12 @@ fun BluetoothTransferScreen(
     )
 
     val cancelAvailable = when (state.phase) {
-        BluetoothTransferPhase.Connecting, BluetoothTransferPhase.AwaitingApproval,
+        BluetoothTransferPhase.Pairing, BluetoothTransferPhase.Connecting, BluetoothTransferPhase.AwaitingApproval,
         BluetoothTransferPhase.Transferring, BluetoothTransferPhase.AwaitingImport -> true
         else -> false
     }
     val awaitingReceipt = !receiving && state.awaitingReceipt
-    val discoverableSeconds = rememberDiscoverableSeconds(state.discoverabilityDeadline)
-    val discoveryExpired by remember(discoverableSeconds) { derivedStateOf { discoverableSeconds.value <= 0 } }
+    val inFlightSystemAction = if (receiving) viewModel.systemActionInFlightFlow.collectAsStateWithLifecycle().value else null
     LaunchedEffect(state.confirmCancel) {
         if (!state.confirmCancel) cancelRequest = null
     }
@@ -206,7 +225,6 @@ fun BluetoothTransferScreen(
         awaitingReceipt -> R.string.bluetooth_stop_waiting
         cancelAvailable -> R.string.cancel
         receiving && state.canRetryListening -> R.string.bluetooth_retry_listening
-        receiving && state.canDiscover && discoveryExpired && state.phase != BluetoothTransferPhase.Incoming -> R.string.bluetooth_allow_discovery
         !receiving && state.canScan && !state.scanning -> R.string.bluetooth_rescan
         else -> null
     }
@@ -226,7 +244,6 @@ fun BluetoothTransferScreen(
             }
             R.string.bluetooth_enable -> viewModel.requestEnable()
             R.string.bluetooth_retry_listening -> viewModel.retryListening()
-            R.string.bluetooth_allow_discovery -> viewModel.requestDiscoverability()
             R.string.bluetooth_rescan -> viewModel.scan()
             R.string.cancel, R.string.bluetooth_stop_waiting -> {
                 if (viewModel.stateFlow.value.confirmCancel) cancelRequest = BluetoothCancelRequest.Transfer
@@ -248,24 +265,35 @@ fun BluetoothTransferScreen(
         primaryActionEnabled = actionEnabled,
     ) {
         Column(Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                state = rememberLazyListState(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                if (receiving) {
-                    receiveContent(state, viewModel.bytesTransferredFlow, discoverableSeconds, discoveryExpired) {
-                        openSettings(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+            if (receiving && (state.phase == BluetoothTransferPhase.Ready || state.phase == BluetoothTransferPhase.Incoming)) {
+                BluetoothWaitingContent(
+                    state = state,
+                    timerActive = active && !leaving,
+                    requestingDiscovery = systemAction == BluetoothSystemAction.Discoverable || inFlightSystemAction == BluetoothSystemAction.Discoverable,
+                    retryEnabled = active && !leaving && systemAction == null && inFlightSystemAction == null,
+                    settingsError = settingsError,
+                    onRetry = viewModel::requestDiscoverability,
+                    onOpenBluetoothSettings = { openSettings(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    state = rememberLazyListState(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    if (receiving) {
+                        receiveContent(state, viewModel.bytesTransferredFlow)
+                    } else {
+                        sendContent(state, sendTitle, active && !leaving, viewModel.bytesTransferredFlow, viewModel::connect)
                     }
-                } else {
-                    sendContent(state, sendTitle, active && !leaving, viewModel.bytesTransferredFlow, viewModel::connect)
-                }
-                if (state.permissionRequired) item("permission_explanation") {
-                    BluetoothSupportingText(stringResource(R.string.bluetooth_permission_explanation))
-                }
-                if (settingsError) item("settings_error") {
-                    BluetoothStatusText(stringResource(R.string.bluetooth_settings_error), error = true)
+                    if (state.permissionRequired) item("permission_explanation") {
+                        BluetoothSupportingText(stringResource(R.string.bluetooth_permission_explanation))
+                    }
+                    if (settingsError) item("settings_error") {
+                        BluetoothStatusText(stringResource(R.string.bluetooth_settings_error), error = true)
+                    }
                 }
             }
             if (!landscape && actionLabel != null) {
@@ -324,19 +352,6 @@ fun BluetoothTransferScreen(
     }
 }
 
-@Composable
-private fun rememberDiscoverableSeconds(deadline: Long): State<Int> = produceState(0, deadline) {
-    while (true) {
-        val remaining = deadline - SystemClock.elapsedRealtime()
-        if (remaining <= 0) {
-            value = 0
-            break
-        }
-        value = ((remaining + 999L) / 1000L).toInt()
-        delay(((remaining - 1L) % 1000L + 1L).milliseconds)
-    }
-}
-
 private fun LazyListScope.sendContent(
     state: BluetoothTransferState,
     title: String?,
@@ -377,7 +392,7 @@ private fun LazyListScope.sendContent(
         BluetoothTransferPhase.Preparing -> item("preparing") {
             BluetoothBusyStatus(stringResource(R.string.bluetooth_preparing))
         }
-        BluetoothTransferPhase.Connecting, BluetoothTransferPhase.AwaitingApproval,
+        BluetoothTransferPhase.Pairing, BluetoothTransferPhase.Connecting, BluetoothTransferPhase.AwaitingApproval,
         BluetoothTransferPhase.Transferring, BluetoothTransferPhase.AwaitingImport -> {
             item("remote_device") {
                 BluetoothInfoCard(
@@ -390,6 +405,10 @@ private fun LazyListScope.sendContent(
             }
             item("send_progress") {
                 when (state.phase) {
+                    BluetoothTransferPhase.Pairing -> BluetoothBusyStatus(
+                        stringResource(R.string.bluetooth_pairing),
+                        detail = stringResource(R.string.bluetooth_pairing_help),
+                    )
                     BluetoothTransferPhase.Connecting -> BluetoothBusyStatus(stringResource(R.string.bluetooth_connecting))
                     BluetoothTransferPhase.AwaitingApproval -> BluetoothBusyStatus(
                         stringResource(R.string.bluetooth_waiting_for_acceptance),
@@ -410,9 +429,6 @@ private fun LazyListScope.sendContent(
 private fun LazyListScope.receiveContent(
     state: BluetoothTransferState,
     bytesTransferredFlow: StateFlow<Long>,
-    discoverableSeconds: State<Int>,
-    discoveryExpired: Boolean,
-    openBluetoothSettings: () -> Unit,
 ) {
     when (state.phase) {
         BluetoothTransferPhase.Transferring, BluetoothTransferPhase.Importing -> {
@@ -445,26 +461,7 @@ private fun LazyListScope.receiveContent(
                 )
             }
         }
-        else -> {
-            item("receiver") { BluetoothReceiverCard(state, discoverableSeconds) }
-            if (!state.permissionRequired && !state.enableRequired && state.canDiscover) {
-                item("receiver_help") {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        val localName = state.localName
-                        if (!localName.isNullOrBlank()) {
-                            Text(stringResource(R.string.bluetooth_local_name_help, localName))
-                        } else {
-                            BluetoothSupportingText(stringResource(R.string.bluetooth_missing_name_help))
-                            TextButton(onClick = openBluetoothSettings) { Text(stringResource(R.string.bluetooth_system_settings)) }
-                        }
-                        if (discoveryExpired && state.statusRes == 0) {
-                            BluetoothSupportingText(stringResource(R.string.bluetooth_paired_can_connect))
-                        }
-                        BluetoothSupportingText(stringResource(R.string.bluetooth_keep_page_open))
-                    }
-                }
-            }
-        }
+        else -> item("receiver") { BluetoothReceiverCard(state) }
     }
     bluetoothStatus(state)
 }
@@ -522,9 +519,186 @@ private fun LazyListScope.bluetoothDeviceGroup(
 }
 
 @Composable
+private fun BluetoothWaitingContent(
+    state: BluetoothTransferState,
+    timerActive: Boolean,
+    requestingDiscovery: Boolean,
+    retryEnabled: Boolean,
+    settingsError: Boolean,
+    onRetry: () -> Unit,
+    onOpenBluetoothSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val listening = state.canDiscover && !state.canRetryListening && !state.permissionRequired && !state.enableRequired
+    val localName = state.localName
+    // 父列的 weight 给出最小内容高度，窄屏或大字体时可滚动到底部引导。
+    Column(
+        modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            BluetoothReceiverCard(state)
+            if (listening) {
+                BluetoothDiscoverabilityCountdown(
+                    discoverability = state.discoverability,
+                    active = timerActive,
+                    requesting = requestingDiscovery,
+                    retryEnabled = retryEnabled,
+                    showPairedHelp = state.statusRes != R.string.bluetooth_transfer_discoverability_denied,
+                    onRetry = onRetry,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                if (localName.isNullOrBlank()) {
+                    Column {
+                        BluetoothSupportingText(stringResource(R.string.bluetooth_missing_name_help))
+                        TextButton(onClick = onOpenBluetoothSettings) { Text(stringResource(R.string.bluetooth_system_settings)) }
+                    }
+                }
+            } else if (state.phase == BluetoothTransferPhase.Ready && state.statusRes == 0 &&
+                !state.permissionRequired && !state.enableRequired && !state.canRetryListening
+            ) {
+                BluetoothBusyStatus(stringResource(R.string.bluetooth_preparing_receiver))
+            }
+            if (state.statusRes != 0) {
+                BluetoothStatusText(stringResource(state.statusRes), error = state.canRetryListening)
+            }
+            if (state.permissionRequired) BluetoothSupportingText(stringResource(R.string.bluetooth_permission_explanation))
+            if (settingsError) BluetoothStatusText(stringResource(R.string.bluetooth_settings_error), error = true)
+        }
+        if (listening && !localName.isNullOrBlank()) {
+            Text(
+                stringResource(R.string.bluetooth_local_name_help, localName),
+                Modifier.fillMaxWidth().padding(top = 24.dp),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+    }
+}
+
+@Composable
+private fun BluetoothDiscoverabilityCountdown(
+    discoverability: BluetoothDiscoverability?,
+    active: Boolean,
+    requesting: Boolean,
+    retryEnabled: Boolean,
+    showPairedHelp: Boolean,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val remainingSeconds = discoverabilitySeconds(discoverability, active)
+    val progress = if (discoverability != null) remainingSeconds.toFloat() / discoverability.durationSeconds else 0f
+    val progressColor = if (remainingSeconds in 1..15) {
+        LocalThemePalette.current.chapter.foreground
+    } else MaterialTheme.colorScheme.primary
+    Column(
+        modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            val captionExpansion = with(LocalDensity.current) { 14.sp.toDp() } - 14.dp
+            val preferredDiameter = if (captionExpansion > 0.dp) 148.dp + captionExpansion * 4 else 148.dp
+            val diameter = if (maxWidth < preferredDiameter) maxWidth else preferredDiameter
+            Box(Modifier.size(diameter), contentAlignment = Alignment.Center) {
+                val ringModifier = Modifier.matchParentSize().clearAndSetSemantics { }
+                val trackColor = MaterialTheme.colorScheme.outlineVariant
+                if (requesting) {
+                    CircularProgressIndicator(
+                        modifier = ringModifier,
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 5.dp,
+                        trackColor = trackColor,
+                        strokeCap = StrokeCap.Round,
+                        gapSize = 0.dp,
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = ringModifier,
+                        color = progressColor,
+                        strokeWidth = 5.dp,
+                        trackColor = trackColor,
+                        strokeCap = StrokeCap.Round,
+                        gapSize = 0.dp,
+                    )
+                }
+                Column(
+                    Modifier.padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    when {
+                        requesting -> Text(
+                            stringResource(R.string.bluetooth_wait_discovery_confirmation),
+                            Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                            style = MaterialTheme.typography.titleSmall,
+                            textAlign = TextAlign.Center,
+                        )
+                        remainingSeconds > 0 -> {
+                            Text(
+                                stringResource(R.string.bluetooth_listening),
+                                style = MaterialTheme.typography.titleSmall,
+                                textAlign = TextAlign.Center,
+                            )
+                            val time = DateUtils.formatElapsedTime(remainingSeconds.toLong())
+                            val timeDescription = stringResource(R.string.bluetooth_discoverable_time, time)
+                            Text(
+                                time,
+                                Modifier.clearAndSetSemantics { contentDescription = timeDescription },
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = progressColor,
+                            )
+                        }
+                        else -> {
+                            val retryDescription = stringResource(R.string.bluetooth_retry_discovery)
+                            Button(
+                                onClick = onRetry,
+                                modifier = Modifier.semantics { onClick(label = retryDescription, action = null) },
+                                enabled = retryEnabled,
+                            ) {
+                                Text(stringResource(R.string.retry))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!requesting && remainingSeconds == 0 && showPairedHelp) {
+            BluetoothSupportingText(stringResource(R.string.bluetooth_paired_can_connect))
+        }
+    }
+}
+
+@Composable
+private fun discoverabilitySeconds(discoverability: BluetoothDiscoverability?, active: Boolean): Int {
+    if (discoverability == null) return 0
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val remaining by key(discoverability) {
+        produceState(discoverability.remainingSeconds(), lifecycle, active) {
+            if (!active) return@produceState
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                while (true) {
+                    val remainingMillis = discoverability.deadlineMillis - SystemClock.elapsedRealtime()
+                    value = secondsFromRemainingMillis(remainingMillis)
+                    if (remainingMillis <= 0L) break
+                    delay(((remainingMillis - 1L) % 1000L + 1L).milliseconds)
+                }
+            }
+        }
+    }
+    return remaining
+}
+
+private fun BluetoothDiscoverability.remainingSeconds(): Int =
+    secondsFromRemainingMillis(deadlineMillis - SystemClock.elapsedRealtime())
+
+private fun secondsFromRemainingMillis(remainingMillis: Long): Int =
+    if (remainingMillis > 0L) ((remainingMillis + 999L) / 1000L).toInt() else 0
+
+@Composable
 private fun BluetoothReceiverCard(
     state: BluetoothTransferState,
-    discoverableSeconds: State<Int>,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -533,36 +707,16 @@ private fun BluetoothReceiverCard(
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    BluetoothSupportingText(stringResource(R.string.bluetooth_local_name))
-                    Text(
-                        state.localName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.bluetooth_name_unavailable),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                BluetoothIconTile(R.drawable.ic_bluetooth)
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                BluetoothSupportingText(stringResource(R.string.bluetooth_local_name))
+                Text(
+                    state.localName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.bluetooth_name_unavailable),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
-            if (state.canDiscover || state.phase == BluetoothTransferPhase.Incoming) {
-                HorizontalDivider()
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
-                    Text(
-                        stringResource(R.string.bluetooth_listening),
-                        Modifier.weight(1f),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    val remaining = discoverableSeconds.value
-                    if (remaining > 0) {
-                        BluetoothSupportingText(
-                            stringResource(R.string.bluetooth_discoverable_time, DateUtils.formatElapsedTime(remaining.toLong())),
-                        )
-                    }
-                }
-            }
+            BluetoothIconTile(R.drawable.ic_bluetooth)
         }
     }
 }
