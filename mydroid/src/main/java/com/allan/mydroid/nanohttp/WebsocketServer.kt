@@ -127,6 +127,7 @@ class WebsocketServer(
         val parser = when (serverRuntimeObj.currentDroidModeFlow.value) {
             MyDroidMode.Receiver,
             MyDroidMode.Send,
+            MyDroidMode.InstallApk,
             MyDroidMode.None -> WebsocketNoneModeMessenger(client)  //接受文件，都走http而非ws。所以给空实现即可。
             MyDroidMode.TextChat -> WebsocketTextChatModeMessenger(client)
         }

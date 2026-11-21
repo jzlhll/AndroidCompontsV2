@@ -150,4 +150,17 @@
     <string name="transfer_summary">%1$d 个文件，共 %2$s</string>
     <string name="transfer_completed_count">已完成 %1$d / %2$d</string>
     <string name="select_items">选择</string>
+    <string name="mydroid_advanced">高级</string>
+    <string name="mydroid_install_apk">安装 APK</string>
+    <string name="mydroid_apk_preparing">正在准备上传地址…</string>
+    <string name="mydroid_apk_instructions">用同一局域网内的电脑脚本向此地址上传 APK。收到后，在下方点击安装并确认。</string>
+    <string name="mydroid_apk_install_action">安装</string>
+    <string name="mydroid_apk_receiving_notification">正在等待通过局域网接收 APK</string>
+    <string name="mydroid_apk_notification_disabled">接收通知已关闭，可在系统设置中开启。</string>
+    <string name="mydroid_apk_notification_settings">通知设置</string>
+    <string name="mydroid_apk_service_error">无法启动 APK 接收，请重新打开此页面。</string>
+    <string name="mydroid_apk_only">请选择 .apk 文件。</string>
+    <string name="mydroid_apk_invalid">该文件不是有效的 APK。</string>
+    <string name="mydroid_apk_unavailable">无法在系统安装器中打开此 APK。</string>
+    <string name="mydroid_apk_script_only">该主机正在等待电脑脚本上传 APK。</string>
 </resources>

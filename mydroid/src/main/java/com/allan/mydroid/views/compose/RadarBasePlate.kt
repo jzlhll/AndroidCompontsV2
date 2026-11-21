@@ -21,7 +21,7 @@ fun RadarBasePlate(scanning: Boolean, modifier: Modifier = Modifier) {
         rememberInfiniteTransition(label = "radar").animateFloat(
             initialValue = 0f,
             targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(durationMillis = 1500, easing = LinearEasing)),
+            animationSpec = infiniteRepeatable(tween(durationMillis = 4000, easing = LinearEasing)),
             label = "radarPhase",
         )
     } else {

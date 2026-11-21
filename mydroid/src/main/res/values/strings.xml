@@ -157,4 +157,17 @@
     <string name="transfer_summary">%1$d files · %2$s</string>
     <string name="transfer_completed_count">Completed %1$d / %2$d</string>
     <string name="select_items">Select</string>
+    <string name="mydroid_advanced">Advanced</string>
+    <string name="mydroid_install_apk">Install APK</string>
+    <string name="mydroid_apk_preparing">Preparing the upload address…</string>
+    <string name="mydroid_apk_instructions">Upload an APK to this address using a script on a computer on the same network. Then tap Install on this device.</string>
+    <string name="mydroid_apk_install_action">Install</string>
+    <string name="mydroid_apk_receiving_notification">Ready to receive APKs over the local network</string>
+    <string name="mydroid_apk_notification_disabled">APK reception notifications are off. You can enable them in Settings.</string>
+    <string name="mydroid_apk_notification_settings">Notification settings</string>
+    <string name="mydroid_apk_service_error">Could not start receiving APKs. Reopen this page to try again.</string>
+    <string name="mydroid_apk_only">Choose a .apk file.</string>
+    <string name="mydroid_apk_invalid">This file is not a valid APK.</string>
+    <string name="mydroid_apk_unavailable">Could not open this APK in the installer.</string>
+    <string name="mydroid_apk_script_only">This host is waiting for an APK upload from a computer script.</string>
 </resources>

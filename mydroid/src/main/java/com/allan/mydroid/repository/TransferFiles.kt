@@ -7,12 +7,17 @@ import java.util.UUID
 import com.au.module_android.Globals
 import com.au.module_android.log.loge
 
-/** 上传合并与客户端下载共用的落盘入口，校验完成后发布，串行选择名称以避免覆盖。 */
+/** 文件传输的落盘入口，校验完成后发布，串行选择名称以避免覆盖。 */
 object TransferFiles {
-    // 首次清理与创建共享 lazy 锁；启动清理晚于下载启动时也不会误删本进程的文件。
-    private val stagingDir: File by lazy {
+    val stagingDir: File by lazy {
         val root = File(File(nanoTempCacheMergedDir()).parentFile, "nanoStaging")
-        root.listFiles()?.forEach { file ->
+        File(root, UUID.randomUUID().toString())
+    }
+
+    private val abandonedFilesCleared: Unit by lazy {
+        // HTTP 合并和下载共享当前进程的准备目录，启动清理只移除旧目录。
+        stagingDir.parentFile?.listFiles()?.forEach { file ->
+            if (file == stagingDir) return@forEach
             if (!file.deleteRecursively()) loge { "Cannot remove abandoned transfer: ${file.name}" }
         }
         // 兼容此前放在 cacheDir 根目录的上传准备文件。
@@ -20,20 +25,22 @@ object TransferFiles {
             ?.forEach { file ->
                 if (!file.delete()) loge { "Cannot remove abandoned upload: ${file.name}" }
             }
-        File(root, UUID.randomUUID().toString()).apply {
-            if (!isDirectory && !mkdirs()) throw IOException("Cannot create transfer directory")
-        }
+        Unit
     }
 
     fun clearAbandonedFiles() {
-        stagingDir
+        abandonedFilesCleared
     }
 
-    fun temporaryFile(): File = File.createTempFile("transfer-", ".part", stagingDir)
+    fun temporaryFile(): File {
+        clearAbandonedFiles()
+        val dir = stagingDir
+        if (!dir.isDirectory && !dir.mkdirs() && !dir.isDirectory) throw IOException("Cannot create transfer directory")
+        return File.createTempFile("transfer-", ".part", dir)
+    }
 
     @Synchronized
-    fun publish(temp: File, rawName: String): File {
-        val dir = File(nanoTempCacheMergedDir())
+    fun publish(temp: File, rawName: String, dir: File = File(nanoTempCacheMergedDir())): File {
         if (!dir.isDirectory && !dir.mkdirs()) throw IOException("Cannot create destination directory")
         val name = rawName.replace('\\', '/').substringAfterLast('/').trim()
         require(name.isNotBlank() && name != "." && name != "..") { "Invalid file name" }

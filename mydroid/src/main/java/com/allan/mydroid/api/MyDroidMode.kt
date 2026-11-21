@@ -8,6 +8,7 @@ enum class MyDroidMode {
     Receiver,
     Send,
     TextChat,
+    InstallApk,
 }
 
 /**
@@ -18,6 +19,7 @@ fun MyDroidMode.toName(): String {
         MyDroidMode.Receiver -> Globals.getString(R.string.my_droid_mode_receiver)
         MyDroidMode.Send -> Globals.getString(R.string.my_droid_mode_send)
         MyDroidMode.TextChat -> Globals.getString(R.string.my_droid_mode_text_chat)
+        MyDroidMode.InstallApk -> Globals.getString(R.string.mydroid_install_apk)
         else -> Globals.getString(R.string.my_droid_mode_none)
     }
 }

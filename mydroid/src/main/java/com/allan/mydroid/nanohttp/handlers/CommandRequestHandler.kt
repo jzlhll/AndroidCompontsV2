@@ -1,6 +1,7 @@
 package com.allan.mydroid.nanohttp.handlers
 
 import com.allan.mydroid.api.GET_MODE
+import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.api.READ_WEBSOCKET_IP_PORT
 import com.allan.mydroid.api.REQUEST_FILE_LIST
 import com.allan.mydroid.beans.httpdata.IpPortResult
@@ -24,17 +25,19 @@ import org.koin.core.component.inject
  */
 class CommandRequestHandler(
     private val globalNetworkMonitor: GlobalNetworkMonitorObj,
+    private val apkOnly: Boolean = false,
 ) : AbsHttpRequestHandler() {
 
     private val shareInRepository: GlobalShareInRepoObj by inject()
     private val serverRuntimeState: GlobalServerRuntimeObj by inject()
 
     override fun tryHandle(method: NanoHTTPD.Method, uri: String, session: IHTTPSession): Response? {
+        if (method == NanoHTTPD.Method.GET && uri == GET_MODE) return getMode()
+        if (apkOnly) return null
+
         when (method) {
             NanoHTTPD.Method.GET -> {
-                if (uri == GET_MODE) {
-                    return getMode()
-                } else if (uri == READ_WEBSOCKET_IP_PORT) {
+                if (uri == READ_WEBSOCKET_IP_PORT) {
                     return getWebsocketIpPort()
                 }
             }
@@ -60,7 +63,7 @@ class CommandRequestHandler(
 
     /** 返回 host 当前 mode name 字符串；client 用 MyDroidMode.valueOf(name) 解析。 */
     private fun getMode(): Response {
-        val mode = serverRuntimeState.currentDroidModeFlow.value
+        val mode = if (apkOnly) MyDroidMode.InstallApk else serverRuntimeState.currentDroidModeFlow.value
         logdNoFile { "get host mode $mode" }
         return ResultBean(CODE_SUC, "Success!", mode.name).okJsonResponse()
     }

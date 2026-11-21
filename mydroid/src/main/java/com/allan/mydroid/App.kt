@@ -117,8 +117,8 @@ class App : InitApplication() {
             singleOf(::GlobalNetworkMonitorObj)
             singleOf(::GlobalDroidServerObj) binds arrayOf(IDroidServerAliveTrigger::class)
 
-            factory { (httpPort:Int)->
-                MyDroidHttpServer(httpPort, get(), get())
+            factory { parameters ->
+                MyDroidHttpServer(parameters.get<Int>(), get(), get(), parameters.get())
             }
             factory { (wsPort:Int)->
                 WebsocketServer(wsPort, get())

@@ -121,13 +121,14 @@ class GlobalDroidServerObj(
 
     @MainThread
     private fun startServer(errorCallback:(String)->Unit) {
+        val mode = livePages.values.lastOrNull() ?: return
         var retry = 0
         val maxRetry = 100
         while (retry < maxRetry) {
             val p = mLastHttpServerPort
             val wsPort = mLastWsServerPort
             logd { "start server try $retry with port: $p, wsPort: $wsPort" }
-            httpServer = get<MyDroidHttpServer> { parametersOf(p) }
+            httpServer = get<MyDroidHttpServer> { parametersOf(p, mode) }
             websocketServer = get<WebsocketServer>{ parametersOf(wsPort) }
 
             try {
@@ -151,9 +152,11 @@ class GlobalDroidServerObj(
                 logt { "start server and websocket success and setPort $p to $wsPort" }
                 serverRuntimeState.setPorts(p, wsPort)
 
-                Globals.mainScope.launchOnIOThread {
-                    clearDirOldFiles(nanoTempCacheChunksDir())
-                    clearDirOldFiles(cacheImportCopyDir())
+                if (mode != MyDroidMode.InstallApk) {
+                    Globals.mainScope.launchOnIOThread {
+                        clearDirOldFiles(nanoTempCacheChunksDir())
+                        clearDirOldFiles(cacheImportCopyDir())
+                    }
                 }
                 return
             } catch (e: IOException) {
@@ -177,9 +180,8 @@ class GlobalDroidServerObj(
 
     private fun stopServer() {
         logd { ">>>stop server." }
-        httpServer?.closeAllConnections()
-        websocketServer?.closeAllConnections()
         httpServer?.stop()
+        websocketServer?.closeAllConnections()
         websocketServer?.stop()
         httpServer = null
         websocketServer = null
@@ -224,37 +226,44 @@ class GlobalDroidServerObj(
     fun enterLivePage(token: Any, mode: MyDroidMode) {
         if (livePages.containsKey(token)) return
 
+        val previous = livePages.values.lastOrNull()
         livePages[token] = mode
-        serverRuntimeState.setMode(mode)
+        refreshLivePage(previous, "when live page enter")
         observerIpChanged()
-        if (livePages.size == 1) {
-            synchronized(aliveLock) {
-                aliveTimerEnabled = true
-                resetAliveTimer(SystemClock.elapsedRealtime(), "when first live page enter")
-            }
-        } else {
-            updateAliveTs("when live page enter")
-        }
-        startServerWrap()
     }
 
     /** 注销已从 Navigation 返回栈销毁的 live 页面。 */
     @MainThread
     fun leaveLivePage(token: Any) {
+        val previous = livePages.values.lastOrNull()
         if (livePages.remove(token) == null) return
+        refreshLivePage(previous, "when live page leave")
+    }
 
-        val lastMode = livePages.values.lastOrNull()
-        if (lastMode == null) {
-            synchronized(aliveLock) {
+    private fun refreshLivePage(previous: MyDroidMode?, reason: String) {
+        val current = livePages.values.lastOrNull()
+        // APK 请求的路由和缓存绑定到 HTTP 实例，跨模式时关闭旧连接。
+        if (previous != current && (previous == MyDroidMode.InstallApk || current == MyDroidMode.InstallApk) &&
+            serverRuntimeState.serverIsOpenFlow.value
+        ) {
+            stopServer()
+        }
+        serverRuntimeState.setMode(current ?: MyDroidMode.None)
+        synchronized(aliveLock) {
+            if (current == null || current == MyDroidMode.InstallApk) {
                 aliveTimerEnabled = false
                 Globals.mainHandler.removeCallbacks(aliveCheckRun)
+            } else if (!aliveTimerEnabled) {
+                aliveTimerEnabled = true
+                resetAliveTimer(SystemClock.elapsedRealtime(), reason)
+            } else {
+                updateAliveTs(reason)
             }
-            serverRuntimeState.setMode(MyDroidMode.None)
-            stopServer()
+        }
+        if (current == null) {
+            if (serverRuntimeState.serverIsOpenFlow.value) stopServer()
             receiverFlowsObj.clearProgress()
         } else {
-            serverRuntimeState.setMode(lastMode)
-            updateAliveTs("when live page leave")
             startServerWrap()
         }
     }

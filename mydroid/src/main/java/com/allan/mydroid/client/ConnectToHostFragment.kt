@@ -95,6 +95,7 @@ class ConnectToHostFragment : ComposeViewFragment() {
                     MyDroidMode.Receiver -> ConnectToHostSendScreen(sendModel, endpoint, stringResource(R.string.connect_to_host_send_title))
                     MyDroidMode.Send -> ConnectToHostReceiveScreen(receiveModel, endpoint, stringResource(R.string.connect_to_host_receive_title))
                     MyDroidMode.TextChat -> ConnectToHostChatScreen(chatModel, endpoint, stringResource(R.string.connect_to_host_chat_title))
+                    MyDroidMode.InstallApk,
                     MyDroidMode.None -> TransferMessageDialog(stringResource(R.string.connect_to_host_mode_none)) {
                         findNavController().popBackStack()
                     }

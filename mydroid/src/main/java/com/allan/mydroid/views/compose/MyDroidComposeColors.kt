@@ -13,6 +13,7 @@ object MyDroidComposeColors {
     val LogicReceiver @Composable @ReadOnlyComposable get() = colorResource(R.color.logic_receiver)
     val LogicSend @Composable @ReadOnlyComposable get() = colorResource(R.color.logic_send)
     val LogicMiddle @Composable @ReadOnlyComposable get() = colorResource(R.color.logic_middle)
+    val LogicAdvanced @Composable @ReadOnlyComposable get() = colorResource(R.color.logic_advanced)
 
     val NormalBlock @Composable @ReadOnlyComposable get() = colorResource(com.au.module_androidcolor.R.color.color_normal_block)
 

@@ -119,6 +119,9 @@ class MyDroidAllFragment : ComposeViewFragment() {
                     findNavController().navigate(R.id.actionMyDroidAllToTextChat)
                 }
             },
+            onInstallApk = {
+                findNavController().navigate(R.id.actionMyDroidAllToInstallApk)
+            },
             discoveredHosts = discoveredHostsState.value,
             scanning = scanningState.value,
             localIp = mIp,
@@ -172,6 +175,10 @@ class MyDroidAllFragment : ComposeViewFragment() {
     }
 
     private fun navigateToConnect(host: DiscoveredHost, mode: MyDroidMode) {
+        if (mode == MyDroidMode.InstallApk) {
+            MyToastUtil.toastOnBottom(Globals.app.getString(R.string.mydroid_apk_script_only))
+            return
+        }
         val args = Bundle().apply {
             putString("ip", host.ip)
             putInt("port", host.port)

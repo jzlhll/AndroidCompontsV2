@@ -1,6 +1,7 @@
 package com.allan.mydroid.views.compose
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -8,18 +9,27 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.allan.mydroid.R
 import com.allan.mydroid.bt.DiscoveredHost
+import com.allan.mydroid.client.TransferTheme
 import com.au.module_android.log.logDebug
 import com.au.module_androiduiex.styles.ComposeColors
 import com.au.module_androiduiex.styles.ComposeDimens
@@ -39,7 +49,7 @@ data class MyDroidAllUiState(
 
 /**
  * mydroid 首页：Tab(host / client) + Pager。
- * - host 页：IP 提示 + 接收 / 发送 / 聊天 三个功能按钮。
+ * - host 页：IP 提示和主机功能入口。
  * - client 页：BLE 雷达扫描 + 8 槽位 IP 矩形。
  */
 @Composable
@@ -48,6 +58,7 @@ fun MyDroidAllScreen(
     onReceiveFile: () -> Unit,
     onSendFile: () -> Unit,
     onTextChat: () -> Unit,
+    onInstallApk: () -> Unit,
     discoveredHosts: List<DiscoveredHost>,
     scanning: Boolean,
     localIp: String?,
@@ -90,6 +101,7 @@ fun MyDroidAllScreen(
                     onReceiveFile = onReceiveFile,
                     onSendFile = onSendFile,
                     onTextChat = onTextChat,
+                    onInstallApk = onInstallApk,
                 )
 
                 1 -> ClientPage(
@@ -148,7 +160,9 @@ private fun HostPage(
     onReceiveFile: () -> Unit,
     onSendFile: () -> Unit,
     onTextChat: () -> Unit,
+    onInstallApk: () -> Unit,
 ) {
+    var showAdvanced by rememberSaveable { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -179,7 +193,35 @@ private fun HostPage(
                 contentPadding = PaddingValues(top = 16.dp),
                 onClick = onTextChat,
             )
+            LogicButton(
+                text = stringResource(R.string.mydroid_advanced),
+                backgroundColor = MyDroidComposeColors.LogicAdvanced,
+                contentPadding = PaddingValues(top = 16.dp),
+                onClick = { showAdvanced = true },
+            )
             Spacer(modifier = Modifier.height(21.dp))
+        }
+    }
+    if (showAdvanced) {
+        TransferTheme {
+            AlertDialog(
+                onDismissRequest = { showAdvanced = false },
+                title = { Text(stringResource(R.string.mydroid_advanced)) },
+                text = {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.mydroid_install_apk)) },
+                        modifier = Modifier.clickable(role = Role.Button) {
+                            showAdvanced = false
+                            onInstallApk()
+                        },
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { showAdvanced = false }) {
+                        Text(stringResource(R.string.connect_to_host_cancel_upload))
+                    }
+                },
+            )
         }
     }
 }
@@ -374,6 +416,6 @@ private fun ipDisplayTextAndColor(localIp: String?, hostIp: String): Pair<String
 @Composable
 private fun MyDroidAllPreview() {
     com.au.module_androiduiex.preview.AppPreview {
-        MyDroidAllScreen(MyDroidAllUiState(null, true), {}, {}, {}, emptyList(), false, null, {}, {})
+        MyDroidAllScreen(MyDroidAllUiState(null, true), {}, {}, {}, {}, emptyList(), false, null, {}, {})
     }
 }

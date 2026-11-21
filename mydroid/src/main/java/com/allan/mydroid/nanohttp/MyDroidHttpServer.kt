@@ -1,45 +1,67 @@
 package com.allan.mydroid.nanohttp
 
+import com.allan.mydroid.apk.ApkReceiveSession
+import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
+import com.allan.mydroid.globals.nanoTempCacheChunksDir
+import com.allan.mydroid.globals.nanoTempCacheDir
 import com.allan.mydroid.nanohttp.handlers.AbsHttpRequestHandler
 import com.allan.mydroid.nanohttp.handlers.ChunkUploadHandler
 import com.allan.mydroid.nanohttp.handlers.CommandRequestHandler
 import com.allan.mydroid.nanohttp.handlers.FileDownloadHandler
 import com.allan.mydroid.nanohttp.handlers.StaticAssetHandler
+import com.allan.mydroid.nanohttp.handlers.UploadRequestHandler
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
-import com.allan.mydroid.state.GlobalReceiverFlowsObj
+import com.allan.mydroid.repository.TransferFiles
 import com.au.module_android.Globals
-import com.au.module_android.log.logEx
-import com.au.module_okhttp.api.ResultBean
-import org.json.JSONException
 import com.au.module_android.log.logdNoFile
+import com.au.module_android.log.logEx
+import com.au.module_android.utils.launchOnIOThread
+import com.au.module_okhttp.api.ResultBean
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.Response.Status
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import org.json.JSONException
+import java.io.File
 
 class MyDroidHttpServer(httpPort: Int,
                         private val aliveTrigger: IDroidServerAliveTrigger,
                         private val globalNetworkMonitor: GlobalNetworkMonitorObj,
-    ) : NanoHTTPD(httpPort), KoinComponent {
+                        mode: MyDroidMode,
+    ) : NanoHTTPD(httpPort) {
 
-    private val receiverFlowsObj: GlobalReceiverFlowsObj by inject()
-
-    private val handlers: List<AbsHttpRequestHandler> = listOf(
-        CommandRequestHandler(globalNetworkMonitor),
-        FileDownloadHandler(aliveTrigger),
-        StaticAssetHandler(),
-        ChunkUploadHandler(receiverFlowsObj, aliveTrigger),
+    private val apkSession = if (mode == MyDroidMode.InstallApk) ApkReceiveSession() else null
+    private val requestTempFileFactory = MyDroidTempFileMgrFactory(apkSession?.requestDir ?: File(nanoTempCacheDir()))
+    private val chunkUploadHandler = ChunkUploadHandler(
+        chunksDir = apkSession?.chunksDir ?: File(nanoTempCacheChunksDir()),
+        stagingDir = apkSession?.stagingDir ?: TransferFiles.stagingDir,
+        requiredExtension = if (apkSession == null) null else "apk",
     )
 
+    private val handlers: List<AbsHttpRequestHandler> = buildList {
+        add(CommandRequestHandler(globalNetworkMonitor, apkOnly = apkSession != null))
+        if (apkSession == null) {
+            add(FileDownloadHandler(aliveTrigger))
+            add(StaticAssetHandler())
+        }
+        add(UploadRequestHandler(chunkUploadHandler, aliveTrigger, apkSession))
+    }
+
     init {
-        tempFileManagerFactory = MyDroidTempFileMgrFactory()
+        tempFileManagerFactory = requestTempFileFactory
     }
 
     override fun serve(session: IHTTPSession): Response {
         // 处理跨域预检请求 (OPTIONS)
-        if (session.method == Method.OPTIONS) {
+        if (apkSession == null && session.method == Method.OPTIONS) {
             return handleOptionRequest()
+        }
+
+        val origin = session.headers["origin"]
+        if (apkSession != null && session.method == Method.POST && origin != null &&
+            !origin.equals("http://${session.headers["host"]}", ignoreCase = true)) {
+            return newFixedLengthResponse(Status.FORBIDDEN, MIME_PLAINTEXT, "Invalid origin").also {
+                it.addHeader("Connection", "close")
+            }
         }
 
         val ct = ContentType(session.headers["content-type"]).tryUTF8()
@@ -90,7 +112,18 @@ class MyDroidHttpServer(httpPort: Int,
 
     override fun stop() {
         logdNoFile { "stop all." }
-        super.stop()
+        apkSession?.close()
+        requestTempFileFactory.close()
+        val pendingFiles = chunkUploadHandler.close()
+        try {
+            super.stop()
+        } finally {
+            if (apkSession != null) {
+                apkSession.clearTemporaryFiles()
+            } else if (pendingFiles.isNotEmpty()) {
+                Globals.mainScope.launchOnIOThread { pendingFiles.forEach { it.delete() } }
+            }
+        }
     }
 
     companion object {
