@@ -1,11 +1,5 @@
 package com.allan.mydroid.views.compose
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -14,19 +8,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -229,11 +217,7 @@ private fun LogicButton(
 
 // ------------------------- client 雷达扫描 UI -------------------------
 
-/**
- * client Tab 雷达 UI。
- * - scanning=true: 雷达水波纹动画启动,隐藏 rescan 与开始搜索按钮。
- * - scanning=false: 雷达底盘静态,右上角 rescan 图标; 无 host 时雷达中心显示「开始搜索」按钮; 有 host 时按钮隐藏、IP 矩形显示。
- */
+/** 客户端雷达将搜索入口放在中心，周围八个槽位展示发现的主机。 */
 @Composable
 private fun ClientPage(
     discoveredHosts: List<DiscoveredHost>,
@@ -258,7 +242,6 @@ private fun ClientPage(
         ) {
             RadarBasePlate(scanning = scanning)
 
-            // 3x3 网格叠加在雷达上,中心格留给"开始搜索"按钮
             Column(Modifier.fillMaxSize()) {
                 Row(Modifier.weight(1f)) {
                     SlotCell(slotMap[0], localIp, onIpClick, Modifier.weight(1f))
@@ -267,7 +250,12 @@ private fun ClientPage(
                 }
                 Row(Modifier.weight(1f)) {
                     SlotCell(slotMap[3], localIp, onIpClick, Modifier.weight(1f))
-                    Spacer(Modifier.weight(1f))
+                    Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                        if (!scanning) {
+                            val label = if (discoveredHosts.isEmpty()) R.string.btn_start_search else R.string.cd_rescan
+                            StartSearchButton(text = stringResource(label), onClick = onStartSearch)
+                        }
+                    }
                     SlotCell(slotMap[4], localIp, onIpClick, Modifier.weight(1f))
                 }
                 Row(Modifier.weight(1f)) {
@@ -276,95 +264,24 @@ private fun ClientPage(
                     SlotCell(slotMap[7], localIp, onIpClick, Modifier.weight(1f))
                 }
             }
-
-            // 中心"开始搜索"按钮: 仅未扫描且无 host 时显示
-            if (!scanning && discoveredHosts.isEmpty()) {
-                StartSearchButton(onStartSearch)
-            }
-        }
-
-        // 右上角 rescan 图标: 仅未扫描时显示
-        if (!scanning) {
-            Icon(
-                painter = painterResource(R.drawable.ic_rescan),
-                contentDescription = stringResource(R.string.cd_rescan),
-                tint = ComposeColors.TextDesc,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = 8.dp)
-                    .size(24.dp)
-                    .noBackClickable(onClick = onStartSearch),
-            )
         }
     }
 }
 
-/** 雷达底盘: 固定圆 + 扫描时叠加 3 个错峰扩散圆。 */
 @Composable
-private fun BoxScope.RadarBasePlate(scanning: Boolean) {
-    val transition = rememberInfiniteTransition(label = "radarWave")
-    val anim = transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1500, easing = LinearEasing),
-        ),
-        label = "radarWaveAnim",
-    )
-
-    val radarColor = ComposeColors.BlueLink
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        val canvasWidth = size.width
-        val canvasHeight = size.height
-        val center = Offset(canvasWidth / 2f, canvasHeight / 2f)
-        val maxRadius = (if (canvasWidth < canvasHeight) canvasWidth else canvasHeight) / 2f
-        val strokePx = 2.dp.toPx()
-
-        // 雷达底盘径向渐变：中心深、边缘淡
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(radarColor.copy(alpha = 0.18f), radarColor.copy(alpha = 0.04f)),
-                center = center,
-                radius = maxRadius,
-                tileMode = TileMode.Clamp,
-            ),
-            radius = maxRadius,
-            center = center,
-        )
-
-        // 扫描时叠加 3 个错峰扩散圆
-        if (scanning) {
-            val offsets = floatArrayOf(0f, 0.33f, 0.66f)
-            offsets.forEach { offset ->
-                val progress = (anim.value + offset) % 1f
-                val radius = maxRadius * progress
-                val alpha = (1f - progress) * 0.8f
-                drawCircle(
-                    color = radarColor.copy(alpha = alpha),
-                    radius = radius,
-                    center = center,
-                    style = Stroke(width = strokePx),
-                )
-            }
-        }
-    }
-}
-
-/** 雷达中心「开始搜索」按钮。 */
-@Composable
-private fun BoxScope.StartSearchButton(onClick: () -> Unit) {
+private fun StartSearchButton(text: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .wrapContentWidth()
             .wrapContentHeight()
             .background(ComposeColors.BlueLink, RoundedCornerShape(6.dp))
             .noBackClickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 10.dp),
+            .padding(horizontal = 8.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
-            text = stringResource(R.string.btn_start_search),
-            style = ComposeTypography.Font16MWhite,
+            text = text,
+            style = ComposeTypography.Font16MWhite.copy(textAlign = TextAlign.Center),
         )
     }
 }
