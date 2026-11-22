@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/text_chat_surface"
+    android:clickable="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <com.au.module_androidui.widget.CustomToolbar
+        android:id="@+id/settingsToolbar"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationContentDescription="@string/transfer_back"
+        app:navigationIcon="@drawable/icon_back"
+        app:navigationIconTint="@color/text_chat_text"
+        app:title="@string/text_chat_settings"
+        app:titleCentered="true"
+        app:titleTextColor="@color/text_chat_text" />
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/text_chat_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/settingsToolbar">
+
+        <RadioGroup
+            android:id="@+id/retentionLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/ui_padding_edge"
+            android:paddingVertical="12dp">
+
+            <com.au.module_androidui.widget.CustomFontText
+                style="@style/StyleAuTextNormalMid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:accessibilityHeading="true"
+                android:paddingVertical="12dp"
+                android:text="@string/text_chat_retention_period" />
+
+            <RadioButton
+                android:id="@+id/retentionSevenDaysBtn"
+                style="@style/StyleTextChatRetentionOption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/text_chat_retention_seven_days" />
+
+            <RadioButton
+                android:id="@+id/retentionThirtyDaysBtn"
+                style="@style/StyleTextChatRetentionOption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/text_chat_retention_thirty_days" />
+
+            <RadioButton
+                android:id="@+id/retentionOneHundredTwentyDaysBtn"
+                style="@style/StyleTextChatRetentionOption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/text_chat_retention_one_hundred_twenty_days" />
+
+            <RadioButton
+                android:id="@+id/retentionNoCleanupBtn"
+                style="@style/StyleTextChatRetentionOption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/text_chat_retention_no_cleanup" />
+        </RadioGroup>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -80,9 +80,8 @@ class SendListFilesFragment : AbsLiveFragment<FragmentSendFilesBinding>() {
 
         clientLiveDataInit()
 
-        val fmt = getString(com.allan.mydroid.R.string.not_close_window)
         val leftStr = getString(com.allan.mydroid.R.string.storage_remaining)
-        binding.descTitle.text = String.format(fmt, leftStr.trim() + " " + getExternalFreeSpace(requireActivity()))
+        binding.descTitle.text = "${leftStr.trim()} ${getExternalFreeSpace(requireActivity())}"
 
         launchRepeatOnStarted(get<GlobalNetworkMonitorObj>().networkInfoFlow) { netInfo->
             if (netInfo == null) {

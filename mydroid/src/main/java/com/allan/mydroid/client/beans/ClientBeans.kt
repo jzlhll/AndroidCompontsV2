@@ -22,15 +22,6 @@ data class RemoteFileBean(
     override val importOrder: Int = 0
 ) : ImportBatchItem
 
-/** 聊天消息 UI 项。 */
-data class ChatMessage(
-    val text: String,
-    val isMe: Boolean,
-    val timestamp: Long,
-    val iconColor: String,
-    val ip: String = "",
-)
-
 /** 待上传文件项。 */
 data class SelectedFile(
     val uri: Uri,

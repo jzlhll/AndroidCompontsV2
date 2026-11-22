@@ -36,7 +36,7 @@
                 android:layout_marginTop="4dp"
                 app:layout_constraintTop_toBottomOf="@id/toolbar"
                 style="@style/StyleWebTransferDescription"
-                tools:text="不退出，不熄屏"
+                tools:text="@string/storage_remaining"
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

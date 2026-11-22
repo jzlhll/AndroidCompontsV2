@@ -38,10 +38,16 @@ window.loc = {
 "download": "下载",
 "cancel": "取消",
 "copy": "复制",
-"text_chat_browser_subtitle": "文本对话",
+"text_chat_lang": "zh-CN",
+"text_chat_browser_title": "文本对话",
+"text_chat_connecting": "连接中…",
+"text_chat_host_address": "已接入 {address}",
 "text_chat_browser_placeholder": "输入文本后发送",
 "text_chat_browser_send": "发送",
 "text_chat_copy_success": "已复制",
+"text_chat_idle_prompt": "是否继续使用当前连接？",
+"text_chat_idle_continue": "继续使用",
+"text_chat_idle_exit": "退出",
 }
     } else if (systemLang == "zh-TW") {
 window.loc = {
@@ -81,10 +87,16 @@ window.loc = {
 "download": "傳輸",
 "cancel": "取消",
 "copy": "複製",
-"text_chat_browser_subtitle": "文字對話",
+"text_chat_lang": "zh-TW",
+"text_chat_browser_title": "文字對話",
+"text_chat_connecting": "連接中…",
+"text_chat_host_address": "已接入 {address}",
 "text_chat_browser_placeholder": "輸入文字後發送",
 "text_chat_browser_send": "發送",
 "text_chat_copy_success": "已複製",
+"text_chat_idle_prompt": "是否繼續使用目前連線？",
+"text_chat_idle_continue": "繼續使用",
+"text_chat_idle_exit": "退出",
 }
     } else {
 window.loc = {
@@ -124,10 +136,16 @@ window.loc = {
 "download": "Download",
 "cancel": "Cancel",
 "copy": "Copy",
-"text_chat_browser_subtitle": "Text chat",
+"text_chat_lang": "en",
+"text_chat_browser_title": "Text Chat",
+"text_chat_connecting": "Connecting…",
+"text_chat_host_address": "Connected to {address}",
 "text_chat_browser_placeholder": "Type text and send",
 "text_chat_browser_send": "Send",
 "text_chat_copy_success": "Copied",
+"text_chat_idle_prompt": "Continue using this connection?",
+"text_chat_idle_continue": "Continue",
+"text_chat_idle_exit": "Exit",
 }
     }
 })();

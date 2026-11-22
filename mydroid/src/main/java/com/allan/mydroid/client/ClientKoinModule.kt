@@ -24,5 +24,5 @@ val ClientKoinModule = module {
     factoryOf(::ClientWsClient)
     viewModel { parameters -> ConnectToHostSendViewModel(parameters.get()) }
     viewModel { parameters -> ConnectToHostReceiveViewModel(parameters.get()) }
-    viewModel { parameters -> ConnectToHostChatViewModel(parameters.get()) }
+    viewModel { parameters -> ConnectToHostChatViewModel(parameters.get(), get(), get()) }
 }

@@ -39,11 +39,14 @@ class ChunkUploadHandler(
         val md5: String,
         val lastModified: Long,
         val streaming: Boolean,
+        val receivedCount: Int,
     )
+
+    data class AbortedUpload(val key: String, val fileName: String, val receivedCount: Int, val totalChunks: Int)
 
     sealed interface MergeResult {
         data class Merged(val temporaryFile: File, val md5: String) : MergeResult
-        data class Failed(val code: String, val message: String?, val error: Exception? = null) : MergeResult
+        data class Failed(val code: String, val message: String?, val error: Exception? = null, val receivedCount: Int = 0) : MergeResult
     }
 
     // 流式协议使用上传会话索引，旧协议仍按完整 MD5 隔离。
@@ -73,7 +76,7 @@ class ChunkUploadHandler(
             val path = files["chunk"]
             require(!path.isNullOrEmpty()) { Globals.getString(R.string.file_not_received) }
             val source = File(path)
-            val chunk = synchronized(cLock) {
+            val result = synchronized(cLock) {
                 check(!closed && key !in closedUploads) { "Upload session is closed" }
                 check(fileChunkInfosMap[key]?.all { it.totalChunks == totalChunks } != false) { "Chunk count changed" }
                 ensureDirectory(chunksDir)
@@ -86,22 +89,29 @@ class ChunkUploadHandler(
                     it.chunkTmpFile.delete()
                     true
                 }
-                ChunkInfoResult(fileName, chunkIndex, totalChunks, if (hashMode == "stream") "" else md5, target)
-                    .also(list::add)
+                val chunk = ChunkInfoResult(fileName, chunkIndex, totalChunks, if (hashMode == "stream") "" else md5, target)
+                list.add(chunk)
+                ChunkResult.Received(key, chunk)
             }
             retainedFile = null
             logdNoFile {
-                "receive chunk $fileName $chunkIndex/$totalChunks bytes=${chunk.chunkTmpFile.length()} hashMode=$hashMode"
+                "receive chunk $fileName $chunkIndex/$totalChunks bytes=${result.chunk.chunkTmpFile.length()} hashMode=$hashMode"
             }
-            return ChunkResult.Received(key, chunk)
+            return result
         } catch (e: Exception) {
             retainedFile?.delete()
             return ChunkResult.Failed(key, fileName, chunkIndex, totalChunks, e)
         }
     }
 
-    fun readMergeRequest(session: IHTTPSession): MergeRequest? {
-        val params = parseRequestBody(session)
+    fun retainedCount(result: ChunkResult.Received): Int? = synchronized(cLock) {
+        val chunks = fileChunkInfosMap[result.key] ?: return@synchronized null
+        if (result.chunk in chunks) chunks.size else null
+    }
+
+    fun isUploadClosed(key: String): Boolean = synchronized(cLock) { closed || key in closedUploads }
+
+    fun readMergeRequest(session: IHTTPSession, params: JSONObject): MergeRequest? {
         val md5 = params.optString("md5")
         val fileName = params.optString("fileName")
         validateFileName(fileName)
@@ -111,7 +121,8 @@ class ChunkUploadHandler(
 
         val hashMode = params.optString("hashMode")
         val key = uploadKey(session, params.optString("uploadId"), fileName, md5, hashMode)
-        return MergeRequest(key, fileName, totalChunks, md5, lastModified, hashMode == "stream")
+        val receivedCount = synchronized(cLock) { fileChunkInfosMap[key]?.size ?: 0 }
+        return MergeRequest(key, fileName, totalChunks, md5, lastModified, hashMode == "stream", receivedCount)
     }
 
     fun handleMergeChunk(request: MergeRequest): MergeResult {
@@ -145,19 +156,20 @@ class ChunkUploadHandler(
             temp = null
             return MergeResult.Merged(stagingFile, actualMd5)
         } catch (e: Exception) {
-            return MergeResult.Failed(errorCode, e.message, e)
+            return MergeResult.Failed(errorCode, e.message, e, chunks.size)
         } finally {
             temp?.delete()
             chunks.forEach { it.chunkTmpFile.delete() }
         }
     }
 
-    fun handleAbortChunk(session: IHTTPSession) {
-        val params = parseRequestBody(session)
+    fun handleAbortChunk(session: IHTTPSession, params: JSONObject): AbortedUpload {
         val hashMode = params.optString("hashMode")
-        val key = uploadKey(session, params.optString("uploadId"), params.optString("fileName"),
-            params.optString("md5"), hashMode)
-        removeChunkInfoList(key, hashMode == "stream")?.forEach { it.chunkTmpFile.delete() }
+        val fileName = params.optString("fileName")
+        val key = uploadKey(session, params.optString("uploadId"), fileName, params.optString("md5"), hashMode)
+        val chunks = removeChunkInfoList(key, hashMode == "stream")
+        chunks?.forEach { it.chunkTmpFile.delete() }
+        return AbortedUpload(key, fileName, chunks?.size ?: 0, chunks?.firstOrNull()?.totalChunks ?: 0)
     }
 
     fun close(): List<File> = synchronized(cLock) {
@@ -199,12 +211,6 @@ class ChunkUploadHandler(
             while (closedUploads.size > 256) closedUploads.remove(closedUploads.first())
         }
         fileChunkInfosMap.remove(key)
-    }
-
-    private fun parseRequestBody(session: IHTTPSession): JSONObject {
-        val files = HashMap<String, String>()
-        session.parseBody(files)
-        return JSONObject(files["postData"] ?: "{}")
     }
 
     private fun ensureDirectory(dir: File) {

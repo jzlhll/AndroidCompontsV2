@@ -19,6 +19,7 @@ data class TextChatWsData(
     val host: String,
     val timestamp: Long,
     val iconColor: String,
+    val replayed: Boolean = false,
 )
 
 /** IP 哈希取色板，与 HTML 端 mydroid-text-chat.js 保持一致。 */

@@ -18,10 +18,7 @@ import com.allan.mydroid.R
 import com.au.module_androiduiex.styles.ComposeTypography
 
 /**
- * client 三模式共用的顶部 Header。复刻 host 三页面提示样式：
- * - 第一行：模式标题
- * - 第二行：不退出，不熄屏
- * - 会话状态由 ConnectionStatus 显示。
+ * client 三模式共用的顶部 Header，显示模式标题和连接地址。
  *
  * 注意：沉浸式由 ComposeViewFragment.FullImmersive + statusBarsPadding 处理。
  */
@@ -43,11 +40,6 @@ fun ConnectToHostHeader(
         BasicText(
             text = titleText,
             style = ComposeTypography.Font20M,
-        )
-        BasicText(
-            text = stringResource(R.string.not_close_window).format("").trim(),
-            style = ComposeTypography.Font14sp,
-            modifier = Modifier.padding(top = 4.dp),
         )
         BasicText(
             text = "$ip:$httpPort",

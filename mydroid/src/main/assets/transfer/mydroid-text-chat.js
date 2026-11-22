@@ -14,11 +14,13 @@
     ];
     const colorCache = new Map();
     const messageList = [];
+    const idleTimeout = 3 * 60 * 1000;
 
     let selfIp = "browser";
     let selfColor = "#7B4DFF";
 
-    const subtitleView = document.getElementById("chatSubtitle");
+    const selfAddressView = document.getElementById("chatSelfAddress");
+    const hostAddressView = document.getElementById("chatHostAddress");
     const titleColorIcon = document.getElementById("titleColorIcon");
     const messageListView = document.getElementById("messageList");
     const messageInput = document.getElementById("messageInput");
@@ -26,15 +28,51 @@
     const copyToast = document.getElementById("copyToast");
     const contextMenu = document.getElementById("messageContextMenu");
     const copyMenuItem = document.getElementById("copyMenuItem");
+    const idleDialog = document.getElementById("idleDialog");
+    const idlePrompt = document.getElementById("idlePrompt");
+    const idleContinueButton = document.getElementById("idleContinueButton");
+    const idleExitButton = document.getElementById("idleExitButton");
+    const overlayView = document.getElementById("overlayView");
     const overlayError1 = document.getElementById("overlayError1");
     const overlayError2 = document.getElementById("overlayError2");
+    let chatConnected = false;
+    let idleTimer = null;
 
-    subtitleView.textContent = loc["text_chat_browser_subtitle"];
+    document.documentElement.lang = loc["text_chat_lang"];
+    document.getElementById("chatTitle").textContent = loc["text_chat_browser_title"];
+    hostAddressView.textContent = loc["text_chat_connecting"];
     messageInput.placeholder = loc["text_chat_browser_placeholder"];
     sendButton.textContent = loc["text_chat_browser_send"];
     copyMenuItem.textContent = loc["copy"];
+    idlePrompt.textContent = loc["text_chat_idle_prompt"];
+    idleContinueButton.textContent = loc["text_chat_idle_continue"];
+    idleExitButton.textContent = loc["text_chat_idle_exit"];
     overlayError1.textContent = loc["connection_lost"];
     overlayError2.textContent = loc["reconnect_prompt"];
+
+    function restartIdleTimer() {
+        clearTimeout(idleTimer);
+        if (idleDialog.open) idleDialog.close();
+        if (!chatConnected || document.visibilityState !== "visible") return;
+
+        idleTimer = setTimeout(() => {
+            if (document.visibilityState === "visible" && window.WS?.readyState === WebSocket.OPEN) {
+                hideContextMenu();
+                idleDialog.showModal();
+            }
+        }, idleTimeout);
+    }
+
+    function stopIdleTimer() {
+        chatConnected = false;
+        selfAddressView.textContent = "";
+        hostAddressView.textContent = "";
+        restartIdleTimer();
+    }
+
+    function onChatInteraction(event) {
+        if (event.isTrusted && !idleDialog.open) restartIdleTimer();
+    }
 
     function hashIp(ip) {
         let hash = 0;
@@ -94,6 +132,7 @@
             iconColor,
         });
         renderMessages();
+        restartIdleTimer();
     }
 
     function scrollMessagesToBottom() {
@@ -215,11 +254,34 @@
 
     sendButton.addEventListener("click", sendCurrentMessage);
 
-    messageInput.addEventListener("input", resizeInput);
+    for (const eventName of ["pointerdown", "click", "keydown", "wheel"]) {
+        document.addEventListener(eventName, onChatInteraction, {capture: true, passive: true});
+    }
+    messageInput.addEventListener("input", (event) => {
+        resizeInput();
+        onChatInteraction(event);
+    });
+    messageListView.addEventListener("scroll", onChatInteraction);
+
+    idleContinueButton.addEventListener("click", restartIdleTimer);
+    idleDialog.addEventListener("cancel", (event) => {
+        event.preventDefault();
+        restartIdleTimer();
+    });
+    idleExitButton.addEventListener("click", () => {
+        stopIdleTimer();
+        window.location.replace("about:blank");
+    });
+    document.addEventListener("visibilitychange", restartIdleTimer);
+    window.addEventListener("pagehide", stopIdleTimer);
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) hostAddressView.textContent = loc["text_chat_connecting"];
+    });
 
     window.commonHtmlConnectError = function() {
-        const overlay = document.getElementById("overlayView");
-        overlay.style.display = "flex";
+        stopIdleTimer();
+        hideContextMenu();
+        overlayView.style.display = "flex";
         document.body.style.overflow = "hidden";
     };
 
@@ -229,12 +291,20 @@
         const api = jsonData.api;
 
         if (api === window.API_WS_CLIENT_INIT_CALLBACK) {
-            selfIp = data.clientName || "browser";
+            const clientName = data.clientName || "";
+            selfIp = clientName || "browser";
             selfColor = getIconColor(selfIp);
             if (titleColorIcon) {
                 titleColorIcon.style.background = selfColor;
             }
-            subtitleView.textContent = `${loc["text_chat_browser_subtitle"]} · ${selfIp}`;
+            const {ip, httpPort} = window.mydroidIpPort;
+            selfAddressView.textContent = clientName;
+            hostAddressView.textContent = loc["text_chat_host_address"].replace("{address}", `${ip}:${httpPort}`);
+            if (!chatConnected) {
+                overlayView.style.display = "";
+                chatConnected = true;
+                restartIdleTimer();
+            }
             return true;
         }
 
@@ -290,10 +360,12 @@
     }
 
     function formatTimestamp(timestamp) {
-        const date = new Date(timestamp || Date.now());
+        const date = new Date(timestamp ?? Date.now());
+        const month = `${date.getMonth() + 1}`.padStart(2, "0");
+        const day = `${date.getDate()}`.padStart(2, "0");
         const hour = `${date.getHours()}`.padStart(2, "0");
         const minute = `${date.getMinutes()}`.padStart(2, "0");
-        return `${hour}:${minute}`;
+        return `${month}-${day} ${hour}:${minute}`;
     }
 
     resizeInput();

@@ -13,6 +13,18 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <queries>
+        <package android:name="com.allan.androidlearning" />
+        <package android:name="com.au.jobstudy" />
+        <package android:name="com.allan.autoclickfloat" />
+        <package android:name="com.allan.mydroid" />
+        <package android:name="com.allan.childmonitor" />
+        <package android:name="com.au.appcompose" />
+        <package android:name="com.au.audiorecordplayer" />
+        <package android:name="com.au.agit" />
+        <package android:name="com.allan.picnote" />
+    </queries>
+
     <!-- BLE IP 广播 + 雷达扫描所需蓝牙权限。-->
     <uses-feature
         android:name="android.hardware.bluetooth_le"
@@ -81,6 +93,10 @@
             android:name=".apk.ApkReceiveService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <receiver
+            android:name=".apk.ApkInstallResultReceiver"
+            android:exported="false" />
 
         <activity
             android:name=".SplashActivity"

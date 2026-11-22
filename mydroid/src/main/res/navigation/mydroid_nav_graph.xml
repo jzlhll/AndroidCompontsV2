@@ -46,24 +46,7 @@
 
     <fragment
         android:id="@+id/receiveFromH5Fragment"
-        android:name="com.allan.mydroid.views.receiver.ReceiveFromH5Fragment">
-        <action
-            android:id="@+id/actionReceiveToFileList"
-            app:destination="@id/receiveFromH5FileListFragment"
-            app:enterAnim="@anim/activity_open_enter"
-            app:exitAnim="@anim/activity_open_exit"
-            app:popEnterAnim="@anim/activity_close_enter"
-            app:popExitAnim="@anim/activity_close_exit" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/receiveFromH5FileListFragment"
-        android:name="com.allan.mydroid.views.receiver.ReceiveFromH5FileListFragment">
-        <argument
-            android:name="isActivityMode"
-            android:defaultValue="false"
-            app:argType="boolean" />
-    </fragment>
+        android:name="com.allan.mydroid.views.receiver.ReceiveFromH5Fragment" />
 
     <fragment
         android:id="@+id/sendListSelectorFragment"

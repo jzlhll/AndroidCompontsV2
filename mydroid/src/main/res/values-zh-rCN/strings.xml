@@ -12,11 +12,9 @@
 
     <string name="next">下一步</string>
     <string name="tips">提示</string>
-    <string name="export_history">"导出历史 "</string>
-    <string name="transfer_list">"接收列表 "</string>
+    <string name="export_history">导出历史</string>
+    <string name="export_history_empty">暂无导出记录。</string>
     <string name="my_transfer_list">"我的接收列表"</string>
-    <string name="transfer_list_2">"接收列表*"</string>
-    <string name="not_close_window">不退出，不熄屏\n%s</string>
     <string name="no_received_files">暂无接收到的文件</string>
     <string name="send_list">发送列表</string>
     <string name="my_droid_mode_receiver">发送给手机</string>
@@ -92,10 +90,18 @@
     <string name="select_videos">选择视频</string>
     <string name="select_files">选择文件</string>
     <string name="send">发送</string>
-    <string name="text_chat_room">文本对话(host)</string>
+    <string name="text_chat_room">文本对话(房间主人)</string>
     <string name="fragment_my_droid_all_text_chat_room">网页-文本对话</string>
     <string name="text_chat_input_hint">输入消息</string>
     <string name="text_chat_copy_success">已复制</string>
+    <string name="text_chat_divider_created">%1$s · 创建房间</string>
+    <string name="text_chat_divider_joined">%1$s · 加入房间</string>
+    <string name="text_chat_settings">设置</string>
+    <string name="text_chat_retention_period">文本清理周期</string>
+    <string name="text_chat_retention_seven_days">7天</string>
+    <string name="text_chat_retention_thirty_days">30天</string>
+    <string name="text_chat_retention_one_hundred_twenty_days">120天</string>
+    <string name="text_chat_retention_no_cleanup">不清理（默认）</string>
 
     <string name="port_m">端口: </string>
     <string name="something_error">发生了一些错误</string>
@@ -104,7 +110,6 @@
     <string name="server_not_support">不支持</string>
 
 
-    <string name="more_actions">更多操作</string>
 
     <string name="tab_host">主机</string>
     <string name="tab_client">客户端</string>
@@ -119,7 +124,8 @@
     <string name="connect_to_host_mode_none">主机未就绪，请返回后重新选择。</string>
     <string name="connect_to_host_send_title">发送文件给主机</string>
     <string name="connect_to_host_receive_title">从主机接收文件</string>
-    <string name="connect_to_host_chat_title">文本对话(client)</string>
+    <string name="connect_to_host_chat_title">文本对话</string>
+    <string name="connect_to_host_chat_connected">已接入 %1$s</string>
     <string name="connect_to_host_start_upload">开始上传</string>
     <string name="connect_to_host_cancel_upload">取消</string>
     <string name="connect_to_host_uploading">上传中</string>
@@ -153,8 +159,8 @@
     <string name="mydroid_advanced">高级</string>
     <string name="mydroid_install_apk">安装 APK</string>
     <string name="mydroid_apk_preparing">正在准备上传地址…</string>
-    <string name="mydroid_apk_instructions">用同一局域网内的电脑脚本向此地址上传 APK。收到后，在下方点击安装并确认。</string>
-    <string name="mydroid_apk_install_action">安装</string>
+    <string name="mydroid_apk_instructions">在同一局域网内使用电脑脚本上传，然后按系统提示确认安装。</string>
+    <string name="mydroid_apk_install_action">重试</string>
     <string name="mydroid_apk_receiving_notification">正在等待通过局域网接收 APK</string>
     <string name="mydroid_apk_notification_disabled">接收通知已关闭，可在系统设置中开启。</string>
     <string name="mydroid_apk_notification_settings">通知设置</string>
@@ -162,5 +168,24 @@
     <string name="mydroid_apk_only">请选择 .apk 文件。</string>
     <string name="mydroid_apk_invalid">该文件不是有效的 APK。</string>
     <string name="mydroid_apk_unavailable">无法在系统安装器中打开此 APK。</string>
+    <string name="mydroid_apk_build_invalid">APK 构建信息无效。</string>
+    <string name="mydroid_apk_build_mismatch">APK 与构建信息不一致。</string>
+    <string name="mydroid_apk_allow_install_source">请在系统设置中允许 MyDroid 安装应用。</string>
+    <string name="mydroid_apk_install_waiting">正在安装…</string>
+    <string name="mydroid_apk_install_checking">正在核验…</string>
+    <string name="mydroid_apk_install_verified">已安装</string>
+    <string name="mydroid_apk_install_unverified">已安装，未能验证版本。</string>
+    <string name="mydroid_apk_install_aborted">安装已取消</string>
+    <string name="mydroid_apk_install_failed">安装失败</string>
     <string name="mydroid_apk_script_only">该主机正在等待电脑脚本上传 APK。</string>
+    <string name="mydroid_apk_receiving">正在接收…</string>
+    <string name="mydroid_apk_receive_chunks">%1$d/%2$d 块 · %3$d%%</string>
+    <string name="mydroid_apk_receive_merging">正在合并和校验…</string>
+    <string name="mydroid_apk_receive_canceled">上传已取消</string>
+    <string name="mydroid_apk_receive_failed">上传失败</string>
+    <string name="mydroid_apk_install_source_action">授权</string>
+    <string name="mydroid_apk_install_queued">等待安装</string>
+    <string name="mydroid_apk_install_preparing">正在准备安装…</string>
+    <string name="mydroid_apk_install_confirm">等待确认</string>
+    <string name="mydroid_apk_install_interrupted">安装中断</string>
 </resources>

@@ -15,4 +15,10 @@ data class HostEndpoint(
     val httpPort: Int,
     val wsPort: Int,
     val mode: MyDroidMode
-)
+) {
+    val address: String
+        get() {
+            val host = if (':' in ip && !ip.startsWith('[')) "[$ip]" else ip
+            return "$host:$httpPort"
+        }
+}

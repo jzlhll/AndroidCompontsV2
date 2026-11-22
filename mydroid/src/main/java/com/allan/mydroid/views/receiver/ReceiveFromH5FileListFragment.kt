@@ -1,54 +1,36 @@
 package com.allan.mydroid.views.receiver
 
 import android.os.Bundle
-import android.widget.TextView
 import androidx.core.view.isVisible
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.fragment.app.viewModels
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.allan.mydroid.R
 import com.allan.mydroid.databinding.FragmentMyDroidReceiveListBinding
-import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.repository.GlobalFileListRepoObj
+import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.views.send.SendListSelectorFragment
 import com.au.module_android.Globals
 import com.au.module_android.simpleflow.collectStatusState
-import com.au.module_androidui.ui.bindings.BindingFragment
-import com.au.module_androidui.ui.views.YourToolbarInfo
-import com.au.module_android.utils.HtmlPart
-import com.au.module_android.utils.asOrNull
 import com.au.module_android.utils.dp
-import com.au.module_android.utils.gone
 import com.au.module_android.utils.launchOnUi
 import com.au.module_android.utils.launchRepeatOnStarted
-import com.au.module_android.utils.unsafeLazy
-import com.au.module_android.utils.useSimpleHtmlText
-import com.au.module_android.utils.visible
-import com.au.module_androidui.widget.FontMode
 import com.au.module_androidui.toast.MyToastUtil
-import com.au.module_androidui.R as AndroidUiR
+import com.au.module_androidui.ui.bindings.BindingFragment
 import com.au.module_nested.decoration.VertPaddingItemDecoration
-import com.au.module_nested.tab.AuTabLayout
-import com.google.android.material.tabs.TabLayout
 import org.koin.android.ext.android.inject
-import kotlinx.coroutines.launch
+import com.au.module_androidui.R as AndroidUiR
 
 class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveListBinding>() {
     override var customBackActionEnable = false
 
     private val receiverFlowsObj: GlobalReceiverFlowsObj by inject()
     private val fileListRepository: GlobalFileListRepoObj by inject()
-    lateinit var receivedFileListTab: TabLayout.Tab
+    private val mViewModel: ReceiveFromH5ViewModel by viewModels(ownerProducer = { requireParentFragment() })
 
-    private val mViewModel by unsafeLazy { ViewModelProvider(this)[ReceiveFromH5ViewModel::class.java] }
-
-    private val isActivityMode by unsafeLazy { arguments?.getBoolean("isActivityMode") ?: false }
-
-    val mAdapter = ReceiveFromH5Adapter(fullClick = { bean ->
+    private val mAdapter = ReceiveFromH5Adapter(fullClick = { bean ->
         ReceiveFromH5FileDetailDialog.pop(
             childFragmentManager,
             arrayOf(
@@ -57,7 +39,7 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                 bean.fileSizeInfo
             )
         )
-    }) {
+    }, click = {
         ReceiveHolderActionDialog.pop(
             childFragmentManager,
             it,
@@ -66,14 +48,8 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
             refreshFileListCallback = refreshFileListCallback,
             importSendCallback = importSendCallback
         )
-    }
-
-    override fun toolbarInfo(): YourToolbarInfo? {
-        return if (isActivityMode) {
-            YourToolbarInfo.Defaults(getString(R.string.transfer_list))
-        } else {
-            null
-        }
+    }).apply {
+        stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
 
     val importSendCallback:()->Unit = {
@@ -115,25 +91,11 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
     }
 
     override fun onBindingCreated(savedInstanceState: Bundle?) {
-        toolbar?.normalBinding?.backIcon?.setOnClickListener {
-            findNavController().navigateUp()
-        }
-
-        binding.tabLayout.apply {
-            selectTabStyleBlock = {
-                AuTabLayout.TabStyle(
-                    textColor = R.color.logic_receiver,
-                    textSize = 16.5f,
-                    fontMode = FontMode.MID
-                )
-            }
-            notSelectTabStyleBlock = {
-                AuTabLayout.TabStyle(
-                    textColor = com.au.module_androidcolor.R.color.color_text_desc,
-                    textSize = 16.5f,
-                    fontMode = FontMode.NORMAL
-                )
-            }
+        binding.receiveRcv.apply {
+            adapter = mAdapter
+            layoutManager = LinearLayoutManager(context)
+            setHasFixedSize(true)
+            addItemDecoration(VertPaddingItemDecoration(0, 0, 2.dp))
         }
 
         launchRepeatOnStarted {
@@ -147,119 +109,13 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
             }
         }
 
-        initTabs()
-        initRcv()
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mViewModel.historyState.collectStatusState(
-                    onSuccess = {
-                        val colorNormal = getString(com.au.module_androidcolor.R.string.color_text_normal_str)
-                        val colorGray = getString(com.au.module_androidcolor.R.string.color_text_desc_str)
-
-                        binding.exportHistoryTv.useSimpleHtmlText(
-                            HtmlPart(Globals.getString(R.string.keep_recent_records) + "\n\n", colorGray),
-                                    HtmlPart(it, colorNormal)
-                        )
-                        updateReceiveListTabTitle(false)
-                    },
-                    onError = {
-                        MyToastUtil.toastOnTopError(Globals.app.getString(R.string.something_error))
-                    }
-                )
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                fileListRepository.fileListStateFlow.collectStatusState(
-                    onSuccess = { fileList->
-                        mAdapter.submitList(fileList, false)
-                        updateReceiveListTabTitle(true)
-                        changeRcvEmptyTextVisible()
-                    },
-                    onError = {
-                    }
-                )
-            }
+        launchRepeatOnStarted {
+            fileListRepository.fileListStateFlow.collectStatusState(onSuccess = { fileList ->
+                mAdapter.submitList(fileList, false)
+                binding.receiveRcvEmptyTv.isVisible = fileList.isEmpty()
+            })
         }
 
         refreshFileListCallback()
-        mViewModel.dispatch(ReceiveFromH5ViewModel.LoadHistoryAction())
-    }
-
-    private fun updateReceiveListTabTitle(updateFileList: Boolean) {
-        val title = if (updateFileList && binding.exportHistoryHost.isVisible) {
-            R.string.transfer_list_2
-        } else {
-            R.string.transfer_list
-        }
-        receivedFileListTab.customView.asOrNull<TextView>()?.setText(title)
-    }
-
-    private fun initTabs() {
-        val transferFileList = binding.tabLayout.newTextTab(getString(R.string.transfer_list), true)
-        receivedFileListTab = transferFileList
-        val exportHistory = binding.tabLayout.newTextTab(getString(R.string.export_history), false)
-        binding.tabLayout.addTab(transferFileList)
-        binding.tabLayout.addTab(exportHistory)
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                binding.tabLayout.refreshTabStyles()
-                when (tab?.position) {
-                    0 -> showReceiveFileListTab()
-                    1 -> showExportHistoryTab()
-                }
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {
-                binding.tabLayout.refreshTabStyles()
-            }
-
-            override fun onTabReselected(tab: TabLayout.Tab?) {
-                when (tab?.position) {
-                    0 -> showReceiveFileListTab()
-                    1 -> showExportHistoryTab()
-                }
-            }
-        })
-    }
-
-    private fun showReceiveFileListTab() {
-        binding.receiveRcv.visible()
-        binding.exportHistoryHost.gone()
-        receivedFileListTab.customView.asOrNull<TextView>()?.let { tabTv ->
-            tabTv.text = getString(R.string.transfer_list)
-        }
-        changeRcvEmptyTextVisible()
-    }
-
-    private fun showExportHistoryTab() {
-        binding.receiveRcv.gone()
-        binding.exportHistoryHost.visible()
-        changeRcvEmptyTextVisible()
-    }
-
-    fun initRcv() {
-        binding.receiveRcv.apply {
-            adapter = mAdapter
-            layoutManager = LinearLayoutManager(context)
-            setHasFixedSize(true)
-            addItemDecoration(VertPaddingItemDecoration(0, 0, 2.dp))
-        }
-    }
-
-    fun changeRcvEmptyTextVisible() {
-        binding.apply {
-            val isCurrentHistoryTabShown = binding.exportHistoryHost.isVisible
-            if (!isCurrentHistoryTabShown) {
-                if (mAdapter.datas.isEmpty()) {
-                    receiveRcvEmptyTv.visible()
-                } else {
-                    receiveRcvEmptyTv.gone()
-                }
-            } else {
-                receiveRcvEmptyTv.gone()
-            }
-        }
     }
 }

@@ -1,22 +1,25 @@
 package com.allan.mydroid.client.api
 
 import com.allan.mydroid.api.Api
+import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_CLIENT_INIT_CALLBACK
+import com.allan.mydroid.api.WSApisConst.Companion.API_WS_INIT
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_LEFT_SPACE
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_PING
-import com.allan.mydroid.api.WSApisConst.Companion.API_WS_INIT
-import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_SEND
 import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_CALLBACK
+import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_SEND
 import com.allan.mydroid.beans.wsdata.LeftSpaceData
 import com.allan.mydroid.beans.wsdata.MyDroidModeData
 import com.allan.mydroid.beans.wsdata.TextChatWsData
 import com.allan.mydroid.client.HostEndpoint
 import com.au.module_android.log.loge
 import com.au.module_gson.fromGson
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,13 +27,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withTimeoutOrNull
-import com.allan.mydroid.api.MyDroidMode
 
 /** 页面独占的连接会话：HTTP 校验模式和端口，登记成功后可操作，退出后不再重连。 */
 class ClientWsClient {
@@ -43,13 +44,27 @@ class ClientWsClient {
     private var reconnectAttempt = 0
     private var generation = 0L
     private var closed = false
+    private var identity: WsFrame.ClientInitBack? = null
+
+    // 同一消费者按收到的顺序处理握手、文本帧和服务端关闭事件。
+    private val socketEvents = Channel<SocketEvent>(Channel.UNLIMITED)
 
     private val _connectionStateFlow = MutableStateFlow<WsConnectionState>(WsConnectionState.Disconnected)
     val connectionStateFlow = _connectionStateFlow.asStateFlow()
-    private val _identityFlow = MutableStateFlow<WsFrame.ClientInitBack?>(null)
-    val identityFlow = _identityFlow.asStateFlow()
     private val _incomingFrameFlow = MutableSharedFlow<WsFrame>(extraBufferCapacity = 64)
     val incomingFrameFlow = _incomingFrameFlow.asSharedFlow()
+
+    init {
+        scope.launch {
+            for (event in socketEvents) {
+                if (closed || event.token != generation) continue
+                when (event) {
+                    is SocketEvent.Message -> handleFrame(event.token, event.text)
+                    is SocketEvent.Disconnected -> handleDisconnect(event.token)
+                }
+            }
+        }
+    }
 
     fun connect(endpoint: HostEndpoint) {
         if (closed) return
@@ -67,6 +82,7 @@ class ClientWsClient {
 
     private fun invalidateSocket() {
         generation++
+        identity = null
         initJob?.cancel()
         heartbeatJob?.cancel()
         webSocket?.cancel()
@@ -98,38 +114,21 @@ class ClientWsClient {
                     }
 
                     override fun onMessage(socket: WebSocket, text: String) {
-                        scope.launch {
-                            if (closed || token != generation) return@launch
-                            try {
-                                val frame = parseFrame(text) ?: return@launch
-                                if (frame is WsFrame.ClientInitBack && frame.clientName.isNotBlank()) {
-                                    initJob?.cancel()
-                                    _identityFlow.value = frame
-                                    reconnectAttempt = 0
-                                    _connectionStateFlow.value = WsConnectionState.Connected
-                                    startHeartbeat(token)
-                                }
-                                _incomingFrameFlow.emit(frame)
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                loge { "Client frame parse failed: ${e.message}" }
-                            }
-                        }
+                        socketEvents.trySend(SocketEvent.Message(token, text))
                     }
 
                     override fun onClosing(socket: WebSocket, code: Int, reason: String) {
                         socket.close(code, reason)
-                        scope.launch { handleDisconnect(token) }
+                        socketEvents.trySend(SocketEvent.Disconnected(token))
                     }
 
                     override fun onClosed(socket: WebSocket, code: Int, reason: String) {
-                        scope.launch { handleDisconnect(token) }
+                        socketEvents.trySend(SocketEvent.Disconnected(token))
                     }
 
                     override fun onFailure(socket: WebSocket, t: Throwable, response: okhttp3.Response?) {
                         loge { "Client ws failed: ${t.message}" }
-                        scope.launch { handleDisconnect(token) }
+                        socketEvents.trySend(SocketEvent.Disconnected(token))
                     }
                 }
                 webSocket = Api.connectWSServer(ep.ip, info.port, listener)
@@ -144,6 +143,30 @@ class ClientWsClient {
                 handleDisconnect(token)
             }
         }
+    }
+
+    private suspend fun handleFrame(token: Long, text: String) {
+        val frame = try {
+            parseFrame(text) ?: return
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            loge { "Client frame parse failed: ${e.message}" }
+            return
+        }
+        when (frame) {
+            is WsFrame.ClientInitBack -> {
+                if (frame.clientName.isBlank() || identity != null) return
+                initJob?.cancel()
+                identity = frame
+                reconnectAttempt = 0
+                _connectionStateFlow.value = WsConnectionState.Connected
+                startHeartbeat(token)
+            }
+            is WsFrame.TextChat -> if (identity == null) return
+            else -> Unit
+        }
+        _incomingFrameFlow.emit(frame)
     }
 
     private fun startHeartbeat(token: Long) {
@@ -163,16 +186,18 @@ class ClientWsClient {
         }
     }
 
-    fun sendTextChat(textBase64: String, timestamp: Long, iconColor: String): Boolean {
-        if (_connectionStateFlow.value != WsConnectionState.Connected) return false
+    fun sendTextChat(textBase64: String, timestamp: Long): WsFrame.ClientInitBack? {
+        val sender = identity ?: return null
+        if (_connectionStateFlow.value != WsConnectionState.Connected) return null
         val sent = webSocket?.send(JSONObject().apply {
             put("api", API_WS_TEXT_CHAT_SEND)
             put("textBase64", textBase64)
             put("timestamp", timestamp)
-            put("iconColor", iconColor)
+            put("iconColor", sender.color)
         }.toString()) == true
-        if (!sent) handleDisconnect(generation)
-        return sent
+        if (sent) return sender
+        handleDisconnect(generation)
+        return null
     }
 
     private fun handleDisconnect(token: Long) {
@@ -196,6 +221,7 @@ class ClientWsClient {
         reconnectJob?.cancel()
         invalidateSocket()
         _connectionStateFlow.value = WsConnectionState.Disconnected
+        socketEvents.cancel()
         scope.cancel()
     }
 
@@ -225,11 +251,19 @@ class ClientWsClient {
                     ip = data?.ip ?: "",
                     host = data?.host ?: "",
                     timestamp = data?.timestamp ?: 0L,
-                    iconColor = data?.iconColor ?: ""
+                    iconColor = data?.iconColor ?: "",
+                    replayed = data?.replayed ?: false,
                 )
             }
             else -> WsFrame.Unknown(api, text)
         }
+    }
+
+    private sealed interface SocketEvent {
+        val token: Long
+
+        data class Message(override val token: Long, val text: String) : SocketEvent
+        data class Disconnected(override val token: Long) : SocketEvent
     }
 }
 
@@ -247,7 +281,8 @@ sealed class WsFrame {
         val ip: String,
         val host: String,
         val timestamp: Long,
-        val iconColor: String
+        val iconColor: String,
+        val replayed: Boolean,
     ) : WsFrame()
 
     /** 未知 api，备查。 */

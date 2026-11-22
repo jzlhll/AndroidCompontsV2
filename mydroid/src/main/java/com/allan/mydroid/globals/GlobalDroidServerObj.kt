@@ -8,6 +8,7 @@ import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
 import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
+import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
 import com.au.module_android.Globals
 import com.au.module_android.scopes.MainAppScope
@@ -30,7 +31,8 @@ import org.koin.core.parameter.parametersOf
 import java.io.IOException
 
 class GlobalDroidServerObj(
-    private val mainScope : MainAppScope
+    private val mainScope : MainAppScope,
+    private val textChatObj: GlobalTextChatObj,
 ) : KoinComponent, IDroidServerAliveTrigger {
 
     private val networkMonitor: GlobalNetworkMonitorObj by inject()
@@ -51,7 +53,12 @@ class GlobalDroidServerObj(
     private var mLastHttpServerPort = 15555
     private var mLastWsServerPort = 16555
 
-    private val livePages = linkedMapOf<Any, MyDroidMode>()
+    private data class LivePage(val mode: MyDroidMode, val textChatRoomId: String?)
+
+    private val livePages = linkedMapOf<Any, LivePage>()
+    @Volatile
+    var currentTextChatRoomId: String? = null
+        private set
 
     private val aliveDeadTime = 5 * 60 * 1000L
     private val aliveTsTooFastTime = 6 * 1000L
@@ -77,8 +84,13 @@ class GlobalDroidServerObj(
 
     override fun updateAliveTs(from:String) {
         synchronized(aliveLock) {
+            if (!aliveTimerEnabled) return
             val cur = SystemClock.elapsedRealtime()
-            if (!aliveTimerEnabled || cur - aliveTs < aliveTsTooFastTime) return
+            if (cur - aliveTs < aliveTsTooFastTime) {
+                // 高频活动只更新时间戳，由已安排的检查按新的剩余时间重排。
+                aliveTs = cur
+                return
+            }
             resetAliveTimer(cur, from)
         }
     }
@@ -121,7 +133,8 @@ class GlobalDroidServerObj(
 
     @MainThread
     private fun startServer(errorCallback:(String)->Unit) {
-        val mode = livePages.values.lastOrNull() ?: return
+        val page = livePages.values.lastOrNull() ?: return
+        val mode = page.mode
         var retry = 0
         val maxRetry = 100
         while (retry < maxRetry) {
@@ -148,6 +161,7 @@ class GlobalDroidServerObj(
                     continue
                 }
 
+                page.textChatRoomId?.let(textChatObj::recordCreatedRoom)
                 serverRuntimeState.setServerOpen(true)
                 logt { "start server and websocket success and setPort $p to $wsPort" }
                 serverRuntimeState.setPorts(p, wsPort)
@@ -189,11 +203,16 @@ class GlobalDroidServerObj(
         serverRuntimeState.clearPorts()
     }
 
-    /**
-     * 委托 WebsocketServer.broadcastTextChatFromApp,避免外部直接访问 websocketServer 字段。
-     */
-    fun broadcastTextChatFromApp(bean: TextChatMessageBean) {
-        websocketServer?.broadcastTextChatFromApp(bean)
+    @MainThread
+    fun sendTextChatFromApp(bean: TextChatMessageBean) {
+        val roomId = currentTextChatRoomId ?: return
+        textChatObj.addHostMessage(bean, isMine = true) {
+            mainScope.launch {
+                if (currentTextChatRoomId == roomId) {
+                    websocketServer?.broadcastTextChatFromApp(bean, roomId)
+                }
+            }
+        }
     }
 
     private var isObserverIpChanged = false
@@ -223,11 +242,12 @@ class GlobalDroidServerObj(
 
     /** 注册仍处于 Navigation 返回栈中的 live 页面。 */
     @MainThread
-    fun enterLivePage(token: Any, mode: MyDroidMode) {
+    fun enterLivePage(token: Any, mode: MyDroidMode, textChatRoomId: String? = null) {
         if (livePages.containsKey(token)) return
 
-        val previous = livePages.values.lastOrNull()
-        livePages[token] = mode
+        val previous = livePages.values.lastOrNull()?.mode
+        livePages[token] = LivePage(mode, textChatRoomId)
+        if (mode == MyDroidMode.TextChat) textChatObj.prepareHistoryForEntry()
         refreshLivePage(previous, "when live page enter")
         observerIpChanged()
     }
@@ -235,18 +255,23 @@ class GlobalDroidServerObj(
     /** 注销已从 Navigation 返回栈销毁的 live 页面。 */
     @MainThread
     fun leaveLivePage(token: Any) {
-        val previous = livePages.values.lastOrNull()
+        val previous = livePages.values.lastOrNull()?.mode
         if (livePages.remove(token) == null) return
         refreshLivePage(previous, "when live page leave")
     }
 
     private fun refreshLivePage(previous: MyDroidMode?, reason: String) {
-        val current = livePages.values.lastOrNull()
+        val page = livePages.values.lastOrNull()
+        val current = page?.mode
         // APK 请求的路由和缓存绑定到 HTTP 实例，跨模式时关闭旧连接。
         if (previous != current && (previous == MyDroidMode.InstallApk || current == MyDroidMode.InstallApk) &&
             serverRuntimeState.serverIsOpenFlow.value
         ) {
             stopServer()
+        }
+        currentTextChatRoomId = page?.textChatRoomId
+        if (serverRuntimeState.serverIsOpenFlow.value) {
+            currentTextChatRoomId?.let(textChatObj::recordCreatedRoom)
         }
         serverRuntimeState.setMode(current ?: MyDroidMode.None)
         synchronized(aliveLock) {

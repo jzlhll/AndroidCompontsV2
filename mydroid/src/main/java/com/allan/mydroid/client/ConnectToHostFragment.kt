@@ -3,6 +3,10 @@ package com.allan.mydroid.client
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import android.view.animation.DecelerateInterpolator
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +16,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +27,7 @@ import androidx.navigation.fragment.findNavController
 import com.allan.mydroid.R
 import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.client.chat.ConnectToHostChatScreen
+import com.allan.mydroid.client.chat.ConnectToHostChatSettings
 import com.allan.mydroid.client.chat.ConnectToHostChatViewModel
 import com.allan.mydroid.client.receive.ConnectToHostReceiveScreen
 import com.allan.mydroid.client.receive.ConnectToHostReceiveViewModel
@@ -33,10 +40,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
 /** 发现后的会话入口，视图重建复用 ViewModel，活动传输期间暂停空闲提示。 */
 class ConnectToHostFragment : ComposeViewFragment() {
+    companion object {
+        private const val KEY_CHAT_SETTINGS_VISIBLE = "chat_settings_visible"
+        private val chatSettingsSlideSpec = tween<Float>(
+            durationMillis = 300,
+            easing = Easing(DecelerateInterpolator()::getInterpolation),
+        )
+    }
+
+    private enum class ChatSettingsState { Closed, Open, Closing }
+
     private val endpoint by lazy {
         HostEndpoint(arguments?.getString("ip") ?: "", arguments?.getInt("port") ?: 0, 0,
             MyDroidMode.entries.getOrElse(arguments?.getInt("mode") ?: 0) { MyDroidMode.None })
@@ -47,13 +65,34 @@ class ConnectToHostFragment : ComposeViewFragment() {
     private var showIdle by mutableStateOf(false)
     private var showExit by mutableStateOf(false)
     private var leaving by mutableStateOf(false)
+    private var chatSettingsState by mutableStateOf(ChatSettingsState.Closed)
     private var lastActivity = SystemClock.elapsedRealtime()
 
     override val customBackAction: () -> Boolean = {
-        if (!leaving) {
+        if (chatSettingsState == ChatSettingsState.Open) {
+            closeChatSettings()
+        } else if (chatSettingsState == ChatSettingsState.Closed && !leaving) {
             if (hasTransfer()) showExit = true else findNavController().popBackStack()
         }
         false
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState?.getBoolean(KEY_CHAT_SETTINGS_VISIBLE) == true) {
+            chatSettingsState = ChatSettingsState.Open
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_CHAT_SETTINGS_VISIBLE, chatSettingsState == ChatSettingsState.Open)
+    }
+
+    private fun closeChatSettings() {
+        if (chatSettingsState != ChatSettingsState.Open) return
+        chatSettingsState = ChatSettingsState.Closing
+        lastActivity = SystemClock.elapsedRealtime()
     }
 
     private fun hasTransfer(): Boolean = when (endpoint.mode) {
@@ -68,14 +107,17 @@ class ConnectToHostFragment : ComposeViewFragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 lastActivity = SystemClock.elapsedRealtime()
-                var messageCount = if (endpoint.mode == MyDroidMode.TextChat) chatModel.uiState.value.messages.size else 0
+                val liveMessageCountFlow = if (endpoint.mode == MyDroidMode.TextChat) chatModel.liveMessageCountFlow else null
+                var messageCount = liveMessageCountFlow?.value ?: 0L
                 while (true) {
                     delay(1000.milliseconds)
-                    val count = if (endpoint.mode == MyDroidMode.TextChat) chatModel.uiState.value.messages.size else 0
+                    val count = liveMessageCountFlow?.value ?: 0L
                     if (hasTransfer() || count != messageCount) {
                         lastActivity = SystemClock.elapsedRealtime()
                         showIdle = false
-                    } else if (!showExit && SystemClock.elapsedRealtime() - lastActivity >= 180000) {
+                    } else if (!showExit && chatSettingsState == ChatSettingsState.Closed &&
+                        SystemClock.elapsedRealtime() - lastActivity >= 180000
+                    ) {
                         showIdle = true
                     }
                     messageCount = count
@@ -94,7 +136,7 @@ class ConnectToHostFragment : ComposeViewFragment() {
                 when (endpoint.mode) {
                     MyDroidMode.Receiver -> ConnectToHostSendScreen(sendModel, endpoint, stringResource(R.string.connect_to_host_send_title))
                     MyDroidMode.Send -> ConnectToHostReceiveScreen(receiveModel, endpoint, stringResource(R.string.connect_to_host_receive_title))
-                    MyDroidMode.TextChat -> ConnectToHostChatScreen(chatModel, endpoint, stringResource(R.string.connect_to_host_chat_title))
+                    MyDroidMode.TextChat -> ChatContent()
                     MyDroidMode.InstallApk,
                     MyDroidMode.None -> TransferMessageDialog(stringResource(R.string.connect_to_host_mode_none)) {
                         findNavController().popBackStack()
@@ -127,5 +169,50 @@ class ConnectToHostFragment : ComposeViewFragment() {
                 )
             }
         }
+    }
+
+    @Composable
+    private fun ChatContent() {
+        val settingsState = chatSettingsState
+        val targetProgress = if (settingsState == ChatSettingsState.Open) 1f else 0f
+        val progress = remember { Animatable(targetProgress) }
+        val settingsActive = settingsState != ChatSettingsState.Closed
+
+        LaunchedEffect(settingsState) {
+            if (progress.value != targetProgress) {
+                progress.animateTo(targetProgress, chatSettingsSlideSpec)
+            }
+            if (settingsState == ChatSettingsState.Closing) {
+                chatSettingsState = ChatSettingsState.Closed
+            }
+        }
+
+        Box(Modifier.fillMaxSize().clipToBounds()) {
+            ConnectToHostChatScreen(
+                chatModel,
+                endpoint,
+                titleText = stringResource(R.string.connect_to_host_chat_title),
+                settingsVisible = settingsActive,
+                onOpenSettings = {
+                    showIdle = false
+                    chatSettingsState = ChatSettingsState.Open
+                },
+                modifier = Modifier.chatPageOffset { -0.5f * progress.value },
+            )
+            if (settingsActive) {
+                ConnectToHostChatSettings(
+                    onClose = ::closeChatSettings,
+                    modifier = Modifier.chatPageOffset { 1f - progress.value },
+                )
+            }
+        }
+    }
+}
+
+// 在布局阶段移动页面，使 AndroidView 的视图位置和触摸坐标同步。
+private fun Modifier.chatPageOffset(fraction: () -> Float): Modifier = layout { measurable, constraints ->
+    val page = measurable.measure(constraints)
+    layout(page.width, page.height) {
+        page.place((page.width * fraction()).roundToInt(), 0)
     }
 }

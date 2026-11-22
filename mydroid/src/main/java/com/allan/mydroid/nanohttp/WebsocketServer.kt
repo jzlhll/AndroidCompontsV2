@@ -5,10 +5,10 @@ import com.allan.mydroid.api.WSApisConst.Companion.API_WS_TEXT_CHAT_CALLBACK
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.beans.wsdata.TextChatWsData
 import com.allan.mydroid.beansinner.WebSocketClientInfo
+import com.allan.mydroid.globals.GlobalDroidServerObj
 import com.allan.mydroid.globals.IDroidServerAliveTrigger
 import com.allan.mydroid.state.GlobalClientListFlowsObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
-import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.nanohttp.messengers.WebsocketNoneModeMessenger
 import com.allan.mydroid.nanohttp.messengers.WebsocketTextChatModeMessenger
 import android.util.Base64
@@ -52,6 +52,7 @@ class WebsocketServer(
     // P1 state: injected via KoinComponent
     val serverRuntimeObj: GlobalServerRuntimeObj by inject()
     private val clientListFlowsObj: GlobalClientListFlowsObj by inject()
+    private val globalDroidServer: GlobalDroidServerObj by inject()
 
     private val clients: MutableList<ServerWebsocketClient> = CopyOnWriteArrayList()
 
@@ -129,7 +130,7 @@ class WebsocketServer(
             MyDroidMode.Send,
             MyDroidMode.InstallApk,
             MyDroidMode.None -> WebsocketNoneModeMessenger(client)  //接受文件，都走http而非ws。所以给空实现即可。
-            MyDroidMode.TextChat -> WebsocketTextChatModeMessenger(client)
+            MyDroidMode.TextChat -> WebsocketTextChatModeMessenger(client, globalDroidServer.currentTextChatRoomId)
         }
         client.messenger = parser
         return client
@@ -148,12 +149,17 @@ class WebsocketServer(
         clientListFlowsObj.clear()
     }
 
-    fun broadcastTextChatFromApp(bean: TextChatMessageBean, excludedClient: ServerWebsocketClient? = null) {
+    fun isCurrentTextChatRoom(roomId: String): Boolean = globalDroidServer.currentTextChatRoomId == roomId
+
+    fun broadcastTextChatFromApp(bean: TextChatMessageBean, roomId: String, excludedClient: ServerWebsocketClient? = null) {
         val textBase64 = Base64.encodeToString(bean.text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
         val data = TextChatWsData(textBase64, bean.ip, "", bean.timestamp, bean.iconColor)
         scope.launch {
             clients.forEach { client ->
+                if (!isCurrentTextChatRoom(roomId)) return@launch
                 if (client === excludedClient) return@forEach
+                val textChat = client.messenger as? WebsocketTextChatModeMessenger ?: return@forEach
+                if (textChat.roomId != roomId) return@forEach
                 try {
                     client.sendApiResult(API_WS_TEXT_CHAT_CALLBACK, data)
                 } catch (e: Exception) {

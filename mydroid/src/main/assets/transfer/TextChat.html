@@ -60,10 +60,18 @@
             flex: 0 0 18px;
         }
 
-        .chat-subtitle {
-            margin-top: 10px;
+        .chat-self-address, .chat-host-address {
+            margin-top: 4px;
             color: #6f7783;
-            font-size: 15px;
+            overflow-wrap: anywhere;
+        }
+
+        .chat-self-address {
+            font-size: 11px;
+        }
+
+        .chat-host-address {
+            font-size: 14px;
         }
 
         .message-list {
@@ -140,6 +148,7 @@
             line-height: 1.2;
             margin-left: 6px;
             display: inline-block;
+            white-space: nowrap;
         }
 
         .message-text {
@@ -278,6 +287,38 @@
             background: #f1f4f8;
         }
 
+        .idle-dialog {
+            width: min(360px, calc(100% - 32px));
+            padding: 22px;
+            border: 1px solid #d8dfe8;
+            border-radius: 18px;
+            background: #fff;
+            color: #23262d;
+            box-shadow: 0 8px 24px rgba(28, 35, 49, 0.16);
+        }
+
+        .idle-dialog::backdrop {
+            background: rgba(28, 35, 49, 0.45);
+        }
+
+        .idle-dialog p {
+            margin: 0 0 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .idle-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .idle-exit-button {
+            background: #eef1f5;
+            color: #23262d;
+        }
+
         #overlayView {
             position: fixed;
             top: 0;
@@ -337,8 +378,9 @@
 <div class="page">
     <div class="chat-shell">
         <div class="chat-header">
-            <h1><span id="titleColorIcon" class="title-color-icon"></span>MyDroid</h1>
-            <div id="chatSubtitle" class="chat-subtitle"></div>
+            <h1><span id="titleColorIcon" class="title-color-icon" aria-hidden="true"></span><span id="chatTitle"></span></h1>
+            <div id="chatSelfAddress" class="chat-self-address"></div>
+            <div id="chatHostAddress" class="chat-host-address" role="status"></div>
         </div>
 
         <div id="messageList" class="message-list"></div>
@@ -356,6 +398,13 @@
 <div id="messageContextMenu" class="context-menu">
     <button id="copyMenuItem" class="context-menu-item" type="button"></button>
 </div>
+<dialog id="idleDialog" class="idle-dialog" aria-labelledby="idlePrompt">
+    <p id="idlePrompt"></p>
+    <div class="idle-dialog-actions">
+        <button id="idleExitButton" class="send-button idle-exit-button" type="button"></button>
+        <button id="idleContinueButton" class="send-button" type="button" autofocus></button>
+    </div>
+</dialog>
 <div id="overlayView">
     <div id="overlayView-content">
         <h2 id="overlayError1"></h2>

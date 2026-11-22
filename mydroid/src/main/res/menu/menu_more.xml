@@ -5,5 +5,5 @@
         android:id="@+id/more"
         app:showAsAction="always"
         android:icon="@drawable/ic_more_already_white"
-        android:title="@string/more_actions"/>
+        android:title="@string/export_history"/>
 </menu>

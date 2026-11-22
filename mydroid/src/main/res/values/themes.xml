@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="ReceiveStyleTab" parent="StyleTabLayoutNormally">
-        <item name="tabIndicatorColor">@color/logic_receiver</item>
-    </style>
-
     <style name="SplashTheme" parent="AbsStyleSplashTheme">
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_playstore</item>
     </style>
@@ -39,6 +35,14 @@
         <item name="backgroundNormal">@color/text_chat_accent</item>
         <item name="backgroundPressed">@color/text_chat_accent_pressed</item>
         <item name="cornerRadius">20dp</item>
+    </style>
+
+    <style name="StyleTextChatRetentionOption" parent="StyleAuTextNormal">
+        <item name="android:buttonTint">@color/text_chat_accent</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:saveEnabled">false</item>
+        <item name="android:textColor">@color/text_chat_text</item>
     </style>
 
     <style name="StyleWebTransferDescription" parent="StyleAuTextThin">

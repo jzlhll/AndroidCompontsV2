@@ -20,6 +20,7 @@ import com.au.module_android.utils.launchRepeatOnStarted
 import com.au.module_androidui.dialogs.ConfirmBottomSingleDialog
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import java.util.UUID
 
 abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
     override var customBackActionEnable = false
@@ -28,6 +29,8 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
     /** 子类返回当前 live 服务模式。 */
     abstract fun getMode(): MyDroidMode
     companion object {
+        private const val KEY_TEXT_CHAT_ROOM_ID = "live_text_chat_room_id"
+
         fun showExitDialogLater() {
             Globals.mainHandler.postDelayed({
                 Globals.topActivity.asOrNull<AppCompatActivity>()?.let { ac->
@@ -60,10 +63,21 @@ abstract class AbsLiveFragment<VB: ViewBinding> : BindingFragment<VB>() {
     private val networkMonitor : GlobalNetworkMonitorObj by inject()
     private val globalDroidServer : GlobalDroidServerObj by inject()
     private val livePageToken = Any()
+    private var textChatRoomId: String? = null
 
     final override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        globalDroidServer.enterLivePage(livePageToken, getMode())
+        val mode = getMode()
+        if (mode == MyDroidMode.TextChat) {
+            textChatRoomId = savedInstanceState?.getString(KEY_TEXT_CHAT_ROOM_ID) ?: UUID.randomUUID().toString()
+        }
+        globalDroidServer.enterLivePage(livePageToken, mode, textChatRoomId)
+    }
+
+    @CallSuper
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        textChatRoomId?.let { outState.putString(KEY_TEXT_CHAT_ROOM_ID, it) }
     }
 
     @CallSuper

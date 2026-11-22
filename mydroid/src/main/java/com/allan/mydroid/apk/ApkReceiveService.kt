@@ -93,6 +93,7 @@ class ApkReceiveService : Service() {
                 startJob = scope.launch {
                     try {
                         ApkReceiveSession.prepareCache()
+                        ApkInstallSessions.prepare()
                         receiveStateFlow.setSuccess(Unit)
                         server.enterLivePage(livePageToken, MyDroidMode.InstallApk)
                     } catch (e: CancellationException) {
