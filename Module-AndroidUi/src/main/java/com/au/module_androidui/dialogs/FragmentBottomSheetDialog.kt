@@ -19,6 +19,7 @@ import com.au.module_android.utils.*
 import com.au.module_androidui.R
 import com.au.module_androidui.ui.base.AbsBottomDialog
 import com.au.module_androidui.ui.base.BeforeDismissBottomSheetDialog
+import com.au.module_androidui.ui.base.BeforeDismissBottomSheetDialog.Companion.DEFAULT_TOP_DRAG_AREA_HEIGHT_DP
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlin.math.max
 import kotlin.math.min
@@ -50,8 +51,9 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
          * @param backgroundColor 弹窗根布局背景色；为null时不额外设置
          * @param paddingMode 是否需要padding模式, 指的是没有横杠，左右两边有padding
          * @param showHeadLine 是否需要显示headLine
-         * @param dragOnlyFromTop 是否只允许从顶部 80dp 开始拖动弹窗
+         * @param dragOnlyFromTop 是否只允许从顶部区域开始拖动弹窗
          * @param dispatchInsetsAnimation 是否向弹窗内容分发 Insets 动画事件
+         * @param topDragAreaHeightDp 限制拖动起点时，顶部区域的高度，单位为 dp
          */
         inline fun <reified T : Fragment> show(
             manager: FragmentManager,
@@ -65,6 +67,7 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
             showHeadLine: Boolean = true,
             dragOnlyFromTop: Boolean = false,
             dispatchInsetsAnimation: Boolean = true,
+            topDragAreaHeightDp: Int = DEFAULT_TOP_DRAG_AREA_HEIGHT_DP,
         ): FragmentBottomSheetDialog {
             if (height < 0) {
                 throw IllegalArgumentException("height must be >= 0")
@@ -84,6 +87,7 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
                 it.putBoolean("showHeadLine", showHeadLine)
                 it.putBoolean("dragOnlyFromTop", dragOnlyFromTop)
                 it.putBoolean("dispatchInsetsAnimation", dispatchInsetsAnimation)
+                it.putInt("topDragAreaHeightDp", topDragAreaHeightDp)
             }
             dialog.show(manager, "FragmentContainBottomSheetDialog")
             return dialog
@@ -96,8 +100,9 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
          * @param backgroundColor 弹窗根布局背景色；为null时不额外设置
          * @param paddingMode 是否需要padding模式, 指的是没有横杠，左右两边有padding
          * @param showHeadLine 是否需要显示headLine
-         * @param dragOnlyFromTop 是否只允许从顶部 80dp 开始拖动弹窗
+         * @param dragOnlyFromTop 是否只允许从顶部区域开始拖动弹窗
          * @param dispatchInsetsAnimation 是否向弹窗内容分发 Insets 动画事件
+         * @param topDragAreaHeightDp 限制拖动起点时，顶部区域的高度，单位为 dp
          */
         inline fun <reified T : Fragment> showWithMaxHeightInset(
             manager: FragmentManager,
@@ -111,6 +116,7 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
             showHeadLine: Boolean = true,
             dragOnlyFromTop: Boolean = false,
             dispatchInsetsAnimation: Boolean = true,
+            topDragAreaHeightDp: Int = DEFAULT_TOP_DRAG_AREA_HEIGHT_DP,
         ): FragmentBottomSheetDialog {
             if (maxHeightInset < 0) {
                 throw IllegalArgumentException("maxHeightInset must be >= 0")
@@ -132,6 +138,7 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
                 it.putBoolean("showHeadLine", showHeadLine)
                 it.putBoolean("dragOnlyFromTop", dragOnlyFromTop)
                 it.putBoolean("dispatchInsetsAnimation", dispatchInsetsAnimation)
+                it.putInt("topDragAreaHeightDp", topDragAreaHeightDp)
             }
             dialog.show(manager, "FragmentContainBottomSheetDialog")
             return dialog
@@ -159,7 +166,11 @@ class FragmentBottomSheetDialog() : AbsBottomDialog(false) {
     override fun onCreatingView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layoutId = if (paddingMode) { R.layout.dialog_bottomsheet_padding } else { R.layout.dialog_bottomsheet }
         val root = inflater.inflate(layoutId, container, false)
-        (dialog as? BeforeDismissBottomSheetDialog)?.dragOnlyFromTop = dragOnlyFromTop
+        (dialog as? BeforeDismissBottomSheetDialog)?.let {
+            it.topDragAreaHeightDp = arguments?.getInt("topDragAreaHeightDp", DEFAULT_TOP_DRAG_AREA_HEIGHT_DP)
+                ?: DEFAULT_TOP_DRAG_AREA_HEIGHT_DP
+            it.dragOnlyFromTop = dragOnlyFromTop
+        }
         backgroundColor?.let {
             val bg = ViewBackgroundBuilder()
                 .setBackground(it)

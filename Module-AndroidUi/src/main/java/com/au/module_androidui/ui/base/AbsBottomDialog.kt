@@ -15,7 +15,7 @@ import androidx.core.view.updatePadding
 import com.au.module_android.screenadapter.ToutiaoScreenAdapter
 import com.au.module_android.utils.applyWindowInsets
 import com.au.module_android.utils.asOrNull
-import com.au.module_android.utils.dp
+import com.au.module_android.utils.dpFloat
 import com.au.module_android.utils.immersive
 import com.au.module_android.utils.isAppearanceLightForBars
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -138,18 +138,25 @@ abstract class AbsBottomDialog(private val hasEditText:Boolean)
 
 
 open class BeforeDismissBottomSheetDialog : BottomSheetDialog {
+    companion object {
+        const val DEFAULT_TOP_DRAG_AREA_HEIGHT_DP = 80
+    }
+
     interface BeforeDismissCallback {
         fun onBeforeDismiss(dialog: BeforeDismissBottomSheetDialog?)
     }
 
     var beforeDismissCallback: BeforeDismissCallback? = null
-    /** 是否只允许从顶部 80dp 发起拖动。 */
+    /** 是否只允许从顶部区域发起拖动。 */
     var dragOnlyFromTop = false
         set(value) {
             field = value
             behavior.isDraggable = !value
             behavior.isDraggableOnNestedScroll = !value
         }
+    /** 从弹窗顶部起算的拖动区域高度，单位为 dp。 */
+    var topDragAreaHeightDp = DEFAULT_TOP_DRAG_AREA_HEIGHT_DP
+
     constructor(context: Context) : super(context)
     constructor(context: Context, theme: Int) : super(context, theme)
     protected constructor(context: Context, cancelable: Boolean, cancelListener: DialogInterface.OnCancelListener?) : super(context, cancelable, cancelListener)
@@ -162,7 +169,7 @@ open class BeforeDismissBottomSheetDialog : BottomSheetDialog {
             val distanceFromTop = ev.rawY - location[1]
             // setCancelable(false) 会关闭 hideable，提交期间不能重新启用拖动。
             behavior.isDraggable = behavior.isHideable && sheet != null &&
-                distanceFromTop >= 0 && distanceFromTop < 80f.dp
+                distanceFromTop >= 0 && distanceFromTop < topDragAreaHeightDp.dpFloat
         }
         val handled = super.dispatchTouchEvent(ev)
         if (dragOnlyFromTop && (ev.actionMasked == MotionEvent.ACTION_UP || ev.actionMasked == MotionEvent.ACTION_CANCEL)) {

@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
@@ -69,6 +70,7 @@ fun ComposeImmersiveImageBackground(
     height: Dp,
     modifier: Modifier = Modifier,
     blurRadius: Dp = 24.dp,
+    contentAlpha: Float = 1f,
     imageContent: @Composable (requestWidth: Dp, requestHeight: Dp, transformation: BitmapTransformation) -> Unit,
 ) {
     val arrayPool = Glide.get(LocalContext.current).arrayPool
@@ -76,7 +78,7 @@ fun ComposeImmersiveImageBackground(
     val transformation = remember(blurRadiusPx, arrayPool) {
         ImageBackgroundBlurTransformation(blurRadiusPx, arrayPool)
     }
-    Box(modifier = modifier.size(width, height).clipToBounds()) {
+    Box(modifier = modifier.size(width, height).clipToBounds().alpha(contentAlpha)) {
         key(transformation) {
             imageContent(
                 width / IMAGE_BACKGROUND_BLUR_DOWNSAMPLE,
