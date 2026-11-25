@@ -276,11 +276,11 @@
     }
 
     // 选择阶段只使用 File 元数据，不读取文件内容。
-    const selectedFileMap = new Map();
+    let selectedFiles = [];
 
     function showSelectedFilesInfo() {
         let text = loc["selected_files"];
-        for (const info of selectedFileMap.values()) {
+        for (const info of selectedFiles) {
             text += `${info.file.name} ${info.fileSizeStr}\n`;
             if (info.uploadInfo) text += `${loc["upload"]}: ${info.uploadInfo}\n`;
             if (info.md5) text += `MD5: ${info.md5}\n`;
@@ -293,10 +293,8 @@
 
     function showFileInfo(files) {
         if (!files) return;
-        selectedFileMap.clear();
-        Array.from(files).forEach((file, index) => {
-            selectedFileMap.set(index, { file, fileSizeStr: myDroidFormatSize(file.size) });
-        });
+        selectedFiles = Array.from(files, file => ({ file, fileSizeStr: myDroidFormatSize(file.size) }));
+        document.getElementById('uploadButton').disabled = selectedFiles.length === 0;
         showSelectedFilesInfo();
     }
 
@@ -334,7 +332,7 @@
     // 开始上传
     function startUpload() {
         requireNotActioning(async ()=>{
-            if (selectedFileMap.size == 0) {
+            if (selectedFiles.length === 0) {
                 showStatus(loc["select_file"], "error", true);
                 return;
             }
@@ -349,11 +347,10 @@
             myHtmlChangeProgressVisible(true);
 
 
-            for (let i = 0; i < selectedFileMap.size; i++) {
+            for (const one of selectedFiles) {
                 if (startTime !== window.lastStartTsFlagArr.startUploadTime) break;
+                if (one.md5) continue;
                 updateProgress(0);
-                const one = selectedFileMap.get(i);
-                delete one.md5;
                 one.uploadInfo = "0%，-- KB/s";
                 showSelectedFilesInfo();
 
@@ -389,6 +386,7 @@
 
             isActioning = false;
             changeUploadButton(true);
+            document.getElementById('uploadButton').disabled = selectedFiles.every(file => file.md5);
             afterUpload();
         });
     }

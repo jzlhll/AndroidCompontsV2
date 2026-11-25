@@ -16,7 +16,6 @@ import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.databinding.FragmentSendListSelectorBinding
 import com.allan.mydroid.repository.GlobalShareInRepoObj
-import com.allan.mydroid.repository.UriPermissionChecker
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
 import com.au.module_android.log.logd
@@ -45,7 +44,6 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     override var customBackActionEnable = false
 
     private val shareInRepository: GlobalShareInRepoObj by inject()
-    private val uriPermissionChecker: UriPermissionChecker by inject()
     companion object {
         const val KEY_AUTO_ENTER_SEND_VIEW = "key_auto_import"
     }
@@ -185,16 +183,13 @@ class SendListSelectorFragment : BindingFragment<FragmentSendListSelectorBinding
     }
 
     private fun onUrisBack(uris: List<Uri>, needCheckPermission: Boolean) {
-        if (needCheckPermission) {
-            for (uri in uris) {
-                uriPermissionChecker.takeHostPermission(uri)
-            }
-        }
-
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 deleteJob?.join()
-                shareInRepository.addShareInUris(uris, FROM_PICKER)
+                val rejected = shareInRepository.addShareInUris(uris, FROM_PICKER, needCheckPermission)
+                if (rejected.isNotEmpty()) {
+                    MyToastUtil.toastOnTopErrorLater(Globals.app.getString(R.string.picker_read_permission_failed, rejected.joinToString(", ")))
+                }
                 reloadJob?.cancelAndJoin()
                 common.reload()
             } catch (e: CancellationException) {

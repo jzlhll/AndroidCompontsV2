@@ -8,6 +8,7 @@ import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.beansinner.ShareInBean
+import com.au.module_android.log.logEx
 import com.au.module_android.Globals
 
 class UriPermissionChecker {
@@ -24,26 +25,18 @@ class UriPermissionChecker {
             return true
         }
 
-        appHostPermissions().forEach { uri ->
-            if (uri == shareInBean.uri) {
-                return true
-            }
-        }
-        return false
+        return Globals.app.contentResolver.persistedUriPermissions.any { it.uri == shareInBean.uri && it.isReadPermission }
     }
 
-    fun takeHostPermission(uri: Uri) {
-        if (CHECK_URI_PERMISSION) {
-            try {
-                Globals.app.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            } catch (e: SecurityException) {
-                e.printStackTrace()
-            }
+    fun takeHostPermission(uri: Uri): Boolean {
+        if (!CHECK_URI_PERMISSION) return true
+        val resolver = Globals.app.contentResolver
+        return try {
+            resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            true
+        } catch (e: SecurityException) {
+            logEx(throwable = e) { "Take persistent read permission failed" }
+            resolver.persistedUriPermissions.any { it.uri == uri && it.isReadPermission }
         }
-    }
-
-    private fun appHostPermissions(): List<Uri> {
-        val list = Globals.app.contentResolver.persistedUriPermissions
-        return list.map { it.uri }
     }
 }

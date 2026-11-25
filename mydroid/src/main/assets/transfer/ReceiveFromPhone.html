@@ -273,7 +273,8 @@
 
     <div id="loading-text" style="text-align: center; font-size: 3em; font-family: 'Arial Black', sans-serif;
          color: #3498db; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin: 50px 0;">
-        Loading...
+        <span id="list-status" role="status"></span>
+        <button type="button" id="retry-list" hidden></button>
     </div>
 
     <div id="overlayView">
@@ -284,7 +285,10 @@
     </div>
 
     <script>
-        let isDownloading = false;
+        document.getElementById('list-status').textContent = loc['file_list_loading'];
+        const retryList = document.getElementById('retry-list');
+        retryList.textContent = loc['retry_file_list'];
+        retryList.onclick = window.requestFileList;
 
         document.getElementById('secondTitle').textContent = loc["refresh_list_by_f5"];
 
@@ -412,7 +416,10 @@
             showResult(loc['transfer_start']);
             const transferId = generateUUID();
             const tmpLink = document.createElement('a');
-            tmpLink.href = `/file_download_uuid/${encodeURIComponent(uriUuid)}?transferId=${encodeURIComponent(transferId)}`;
+            const query = new URLSearchParams({ transferId });
+            if (importBatchId) query.set('importBatchId', importBatchId);
+            tmpLink.href = `/file_download_uuid/${encodeURIComponent(uriUuid)}?${query}`;
+            tmpLink.download = '';
             tmpLink.style.display = 'none';
             document.body.appendChild(tmpLink);
             tmpLink.click();
@@ -432,7 +439,7 @@
                         throw new Error('Invalid download session');
                     }
                     if ((answer.data.importBatchId || '') !== importBatchId) {
-                        throw new Error(loc['operation_cancelled']);
+                        throw new Error(loc['download_batch_changed']);
                     }
                     if (answer.data.state === 'completed') {
                         if (!/^[a-f0-9]{32}$/i.test(answer.data.md5)) throw new Error(loc['md5_error']);

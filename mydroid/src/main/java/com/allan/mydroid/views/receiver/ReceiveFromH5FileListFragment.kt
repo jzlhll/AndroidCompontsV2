@@ -104,8 +104,6 @@ class ReceiveFromH5FileListFragment : BindingFragment<FragmentMyDroidReceiveList
                     Globals.app.getString(R.string.file_received_success_fmt, file.name),
                     iconResId = AndroidUiR.drawable.ic_successful,
                 )
-
-                refreshFileListCallback()
             }
         }
 

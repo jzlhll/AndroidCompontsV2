@@ -81,22 +81,21 @@ class UploadRequestHandler(
         return when (val result = chunkUploadHandler.handleUploadChunk(session)) {
             is ChunkUploadHandler.ChunkResult.Received -> {
                 val chunk = result.chunk
-                val progress = ReceivingFileInfo(chunk.fileName, "", chunk.chunkIndex, chunk.totalChunks, PROCESS_CHUNK)
-                if (apkSession == null) {
-                    emitProgress(result.key, progress)
-                } else synchronized(apkSession) {
+                if (apkSession != null) synchronized(apkSession) {
                     // 只发布仍属于当前分片集合的结果，合并、取消和重传可使旧结果失效。
                     val count = chunkUploadHandler.retainedCount(result)
-                    if (count != null) apkSession.updateProgress(result.key, progress.copy(currentChunkIndex = count))
+                    if (count != null) apkSession.updateProgress(result.key, ReceivingFileInfo(
+                        chunk.fileName, "", count, chunk.totalChunks, PROCESS_CHUNK,
+                    ))
                 }
                 ResultBean(CODE_SUC, "Chunk received", chunk).okJsonResponse()
             }
             is ChunkUploadHandler.ChunkResult.Failed -> {
                 val error = result.error
                 logEx(throwable = error) { "Receive chunk failed" }
-                if (apkSession == null || !chunkUploadHandler.isUploadClosed(result.key)) {
-                    emitProgress(result.key, ReceivingFileInfo(
-                        result.fileName, "", if (apkSession != null) 0 else result.chunkIndex,
+                if (apkSession != null && !chunkUploadHandler.isUploadClosed(result.key)) {
+                    apkSession.updateProgress(result.key, ReceivingFileInfo(
+                        result.fileName, "", 0,
                         result.totalChunks, PROCESS_CHUNK_ERROR,
                         Globals.getString(R.string.chunk_receiver_error),
                     ))
@@ -118,14 +117,11 @@ class UploadRequestHandler(
         val request = chunkUploadHandler.readMergeRequest(session, params) ?: return ResultBean<String>(
             CODE_FAIL, Globals.getString(R.string.error_merge_chunk_params), null
         ).badRequestJsonResponse()
-        val progress = ReceivingFileInfo(
-            request.fileName, "", if (apkSession != null) request.receivedCount else request.totalChunks,
-            request.totalChunks, PROCESS_MERGING,
-        )
-        if (apkSession == null) {
-            emitProgress(request.key, progress)
-        } else if (!apkSession.startMerging(request.key, progress)) {
-            return ResultBean<String>(CODE_FAIL_MERGE_CHUNK, Globals.app.getString(R.string.no_chunks), null).okJsonResponse()
+        if (apkSession != null) {
+            val progress = ReceivingFileInfo(request.fileName, "", request.receivedCount, request.totalChunks, PROCESS_MERGING)
+            if (!apkSession.startMerging(request.key, progress)) {
+                return ResultBean<String>(CODE_FAIL_MERGE_CHUNK, Globals.app.getString(R.string.no_chunks), null).okJsonResponse()
+            }
         }
         val buildInfo = try {
             if (apkSession != null && params.has("buildInfo")) ApkBuildInfo.fromJson(params.getJSONObject("buildInfo")) else null
@@ -154,11 +150,16 @@ class UploadRequestHandler(
                 mapOf("fileName" to received.file.name, "md5" to md5, "sha256" to received.buildInfo.sha256)
             } else {
                 val file = TransferFiles.publish(temp, request.fileName)
-                runBlocking { fileListRepository.addReceivedFile(file, md5) }
+                // 正式文件已发布，更新本地索引失败也应向发送端确认收件成功。
+                try {
+                    runBlocking { fileListRepository.addReceivedFile(file, md5) }
+                } catch (e: Exception) {
+                    logEx(throwable = e) { "Update published file index failed" }
+                }
                 receiverFlowsObj.emitFileMerged(file)
                 mapOf("fileName" to file.name, "md5" to md5)
             }
-            emitProgress(request.key, ReceivingFileInfo(
+            apkSession?.updateProgress(request.key, ReceivingFileInfo(
                 request.fileName, md5, request.totalChunks, request.totalChunks, PROCESS_COMPLETED
             ))
             ResultBean(CODE_SUC, Globals.getString(R.string.file_merge_success), data).okJsonResponse()
@@ -183,15 +184,9 @@ class UploadRequestHandler(
         receivedCount: Int = 0,
     ): Response {
         if (error != null) logEx(throwable = error) { "Merge chunks failed" }
-        emitProgress(request.key, ReceivingFileInfo(
-            request.fileName, "", if (apkSession != null) receivedCount else request.totalChunks,
-            request.totalChunks, PROCESS_MERGE_ERROR, message,
+        apkSession?.updateProgress(request.key, ReceivingFileInfo(
+            request.fileName, "", receivedCount, request.totalChunks, PROCESS_MERGE_ERROR, message,
         ))
         return ResultBean<String>(code, message, null).okJsonResponse()
-    }
-
-    private fun emitProgress(key: String, info: ReceivingFileInfo) {
-        if (apkSession == null) receiverFlowsObj.emitProgress(mapOf(key to info))
-        else apkSession.updateProgress(key, info)
     }
 }

@@ -8,15 +8,12 @@ import com.allan.mydroid.utils.JsonUriAdapter
 import com.allan.mydroid.views.send.VIEW_TYPE_URI_INFO
 import com.au.module_android.Globals
 import com.au.module_android.utilsmedia.ExtensionMimeUtil
-import com.au.module_android.utilsmedia.UriParsedInfo
 import com.au.module_android.utilsmedia.VideoDurationHelper
 import com.au.module_android.utilsmedia.formatBytes
 import com.au.module_android.utilsmedia.myParseSuspend
 import com.au.module_nested.recyclerview.IMultiViewTypeBean
 import com.google.gson.annotations.JsonAdapter
-import kotlinx.coroutines.delay
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 
 const val FROM_LOCAL = "local"
 const val FROM_SHARE_IN = "share_in"
@@ -47,13 +44,12 @@ data class ShareInBean(val uriUuid:String,
     @Transient var completedMd5: String? = null
 
     companion object {
-        suspend fun convert(info: MergedFileInfo, from:String) : ShareInBean {
-            delay(0.milliseconds)
+        fun convert(info: MergedFileInfo, from:String) : ShareInBean {
             val fileSize = info.file.length()
             val fileLen = formatBytes(fileSize)
             // 使用文件元数据稳定标识，不为生成下载身份扫描文件内容。
             val uriUuid = UUID.nameUUIDFromBytes(
-                "local:${info.file.name}:${info.file.length()}:${info.file.lastModified()}".toByteArray(Charsets.UTF_8)
+                "local:${info.file.name}:$fileSize:${info.file.lastModified()}".toByteArray(Charsets.UTF_8)
             ).toString().replace("-", "")
 
             val mimeType = ExtensionMimeUtil.getMimeTypePath(info.file.absolutePath)
@@ -68,15 +64,8 @@ data class ShareInBean(val uriUuid:String,
                 videoDuration)
         }
 
-        suspend fun convert(uri: Uri, from:String) : ShareInBean {
-            delay(0.milliseconds)
-            val parsedInfo = uri.myParseSuspend(Globals.app.contentResolver)
-            return copyFrom(parsedInfo, from)
-        }
-
-        private suspend fun copyFrom(info: UriParsedInfo, from:String) : ShareInBean {
-            delay(0.milliseconds)
-            val uriUuid = UUID.randomUUID().toString().replace("-", "")
+        suspend fun convert(uri: Uri, from: String, uriUuid: String): ShareInBean {
+            val info = uri.myParseSuspend(Globals.app.contentResolver)
             val fileSize = info.fileLength
             val fileSizeStr = if(fileSize > 0) formatBytes(fileSize) else Globals.getString(R.string.unknown_size)
             return ShareInBean(uriUuid,

@@ -200,4 +200,5 @@
     <string name="import_saved_delete_completed">已儲存到應用程式，系統相簿圖片已清理</string>
     <string name="import_saved_delete_cancelled">已儲存到應用程式，未完成全部系統相簿刪除</string>
     <string name="import_saved_delete_failed">已儲存到應用程式，系統相簿圖片刪除失敗</string>
+    <string name="error_node_text_too_large">單一節點的文字超過 1 MiB，請分段後再儲存。</string>
 </resources>

@@ -2,6 +2,7 @@ package com.allan.mydroid.repository
 
 import com.allan.mydroid.beansinner.MergedFileInfo
 import com.allan.mydroid.globals.nanoTempCacheMergedDir
+import com.au.module_android.log.logEx
 import com.au.module_android.simpleflow.StatusState
 import com.au.module_android.utils.withIOThread
 import kotlinx.coroutines.currentCoroutineContext
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
+import java.io.IOException
 import org.json.JSONObject
 import com.au.module_android.Globals
 import com.au.module_cached.AppDataStore
@@ -30,9 +32,14 @@ class GlobalFileListRepoObj {
     private var digestSnapshot: JSONObject? = null
     private val digestKey = stringPreferencesKey("mydroid_received_md5")
 
-    private fun digestSnapshot(): JSONObject {
+    private suspend fun digestSnapshot(): JSONObject? {
         digestSnapshot?.let { return it }
-        val text = AppDataStore.readStringBlocked("mydroid_received_md5", "").orEmpty()
+        val text = try {
+            AppDataStore.readString(digestKey.name, "").orEmpty()
+        } catch (e: IOException) {
+            logEx(throwable = e) { "Read received file digests failed" }
+            return null
+        }
         val snapshot = try { if (text.isEmpty()) JSONObject() else JSONObject(text) }
         catch (e: Exception) { JSONObject() }
         digestSnapshot = snapshot
@@ -47,21 +54,23 @@ class GlobalFileListRepoObj {
         }
     }
 
-    suspend fun addReceivedFile(file: File, md5: String) = withIOThread {
+    suspend fun addReceivedFile(file: File, md5: String): Unit = withIOThread {
         mutex.withLock {
             val length = file.length()
+            val modified = file.lastModified()
             val info = MergedFileInfo(file, md5, formatSize(length))
-            val snapshot = digestSnapshot()
+            cache[file.absolutePath] = CachedFile(length, modified, info)
+            // 首次目录扫描建立完整列表，此前收到的文件先保留在缓存中。
+            if (_fileListStateFlow.value is StatusState.Success) {
+                _fileListStateFlow.value = StatusState.Success(cache.values.sortedByDescending { it.modified }.map { it.info })
+            }
+            val snapshot = digestSnapshot() ?: return@withLock
             snapshot.put(file.absolutePath, JSONObject().apply {
                 put("length", length)
-                put("modified", file.lastModified())
+                put("modified", modified)
                 put("md5", md5)
             })
             Globals.app.globalDataStore.edit { it[digestKey] = snapshot.toString() }
-            cache[file.absolutePath] = CachedFile(length, file.lastModified(), info)
-            // 落盘事件不依赖页面订阅，复用合并时已经校验过的摘要。
-            _fileListStateFlow.value = StatusState.Success(cache.values.map { it.info }
-                .sortedByDescending { it.file.lastModified() })
         }
     }
 
@@ -70,6 +79,7 @@ class GlobalFileListRepoObj {
         val fileList = ArrayList<MergedFileInfo>()
         val nextCache = mutableMapOf<String, CachedFile>()
         if (nanoMergedDir.exists()) {
+            val digests = digestSnapshot()
             nanoMergedDir.listFiles()?.forEach {
                 currentCoroutineContext().ensureActive()
                 if (!it.isFile) return@forEach
@@ -79,7 +89,7 @@ class GlobalFileListRepoObj {
                 val info = if (cached != null && cached.length == length && cached.modified == modified) {
                     cached.info
                 } else {
-                    val saved = digestSnapshot().optJSONObject(it.absolutePath)
+                    val saved = digests?.optJSONObject(it.absolutePath)
                     val md5 = if (saved != null && saved.optLong("length") == length &&
                         saved.optLong("modified") == modified) saved.optString("md5") else ""
                     MergedFileInfo.fromCacheFile(it, formatSize(length), md5)

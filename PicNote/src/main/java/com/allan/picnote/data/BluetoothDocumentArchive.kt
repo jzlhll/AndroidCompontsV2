@@ -9,6 +9,7 @@ import android.util.JsonReader
 import android.util.JsonToken
 import androidx.annotation.StringRes
 import com.allan.picnote.R
+import com.allan.picnote.data.entity.MaxNodeTextBytes
 import com.allan.picnote.data.entity.DocumentContent
 import com.allan.picnote.logEx
 import com.allan.picnote.loge
@@ -48,7 +49,6 @@ private const val MaxEntries = 1025
 private const val MaxNodes = 4096
 private const val MaxImageReferences = 8192
 private const val MaxManifestBytes = 4L * 1024 * 1024
-private const val MaxNodeTextBytes = 1024 * 1024
 private const val MaxMediaBytes = 64L * 1024 * 1024
 private const val MaxDecodedImageBytes = 128L * 1024 * 1024
 private const val MaxCentralDirectoryBytes = 1024L * 1024

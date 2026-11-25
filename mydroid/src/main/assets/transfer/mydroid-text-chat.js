@@ -13,7 +13,8 @@
         "#71A3CE",
     ];
     const colorCache = new Map();
-    const messageList = [];
+    const messageKeys = new Set();
+    const messageTemplate = document.getElementById("chat-message");
     const idleTimeout = 3 * 60 * 1000;
 
     let selfIp = "browser";
@@ -91,47 +92,27 @@
         return colorCache.get(ip);
     }
 
-    function renderMessages() {
-        const html = messageList.map((item) => {
-            const timeText = formatTimestamp(item.timestamp);
-            const escapedText = escapeHtml(item.text);
-            const iconColor = item.iconColor || getIconColor(item.ip);
-            const iconHtml = item.type === 'client'
-                ? `<span class="message-icon-star">🌟</span>`
-                : `<div class="message-icon" style="background:${iconColor};"></div>`;
-            return `
-                <div class="message-item ${item.type}">
-                    <div class="message-content">
-                        <div class="message-top">
-                            ${iconHtml}
-                            <div class="message-host">${escapeHtml(item.ip)}</div>
-                            <div class="message-time">${timeText}</div>
-                        </div>
-                        <div class="message-bubble">
-                            <div class="message-text" data-copy-text="${escapeAttr(item.text)}">${escapedText}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join("");
-        messageListView.innerHTML = html;
-        scrollMessagesToBottom();
-    }
-
     function appendMessage(type, text, ip, timestamp = Date.now(), iconColor = "") {
-        const trimText = (text || "").trim();
-        if (!trimText) {
-            return;
+        const message = (text || "").trim();
+        if (!message) return;
+        const host = ip || "0.0.0.0";
+        const key = JSON.stringify([host, timestamp, message]);
+        if (messageKeys.has(key)) return;
+        const row = messageTemplate.content.firstElementChild.cloneNode(true);
+        row.classList.add(type);
+        const icon = row.querySelector(".message-icon");
+        if (type === "client") {
+            icon.className = "message-icon-star";
+            icon.textContent = "🌟";
+        } else {
+            icon.style.backgroundColor = iconColor || getIconColor(host);
         }
-        if (messageList.some(item => item.ip === ip && item.timestamp === timestamp && item.text === trimText)) return;
-        messageList.push({
-            type,
-            text: trimText,
-            ip: ip || "0.0.0.0",
-            timestamp,
-            iconColor,
-        });
-        renderMessages();
+        row.querySelector(".message-host").textContent = host;
+        row.querySelector(".message-time").textContent = formatTimestamp(timestamp);
+        row.querySelector(".message-text").textContent = message;
+        messageListView.appendChild(row);
+        messageKeys.add(key);
+        scrollMessagesToBottom();
         restartIdleTimer();
     }
 
@@ -230,7 +211,7 @@
         const target = event.target.closest(".message-text");
         if (target) {
             event.preventDefault();
-            showContextMenu(event.clientX, event.clientY, target.dataset.copyText || "");
+            showContextMenu(event.clientX, event.clientY, target.textContent);
         }
     });
 
@@ -326,26 +307,6 @@
     window.appendPhoneMessage = function(text, ip = "phone", timestamp = Date.now(), iconColor = "") {
         appendMessage(ip === selfIp ? "self" : "client", text, ip, timestamp, iconColor);
     };
-
-    function escapeHtml(text) {
-        return String(text)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll("\"", "&quot;")
-            .replaceAll("'", "&#39;")
-            .replaceAll("\n", "<br>");
-    }
-
-    function escapeAttr(text) {
-        return String(text)
-            .replaceAll("&", "&amp;")
-            .replaceAll("\"", "&quot;")
-            .replaceAll("'", "&#39;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll("\n", "&#10;");
-    }
 
     function encodeBase64(text) {
         return btoa(unescape(encodeURIComponent(text)));

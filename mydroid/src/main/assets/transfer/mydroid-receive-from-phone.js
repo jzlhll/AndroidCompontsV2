@@ -1,25 +1,40 @@
 (function() {
     const REQUEST_FILE_LIST = "/request-file-list";
 
-    async function requestFileList() {
-        let response = null;
+    let pendingRequest = null;
+    window.requestFileList = async function() {
+        if (pendingRequest) pendingRequest.abort();
+        const controller = new AbortController();
+        pendingRequest = controller;
+        const status = document.getElementById('list-status');
+        const retry = document.getElementById('retry-list');
+        document.getElementById('loading-text').style.display = 'block';
+        retry.hidden = true;
+        status.textContent = loc['file_list_loading'];
+        const timeout = setTimeout(() => controller.abort(), 15000);
         try {
-            response = await fetch(REQUEST_FILE_LIST, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-        } catch(e) {}
-        if (!response) throw new Error(loc["failure_error_with_code"] + "101");
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(loc["failure_error_with_code"] + "102 " + text);
+            const response = await fetch(REQUEST_FILE_LIST, { method: 'POST', signal: controller.signal });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (String(result.code) !== "0") throw new Error(result.msg || 'File list request failed');
+            const files = JSON.parse(result.data);
+            if (!Array.isArray(files)) throw new Error('Invalid file list');
+            if (pendingRequest === controller) htmlShowFileList(files);
+        } catch (error) {
+            if (pendingRequest !== controller) return;
+            console.error('Load file list failed', error);
+            status.textContent = loc['file_list_failed'];
+            retry.hidden = false;
+        } finally {
+            clearTimeout(timeout);
+            if (pendingRequest === controller) pendingRequest = null;
         }
-        const response2 = await response.json();
-        const fileList = JSON.parse(response2.data);
-        htmlShowFileList(fileList);
-    }
+    };
+
+    window.addEventListener('pagehide', () => {
+        if (pendingRequest) pendingRequest.abort();
+        pendingRequest = null;
+    });
 
     window.parseMessage = function(eventData) {
         const jsonData = JSON.parse(eventData);
@@ -28,7 +43,7 @@
 
         if (api == API_WS_CLIENT_INIT_CALLBACK) {
             htmlUpdateIpClient(data.myDroidMode, data.clientName, data.color);
-            requestFileList();
+            window.requestFileList();
             return true;
         }
 

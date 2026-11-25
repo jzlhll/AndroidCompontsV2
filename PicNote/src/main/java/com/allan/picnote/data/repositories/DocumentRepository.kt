@@ -66,11 +66,19 @@ import java.util.zip.ZipOutputStream
 data class Saved<T>(val value: T, val mirrorFailed: Boolean = false, val skippedImages: Int = 0)
 data class ImageDraft(val existing: NodeImageEntity? = null, val prepared: PreparedImage? = null, val id: String = existing?.id ?: UUID.randomUUID().toString(), val pendingRemoval: Boolean = false)
 data class HomeDocuments(val documents: List<DocumentSummary>, val content: DocumentContent?)
+data class EditableNode(val node: NodeEntity, val images: List<NodeImageEntity>, val fixed: Boolean)
 
 private const val NodeSortKeyStep = 1024L
 
 private fun requireStorage(condition: Boolean, @StringRes messageRes: Int) {
     if (!condition) throw PicNoteStorageException(messageRes)
+}
+
+private fun checkedNodeTextBytes(text: String, available: Int = MaxNodeTextBytes): Int {
+    requireStorage(text.length <= available, R.string.error_node_text_too_large)
+    val bytes = text.encodeToByteArray().size
+    requireStorage(bytes <= available, R.string.error_node_text_too_large)
+    return bytes
 }
 
 /** 串行维护文档结构、WebP 副本、源 URI 映射与可重建的 Markdown 镜像。 */
@@ -143,8 +151,14 @@ class DocumentRepository(private val context: Context, private val database: Pic
         }
     }
 
-    suspend fun content(id: String): DocumentContent = withContext(Dispatchers.IO) {
-        mutex.withLock { snapshot(id) }
+    suspend fun editableNode(documentId: String, nodeId: String): EditableNode = withIOThread {
+        mutex.withLock {
+            val node = dao.node(documentId, nodeId) ?: run {
+                requireStorage(dao.document(documentId) != null, R.string.error_document_deleted_reselect)
+                throw PicNoteStorageException(R.string.error_node_deleted)
+            }
+            EditableNode(node, dao.nodeImages(documentId, nodeId), dao.isFixedNode(documentId, nodeId))
+        }
     }
 
     suspend fun contentIfExists(id: String): DocumentContent? = withContext(Dispatchers.IO) {
@@ -235,14 +249,17 @@ class DocumentRepository(private val context: Context, private val database: Pic
 
     suspend fun create(title: String, firstBody: String): Saved<String> = withContext(Dispatchers.IO) {
         mutex.withLock {
-            requireStorage(title.trim().isNotEmpty(), R.string.error_title_required)
+            val savedTitle = title.trim()
+            requireStorage(savedTitle.isNotEmpty(), R.string.error_title_required)
+            checkedNodeTextBytes(savedTitle)
+            checkedNodeTextBytes(firstBody)
             val id = UUID.randomUUID().toString()
             currentCoroutineContext().ensureActive()
             withContext(NonCancellable) {
                 database.withTransaction {
-                    dao.putDocument(DocumentEntity(id, title.trim(), System.currentTimeMillis()))
+                    dao.putDocument(DocumentEntity(id, savedTitle, System.currentTimeMillis()))
                     dao.putNodes(listOf(
-                        NodeEntity(UUID.randomUUID().toString(), id, 1024, "title", title = title.trim()),
+                        NodeEntity(UUID.randomUUID().toString(), id, 1024, "title", title = savedTitle),
                         NodeEntity(UUID.randomUUID().toString(), id, 2048, "introduction", firstBody),
                     ))
                 }
@@ -266,9 +283,15 @@ class DocumentRepository(private val context: Context, private val database: Pic
             fun unreadable(number: Int, cause: IOException?): PicNoteStorageException = PicNoteStorageException(
                 R.string.error_duplicate_unreadable_image, cause, listOf(source.document.title, number),
             )
+            val title = "${source.document.title}(V2)"
+            for (entry in source.nodes) {
+                val node = entry.node
+                val nodeTitle = if (node.kind == "title") title else node.title
+                val titleBytes = checkedNodeTextBytes(nodeTitle)
+                checkedNodeTextBytes(node.bodyMarkdown, MaxNodeTextBytes - titleBytes)
+            }
             val files = trustedMedia(source, ::unreadable)
             val newId = UUID.randomUUID().toString()
-            val title = "${source.document.title}(V2)"
             val directory = File(root, newId)
             var committed = false
             try {
@@ -317,7 +340,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
 
     suspend fun move(documentId: String, nodeId: String, beforeId: String?): Saved<Unit>? {
         if (beforeId == nodeId) return null
-        return mutate(documentId) {
+        return mutate(documentId, cleanupMedia = false) {
             val nodes = dao.nodes(documentId).toMutableList()
             val sourceIndex = nodes.indexOfFirst { it.id == nodeId }
             requireStorage(sourceIndex >= 0, R.string.error_node_deleted)
@@ -357,7 +380,19 @@ class DocumentRepository(private val context: Context, private val database: Pic
         requireStorage(selected.size == ids.size && selected.all { it.node.kind == "body" }, R.string.error_merge_nodes_changed)
         // 以当前文档顺序为准，先转移引用，再删除较后节点，避免级联删除图片。
         val earlier = selected.first()
-        val body = selected.map { it.node.bodyMarkdown }.filter { it.isNotBlank() }.joinToString(MarkdownBlockSeparator)
+        val body = buildString {
+            var remaining = MaxNodeTextBytes
+            for (entry in selected) {
+                val text = entry.node.bodyMarkdown
+                if (text.isBlank()) continue
+                if (isNotEmpty()) {
+                    remaining -= checkedNodeTextBytes(MarkdownBlockSeparator, remaining)
+                    append(MarkdownBlockSeparator)
+                }
+                remaining -= checkedNodeTextBytes(text, remaining)
+                append(text)
+            }
+        }
         dao.updateNode(earlier.node.id, "body", body, "")
         dao.putImages(selected.flatMap { it.images }.mapIndexed { index, image ->
             image.copy(nodeId = earlier.node.id, sortIndex = index)
@@ -366,13 +401,14 @@ class DocumentRepository(private val context: Context, private val database: Pic
         earlier.node.id
     }
 
-    suspend fun moveImage(documentId: String, nodeId: String, imageId: String, direction: Int): Saved<Unit> = mutate(documentId) {
+    suspend fun moveImage(documentId: String, nodeId: String, imageId: String, direction: Int): Saved<Unit> = mutate(documentId, cleanupMedia = false) {
         requireStorage(direction == -1 || direction == 1, R.string.error_invalid_image_direction)
-        val node = snapshot(documentId).nodes.firstOrNull { it.node.id == nodeId } ?: throw PicNoteStorageException(R.string.error_node_deleted)
-        val index = node.images.indexOfFirst { it.id == imageId }
+        val images = dao.nodeImages(documentId, nodeId)
+        if (images.isEmpty()) requireStorage(dao.node(documentId, nodeId) != null, R.string.error_node_deleted)
+        val index = images.indexOfFirst { it.id == imageId }
         requireStorage(index >= 0, R.string.error_image_deleted)
-        val adjacent = node.images.getOrNull(index + direction) ?: throw PicNoteStorageException(R.string.error_image_at_edge)
-        val image = node.images[index]
+        val adjacent = images.getOrNull(index + direction) ?: throw PicNoteStorageException(R.string.error_image_at_edge)
+        val image = images[index]
         dao.putImages(listOf(image.copy(sortIndex = adjacent.sortIndex), adjacent.copy(sortIndex = image.sortIndex)))
     }
 
@@ -400,6 +436,10 @@ class DocumentRepository(private val context: Context, private val database: Pic
             if (nodeId == null) requireStorage(anchorIndex >= 2, R.string.error_insert_before_fixed)
             requireStorage(savedKind !in listOf("title", "chapter") || title.trim().isNotEmpty(), R.string.error_title_required)
             requireStorage(savedKind != "introduction" || currentIndex == 1 || body.isNotBlank(), R.string.error_introduction_required)
+            val savedTitle = if (savedKind == "title" || savedKind == "chapter") title.trim() else ""
+            val savedBody = if (savedKind in listOf("body", "introduction", "code")) body else ""
+            val titleBytes = checkedNodeTextBytes(savedTitle)
+            checkedNodeTextBytes(savedBody, MaxNodeTextBytes - titleBytes)
             val code = if (savedKind == "code") parseCodeBlock(body) else null
             val oldBody = current?.node?.bodyMarkdown
             requireStorage(savedKind != "code" || code?.code?.isNotBlank() == true ||
@@ -444,13 +484,13 @@ class DocumentRepository(private val context: Context, private val database: Pic
                     if (skippedImages > 0) R.string.error_duplicate_image else R.string.error_body_required,
                 )
                 val sources = checkSourceMappings(documentId, mappings)
+                val keptImages = savedImages.mapTo(hashSetOf()) { it.id }
+                val removedImages = currentImages.keys.any { it !in keptImages }
                 currentCoroutineContext().ensureActive()
                 withContext(NonCancellable) {
                     database.withTransaction {
                         requireStorage(dao.document(documentId) != null, R.string.error_document_deleted)
                         val currentNodes = dao.nodes(documentId)
-                        val savedTitle = if (savedKind == "title" || savedKind == "chapter") title.trim() else ""
-                        val savedBody = if (savedKind in listOf("body", "introduction", "code")) body else ""
                         if (nodeId == null) {
                             val index = if (anchorId == null) currentNodes.size else currentNodes.indexOfFirst { it.id == anchorId }
                             requireStorage(index >= 2, R.string.error_insert_anchor_changed)
@@ -467,11 +507,11 @@ class DocumentRepository(private val context: Context, private val database: Pic
                         }
                         dao.putImages(savedImages)
                         saveSourceMappings(sources)
-                        dao.cleanSourceImages(documentId)
+                        if (removedImages) dao.cleanSourceImages(documentId)
                         dao.touchDocument(documentId, System.currentTimeMillis())
                     }
                     committed = true
-                    afterCommit(documentId, id, skippedImages = skippedImages)
+                    afterCommit(documentId, id, cleanupMedia = removedImages, skippedImages = skippedImages)
                 }
             } finally {
                 if (!committed) createdFiles.forEach { it.delete() }
@@ -645,7 +685,7 @@ class DocumentRepository(private val context: Context, private val database: Pic
             image.width, image.height, image.sourceUri)
     }
 
-    private suspend fun <T> mutate(id: String, block: suspend () -> T): Saved<T> = withContext(Dispatchers.IO) {
+    private suspend fun <T> mutate(id: String, cleanupMedia: Boolean = true, block: suspend () -> T): Saved<T> = withContext(Dispatchers.IO) {
         mutex.withLock {
             currentCoroutineContext().ensureActive()
             withContext(NonCancellable) {
@@ -653,16 +693,20 @@ class DocumentRepository(private val context: Context, private val database: Pic
                     requireStorage(dao.document(id) != null, R.string.error_document_deleted)
                     val result = block()
                     dao.touchDocument(id, System.currentTimeMillis())
-                    dao.cleanSourceImages(id)
+                    if (cleanupMedia) dao.cleanSourceImages(id)
                     result
                 }
-                afterCommit(id, value)
+                afterCommit(id, value, cleanupMedia)
             }
         }
     }
 
     private suspend fun <T> afterCommit(id: String, value: T, cleanupMedia: Boolean = true, skippedImages: Int = 0): Saved<T> {
-        if (cleanupMedia) cleanMedia(id)
+        if (cleanupMedia) {
+            try { cleanMedia(id) }
+            catch (e: CancellationException) { throw e }
+            catch (e: Exception) { logEx(throwable = e, message = "Clean media after commit failed") }
+        }
         return Saved(value, !writeMirror(id), skippedImages)
     }
 

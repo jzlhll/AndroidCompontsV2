@@ -200,4 +200,5 @@
     <string name="import_saved_delete_completed">已保存到应用，系统相册图片已清理</string>
     <string name="import_saved_delete_cancelled">已保存到应用，未完成全部系统相册删除</string>
     <string name="import_saved_delete_failed">已保存到应用，系统相册图片删除失败</string>
+    <string name="error_node_text_too_large">单个节点的文字超过 1 MiB，请拆分后再保存。</string>
 </resources>

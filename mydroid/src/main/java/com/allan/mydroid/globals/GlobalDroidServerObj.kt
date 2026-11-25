@@ -6,7 +6,6 @@ import com.allan.mydroid.api.MyDroidMode
 import com.allan.mydroid.beans.wsdata.TextChatMessageBean
 import com.allan.mydroid.nanohttp.MyDroidHttpServer
 import com.allan.mydroid.nanohttp.WebsocketServer
-import com.allan.mydroid.state.GlobalReceiverFlowsObj
 import com.allan.mydroid.state.GlobalServerRuntimeObj
 import com.allan.mydroid.state.GlobalTextChatObj
 import com.allan.mydroid.network.GlobalNetworkMonitorObj
@@ -37,7 +36,6 @@ class GlobalDroidServerObj(
 
     private val networkMonitor: GlobalNetworkMonitorObj by inject()
     private val serverRuntimeState: GlobalServerRuntimeObj by inject()
-    private val receiverFlowsObj: GlobalReceiverFlowsObj by inject()
 
     /**
      * 服务存活停止事件流,由本类 emitAliveStopped 触发,供 AbsLiveFragment 观察。
@@ -287,7 +285,6 @@ class GlobalDroidServerObj(
         }
         if (current == null) {
             if (serverRuntimeState.serverIsOpenFlow.value) stopServer()
-            receiverFlowsObj.clearProgress()
         } else {
             startServerWrap()
         }

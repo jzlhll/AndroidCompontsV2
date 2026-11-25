@@ -79,21 +79,28 @@ class MediaScanner(private val context: Context, private val database: PicNoteDa
                 val version = versions.getValue(volume)
                 val prefix = MediaStore.Images.Media.getContentUri(volume).toString() + "/"
                 val previousState = states[volume]
-                val previous = dao.snapshots(prefix)
                 val rebaseline = previousState == null || !previousState.baselineValid || !previousState.available || previousState.version != version
                 if (rebaseline) {
                     if (previousState == null || previousState.version != version) dao.clearPendingVolume(volume)
-                } else {
-                    val oldUris = previous.associate { it.uri to it.time }
-                    val latest = previous.firstOrNull()?.time ?: Long.MIN_VALUE
-                    val added = current.takeWhile { it.snapshot.time >= latest }.filter { oldUris[it.snapshot.uri] != it.snapshot.time }
-                    addedCount += added.size
-                    dao.putPending(added.map { PendingMediaEntity(it.snapshot.uri, volume, it.name, it.snapshot.time, version) })
-                }
-                val snapshots = current.map { it.snapshot }
-                if (previous != snapshots) {
                     dao.clearSnapshots(prefix)
-                    dao.putSnapshots(snapshots)
+                    dao.putSnapshots(current.map { it.snapshot })
+                } else {
+                    val previous = dao.snapshots(prefix)
+                    val latest = previous.firstOrNull()?.time ?: Long.MIN_VALUE
+                    val remaining = previous.associateTo(HashMap()) { it.uri to it.time }
+                    val changed = mutableListOf<MediaSnapshotEntity>()
+                    val added = mutableListOf<PendingMediaEntity>()
+                    for ((snapshot, name) in current) {
+                        if (remaining.remove(snapshot.uri) == snapshot.time) continue
+                        changed += snapshot
+                        if (snapshot.time >= latest) {
+                            added += PendingMediaEntity(snapshot.uri, volume, name, snapshot.time, version)
+                        }
+                    }
+                    remaining.keys.chunked(MediaQueryBatchSize).forEach { dao.deleteSnapshots(it) }
+                    if (changed.isNotEmpty()) dao.putSnapshots(changed)
+                    if (added.isNotEmpty()) dao.putPending(added)
+                    addedCount += added.size
                 }
                 dao.cleanMissingPending(volume)
                 dao.putScanStates(listOf(MediaScanStateEntity(volume, version, time, true, true)))

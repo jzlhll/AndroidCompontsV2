@@ -8,6 +8,7 @@ import android.os.PowerManager
 import com.allan.mydroid.R
 import com.allan.mydroid.repository.GlobalFileListRepoObj
 import com.allan.mydroid.repository.TransferFiles
+import com.au.module_android.Globals
 import com.au.module_android.log.logEx
 import com.au.module_android.service.AutoStopService
 import com.allan.mydroid.client.api.ClientHttp
@@ -67,6 +68,7 @@ class DownloadService : AutoStopService(), KoinComponent {
                 temp = staging
                 val startedAt = android.os.SystemClock.elapsedRealtime()
                 call.execute().use { response ->
+                    if (response.code == 409) throw IOException(Globals.app.getString(R.string.download_batch_changed))
                     if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
                     val body = response.body ?: throw IOException("Empty response")
                     var received = 0L
@@ -102,6 +104,15 @@ class DownloadService : AutoStopService(), KoinComponent {
                 throw e
             } catch (e: Exception) {
                 error = e.message
+                val pending = task
+                if (!registered && pending != null) {
+                    globalDownloadObj.updateTask(pending) { current ->
+                        if (current.state == DownloadState.Pending) {
+                            current.copy(state = DownloadState.Failed,
+                                error = e.message ?: Globals.app.getString(R.string.transfer_interrupted))
+                        } else current
+                    }
+                }
                 logEx(throwable = e) { "Download failed: $attempt" }
             } finally {
                 if (registered) activeCalls.remove(attempt)?.cancel()

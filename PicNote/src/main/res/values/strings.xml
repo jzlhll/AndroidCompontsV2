@@ -200,4 +200,5 @@
     <string name="import_saved_delete_completed">Saved in the app. System gallery images have been removed.</string>
     <string name="import_saved_delete_cancelled">Saved in the app. System gallery deletion was not fully completed.</string>
     <string name="import_saved_delete_failed">Saved in the app, but system gallery images could not be deleted.</string>
+    <string name="error_node_text_too_large">Node text exceeds 1 MiB. Split it into smaller nodes.</string>
 </resources>

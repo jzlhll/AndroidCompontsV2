@@ -186,4 +186,6 @@
     <string name="mydroid_apk_install_preparing">正在準備安裝…</string>
     <string name="mydroid_apk_install_confirm">等待確認</string>
     <string name="mydroid_apk_install_interrupted">安裝中斷</string>
+    <string name="picker_read_permission_failed">無法取得以下檔案的持續讀取權限：%1$s</string>
+    <string name="download_batch_changed">檔案已重新分享，請重新整理清單後再下載。</string>
 </resources>

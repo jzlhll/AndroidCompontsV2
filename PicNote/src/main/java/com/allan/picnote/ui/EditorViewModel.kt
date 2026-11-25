@@ -88,14 +88,12 @@ class EditorViewModel(
         mutableStateFlow.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             try {
-                val nodes = repository.content(documentId).nodes
-                val index = nodes.indexOfFirst { it.node.id == nodeId }
-                val node = nodes.getOrNull(index) ?: throw PicNoteStorageException(R.string.error_node_deleted)
+                val node = repository.editableNode(documentId, nodeId)
                 val isCode = node.node.kind == "code"
                 val codeBlock = if (isCode) withContext(Dispatchers.Default) { parseCodeBlock(node.node.bodyMarkdown) } else null
                 originalCodeBlock = codeBlock
                 originalCodeMarkdown = if (isCode) node.node.bodyMarkdown else null
-                originalDraft = EditorState(title = node.node.title, kind = node.node.kind, fixed = index < 2,
+                originalDraft = EditorState(title = node.node.title, kind = node.node.kind, fixed = node.fixed,
                     body = codeBlock?.description ?: if (isCode) "" else node.node.bodyMarkdown,
                     code = codeBlock?.code ?: if (isCode) node.node.bodyMarkdown else "",
                     codeLanguage = codeBlock?.language.orEmpty(),

@@ -158,9 +158,11 @@ object ClientApi {
     }
 
     /** 拼下载 URL 字符串。实际下载由 DownloadService 用 OkHttp 流式 GET 执行。 */
-    fun downloadFileUrl(ip: String, httpPort: Int, uriUuid: String): String {
+    fun downloadFileUrl(ip: String, httpPort: Int, uriUuid: String, importBatchId: String?): String {
         return HttpUrl.Builder().scheme("http").host(ip).port(httpPort)
-            .addPathSegment("file_download_uuid").addPathSegment(uriUuid).build().toString()
+            .addPathSegment("file_download_uuid").addPathSegment(uriUuid)
+            .apply { if (importBatchId != null) addQueryParameter("importBatchId", importBatchId) }
+            .build().toString()
     }
 
     private suspend fun postJson(url: String, json: String): String = withIOThread {

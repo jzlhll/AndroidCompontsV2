@@ -69,7 +69,7 @@ class ConnectToHostReceiveViewModel(private val endpoint: HostEndpoint) : ViewMo
         globalDownloadObj.enqueue(DownloadTask(
             ip = endpoint.ip, httpPort = endpoint.httpPort, uriUuid = bean.uriUuid,
             name = bean.name ?: bean.uriUuid, fileSize = bean.fileSize ?: 0L,
-            url = ClientApi.downloadFileUrl(endpoint.ip, endpoint.httpPort, bean.uriUuid),
+            url = ClientApi.downloadFileUrl(endpoint.ip, endpoint.httpPort, bean.uriUuid, bean.importBatchId),
             importBatchId = bean.importBatchId
         ))
     }

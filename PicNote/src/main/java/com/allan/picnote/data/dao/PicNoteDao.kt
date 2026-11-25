@@ -17,8 +17,17 @@ interface PicNoteDao {
     @Query("SELECT id, document_id, sort_key, kind, body_markdown, title FROM nodes WHERE document_id = :id ORDER BY sort_key, id")
     suspend fun nodes(id: String): List<NodeEntity>
 
+    @Query("SELECT id, document_id, sort_key, kind, body_markdown, title FROM nodes WHERE document_id = :documentId AND id = :nodeId")
+    suspend fun node(documentId: String, nodeId: String): NodeEntity?
+
+    @Query("SELECT :nodeId IN (SELECT id FROM nodes WHERE document_id = :documentId ORDER BY sort_key, id LIMIT 2)")
+    suspend fun isFixedNode(documentId: String, nodeId: String): Boolean
+
     @Query("SELECT id, node_id, document_id, sort_index, file_name, hash, width, height, source_uri FROM node_images WHERE document_id = :id ORDER BY sort_index, id")
     suspend fun images(id: String): List<NodeImageEntity>
+
+    @Query("SELECT id, node_id, document_id, sort_index, file_name, hash, width, height, source_uri FROM node_images WHERE node_id = :nodeId AND document_id = :documentId ORDER BY sort_index, id")
+    suspend fun nodeImages(documentId: String, nodeId: String): List<NodeImageEntity>
 
     @Query("SELECT file_name FROM node_images WHERE document_id = :id")
     suspend fun referencedFiles(id: String): List<String>
@@ -59,6 +68,8 @@ interface PicNoteDao {
     suspend fun putPending(values: List<PendingMediaEntity>)
     @Query("DELETE FROM media_snapshots WHERE substr(uri, 1, length(:prefix)) = :prefix")
     suspend fun clearSnapshots(prefix: String)
+    @Query("DELETE FROM media_snapshots WHERE uri IN (:uris)")
+    suspend fun deleteSnapshots(uris: List<String>)
     @Query("DELETE FROM pending_media WHERE volume = :volume")
     suspend fun clearPendingVolume(volume: String)
     @Query("DELETE FROM pending_media WHERE uri IN (:uris)")

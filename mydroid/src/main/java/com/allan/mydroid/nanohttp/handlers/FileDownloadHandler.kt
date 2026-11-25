@@ -1,5 +1,6 @@
 package com.allan.mydroid.nanohttp.handlers
 
+import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.ShareInBean
 import com.allan.mydroid.globals.nanoTempCacheMergedDir
@@ -46,21 +47,23 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
         if (method == NanoHTTPD.Method.GET && uri.startsWith(URL_PREFIX)) {
             val transferId = session.parameters["transferId"]?.firstOrNull() ?: UUID.randomUUID().toString()
             if (!transferId.matches(Regex("[A-Za-z0-9_-]{1,64}"))) return newNotFoundResponse("Invalid download session")
-            return fileDownload(uri.substring(URL_PREFIX.length), transferId)
+            return fileDownload(uri.substring(URL_PREFIX.length), transferId, session.parameters["importBatchId"]?.firstOrNull())
         }
         return null
     }
 
-    private fun fileDownload(uriUuid: String, transferId: String): Response {
+    private fun fileDownload(uriUuid: String, transferId: String, expectedBatchId: String?): Response {
         var transferStream: InputStream? = null
         var registered = false
         try {
             val info = shareInRepository.shareInAndReceiveBeans?.find { it.uriUuid == uriUuid }
                 ?: return fileNotFoundResponse()
-            val fileSize = info.fileSize ?: 0
-            if (fileSize <= 0) {
-                return fileSizeIs0Response()
+            if (expectedBatchId != null && expectedBatchId != info.importBatchId.orEmpty()) {
+                shareInRepository.startDownload(transferId, uriUuid, info.importBatchId, state = "stale")
+                return NanoHTTPD.newFixedLengthResponse(Response.Status.CONFLICT, MIME_PLAINTEXT, "File list changed")
             }
+            val fileSize = info.fileSize?.takeIf { it > 0 } ?: -1L
+            if (fileSize < 0 && info.from != FROM_PICKER) return fileSizeIs0Response()
             val uri = info.uri
             val filename = info.name ?: "file"
             logdNoFile { "file Download1 $uri size:$fileSize" }
@@ -69,20 +72,32 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
                 logdNoFile { "file Download this uri is donot has permission." }
                 return newInternalErrorResponse("No permission yet todo translate.")
             }
-            val inputStream = openDownloadInputStream(info)
+            val source = openDownloadInputStream(info)
+            transferStream = source
+            // 提供方可能省略长度，先区分空文件，再按 HTTP 分块传输到 EOF。
+            val inputStream = if (fileSize < 0) {
+                val buffered = source.buffered()
+                buffered.mark(1)
+                if (buffered.read() == -1) return fileSizeIs0Response()
+                buffered.reset()
+                buffered
+            } else source
             aliveTrigger.transferStarted()
             val digest = MessageDigest.getInstance("MD5")
             var readBytes = 0L
+            var reachedEof = false
             // 摘要仅覆盖实际发送的字节；下载仍由浏览器原生流式落盘。
             val trackedStream = object : FilterInputStream(inputStream) {
                 private val closed = AtomicBoolean(false)
                 override fun read(): Int {
                     val value = inputStream.read()
+                    if (value == -1) reachedEof = true
                     if (value >= 0) { digest.update(value.toByte()); readBytes++ }
                     return value
                 }
                 override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
                     val count = inputStream.read(buffer, offset, length)
+                    if (count == -1) reachedEof = true
                     if (count > 0) { digest.update(buffer, offset, count); readBytes += count }
                     return count
                 }
@@ -130,7 +145,10 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
                         returned = true
                     } finally {
                         try { trackedStream.close() }
-                        finally { publishResult(returned && !failed && readBytes == fileSize) }
+                        finally {
+                            val complete = if (fileSize < 0) reachedEof else readBytes == fileSize
+                            publishResult(returned && !failed && complete)
+                        }
                     }
                 }
 
@@ -158,9 +176,6 @@ class FileDownloadHandler(private val aliveTrigger: IDroidServerAliveTrigger) : 
             response.addHeader("Pragma", "no-cache")
             response.addHeader("Expires", "0")
 
-            // 3. （可选但推荐）设置 Content-Length 头
-            response.addHeader("Content-Length", "" + fileSize)
-            // 4. （可选）设置 Content-Type，如果你确切知道文件类型，可以设置更具体的 MIME 类型
             transferStream = null
             return response
         } catch (e: FileNotFoundException) {

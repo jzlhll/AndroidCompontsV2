@@ -26,7 +26,6 @@ class ChunkUploadHandler(
         data class Failed(
             val key: String,
             val fileName: String,
-            val chunkIndex: Int,
             val totalChunks: Int,
             val error: Exception,
         ) : ChunkResult
@@ -49,15 +48,18 @@ class ChunkUploadHandler(
         data class Failed(val code: String, val message: String?, val error: Exception? = null, val receivedCount: Int = 0) : MergeResult
     }
 
+    private class UploadChunks(val totalChunks: Int) {
+        val byIndex = HashMap<Int, ChunkInfoResult>()
+    }
+
     // 流式协议使用上传会话索引，旧协议仍按完整 MD5 隔离。
-    private val fileChunkInfosMap = HashMap<String, ArrayList<ChunkInfoResult>>()
+    private val uploads = HashMap<String, UploadChunks>()
     private val closedUploads = LinkedHashSet<String>()
     private val cLock = Any()
     private var closed = false
 
     fun handleUploadChunk(session: IHTTPSession): ChunkResult {
         var fileName = ""
-        var chunkIndex = 0
         var totalChunks = 0
         var key = ""
         var retainedFile: File? = null
@@ -67,7 +69,7 @@ class ChunkUploadHandler(
             val params = session.parameters
             fileName = params["fileName"]?.firstOrNull().orEmpty()
             validateFileName(fileName)
-            chunkIndex = params["chunkIndex"]?.firstOrNull()?.toInt() ?: 0
+            val chunkIndex = params["chunkIndex"]?.firstOrNull()?.toInt() ?: 0
             totalChunks = params["totalChunks"]?.firstOrNull()?.toInt() ?: 0
             val md5 = params["md5"]?.firstOrNull().orEmpty()
             val hashMode = params["hashMode"]?.firstOrNull().orEmpty()
@@ -78,19 +80,15 @@ class ChunkUploadHandler(
             val source = File(path)
             val result = synchronized(cLock) {
                 check(!closed && key !in closedUploads) { "Upload session is closed" }
-                check(fileChunkInfosMap[key]?.all { it.totalChunks == totalChunks } != false) { "Chunk count changed" }
+                val existing = uploads[key]
+                check(existing == null || existing.totalChunks == totalChunks) { "Chunk count changed" }
                 ensureDirectory(chunksDir)
                 val target = File(chunksDir, source.name)
                 check(source.renameTo(target)) { "Cannot retain chunk" }
                 retainedFile = target
-                val list = fileChunkInfosMap.getOrPut(key) { ArrayList() }
-                list.removeAll {
-                    if (it.chunkIndex != chunkIndex) return@removeAll false
-                    it.chunkTmpFile.delete()
-                    true
-                }
+                val upload = existing ?: UploadChunks(totalChunks).also { uploads[key] = it }
                 val chunk = ChunkInfoResult(fileName, chunkIndex, totalChunks, if (hashMode == "stream") "" else md5, target)
-                list.add(chunk)
+                upload.byIndex.put(chunkIndex, chunk)?.chunkTmpFile?.delete()
                 ChunkResult.Received(key, chunk)
             }
             retainedFile = null
@@ -100,13 +98,13 @@ class ChunkUploadHandler(
             return result
         } catch (e: Exception) {
             retainedFile?.delete()
-            return ChunkResult.Failed(key, fileName, chunkIndex, totalChunks, e)
+            return ChunkResult.Failed(key, fileName, totalChunks, e)
         }
     }
 
     fun retainedCount(result: ChunkResult.Received): Int? = synchronized(cLock) {
-        val chunks = fileChunkInfosMap[result.key] ?: return@synchronized null
-        if (result.chunk in chunks) chunks.size else null
+        val chunks = uploads[result.key]?.byIndex ?: return@synchronized null
+        if (chunks[result.chunk.chunkIndex] === result.chunk) chunks.size else null
     }
 
     fun isUploadClosed(key: String): Boolean = synchronized(cLock) { closed || key in closedUploads }
@@ -121,21 +119,21 @@ class ChunkUploadHandler(
 
         val hashMode = params.optString("hashMode")
         val key = uploadKey(session, params.optString("uploadId"), fileName, md5, hashMode)
-        val receivedCount = synchronized(cLock) { fileChunkInfosMap[key]?.size ?: 0 }
+        val receivedCount = synchronized(cLock) { uploads[key]?.byIndex?.size ?: 0 }
         return MergeRequest(key, fileName, totalChunks, md5, lastModified, hashMode == "stream", receivedCount)
     }
 
     fun handleMergeChunk(request: MergeRequest): MergeResult {
-        val chunks = removeChunkInfoList(request.key, request.streaming)
+        val upload = removeUpload(request.key, request.streaming)
             ?: return MergeResult.Failed(CODE_FAIL_MERGE_CHUNK, Globals.getString(R.string.no_chunks))
+        val chunks = upload.byIndex
         var temp: File? = null
         var errorCode = CODE_FAIL_MERGE_CHUNK
         try {
             val totalChunks = request.totalChunks
-            chunks.sortBy { it.chunkIndex }
-            check(chunks.size == totalChunks && chunks.withIndex().all { (index, chunk) ->
-                chunk.chunkIndex == index + 1 && chunk.totalChunks == totalChunks
-            }) { Globals.getString(R.string.chunks_number_not_match) }
+            check(upload.totalChunks == totalChunks && chunks.size == totalChunks) {
+                Globals.getString(R.string.chunks_number_not_match)
+            }
             val digest = MessageDigest.getInstance("MD5")
             val stagingFile = synchronized(cLock) {
                 check(!closed) { "Upload session is closed" }
@@ -145,7 +143,9 @@ class ChunkUploadHandler(
             temp = stagingFile
             // 合并写入时计算完整摘要，避免再次读取整个文件。
             DigestOutputStream(stagingFile.outputStream().buffered(64 * 1024), digest).use { output ->
-                chunks.forEach { chunk -> chunk.chunkTmpFile.inputStream().use { it.copyTo(output, 64 * 1024) } }
+                for (index in 1..totalChunks) {
+                    chunks.getValue(index).chunkTmpFile.inputStream().use { it.copyTo(output, 64 * 1024) }
+                }
             }
             val actualMd5 = digest.digest().joinToString("") { "%02x".format(it) }
             if (!actualMd5.equals(request.md5, ignoreCase = true)) {
@@ -159,7 +159,7 @@ class ChunkUploadHandler(
             return MergeResult.Failed(errorCode, e.message, e, chunks.size)
         } finally {
             temp?.delete()
-            chunks.forEach { it.chunkTmpFile.delete() }
+            chunks.values.forEach { it.chunkTmpFile.delete() }
         }
     }
 
@@ -167,15 +167,15 @@ class ChunkUploadHandler(
         val hashMode = params.optString("hashMode")
         val fileName = params.optString("fileName")
         val key = uploadKey(session, params.optString("uploadId"), fileName, params.optString("md5"), hashMode)
-        val chunks = removeChunkInfoList(key, hashMode == "stream")
-        chunks?.forEach { it.chunkTmpFile.delete() }
-        return AbortedUpload(key, fileName, chunks?.size ?: 0, chunks?.firstOrNull()?.totalChunks ?: 0)
+        val upload = removeUpload(key, hashMode == "stream")
+        upload?.byIndex?.values?.forEach { it.chunkTmpFile.delete() }
+        return AbortedUpload(key, fileName, upload?.byIndex?.size ?: 0, upload?.totalChunks ?: 0)
     }
 
     fun close(): List<File> = synchronized(cLock) {
         closed = true
-        val pendingFiles = fileChunkInfosMap.values.flatMap { chunks -> chunks.map { it.chunkTmpFile } }
-        fileChunkInfosMap.clear()
+        val pendingFiles = uploads.values.flatMap { it.byIndex.values.map { chunk -> chunk.chunkTmpFile } }
+        uploads.clear()
         closedUploads.clear()
         pendingFiles
     }
@@ -203,14 +203,14 @@ class ChunkUploadHandler(
         return "${session.remoteIpAddress}:$uploadId:$fileName-${md5.lowercase()}"
     }
 
-    private fun removeChunkInfoList(key: String, closeSession: Boolean): ArrayList<ChunkInfoResult>? = synchronized(cLock) {
+    private fun removeUpload(key: String, closeSession: Boolean): UploadChunks? = synchronized(cLock) {
         if (closed) return@synchronized null
         // 避免取消或合并后迟到的分块产生孤立临时文件。
         if (closeSession) {
             closedUploads.add(key)
             while (closedUploads.size > 256) closedUploads.remove(closedUploads.first())
         }
-        fileChunkInfosMap.remove(key)
+        uploads.remove(key)
     }
 
     private fun ensureDirectory(dir: File) {

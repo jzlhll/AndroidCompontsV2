@@ -152,6 +152,7 @@
         }
 
         .message-text {
+            white-space: pre-line;
             color: #23262d;
             font-size: 15px;
             line-height: 1.55;
@@ -384,6 +385,18 @@
         </div>
 
         <div id="messageList" class="message-list"></div>
+        <template id="chat-message">
+            <div class="message-item">
+                <div class="message-content">
+                    <div class="message-top">
+                        <span class="message-icon"></span>
+                        <div class="message-host"></div>
+                        <div class="message-time"></div>
+                    </div>
+                    <div class="message-bubble"><div class="message-text"></div></div>
+                </div>
+            </div>
+        </template>
 
         <div class="input-bar">
             <div class="input-row">

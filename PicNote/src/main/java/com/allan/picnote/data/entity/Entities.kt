@@ -6,6 +6,8 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+const val MaxNodeTextBytes = 1024 * 1024
+
 @Entity(tableName = "documents", indices = [Index("updated_at")])
 data class DocumentEntity(
     @PrimaryKey val id: String,

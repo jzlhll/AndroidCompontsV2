@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.allan.mydroid.R
+import com.allan.mydroid.beansinner.FROM_PICKER
 import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.LEGACY_IMPORT_BATCH_ID
 import com.allan.mydroid.beansinner.groupImportBatches
@@ -74,7 +75,11 @@ fun ConnectToHostReceiveScreen(
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column(Modifier.weight(1f)) {
                         BasicText(stringResource(R.string.transfer_remote_files), style = ComposeTypography.Font16M)
-                        val totalSize = if (state.files.any { it.fileSize == null || it.fileSize < 0 }) {
+                        val unknownSize = state.files.any { file ->
+                            val size = file.fileSize ?: return@any true
+                            size < 0 || (size == 0L && file.from == FROM_PICKER)
+                        }
+                        val totalSize = if (unknownSize) {
                             stringResource(R.string.unknown_size)
                         } else {
                             formatBytes(state.files.sumOf { it.fileSize ?: 0L })
@@ -180,7 +185,11 @@ private fun RemoteFileRow(
                     BasicText(stringResource(R.string.transfer_average_speed, formatBytes(task.bytesPerSecond)),
                         style = ComposeTypography.Font14Desc91)
                 }
-                LinearProgressIndicator(progress = { task.progress }, modifier = Modifier.fillMaxWidth())
+                if (task.fileSize > 0) {
+                    LinearProgressIndicator(progress = { task.progress }, modifier = Modifier.fillMaxWidth())
+                } else {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
             }
             task.error?.let { Text(it, style = ComposeTypography.Font14sp, color = ComposeColors.Red) }
         }

@@ -6,6 +6,7 @@ import com.allan.picnote.data.normalizeCodeLanguage
 import io.noties.prism4j.Prism4j
 
 private val lineBreakCharacters = charArrayOf('\r', '\n')
+private val xmlAttribute = Regex("""\s+([^\s=/>]+)\s*=\s*(?:"([^"]*)"|'([^']*)')""")
 private const val ContinuationOperators = ".+-=*/%&|?^\\"
 
 /** 保存前整理代码结构与缩进，字符串、注释和有语义的相对缩进保持原文。 */
@@ -217,6 +218,13 @@ private fun formatMarkup(code: String, tokens: List<Prism4j.Node>, html: Boolean
                 // 内联元素之间新增空白会改变文本，例如相邻 span 原本没有空格。
                 if (html && name in inlineTags) parent.hasText = true
                 val element = MarkupElement(name, offset, raw, end)
+                if (!html && "xml:space" in raw) {
+                    // 整段保留也覆盖继承该属性的子节点，其他属性中的引号文本不参与判断。
+                    element.hasText = element.hasText || xmlAttribute.findAll(raw).any { attribute ->
+                        attribute.groupValues[1] == "xml:space" &&
+                            (attribute.groups[2] ?: attribute.groups[3])?.value != "default"
+                    }
+                }
                 parent.children.add(element)
                 if (!raw.endsWith("/>") && !(html && name in voidTags)) elements.addLast(element)
             }

@@ -195,4 +195,6 @@
     <string name="mydroid_apk_install_preparing">Preparing installation…</string>
     <string name="mydroid_apk_install_confirm">Waiting for confirmation</string>
     <string name="mydroid_apk_install_interrupted">Installation interrupted</string>
+    <string name="picker_read_permission_failed">Could not keep read access to: %1$s</string>
+    <string name="download_batch_changed">This file was shared again. Refresh the list before downloading.</string>
 </resources>

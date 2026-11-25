@@ -1,6 +1,7 @@
 package com.allan.mydroid.repository
 
 import android.net.Uri
+import com.allan.mydroid.PICKER_NEED_PERMISSION
 import com.allan.mydroid.beansinner.FROM_LOCAL
 import com.allan.mydroid.beansinner.FROM_SHARE_IN
 import com.allan.mydroid.beansinner.FROM_PICKER
@@ -52,7 +53,7 @@ class GlobalShareInRepoObj(
     private val _downloadTransfersFlow = MutableStateFlow<Map<String, DownloadTransfer>>(emptyMap())
     val downloadTransfersFlow = _downloadTransfersFlow.asStateFlow()
 
-    fun startDownload(transferId: String, uriUuid: String, importBatchId: String?) {
+    fun startDownload(transferId: String, uriUuid: String, importBatchId: String?, state: String = "sending") {
         _downloadTransfersFlow.update { previous ->
             val existing = previous[transferId]
             check(existing == null || (existing.uriUuid == uriUuid && existing.state != "sending")) {
@@ -65,7 +66,7 @@ class GlobalShareInRepoObj(
                 check(completed != null) { "Too many active downloads" }
                 next.remove(completed.key)
             }
-            next[transferId] = DownloadTransfer(transferId, uriUuid, importBatchId = importBatchId)
+            next[transferId] = DownloadTransfer(transferId, uriUuid, state = state, importBatchId = importBatchId)
             next
         }
     }
@@ -98,12 +99,11 @@ class GlobalShareInRepoObj(
             val json = AppDataStore.readStringBlocked("mydroid_sendUriMap", "") ?: ""
             logdNoFile { "load cache sendUri Map json: $json" }
             val map: HashMap<String, ShareInBean>? = if (json.isEmpty()) hashMapOf() else json.fromGson()
-            val hostUris = Globals.app.contentResolver.persistedUriPermissions.map { it.uri }
+            val hostUris = Globals.app.contentResolver.persistedUriPermissions.filter { it.isReadPermission }.map { it.uri }.toSet()
             val needDeleteKeys = mutableListOf<String>()
             map?.forEach { k, v ->
                 if (v.from == FROM_PICKER) {
-                    val found = hostUris.find { it == v.uri }
-                    if (found == null) {
+                    if (v.uri !in hostUris) {
                         needDeleteKeys.add(k)
                     }
                 }
@@ -162,16 +162,22 @@ class GlobalShareInRepoObj(
         }
     }
 
-    suspend fun addShareInUris(uris: List<Uri>, from: String) = withIOThread {
+    suspend fun addShareInUris(
+        uris: List<Uri>,
+        from: String,
+        needPermission: Boolean = from == FROM_PICKER && PICKER_NEED_PERMISSION,
+    ): List<String> = withIOThread {
         mutex.withLock {
             val next = HashMap(loadSendUriMap())
             val batchId = UUID.randomUUID().toString()
             val importedAt = System.currentTimeMillis()
             val copiedFiles = mutableListOf<File>()
+            val selected = uris.distinct()
+            val rejected = mutableListOf<String>()
             val replacedBeans = mutableListOf<ShareInBean>()
             var committed = false
             try {
-                for ((index, uri) in uris.distinct().withIndex()) {
+                for ((index, uri) in selected.withIndex()) {
                     val importKey = UUID.nameUUIDFromBytes("share:$uri".toByteArray(Charsets.UTF_8))
                         .toString().replace("-", "")
                     // 分享副本的 URI 已改变，同时按原始来源标识匹配，兼容旧记录与跨入口重复导入。
@@ -180,8 +186,12 @@ class GlobalShareInRepoObj(
                     }
                     // uriUuid 标识同一来源的逻辑文件，批次标识隔离每次重新导入的下载结果。
                     val uriUuid = replaced.values.firstOrNull()?.uriUuid ?: importKey
-                    var bean = ShareInBean.convert(uri, from).copy(uriUuid = uriUuid, importBatchId = batchId,
+                    var bean = ShareInBean.convert(uri, from, uriUuid).copy(importBatchId = batchId,
                         importedAt = importedAt, importOrder = index, sourceUriKey = importKey)
+                    if (needPermission && !uriPermissionChecker.takeHostPermission(uri)) {
+                        rejected += bean.name?.ifBlank { null } ?: uri.lastPathSegment ?: uri.toString()
+                        continue
+                    }
                     if (from == FROM_SHARE_IN) {
                         // 外部分享的读授权随来源任务结束，先保存独立副本再关闭导入页。
                         check(importDir.isDirectory || importDir.mkdirs()) { "Cannot create import directory" }
@@ -208,6 +218,7 @@ class GlobalShareInRepoObj(
                     }
                     next[bean.uriUuid] = bean
                 }
+                if (rejected.size == selected.size) return@withLock rejected
                 currentCoroutineContext().ensureActive()
                 withContext(NonCancellable) {
                     updateSendUriMap(next)
@@ -227,6 +238,7 @@ class GlobalShareInRepoObj(
             } finally {
                 if (!committed) copiedFiles.forEach { it.delete() }
             }
+            rejected
         }
     }
 
