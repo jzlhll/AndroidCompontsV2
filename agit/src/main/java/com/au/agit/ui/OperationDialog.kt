@@ -60,6 +60,7 @@ fun OperationDialog(
     onCancel: () -> Unit,
     onClose: () -> Unit,
     onPush: (Boolean) -> Unit,
+    onBranchChoice: (BranchChoice) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Dialog(onDismissRequest = {}, properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false)) {
@@ -70,18 +71,53 @@ fun OperationDialog(
                 Spacer(Modifier.height(16.dp))
                 val scroll = rememberLazyListState()
                 val current = state.steps.indexOfLast { it.status != StepStatus.Pending }
-                LaunchedEffect(current, state.steps.size, state.preview) {
-                    if (state.preview != null) scroll.animateScrollToItem(state.steps.size)
+                LaunchedEffect(current, state.steps.size, state.preview, state.branchChoice) {
+                    if (state.preview != null || state.branchChoice != null) scroll.animateScrollToItem(state.steps.size)
                     else if (current >= 0) scroll.animateScrollToItem(current)
                 }
                 LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 320.dp), state = scroll, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     itemsIndexed(state.steps) { _, step -> TerminalStep(step) }
                     state.preview?.let { plan ->
                         item {
-                            Text("${plan.projectName}\n${plan.branch} → origin/${plan.target.removePrefix("refs/heads/")}", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
+                            val branch = plan.target?.let { "${plan.branch} → origin/${it.removePrefix("refs/heads/")}" } ?: plan.branch
+                            Text("${plan.projectName}\n$branch", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
+                            if (plan.recreateTemporary) Text(stringResource(R.string.recreate_temporary), style = MaterialTheme.typography.bodySmall)
                             if (plan.dirty) Text(stringResource(R.string.uncommitted_local), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 8.dp))
                             plan.commits.forEach { commit -> Text("${commit.id.take(8)} ${commit.message}", fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall) }
                             if (plan.commits.isEmpty()) Text(stringResource(R.string.no_outgoing), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    state.branchChoice?.let { plan ->
+                        item {
+                            val message = when {
+                                plan.initializing -> stringResource(R.string.choose_remote_branch)
+                                plan.choosingInitialUpstream -> stringResource(R.string.choose_initial_upstream, plan.currentBranch)
+                                else -> stringResource(R.string.return_branch_preserve, plan.currentBranch)
+                            }
+                            Text(message, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        itemsIndexed(plan.choices) { _, choice ->
+                            Column {
+                                if (!plan.initializing && !choice.merged) {
+                                    val message = when {
+                                        choice.configureUpstream -> R.string.return_first_push_unmerged
+                                        choice.legacyDeliveryUnknown -> R.string.return_legacy_unverified
+                                        else -> R.string.return_merge_unverified
+                                    }
+                                    Text(stringResource(message), style = MaterialTheme.typography.bodySmall)
+                                }
+                                Button(onClick = { onBranchChoice(choice) }, modifier = Modifier.fillMaxWidth()) {
+                                    Text(when {
+                                        plan.initializing -> stringResource(R.string.confirm_checkout_branch, choice.branch)
+                                        plan.choosingInitialUpstream -> stringResource(R.string.confirm_initial_upstream, choice.target.removePrefix("refs/heads/"))
+                                        choice.configureUpstream -> stringResource(R.string.confirm_return_tracking_branch,
+                                            choice.branch, choice.target.removePrefix("refs/heads/"))
+                                        else -> stringResource(R.string.confirm_return_branch, choice.branch)
+                                    })
+                                }
+                                if (!plan.initializing && !choice.configureUpstream) Text("origin/${choice.target.removePrefix("refs/heads/")}", fontFamily = FontFamily.Monospace,
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
@@ -91,15 +127,17 @@ fun OperationDialog(
                     if (state.status == OperationStatus.Running) {
                         if (state.cancellable && !state.cancelling) TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
                     } else {
-                        TextButton(onClick = onClose) { Text(if (state.status == OperationStatus.Success && state.preview == null) stringResource(R.string.done) else stringResource(R.string.close)) }
+                        TextButton(onClick = onClose) { Text(if (state.status == OperationStatus.Success && state.preview == null && state.branchChoice == null) stringResource(R.string.done) else stringResource(R.string.close)) }
                     }
                 }
-                if (state.status != OperationStatus.Running && state.preview != null) {
-                    if (state.allowTemporaryBranch) {
-                        Text(stringResource(R.string.temporary_hint), style = MaterialTheme.typography.bodySmall)
+                val plan = state.preview
+                if (state.status != OperationStatus.Running && plan != null) {
+                    if (plan.canCreateTemporaryBranch) {
+                        Text(stringResource(if (plan.initialPushConflict) R.string.initial_push_temporary_hint else R.string.temporary_hint),
+                            style = MaterialTheme.typography.bodySmall)
                         Button(onClick = { onPush(true) }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Text(stringResource(R.string.temporary_push)) }
-                    } else if (state.preview.commits.isNotEmpty()) {
-                        Button(onClick = { onPush(false) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.confirm_push, state.preview.commits.size)) }
+                    } else if (plan.canPush) {
+                        Button(onClick = { onPush(false) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.confirm_push, plan.commits.size)) }
                     }
                 }
             }
@@ -170,7 +208,7 @@ private fun OperationErrorPreview() {
                 state = OperationState(null, stringResource(R.string.clone_title),
                     listOf(OperationStep("git clone https://github.com/owner/repository.git", StepStatus.Failed, error)),
                     status = OperationStatus.Failed, result = error, kind = "clone"),
-                notice = null, onNoticeConsumed = {}, onCancel = {}, onClose = {}, onPush = {},
+                notice = null, onNoticeConsumed = {}, onCancel = {}, onClose = {}, onPush = {}, onBranchChoice = {},
             )
         }
     }

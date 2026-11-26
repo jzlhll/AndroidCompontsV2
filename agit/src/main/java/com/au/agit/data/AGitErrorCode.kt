@@ -47,6 +47,7 @@ enum class AGitErrorCode(
     FORBIDDEN_PATH("E0211", com.au.agit.R.string.forbidden_path),
     SYMLINK_UNSUPPORTED("E0212", com.au.agit.R.string.symlink_unsupported),
     PATH_ESCAPE("E0213", com.au.agit.R.string.path_escape),
+    DELETE_CLEANUP_PENDING("E0214", com.au.agit.R.string.delete_cleanup_pending),
 
     // E0300–E0399：本地文件、外部应用及编辑回写。
     MISSING_DIRECTORY("E0300", com.au.agit.R.string.missing_directory),
@@ -58,9 +59,12 @@ enum class AGitErrorCode(
     EDIT_NOT_FINISHED("E0306", com.au.agit.R.string.edit_not_finished),
     NO_HANDLER("E0307", com.au.agit.R.string.no_handler),
     OPEN_FAILED("E0308", com.au.agit.R.string.open_failed),
+    INVALID_FILE_NAME("E0309", com.au.agit.R.string.invalid_file_name),
+    FILE_ALREADY_EXISTS("E0310", com.au.agit.R.string.file_already_exists),
+    DISCARD_CHANGED("E0311", com.au.agit.R.string.discard_changed),
 
     // E0400–E0499：Git 状态、提交、更新、临时分支与推送。
-    REMOTE_AHEAD("E0400", com.au.agit.R.string.remote_ahead),
+    REMOTE_AHEAD("E0400", com.au.agit.R.string.remote_ahead, com.au.agit.R.string.remote_ahead_update, com.au.agit.R.string.remote_ahead_update_dirty),
     REPO_UNSAFE("E0401", com.au.agit.R.string.repo_unsafe, com.au.agit.R.string.repo_operation_pending),
     DETACHED_HEAD("E0402", com.au.agit.R.string.detached_head),
     UNBORN_HEAD("E0403", com.au.agit.R.string.unborn_head),
@@ -81,6 +85,14 @@ enum class AGitErrorCode(
     BRANCH_SWITCH_FAILED("E0418", com.au.agit.R.string.branch_switch_failed),
     PUSH_UNCERTAIN("E0419", com.au.agit.R.string.push_uncertain, com.au.agit.R.string.push_unknown),
     PUSH_REJECTED("E0420", com.au.agit.R.string.push_rejected),
+    BRANCH_PROTECTED("E0421", com.au.agit.R.string.branch_protected),
+    DIRTY_BRANCH_SWITCH("E0422", com.au.agit.R.string.dirty_branch_switch),
+    BRANCH_IGNORED_COLLISION("E0423", com.au.agit.R.string.branch_ignored_collision),
+    BRANCH_CHOICE_CHANGED("E0424", com.au.agit.R.string.branch_choice_changed),
+    RETURN_SOURCE_MISSING("E0425", com.au.agit.R.string.return_source_missing),
+    RETURN_UNPUBLISHED("E0426", com.au.agit.R.string.return_unpublished),
+    BRANCH_SWITCH_INTERRUPTED("E0427", com.au.agit.R.string.branch_switch_interrupted, com.au.agit.R.string.branch_switch_removal_pending),
+    INITIAL_PUSH_CONFLICT("E0428", com.au.agit.R.string.initial_push_conflict),
 
     // E0500–E0599：日志文件读取、导出及图片和视频预览。
     LOG_MISSING("E0500", com.au.agit.R.string.log_missing),

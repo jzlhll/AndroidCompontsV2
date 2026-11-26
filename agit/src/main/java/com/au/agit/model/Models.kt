@@ -34,6 +34,7 @@ data class Catalog(
     val pendingBranches: Map<String, String> = emptyMap(),
     val theme: AppTheme = AppTheme.White,
     val selectedGroupId: String? = null,
+    val pendingDeletionProjectIds: Set<String> = emptySet(),
 ) {
     // 旧数据没有 selectedGroupId，优先沿用最近项目所属分组。
     val currentGroup: TokenGroup?
@@ -61,7 +62,7 @@ enum class ChangeType(val marker: String) { Added("A"), Modified("M"), Deleted("
 
 data class CommitSummary(val id: String, val message: String)
 
-data class PushOutcome(val accepted: Boolean, val nonFastForward: Boolean, val message: String)
+data class PushOutcome(val accepted: Boolean, val nonFastForward: Boolean, val message: String, val protectedBranch: Boolean = false)
 
 data class RepositorySnapshot(
     val branch: String = "",
@@ -73,11 +74,16 @@ data class RepositorySnapshot(
     val commits: List<CommitSummary> = emptyList(),
     val problem: String? = null,
     val fetched: Boolean = false,
+    val initialPush: Boolean = false,
+    val temporaryBranch: Boolean = false,
+    val initialPushConflict: Boolean = false,
 ) {
     val dirty: Boolean get() = changes.isNotEmpty()
 }
 
 data class RepositoryFile(val path: String, val name: String, val directory: Boolean, val size: Long, val exists: Boolean = true)
+
+data class CreatedFile(val path: String, val ignoredByGit: Boolean)
 
 data class EditCandidate(
     val projectId: String,
@@ -93,13 +99,24 @@ data class PushPlan(
     val projectId: String,
     val projectName: String,
     val branch: String,
-    val target: String,
+    val target: String?,
     val head: String,
     val commits: List<CommitSummary>,
     val dirty: Boolean,
     val blocked: Boolean,
-)
+    val protectionRejected: Boolean = false,
+    val recreateTemporary: Boolean = false,
+    val allowTemporary: Boolean = true,
+    val initialPushConflict: Boolean = false,
+) : RepositoryPlan {
+    val canPush: Boolean get() = target != null && !blocked && !protectionRejected && commits.isNotEmpty()
+    val canCreateTemporaryBranch: Boolean get() = allowTemporary && (blocked || protectionRejected) && commits.isNotEmpty()
+}
 
 open class AGitException(message: String, val code: String = "PRECONDITION", cause: Throwable? = null) : Exception(message, cause)
 
-class PushBlockedException(val plan: PushPlan, message: String) : AGitException(message, "REMOTE_AHEAD")
+class PushBlockedException(val plan: PushPlan, message: String) : AGitException(message, when {
+    plan.initialPushConflict -> "INITIAL_PUSH_CONFLICT"
+    plan.protectionRejected -> "BRANCH_PROTECTED"
+    else -> "REMOTE_AHEAD"
+})

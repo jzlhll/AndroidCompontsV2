@@ -57,19 +57,26 @@ fun AGitNavHost(
                 entry<HomeKey> {
                     HomeScreen(catalog, onMenu = navigation::openDrawer,
                         onAddToken = { navigation.go(TokenKey()) },
-                        onClone = { catalog.currentGroup?.let { navigation.go(CloneKey(it.id)) } ?: navigation.addProject() },
+                        onClone = { catalog.currentGroup?.id?.let(navigation::cloneInGroup) ?: navigation.addProject() },
                         onProject = navigation::openProject)
                 }
                 entry<RepositoryKey> { key ->
                     val repositoryModel = koinViewModel<RepositoryViewModel>(parameters = { parametersOf(key.projectId) })
                     RepositoryRoute(key, catalog, repositoryModel, model,
+                        isCurrent = { navigation.backStack.lastOrNull() == key },
                         onBack = navigation::back, onMenu = navigation::openDrawer,
                         onDirectory = { navigation.go(RepositoryKey(key.projectId, it)) },
-                        onCommit = { navigation.go(CommitKey(key.projectId)) }, onMedia = { navigation.go(MediaKey(key.projectId, it)) })
+                        onCommit = { navigation.go(CommitKey(key.projectId)) }, onMedia = { navigation.go(MediaKey(key.projectId, it)) },
+                        onDiff = { change -> navigation.go(DiffKey(key.projectId, change.path, change.paths.firstOrNull { it != change.path })) })
                 }
                 entry<CommitKey> { key ->
                     val repositoryModel = koinViewModel<RepositoryViewModel>(parameters = { parametersOf(key.projectId) })
-                    CommitRoute(repositoryModel, model, catalog.author, onBack = navigation::back, onAuthor = { navigation.go(AuthorKey()) })
+                    CommitRoute(repositoryModel, model, catalog.author, onBack = navigation::back, onAuthor = { navigation.go(AuthorKey()) },
+                        onDiff = { change -> navigation.go(DiffKey(key.projectId, change.path, change.paths.firstOrNull { it != change.path })) })
+                }
+                entry<DiffKey> { key ->
+                    val repositoryModel = koinViewModel<RepositoryViewModel>(parameters = { parametersOf(key.projectId) })
+                    FileDiffRoute(key, repositoryModel, onBack = navigation::back)
                 }
                 entry<TokenKey> { key ->
                     TokenRoute(key, catalog, model, actionBusy, onBack = navigation::back,
@@ -78,7 +85,8 @@ fun AGitNavHost(
                 entry<CloneKey> { key ->
                     if (key.groupId == null) {
                         LaunchedEffect(key) { navigation.back(); navigation.choosingTokenGroup = true }
-                    } else CloneScreen(catalog.groups.firstOrNull { it.id == key.groupId }, actionBusy, onBack = navigation::back, onClone = model::clone)
+                    } else CloneScreen(catalog.groups.firstOrNull { it.id == key.groupId }, actionBusy || catalog.projects.any { it.id == key.projectId },
+                        onBack = navigation::back, onClone = { groupId, url -> model.clone(groupId, key.projectId, url) })
                 }
                 entry<AuthorKey> { key ->
                     if (key.tokenGroupSetup && model.tokenGroupInput() == null && savedForm?.kind != "token_author") {
@@ -108,8 +116,9 @@ fun AGitNavHost(
     }
     val selected = (navigation.backStack.lastOrNull() as? RepositoryKey)?.projectId ?: catalog.currentProject?.id
     val drawerContent: @Composable () -> Unit = {
-        ProjectDrawer(catalog, selected,
+        ProjectDrawer(catalog, selected, actionBusy,
             onSelect = navigation::openProject, onSelectGroup = navigation::openGroup, onClone = navigation::addProject,
+            onDeleteProject = model::deleteProject, onRetryDeletion = model::retryPendingDeletions,
             onToken = { id -> navigation.openFromDrawer(TokenKey(id)) },
             onAuthor = { navigation.openFromDrawer(AuthorKey()) }, onSettings = { navigation.openFromDrawer(SettingsKey) },
             onTheme = { navigation.openFromDrawer(ThemeKey) })

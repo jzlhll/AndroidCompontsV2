@@ -24,6 +24,21 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
+private const val INITIAL_PUSH_KEY = "agitInitialPush"
+private const val INITIAL_PUSH_HEAD_KEY = "agitInitialPushHead"
+
+fun Repository.hasPendingInitialPush(branch: String): Boolean {
+    val upstream = BranchConfig(config, branch)
+    return upstream.remote == null && upstream.merge == null && config.getBoolean("branch", branch, INITIAL_PUSH_KEY, false)
+}
+
+fun Repository.setOriginUpstream(branch: String, target: String) {
+    config.setString("branch", branch, "remote", "origin")
+    config.setString("branch", branch, "merge", target)
+    config.unset("branch", branch, INITIAL_PUSH_KEY)
+    config.unset("branch", branch, INITIAL_PUSH_HEAD_KEY)
+}
+
 /** 只实现 origin 的普通 Git 操作；所有调用由 AGitRepository 在 IO 线程串行执行。 */
 class JGitEngine(private val environment: AndroidGitEnvironment, private val paths: RepositoryPaths) {
     fun normalizeUrl(input: String): String {
@@ -90,24 +105,29 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
         val fullBranch = repo.fullBranch.orEmpty()
         val branch = Repository.shortenRefName(fullBranch)
         val config = BranchConfig(repo.config, branch)
-        val unpublished = pendingBranch == branch
+        val pendingInitialPush = initialPushBranch(repo) != null
+        val initialPush = advertised.isNullOrEmpty() && pendingInitialPush
+        val remoteHeads = advertised.orEmpty().filter { it.startsWith(Constants.R_HEADS) }
+        val initialPushConflict = pendingInitialPush && remoteHeads.isNotEmpty()
+        val unpublished = initialPush || (pendingBranch == branch && config.remote == null && config.merge == null)
         val target = if (unpublished) "refs/heads/$branch" else config.merge?.takeIf { config.remote == "origin" && it.startsWith(Constants.R_HEADS) }
         val tracking = if (unpublished) "refs/remotes/origin/$branch" else config.remoteTrackingBranch
         var problem = when {
             repo.repositoryState != RepositoryState.SAFE -> appString(R.string.repo_unsafe)
             !fullBranch.startsWith(Constants.R_HEADS) -> appString(R.string.detached_head)
             head == null -> appString(R.string.unborn_head)
+            initialPushConflict -> null
             target == null || tracking == null -> appString(R.string.missing_upstream)
             !unpublished && advertised != null && target !in advertised -> appString(R.string.remote_deleted)
             else -> null
         }
         val remote = tracking?.let { repo.exactRef(it)?.objectId }
-        if (problem == null && remote == null && !unpublished) problem = appString(R.string.missing_tracking)
+        if (problem == null && remote == null && !unpublished && !initialPushConflict) problem = appString(R.string.missing_tracking)
         var ahead: Int? = null
         var behind: Int? = null
         var commits = emptyList<CommitSummary>()
-        if (problem == null && unpublished && remote == null && head != null) {
-            commits = git.log().call().map { CommitSummary(it.name, it.shortMessage) }
+        if (problem == null && head != null && (initialPushConflict || (unpublished && remote == null))) {
+            commits = repo.commitsOutsideRemoteBranches(head, remoteHeads)
             ahead = commits.size
             behind = 0
         }
@@ -124,7 +144,8 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
                 behind = git.log().addRange(head, remote).call().count()
             }
         }
-        return RepositorySnapshot(branch, target, head?.name, changes, ahead, behind, commits, problem, fetched)
+        return RepositorySnapshot(branch, target, head?.name, changes, ahead, behind, commits, problem, fetched, initialPush,
+            repo.isTemporaryBranch(branch) || pendingBranch == branch, initialPushConflict)
     }
 
     private fun changes(git: Git): List<FileChange> {
@@ -166,17 +187,34 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
     }
 
     fun fetch(git: Git, token: CharArray, job: Job): Set<String> = credentials(token) { provider ->
-        git.fetch().setRemote("origin").setRefSpecs(RefSpec("+refs/heads/*:refs/remotes/origin/*"))
+        val refs = git.fetch().setRemote("origin").setRefSpecs(RefSpec("+refs/heads/*:refs/remotes/origin/*"))
             .setRemoveDeletedRefs(true).setCredentialsProvider(provider).setTimeout(45)
-            .setProgressMonitor(monitor(job)).call().advertisedRefs.map { it.name }.toSet()
+            .setProgressMonitor(monitor(job)).call().advertisedRefs
+        job.ensureActive()
+        // 首次推送前确认全部远端引用，避免把只有分支过滤范围以外引用的仓库视为空仓库。
+        val advertised = if (refs.none { it.objectId != null && it.objectId != ObjectId.zeroId() } && initialPushBranch(git.repository) != null) {
+            git.lsRemote().setRemote("origin").setCredentialsProvider(provider).setTimeout(45).call()
+        } else refs
+        advertised.filter { it.objectId != null && it.objectId != ObjectId.zeroId() }.mapTo(mutableSetOf()) { it.name }
     }
 
     fun commit(git: Git, selected: Set<String>, author: Author, message: String): String {
-        if (git.repository.repositoryState != RepositoryState.SAFE) throw AGitException(appString(R.string.repo_operation_pending), "REPO_OPERATION_PENDING")
+        val repo = git.repository
+        if (repo.repositoryState != RepositoryState.SAFE) throw AGitException(appString(R.string.repo_operation_pending), "REPO_OPERATION_PENDING")
         if (selected.isEmpty() || message.isBlank()) throw AGitException(appString(R.string.empty_commit), "EMPTY_COMMIT")
         if (!author.isConfigured) throw AGitException(appString(R.string.configure_author), "CONFIGURE_AUTHOR")
         val status = git.status().call()
         if (status.conflicting.isNotEmpty()) throw AGitException(appString(R.string.conflicts_unsupported), "CONFLICTS_UNSUPPORTED")
+        val fullBranch = repo.fullBranch.orEmpty()
+        if (fullBranch.startsWith(Constants.R_HEADS) && repo.resolve(Constants.HEAD) == null && !repo.refDatabase.hasRefs()) {
+            val branch = Repository.shortenRefName(fullBranch)
+            val config = BranchConfig(repo.config, branch)
+            if (config.remote == null && config.merge == null) {
+                // 写入首笔提交前记录同名目标，推送时仍须确认远端为空。
+                repo.config.setBoolean("branch", branch, INITIAL_PUSH_KEY, true)
+                repo.config.save()
+            }
+        }
         // setOnly 隔离未选中的暂存项；新文件需先进入索引才能参与普通文件提交。
         selected.filter { it in status.untracked }.forEach { git.add().addFilepattern(it).call() }
         val ident = PersonIdent(author.commitName, author.email.trim())
@@ -202,31 +240,94 @@ class JGitEngine(private val environment: AndroidGitEnvironment, private val pat
         return name
     }
 
-    fun createTemporaryBranch(git: Git, name: String) {
+    fun createTemporaryBranch(git: Git, name: String, source: String, sourceTarget: String?) {
         // 新分支指向同一 HEAD，不检出文件，保留未选中的工作区与暂存区。
+        git.repository.recordTemporarySource(name, source, sourceTarget)
         git.branchCreate().setName(name).setStartPoint(Constants.HEAD).setUpstreamMode(org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode.NOTRACK).call()
         val update = git.repository.updateRef(Constants.HEAD).link("refs/heads/$name")
         if (update !in setOf(RefUpdate.Result.NEW, RefUpdate.Result.FORCED, RefUpdate.Result.NO_CHANGE)) throw AGitException(appString(R.string.branch_switch_failed), "BRANCH_SWITCH_FAILED")
     }
 
-    fun push(git: Git, target: String, token: CharArray): PushOutcome = credentials(token) { provider ->
-        val updates = git.push().setRemote("origin").setRefSpecs(RefSpec("HEAD:$target"))
-            .setForce(false).setCredentialsProvider(provider).setTimeout(45).call().flatMap { it.remoteUpdates }
+    fun push(git: Git, target: String, token: CharArray, createOnly: Boolean): PushOutcome = credentials(token) { provider ->
+        val command = git.push().setRemote("origin").setRefSpecs(RefSpec("HEAD:$target"))
+            .setForce(false).setCredentialsProvider(provider).setTimeout(45)
+        if (createOnly) command.setRefLeaseSpecs(RefLeaseSpec(target, ObjectId.zeroId().name()))
+        val results = command.call().toList()
+        val updates = results.flatMap { it.remoteUpdates }
         if (updates.size != 1) throw AGitException(appString(R.string.push_unknown), "PUSH_UNKNOWN")
         val update = updates.single()
-        when (update.status) {
-            RemoteRefUpdate.Status.OK, RemoteRefUpdate.Status.UP_TO_DATE -> PushOutcome(true, false, appString(R.string.push_complete))
-            RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD, RemoteRefUpdate.Status.REJECTED_REMOTE_CHANGED -> PushOutcome(false, true, appString(R.string.remote_ahead))
-            else -> PushOutcome(false, false, appString(R.string.push_rejected))
+        if (update.status in setOf(RemoteRefUpdate.Status.OK, RemoteRefUpdate.Status.UP_TO_DATE)) {
+            return@credentials PushOutcome(true, false, appString(R.string.push_complete))
+        }
+        val nonFastForward = update.status == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD ||
+            (!createOnly && update.status == RemoteRefUpdate.Status.REJECTED_REMOTE_CHANGED)
+        val protectedBranch = !nonFastForward && update.status == RemoteRefUpdate.Status.REJECTED_OTHER_REASON &&
+            (results.joinToString("\n") { it.messages.orEmpty() } + "\n" + update.message.orEmpty()).lowercase().let { response ->
+                "gh006" in response || "protected branch hook declined" in response ||
+                    "changes must be made through a pull request" in response ||
+                    "cannot push to this protected branch" in response
+            }
+        val message = when {
+            nonFastForward -> R.string.remote_ahead
+            protectedBranch -> R.string.branch_protected
+            else -> R.string.push_rejected
+        }
+        PushOutcome(false, nonFastForward, appString(message), protectedBranch)
+    }
+
+    fun setUpstream(git: Git, branch: String, target: String = Constants.R_HEADS + branch) {
+        git.repository.setOriginUpstream(branch, target)
+        git.repository.config.save()
+    }
+
+    fun recordInitialPushAttempt(git: Git, branch: String, head: String) {
+        git.repository.config.apply {
+            setString("branch", branch, INITIAL_PUSH_HEAD_KEY, head)
+            save()
         }
     }
 
-    fun setUpstream(git: Git, branch: String) {
-        git.repository.config.apply {
-            setString("branch", branch, "remote", "origin")
-            setString("branch", branch, "merge", "refs/heads/$branch")
-            save()
+    fun recoverInitialPush(git: Git, advertised: Set<String>) {
+        val repo = git.repository
+        val branch = initialPushBranch(repo) ?: return
+        val target = "${Constants.R_HEADS}$branch"
+        if (target !in advertised) return
+        val attempted = repo.config.getString("branch", branch, INITIAL_PUSH_HEAD_KEY)?.let(ObjectId::fromString) ?: return
+        val head = repo.resolve(Constants.HEAD) ?: return
+        // 同一笔提交仍属于本地分支，且同名远端分支已收到它，才恢复首次推送的跟踪关系。
+        if (repo.objectDatabase.has(attempted) && includesCommit(repo, head, attempted) && remoteIncludes(git, target, attempted)) {
+            setUpstream(git, branch)
         }
+    }
+
+    fun recoverTemporaryPush(git: Git, branch: String, advertised: Set<String>): Boolean {
+        val repo = git.repository
+        val target = "${Constants.R_HEADS}$branch"
+        if (repo.fullBranch != target) return false
+        val config = BranchConfig(repo.config, branch)
+        if (config.remote != null || config.merge != null) return true
+        val head = repo.resolve(Constants.HEAD) ?: return false
+        if (target !in advertised || !remoteIncludes(git, target, head)) return false
+        setUpstream(git, branch)
+        repo.recordTemporaryPublication(branch, head)
+        return true
+    }
+
+    fun remoteIncludes(git: Git, target: String, commit: ObjectId): Boolean {
+        val remote = "${Constants.R_REMOTES}origin/${target.removePrefix(Constants.R_HEADS)}"
+        val tip = git.repository.resolve(remote) ?: return false
+        return includesCommit(git.repository, tip, commit)
+    }
+
+    private fun includesCommit(repo: Repository, tip: ObjectId, commit: ObjectId): Boolean = RevWalk(repo).use { walk ->
+        walk.isMergedInto(walk.parseCommit(commit), walk.parseCommit(tip))
+    }
+
+    private fun initialPushBranch(repo: Repository): String? {
+        val fullBranch = repo.fullBranch.orEmpty()
+        if (!fullBranch.startsWith(Constants.R_HEADS)) return null
+        val branch = Repository.shortenRefName(fullBranch)
+        return branch.takeIf(repo::hasPendingInitialPush)
     }
 
     private fun monitor(job: Job) = object : ProgressMonitor {

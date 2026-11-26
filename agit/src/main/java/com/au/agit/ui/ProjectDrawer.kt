@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,20 +35,46 @@ import com.au.agit.model.AppTheme
 import com.au.agit.ui.theme.AGitTheme
 import com.au.module_androiduiex.preview.AppPreview
 import com.au.module_androiduiex.styles.ComposeDimens
+import com.au.module_androiduiex.styles.ComposeColors
 import com.au.module_androiduiex.styles.ComposeTypography
+
+private data class DrawerProjectName(val repository: String, val copyId: String? = null) {
+    val fullName: String get() = copyId?.let { "$repository ($it)" } ?: repository
+}
+
+private fun drawerProjectNames(projects: List<GitProject>): Map<String, DrawerProjectName> = buildMap {
+    projects.groupBy { it.groupId to it.name.lowercase() }.values.forEach { sameName ->
+        val urlCounts = sameName.groupingBy { it.url.lowercase() }.eachCount()
+        val idPrefixCounts = sameName.groupingBy { it.id.take(8) }.eachCount()
+        sameName.forEach { project ->
+            val repository = if (sameName.size == 1) project.name
+                else project.url.removePrefix("https://github.com/").removeSuffix(".git")
+            val shortId = project.id.take(8)
+            val copyId = if (urlCounts.getValue(project.url.lowercase()) > 1) {
+                shortId.takeIf { idPrefixCounts.getValue(it) == 1 } ?: project.id
+            } else null
+            put(project.id, DrawerProjectName(repository, copyId))
+        }
+    }
+}
 
 @Composable
 fun ProjectDrawer(
     catalog: Catalog,
     selected: String?,
+    busy: Boolean,
     onSelect: (String) -> Unit,
     onSelectGroup: (String) -> Unit,
     onClone: () -> Unit,
+    onDeleteProject: (String) -> Unit,
+    onRetryDeletion: () -> Unit,
     onToken: (String?) -> Unit,
     onAuthor: () -> Unit,
     onSettings: () -> Unit,
     onTheme: () -> Unit,
 ) {
+    var deletingProjectId by rememberSaveable { mutableStateOf<String?>(null) }
+    val projectNames = remember(catalog.projects) { drawerProjectNames(catalog.projects) }
     val selectedGroup = catalog.groups.firstOrNull { group -> catalog.projects.any { it.id == selected && it.groupId == group.id } } ?: catalog.currentGroup
     Column(Modifier.fillMaxSize().safeDrawingPadding()) {
         Row(Modifier.fillMaxWidth().padding(ComposeDimens.PaddingEdge20), verticalAlignment = Alignment.CenterVertically) {
@@ -91,18 +118,53 @@ fun ProjectDrawer(
                         }
                     }
                     if (expanded) projects.forEach { project ->
-                        NavigationDrawerItem(label = { Text(project.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            style = ComposeTypography.Font14sp, color = LocalContentColor.current) }, selected = selected == project.id,
-                            badge = { DrawerSelectionButton(selected == project.id, onClick = { onSelect(project.id) }) },
-                            onClick = { onSelect(project.id) }, modifier = Modifier.padding(start = 40.dp, end = 12.dp))
+                        val name = projectNames.getValue(project.id)
+                        val isCurrent = selected == project.id
+                        Column(Modifier.fillMaxWidth().padding(start = 40.dp, end = 12.dp)) {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                NavigationDrawerItem(
+                                    label = { Text(project.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                        style = ComposeTypography.Font14sp, color = LocalContentColor.current) },
+                                    selected = isCurrent,
+                                    badge = { DrawerSelectionButton(isCurrent, onClick = { onSelect(project.id) }) },
+                                    onClick = { onSelect(project.id) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                IconButton(onClick = { deletingProjectId = project.id }, enabled = !busy) {
+                                    Icon(Icons.Default.Delete, stringResource(R.string.delete_project_action, name.fullName), modifier = Modifier.size(20.dp))
+                                }
+                            }
+                            if (name.fullName != project.name) {
+                                Text(name.fullName, modifier = Modifier.padding(start = 16.dp, end = 12.dp, bottom = 8.dp),
+                                    style = ComposeTypography.Font12sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                 }
             }
         }
         HorizontalDivider()
+        if (catalog.pendingDeletionProjectIds.isNotEmpty()) {
+            TextButton(onClick = onRetryDeletion, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.retry_project_deletion))
+            }
+        }
         TextButton(onClick = onAuthor, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.author_title), modifier = Modifier.fillMaxWidth().padding(horizontal = ComposeDimens.PaddingEdge / 2), fontSize = 15.sp) }
         TextButton(onClick = onTheme, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.appearance), modifier = Modifier.fillMaxWidth().padding(horizontal = ComposeDimens.PaddingEdge / 2)) }
         TextButton(onClick = onSettings, modifier = Modifier.fillMaxWidth().padding(bottom = ComposeDimens.BottomMargin)) { Text(stringResource(R.string.settings), modifier = Modifier.fillMaxWidth().padding(horizontal = ComposeDimens.PaddingEdge / 2), fontSize = 15.sp) }
+    }
+    catalog.projects.firstOrNull { it.id == deletingProjectId }?.let { project ->
+        val name = projectNames.getValue(project.id)
+        AlertDialog(onDismissRequest = { deletingProjectId = null },
+            title = { Text(stringResource(R.string.delete_project_title)) },
+            text = { Text(stringResource(R.string.delete_project_body, name.fullName)) },
+            confirmButton = {
+                TextButton(onClick = { deletingProjectId = null; onDeleteProject(project.id) }, enabled = !busy) {
+                    Text(stringResource(R.string.delete), color = ComposeColors.Red)
+                }
+            }, dismissButton = {
+                TextButton(onClick = { deletingProjectId = null }) { Text(stringResource(R.string.cancel)) }
+            })
     }
 }
 
@@ -136,7 +198,8 @@ private fun ProjectDrawerPreview() {
                         projects = listOf(GitProject("preview", "personal", "AndroidComponts", "https://github.com/owner/repository")),
                         selectedGroupId = "personal", selectedProjectId = "preview",
                     ),
-                    selected = "preview", onSelect = {}, onSelectGroup = {}, onClone = {}, onToken = {}, onAuthor = {}, onSettings = {}, onTheme = {},
+                    selected = "preview", busy = false, onSelect = {}, onSelectGroup = {}, onClone = {},
+                    onDeleteProject = {}, onRetryDeletion = {}, onToken = {}, onAuthor = {}, onSettings = {}, onTheme = {},
                 )
             }
         }

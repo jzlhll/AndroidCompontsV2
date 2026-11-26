@@ -4,7 +4,9 @@ import com.au.agit.ui.components.AGitButton as Button
 import com.au.agit.ui.components.AGitOutlinedButton as OutlinedButton
 import com.au.agit.ui.components.AGitTextButton as TextButton
 import com.au.agit.ui.components.AGitIconButton as IconButton
+import android.content.ActivityNotFoundException
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -18,6 +20,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -43,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.au.agit.R
 import com.au.agit.data.AGitRepository
+import com.au.agit.data.safeFailure
 import com.au.agit.appString
 import com.au.agit.model.*
 import com.au.agit.ui.theme.AGitTheme
@@ -58,9 +63,13 @@ import com.au.module_androiduiex.styles.ComposeColors
 import com.au.module_androiduiex.styles.ComposeDimens
 import com.au.module_androiduiex.styles.ComposeTypography
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.InputStreamReader
+import java.nio.charset.CharacterCodingException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -226,61 +235,166 @@ fun RepositoryRoute(
     catalog: Catalog,
     model: RepositoryViewModel,
     app: AppViewModel,
+    isCurrent: () -> Boolean,
     onBack: () -> Unit,
     onMenu: () -> Unit,
     onDirectory: (String) -> Unit,
     onCommit: () -> Unit,
     onMedia: (String) -> Unit,
+    onDiff: (FileChange) -> Unit,
 ) {
     val state by model.stateFlow.collectAsStateWithLifecycle()
     val project = catalog.projects.firstOrNull { it.id == key.projectId }
     val activeEdit = catalog.edits.any { it.projectId == key.projectId && it.active }
     val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val scope = rememberCoroutineScope()
     var openFile by remember { mutableStateOf<RepositoryFile?>(null) }
+    var newFileName by rememberSaveable { mutableStateOf<String?>(null) }
+    var fileActionBusy by remember { mutableStateOf(false) }
+    var discardPlan by remember { mutableStateOf<FileDiscardPlan?>(null) }
+    val actionBusy by app.actionBusyFlow.collectAsStateWithLifecycle()
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { model.refresh(key.directory) }
     RepositoryRefresh(model, app.repository, key.directory)
-    fun openExternal(file: RepositoryFile, edit: Boolean) {
+
+    fun launchExternal(intent: Intent) {
+        if (!isCurrent() || lifecycle.currentState != Lifecycle.State.RESUMED) throw CancellationException()
+        launcher.launch(intent)
+    }
+
+    suspend fun openExternal(path: String, edit: Boolean, fileCreated: Boolean = false) {
+        try {
+            if (edit) {
+                app.repository.beginEdit(key.projectId, path,
+                    prepareIntent = { externalFileIntent(context, it, edit = true) }, launch = ::launchExternal)
+            } else {
+                val source = app.repository.file(key.projectId, path)
+                val intent = withContext(Dispatchers.IO) { externalFileIntent(context, source, edit = false) }
+                launchExternal(intent)
+            }
+            app.logd { "external file opened project=${key.projectId} edit=$edit" }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            val failure = if (error is ActivityNotFoundException) AGitException(appString(R.string.no_handler), "NO_HANDLER", error) else error
+            if (fileCreated) {
+                val details = safeFailure(failure)
+                app.failure("external file open", AGitException(appString(R.string.new_file_edit_failed, details.message), details.code, failure), key.projectId)
+            } else {
+                app.failure("external file open", failure, key.projectId)
+            }
+        }
+    }
+
+    fun openSelectedFile(file: RepositoryFile, edit: Boolean) {
+        if (fileActionBusy) return
+        fileActionBusy = true
         openFile = null
         scope.launch {
             try {
-                val source = if (edit) app.repository.beginEdit(key.projectId, file.path) else app.repository.file(key.projectId, file.path)
-                val uri = getUriFromFile(context, source) ?: throw AGitException(appString(R.string.open_failed), "OPEN_FAILED")
-                val mime = fileMime(source)
-                val intent = Intent(if (edit) Intent.ACTION_EDIT else Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, mime)
-                    clipData = ClipData.newRawUri(source.name, uri)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    if (edit) addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                }
-                launcher.launch(intent)
-                app.logd { "external file opened project=${key.projectId} edit=$edit" }
-            } catch (error: CancellationException) { throw error } catch (error: android.content.ActivityNotFoundException) {
-                if (edit) app.repository.finishEditing(key.projectId)
-                app.notify(appString(R.string.no_handler), isError = true)
-                app.failure("external file open", AGitException(appString(R.string.no_handler), "NO_HANDLER"), key.projectId)
-            } catch (error: Exception) { app.failure("external file open", error, key.projectId) }
+                openExternal(file.path, edit)
+            } finally {
+                fileActionBusy = false
+            }
         }
     }
+
+    fun createFile(name: String) {
+        if (fileActionBusy) return
+        fileActionBusy = true
+        scope.launch {
+            try {
+                val created = app.repository.createFile(key.projectId, key.directory, name)
+                newFileName = null
+                if (created.ignoredByGit) app.notify(appString(R.string.new_file_ignored))
+                openExternal(created.path, edit = true, fileCreated = true)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                app.failure("create file", error, key.projectId)
+            } finally {
+                fileActionBusy = false
+            }
+        }
+    }
+
+    fun prepareDiscard(path: String) {
+        val snapshot = state.snapshot ?: return
+        val fingerprint = state.fingerprints[path] ?: return
+        if (fileActionBusy || actionBusy || activeEdit || state.loading) return
+        fileActionBusy = true
+        scope.launch {
+            try {
+                discardPlan = app.repository.prepareDiscard(key.projectId, path, snapshot.head, fingerprint)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                model.refresh(key.directory)
+                app.failure("prepare file discard", error, key.projectId)
+            } finally {
+                fileActionBusy = false
+            }
+        }
+    }
+
+    fun discardFile(plan: FileDiscardPlan) {
+        if (fileActionBusy || app.actionBusyFlow.value) return
+        app.quiet("discard file", key.projectId) {
+            app.repository.discardFile(key.projectId, plan)
+            app.notify(appString(if (plan.action == FileDiscardAction.RestoreFromHead) R.string.file_restored else R.string.file_deleted))
+        }
+        discardPlan = null
+    }
+
     RepositoryScreen(catalog.groups.firstOrNull { it.id == project?.groupId }?.name ?: stringResource(R.string.app_name),
         project?.name.orEmpty(), state, activeEdit, onBack, onMenu, onDirectory,
         onFile = { file ->
-            val mime = fileMime(File(file.name))
-            if (mime.startsWith("image/") || mime.startsWith("video/")) onMedia(file.path) else openFile = file
-        }, onRefresh = { model.refresh(key.directory) }, onCommit = onCommit,
+            if (!fileActionBusy) {
+                if (isMediaFile(file)) onMedia(file.path) else openFile = file
+            }
+        }, onEditFile = { openSelectedFile(it, edit = true) },
+        onCreateFile = { if (!fileActionBusy) newFileName = "" },
+        onRefresh = { model.refresh(key.directory) }, onCommit = onCommit,
         onUpdate = { app.update(key.projectId) }, onPush = { app.preparePush(key.projectId) },
-        onFinishEdit = { app.finishEditing(key.projectId) })
+        onReturnBranch = { app.prepareReturn(key.projectId) },
+        onFinishEdit = { app.finishEditing(key.projectId) }, onDiff = onDiff, onDiscardFile = ::prepareDiscard,
+        fileActionBusy = fileActionBusy || actionBusy)
+    discardPlan?.let { plan ->
+        FileDiscardDialog(plan, confirmEnabled = !fileActionBusy && !actionBusy && !activeEdit,
+            onCancel = { discardPlan = null }, onConfirm = { discardFile(plan) })
+    }
+    newFileName?.let { name ->
+        AlertDialog(
+            onDismissRequest = { if (!fileActionBusy) newFileName = null },
+            title = { Text(stringResource(R.string.create_file)) },
+            text = {
+                OutlinedTextField(name, { newFileName = it }, modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.file_name)) }, singleLine = true, enabled = !fileActionBusy)
+            },
+            confirmButton = {
+                TextButton(onClick = { createFile(name) }, enabled = name.isNotBlank() && !fileActionBusy) {
+                    Text(stringResource(R.string.create_and_edit_file))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { newFileName = null }, enabled = !fileActionBusy) { Text(stringResource(R.string.cancel)) }
+            },
+        )
+    }
     openFile?.let { file ->
         AlertDialog(onDismissRequest = { openFile = null }, title = { Text(file.name) },
             text = { Text(file.path, fontFamily = FontFamily.Monospace) },
-            confirmButton = { TextButton(onClick = { openExternal(file, true) }) { Text(stringResource(R.string.edit_file)) } },
-            dismissButton = { TextButton(onClick = { openExternal(file, false) }) { Text(stringResource(R.string.view_file)) } })
+            confirmButton = { TextButton(onClick = { openSelectedFile(file, true) }, enabled = !activeEdit) { Text(stringResource(R.string.edit_file)) } },
+            dismissButton = { TextButton(onClick = { openSelectedFile(file, false) }) { Text(stringResource(R.string.view_file)) } })
     }
-    if (!activeEdit) state.candidates.firstOrNull()?.let { candidate ->
+    if (!activeEdit && !state.loading && !fileActionBusy && discardPlan == null && openFile == null && newFileName == null) state.candidates.firstOrNull()?.let { candidate ->
         AlertDialog(onDismissRequest = {}, title = { Text(stringResource(R.string.copy_title)) },
             text = { Text(stringResource(R.string.copy_body, candidate.original, candidate.candidate)) },
-            confirmButton = { TextButton(onClick = { app.resolveCandidate(candidate, true) }) { Text(stringResource(R.string.replace)) } },
-            dismissButton = { TextButton(onClick = { app.resolveCandidate(candidate, false) }) { Text(stringResource(R.string.keep_both)) } })
+            confirmButton = { TextButton(onClick = { app.resolveCandidate(candidate, true) }, enabled = !actionBusy) { Text(stringResource(R.string.replace)) } },
+            dismissButton = {
+                TextButton(onClick = { model.refresh(key.directory) }, enabled = !actionBusy) { Text(stringResource(R.string.refresh)) }
+                TextButton(onClick = { app.resolveCandidate(candidate, false) }, enabled = !actionBusy) { Text(stringResource(R.string.keep_both)) }
+            })
     }
 }
 
@@ -295,12 +409,18 @@ fun RepositoryScreen(
     onMenu: () -> Unit,
     onDirectory: (String) -> Unit,
     onFile: (RepositoryFile) -> Unit,
+    onEditFile: (RepositoryFile) -> Unit,
+    onCreateFile: () -> Unit,
     onRefresh: () -> Unit,
     onCommit: () -> Unit,
     onUpdate: () -> Unit,
     onPush: () -> Unit,
     onFinishEdit: () -> Unit,
+    onReturnBranch: () -> Unit,
+    onDiff: (FileChange) -> Unit,
+    onDiscardFile: (String) -> Unit,
     modifier: Modifier = Modifier,
+    fileActionBusy: Boolean = false,
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     Scaffold(modifier = modifier, topBar = {
@@ -309,12 +429,17 @@ fun RepositoryScreen(
             IconButton(onClick = if (state.directory.isEmpty()) onMenu else onBack) {
                 if (state.directory.isEmpty()) Icon(Icons.Default.Menu, stringResource(R.string.menu)) else Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
             }
-        }, actions = { IconButton(onClick = onRefresh, enabled = !state.loading) { Icon(Icons.Default.Refresh, stringResource(R.string.refresh)) } })
+        }, actions = {
+            if (tab == 0) IconButton(onClick = onCreateFile, enabled = !state.loading && state.error == null && !activeEdit && !fileActionBusy) {
+                Icon(Icons.Default.Add, stringResource(R.string.create_file))
+            }
+            IconButton(onClick = onRefresh, enabled = !state.loading) { Icon(Icons.Default.Refresh, stringResource(R.string.refresh)) }
+        })
     }, bottomBar = {
         Surface(tonalElevation = 3.dp) {
             Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onUpdate, enabled = !state.loading, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.update)) }
-                Button(onClick = onCommit, enabled = !state.loading && state.snapshot?.dirty == true && !activeEdit, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.commit)) }
+                Button(onClick = onCommit, enabled = !state.loading && state.snapshot?.dirty == true && !activeEdit && !fileActionBusy, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.commit)) }
                 OutlinedButton(onClick = onPush, enabled = !state.loading && state.snapshot?.head != null, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.push)) }
             }
         }
@@ -338,12 +463,17 @@ fun RepositoryScreen(
                         }
                     }
                     snapshot.problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    if (snapshot.temporaryBranch) {
+                        TextButton(onClick = onReturnBranch, enabled = !state.loading && !fileActionBusy) {
+                            Text(stringResource(R.string.return_branch))
+                        }
+                    }
                 }
             }
             if (activeEdit) Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
                 Column(Modifier.fillMaxWidth().padding(16.dp)) {
                     Text(stringResource(R.string.external_edit_active), style = MaterialTheme.typography.bodyMedium)
-                    TextButton(onClick = onFinishEdit) { Text(stringResource(R.string.finish_edit)) }
+                    TextButton(onClick = onFinishEdit, enabled = !fileActionBusy) { Text(stringResource(R.string.finish_edit)) }
                 }
             }
             PrimaryTabRow(selectedTabIndex = tab) {
@@ -363,8 +493,18 @@ fun RepositoryScreen(
                             leadingContent = { FileTypeIcon(file) },
                             colors = ListItemDefaults.colors(containerColor = if (changed) changeBackground(change?.type ?: ChangeType.Modified) else MaterialTheme.colorScheme.surface, headlineColor = tint),
                             trailingContent = {
-                                if (change != null) FileStatusBadge(change)
-                                else if (nestedCount > 0) Text(nestedCount.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (change != null) FileStatusBadge(change)
+                                    else if (nestedCount > 0) Text(nestedCount.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                    if (file.exists && !file.directory && isMediaFile(file)) {
+                                        IconButton(onClick = { onEditFile(file) }, enabled = !activeEdit && !fileActionBusy) {
+                                            Icon(Icons.Default.Edit, stringResource(R.string.edit_file))
+                                        }
+                                    }
+                                    if (!file.directory && change != null && change.type != ChangeType.Conflicted) {
+                                        FileDiscardMenu(listOf(file.path), !state.loading && !activeEdit && !fileActionBusy, onDiscardFile)
+                                    }
+                                }
                             },
                             modifier = Modifier.clickable(enabled = file.exists || file.directory) { if (file.directory) onDirectory(file.path) else onFile(file) })
                     }
@@ -375,8 +515,15 @@ fun RepositoryScreen(
                     if (changes.isEmpty()) item { Text(stringResource(R.string.no_changes), modifier = Modifier.padding(24.dp)) }
                     items(changes, key = { it.path }) { change ->
                         ListItem(headlineContent = { Text(change.path, fontFamily = FontFamily.Monospace) },
-                            supportingContent = { Text(change.kind) }, trailingContent = { FileStatusBadge(change) },
-                            colors = ListItemDefaults.colors(containerColor = changeBackground(change.type), headlineColor = changeColor(change.type)))
+                            supportingContent = { Text(change.kind) }, trailingContent = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    FileStatusBadge(change)
+                                    TextButton(onClick = { onDiff(change) }, enabled = !state.loading) { Text(stringResource(R.string.file_diff_action)) }
+                                    if (change.type != ChangeType.Conflicted) {
+                                        FileDiscardMenu(change.paths.toList(), !state.loading && !activeEdit && !fileActionBusy, onDiscardFile)
+                                    }
+                                }
+                            }, colors = ListItemDefaults.colors(containerColor = changeBackground(change.type), headlineColor = changeColor(change.type)))
                     }
                 }
             }
@@ -385,12 +532,12 @@ fun RepositoryScreen(
 }
 
 @Composable
-fun CommitRoute(model: RepositoryViewModel, app: AppViewModel, author: Author, onBack: () -> Unit, onAuthor: () -> Unit) {
+fun CommitRoute(model: RepositoryViewModel, app: AppViewModel, author: Author, onBack: () -> Unit, onAuthor: () -> Unit, onDiff: (FileChange) -> Unit) {
     val state by model.stateFlow.collectAsStateWithLifecycle()
     RepositoryRefresh(model, app.repository)
     CommitScreen(state, author, onBack, onAuthor, onRefresh = { model.refresh() }, onCommit = { selected, message ->
         app.commit(model.projectId, selected, state.fingerprints.filterKeys { it in selected }, message)
-    })
+    }, onDiff = onDiff)
 }
 
 @Composable
@@ -414,6 +561,7 @@ fun CommitScreen(
     onAuthor: () -> Unit,
     onRefresh: () -> Unit,
     onCommit: (Set<String>, String) -> Unit,
+    onDiff: (FileChange) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var message by rememberSaveable { mutableStateOf("") }
@@ -430,7 +578,12 @@ fun CommitScreen(
             LazyColumn(Modifier.weight(1f)) {
                 items(changes, key = { it.path }) { change ->
                     val checked = change.path in selected
-                    ListItem(headlineContent = { Text(change.path, fontFamily = FontFamily.Monospace) }, supportingContent = { Text(change.kind + if (change.staged) " · " + stringResource(R.string.staged) else "") }, trailingContent = { FileStatusBadge(change) },
+                    ListItem(headlineContent = { Text(change.path, fontFamily = FontFamily.Monospace) }, supportingContent = { Text(change.kind + if (change.staged) " · " + stringResource(R.string.staged) else "") }, trailingContent = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            FileStatusBadge(change)
+                            TextButton(onClick = { onDiff(change) }, enabled = !state.loading) { Text(stringResource(R.string.file_diff_action)) }
+                        }
+                    },
                         colors = ListItemDefaults.colors(containerColor = changeBackground(change.type), headlineColor = changeColor(change.type)),
                         leadingContent = { Checkbox(checked, { selected = if (it) selected + change.path else selected - change.path }) },
                         modifier = Modifier.clickable { selected = if (checked) selected - change.path else selected + change.path })
@@ -442,6 +595,36 @@ fun CommitScreen(
             }
         }
     }
+}
+
+private fun isMediaFile(file: RepositoryFile): Boolean {
+    val mime = fileMime(File(file.name))
+    return mime.startsWith("image/") || mime.startsWith("video/")
+}
+
+private fun externalFileIntent(context: Context, file: File, edit: Boolean): Intent {
+    val uri = getUriFromFile(context, file) ?: throw AGitException(appString(R.string.open_failed), "OPEN_FAILED")
+    val fileType = fileMime(file)
+    val mime = if (edit && fileType == "application/octet-stream" && isPlainText(file)) "text/plain" else fileType
+    return Intent(if (edit) Intent.ACTION_EDIT else Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, mime)
+        clipData = ClipData.newRawUri(file.name, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (edit) addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+    }
+}
+
+private fun isPlainText(file: File): Boolean = try {
+    InputStreamReader(file.inputStream(), Charsets.UTF_8.newDecoder()).use { reader ->
+        val sample = CharArray(4096)
+        val count = reader.read(sample)
+        (0 until count).none { index ->
+            val char = sample[index]
+            char.isISOControl() && char != '\n' && char != '\r' && char != '\t'
+        }
+    }
+} catch (_: CharacterCodingException) {
+    false
 }
 
 fun fileMime(file: File): String {
@@ -503,7 +686,8 @@ private fun RepositoryPreview() {
         AGitTheme(AppTheme.Black) {
             RepositoryScreen("Personal", "AndroidComponts",
                 RepositoryUiState(false, directory = "src/main", snapshot = RepositorySnapshot(branch = "main", ahead = 2, behind = 0)), false,
-                onBack = {}, onMenu = {}, onDirectory = {}, onFile = {}, onRefresh = {}, onCommit = {}, onUpdate = {}, onPush = {}, onFinishEdit = {})
+                onBack = {}, onMenu = {}, onDirectory = {}, onFile = {}, onEditFile = {}, onCreateFile = {}, onRefresh = {}, onCommit = {},
+                onUpdate = {}, onPush = {}, onFinishEdit = {}, onReturnBranch = {}, onDiff = {}, onDiscardFile = {})
         }
     }
 }

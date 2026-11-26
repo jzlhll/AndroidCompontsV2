@@ -23,17 +23,21 @@ Koin 的 `agitModule` 注册应用级 `CatalogStore`、`TokenVault`、`UserFeedb
 - 没有有效作者邮箱时，添加分组使用两步表单：`Next` 仅把 Token 草稿放在 `AppViewModel` 内存中，作者页 `Save` 再通过一次 DataStore 更新保存加密分组和作者。返回第一步可恢复内存草稿；离开流程或 ViewModel 销毁时清空字符数组，进程恢复时要求重新填写 Token。
 - `Author.isConfigured` 仅要求有效邮箱，`Author.displayName` 优先显式姓名、否则完整邮箱；`Author.commitName` 优先显式姓名、否则邮箱 `@` 前的部分，供 JGit `PersonIdent` 使用。
 - `AGitRepository` 以 project ID 分配 Mutex，同一仓库的扫描、Git 写入和文件回写串行执行。阻塞操作进入 IO；ViewModel 状态在主线程更新。
+- `CloneKey.projectId` 关联页面与本次登记的 `GitProject`。删除项目或分组时，`Catalog` 在同一次更新中移除索引并记录待清理的项目 ID。清理任务按项目锁删除目录，启动时继续未完成的清理，抽屉可重试失败项。
 - Clone 先写入 `filesDir/temp/clones/<projectId>/`，JGit 完成下载、检出并关闭仓库后，原子改名为 `filesDir/shared/<projectId>/`，随后登记 Catalog。失败或取消时，在项目锁内等待引擎和进度回写停止，再以不可取消的清理删除未完成目录。`AppViewModel` 启动后延迟 3 秒调用残留检查，复用相同项目锁，清理 temp 和未登记的正式目录；Catalog 读取失败时不把已有目录视作孤立目录。
 - `JGitEngine` 固定使用官方 Java 8 兼容修订版 JGit `5.13.5.202508271544-r`，只使用 GitHub HTTPS 和单一 `origin`。该修订版包含 CVE-2025-4949 修复，并修正了 `5.13.4` 错误使用 JDK 17 编译的问题。凭据只提供给 `github.com`，不写入 URL 或 Git 配置。禁用 hooks、外部 filter、JMX 注册和系统 Git 探测。
 - commit 重新检查选中文件的指纹，使用 `CommitCommand.setOnly` 隔离未选中的暂存项；新文件先加入索引。重命名使用 JGit 的检测结果组合原、新路径。
 - 更新先 fetch，再检查共同历史、上游、dirty、ahead 和 behind，只执行 `FF_ONLY`。推送先检查并展示仓库、目标及提交；确认后重新 fetch，仅推送明确的单个目标引用。
+- 空仓库第一次 commit 时记录当前分支的首次发布资格。首次 push 确认远端为空，发送前记录本次提交 ID。若远端已收到而本地上游配置尚未写入，下次 fetch 核对本地分支和同名远端分支均包含该提交后恢复跟踪关系。若其他人抢先初始化远端，`PushPlan` 可将本地独有提交发布到新的临时分支。如果已有远端分支包含当前 `HEAD`，`BranchChoicePlan` 提供这些分支供用户确认上游。旧版本中已有提交、缺少上游且没有首次发布记录的分支，仍按缺少上游处理。
 - 暂存与文件选择均以整文件为单位；未选中的工作区和暂存项不会隐式进入 commit。Git 操作不执行 stash、rebase、冲突合并、强制推送或自动重试。
 
 ## 外部文件与媒体
 
-仓库根目录固定为 `filesDir/shared/<projectId>/`。复用公共模块的 FileProvider 和 `getUriFromFile`，每次仅授权所选文件。拒绝 `.git`、绝对路径、父目录穿越及符号链接；结束编辑时撤销临时 URI 权限。用户必须明确结束编辑，返回 AGit 或收到 Activity 结果不会被视作写入已完成。
+仓库根目录固定为 `filesDir/shared/<projectId>/`。`RepositoryPaths` 拒绝 `.git`、绝对路径、父目录穿越及符号链接。新建文件沿用同一套路径校验，用户输入单个文件名，仓库层在当前目录创建空文件。文件已存在时保留原内容。
 
-候选副本检测仅针对曾经打开编辑的文件、同目录中随后出现的未跟踪文件和明确的后缀规则。提示保存原文件和候选文件指纹，覆盖前再次核对并使用同目录原子替换；保留候选文件，拒绝后对同一内容不重复提示。外部应用保存在仓库之外的副本不在检测范围。
+外部编辑复用公共模块的 FileProvider 和 `getUriFromFile`，每次仅授权所选文件。编辑器启动失败时撤回本次编辑会话，已创建的文件保留在工作区。启动成功后，由用户返回 AGit 并明确结束编辑，应用随即撤销临时 URI 权限。Activity 结果只触发刷新。
+
+候选副本检测仅针对曾经打开编辑的文件、同目录中随后出现的未跟踪文件和明确的后缀规则。失效、不可读或已变成符号链接的历史路径单独跳过，其余文件继续刷新。提示保存原文件和候选文件指纹，覆盖前再次核对并使用同目录原子替换；保留候选文件，拒绝后对同一内容不重复提示。外部应用保存在仓库之外的副本不在检测范围。
 
 图片复用 `Module-ImageCompressed` 的采样加载并显式限制解码尺寸。视频采用 Media3 Compose `PlayerSurface`，只在页面 STARTED 时持有播放器，停止时释放。文本由外部应用查看和编辑。
 

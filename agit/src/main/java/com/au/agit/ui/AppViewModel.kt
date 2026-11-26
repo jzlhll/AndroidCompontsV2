@@ -6,6 +6,7 @@ import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.au.agit.data.AGitRepository
+import com.au.agit.data.blockedMessage
 import com.au.agit.data.safeFailure
 import com.au.agit.data.UserFeedback
 import com.au.agit.model.*
@@ -21,7 +22,6 @@ data class SavedForm(
     val kind: String,
     val groupId: String? = null,
     val savedGroupId: String? = null,
-    val removedProjectIds: Set<String> = emptySet(),
 )
 
 private data class TokenGroupDraft(val name: String, val token: CharArray)
@@ -46,6 +46,7 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
 
     init {
         loadCatalog()
+        retryPendingDeletions()
         viewModelScope.launch {
             delay(3000.milliseconds)
             try {
@@ -76,10 +77,17 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
     }
 
     fun deleteGroup(id: String) = quiet("credential group delete") {
-        val removedProjectIds = repository.deleteGroup(id)
-        mutableCatalog.value = repository.store.catalogFlow.first()
+        repository.deleteGroup(id)
         notify(appString(R.string.group_deleted))
-        mutableSavedForm.value = SavedForm(kind = "token_deleted", groupId = id, removedProjectIds = removedProjectIds)
+    }
+
+    fun deleteProject(id: String) = quiet("project delete", id) {
+        repository.deleteProject(id)
+        notify(appString(R.string.project_deleted))
+    }
+
+    fun retryPendingDeletions() = quiet("project deletion cleanup") {
+        repository.retryPendingDeletions()
     }
 
     fun prepareTokenGroup(name: String, token: String): Boolean {
@@ -153,8 +161,8 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
         notify(if (overwrite) appString(R.string.copy_replaced) else appString(R.string.both_kept))
     }
 
-    fun clone(groupId: String, url: String) = operation("clone", null, appString(R.string.clone_title), listOf("git clone")) { reporter ->
-        repository.clone(groupId, url, reporter)
+    fun clone(groupId: String, projectId: String, url: String) = operation("clone", projectId, appString(R.string.clone_title), listOf("git clone")) { reporter ->
+        repository.clone(groupId, projectId, url, reporter)
         appString(R.string.project_added)
     }
 
@@ -165,32 +173,89 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
         }
 
     fun update(projectId: String) = operation("update", projectId, appString(R.string.update_title), listOf("git fetch origin", appString(R.string.check_state), "git merge --ff-only")) { reporter ->
-        repository.update(projectId, reporter)
-        appString(R.string.update_done)
+        when (val plan = repository.update(projectId, reporter)) {
+            null -> appString(R.string.update_done)
+            is BranchChoicePlan -> {
+                showBranchChoices(plan)
+                null
+            }
+            is PushPlan -> {
+                showPushPreview(plan)
+                null
+            }
+        }
+    }
+
+    fun prepareReturn(projectId: String) = operation("return branch", projectId, appString(R.string.return_branch),
+        listOf("git fetch origin", appString(R.string.check_state))) { reporter ->
+        showBranchChoices(repository.prepareReturn(projectId, reporter))
+        null
+    }
+
+    private fun showBranchChoices(plan: BranchChoicePlan) {
+        mutableOperation.value = mutableOperation.value?.let { state ->
+            state.copy(
+                title = appString(when {
+                    plan.initializing -> R.string.checkout_remote_branch
+                    plan.choosingInitialUpstream -> R.string.choose_initial_upstream_title
+                    else -> R.string.return_branch
+                }),
+                status = OperationStatus.Success,
+                branchChoice = plan,
+                steps = state.steps.map { if (it.status == StepStatus.Pending) it.copy(status = StepStatus.Skipped) else it },
+            )
+        }
+    }
+
+    fun continueBranchChoice(choice: BranchChoice) {
+        val state = mutableOperation.value ?: return
+        val plan = state.branchChoice ?: return
+        if (state.status == OperationStatus.Running || operationJob?.isActive == true || choice !in plan.choices) return
+        operation("switch branch", plan.projectId, state.title,
+            listOf("git fetch origin", appString(R.string.check_state), "git switch"),
+            previous = state) { reporter ->
+            repository.confirmBranchChoice(plan, choice, reporter, state.steps.size)
+            if (plan.choosingInitialUpstream) appString(R.string.initial_upstream_set,
+                choice.branch, choice.target.removePrefix("refs/heads/"))
+            else appString(R.string.branch_checked_out, choice.branch)
+        }
     }
 
     fun preparePush(projectId: String) = operation("push check", projectId, appString(R.string.push_check_title), listOf("git fetch origin", appString(R.string.check_state), "git push origin")) { reporter ->
-        val plan = repository.preparePush(projectId, reporter)
-        mutableOperation.value = mutableOperation.value?.copy(
-            status = if (plan.blocked) OperationStatus.Blocked else OperationStatus.Success,
-            preview = plan,
-            allowTemporaryBranch = plan.blocked,
-            result = if (plan.blocked) appString(R.string.remote_ahead) else null,
-            steps = mutableOperation.value!!.steps.map { if (it.status == StepStatus.Pending) it.copy(status = StepStatus.Skipped) else it },
-        )
-        if (plan.blocked) notify(appString(R.string.remote_ahead), isError = true)
+        when (val plan = repository.preparePush(projectId, reporter)) {
+            is BranchChoicePlan -> showBranchChoices(plan)
+            is PushPlan -> showPushPreview(plan)
+        }
         null
+    }
+
+    private fun showPushPreview(plan: PushPlan) {
+        val blockedMessage = if (plan.blocked) plan.blockedMessage() else null
+        mutableOperation.value = mutableOperation.value?.let { state ->
+            state.copy(
+                status = if (plan.blocked) OperationStatus.Blocked else OperationStatus.Success,
+                preview = plan,
+                result = blockedMessage,
+                steps = state.steps.map { if (it.status == StepStatus.Pending) it.copy(status = StepStatus.Skipped) else it },
+            )
+        }
+        if (blockedMessage != null) notify(blockedMessage, isError = true)
     }
 
     fun continuePush(temporary: Boolean) {
         val state = mutableOperation.value ?: return
         val plan = state.preview ?: return
         if (state.status == OperationStatus.Running || operationJob?.isActive == true) return
+        if ((temporary && !plan.canCreateTemporaryBranch) || (!temporary && !plan.canPush)) return
         val offset = state.steps.size
         val next = listOf("git fetch origin", appString(R.string.check_state)) + if (temporary) listOf(appString(R.string.create_branch), "git push origin HEAD:<temporary>") else listOf("git push origin HEAD:${plan.target}")
         operation("push", plan.projectId, if (temporary) appString(R.string.temporary_push) else appString(R.string.push_title), next, previous = state) { reporter ->
-            repository.push(plan, temporary, reporter, offset)
-            appString(if (temporary) R.string.push_done_temporary else R.string.push_done)
+            val choicePlan = repository.push(plan, temporary, reporter, offset)
+            if (choicePlan == null) appString(if (temporary) R.string.push_done_temporary else R.string.push_done)
+            else {
+                showBranchChoices(choicePlan)
+                null
+            }
         }
     }
 
@@ -224,7 +289,7 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
                         if (i == index) step.copy(command = command, status = StepStatus.Running, startedAt = SystemClock.elapsedRealtime()) else step
                     })
                 }
-                logd { "operation step started trace=$traceId kind=$kind project=${projectId ?: "new"} step=$index command=$command" }
+                logd { "operation step started trace=$traceId kind=$kind project=${projectId ?: "new"} step=$index" }
             }
             override suspend fun progress(index: Int, receivedBytes: Long) = withContext(Dispatchers.Main.immediate) {
                 val state = mutableOperation.value ?: return@withContext
@@ -265,7 +330,7 @@ class AppViewModel(val repository: AGitRepository, private val feedback: UserFee
                 logd { "operation cancelled trace=$traceId kind=$kind project=${projectId ?: "new"}" }
             } catch (error: PushBlockedException) {
                 finishFailure(OperationStatus.Blocked, error.message.orEmpty(), StepStatus.Failed)
-                mutableOperation.value = mutableOperation.value?.copy(preview = error.plan, allowTemporaryBranch = true)
+                mutableOperation.value = mutableOperation.value?.copy(preview = error.plan)
                 failure(kind, error, projectId, traceId)
             } catch (error: Exception) {
                 if (!isActive) {

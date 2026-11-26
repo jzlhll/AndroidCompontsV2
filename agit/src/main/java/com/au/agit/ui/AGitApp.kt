@@ -39,7 +39,7 @@ fun AGitApp(model: AppViewModel = koinViewModel()) {
     val notice by model.noticeFlow.collectAsStateWithLifecycle()
     val actionBusy by model.actionBusyFlow.collectAsStateWithLifecycle()
     val savedForm by model.savedFormFlow.collectAsStateWithLifecycle()
-    val navigation = rememberAGitNavigationState(model, catalog, savedForm)
+    val navigation = rememberAGitNavigationState(model, catalog, savedForm, hasOperation = operation != null)
     val currentCatalog = catalog
     Surface(Modifier.fillMaxSize().dismissKeyboardOnBlankTap()) {
         if (currentCatalog == null) {
@@ -57,17 +57,15 @@ fun AGitApp(model: AppViewModel = koinViewModel()) {
         if (navigation.choosingTokenGroup && currentCatalog != null) {
             TokenGroupPickerDialog(currentCatalog.groups,
                 onDismiss = { navigation.choosingTokenGroup = false },
-                onGroup = { id -> navigation.choosingTokenGroup = false; navigation.go(CloneKey(id)) },
+                onGroup = { id -> navigation.choosingTokenGroup = false; navigation.cloneInGroup(id) },
                 onAddGroup = { navigation.choosingTokenGroup = false; navigation.go(TokenKey(cloneAfterSave = true)) })
         }
         operation?.let { state ->
             OperationDialog(state, notice, model::acknowledgeNotice, model::cancelOperation,
                 onClose = {
                     model.closeOperation()
-                    if (state.status == OperationStatus.Success && state.kind == "clone") {
-                        catalog?.currentProject?.id?.let(navigation::openProject)
-                    } else if (state.status == OperationStatus.Success && state.kind == "commit") navigation.back()
-                }, onPush = model::continuePush)
+                    if (state.status == OperationStatus.Success && state.kind == "commit") navigation.back()
+                }, onPush = model::continuePush, onBranchChoice = model::continueBranchChoice)
         }
     }
 }

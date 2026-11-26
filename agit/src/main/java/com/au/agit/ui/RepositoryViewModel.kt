@@ -20,6 +20,8 @@ data class RepositoryUiState(
     val error: String? = null,
 )
 
+data class FileDiffUiState(val loading: Boolean = true, val diff: CommitDiff? = null, val error: String? = null)
+
 /** 每个 NavEntry 独立持有仓库页面状态，刷新取消并等待前一任务结束。 */
 class RepositoryViewModel(
     val projectId: String,
@@ -29,6 +31,9 @@ class RepositoryViewModel(
     private val mutableState = MutableStateFlow(RepositoryUiState())
     val stateFlow = mutableState.asStateFlow()
     private var refreshJob: Job? = null
+    private val mutableDiff = MutableStateFlow(FileDiffUiState())
+    val diffFlow = mutableDiff.asStateFlow()
+    private var diffJob: Job? = null
 
     fun cancelRefresh() { refreshJob?.cancel() }
 
@@ -57,6 +62,24 @@ class RepositoryViewModel(
                 mutableState.value = RepositoryUiState(false, directory, snapshot, files, candidates, fingerprints)
                 logd { "repository scan completed project=$projectId changes=${snapshot.changes.size} ahead=${snapshot.ahead} behind=${snapshot.behind}" }
             } catch (error: CancellationException) { throw error } catch (error: Exception) { failed(error) } catch (error: LinkageError) { failed(error) }
+        }
+    }
+
+    fun refreshDiff(path: String, oldPath: String?) {
+        if (diffJob?.isActive == true) return
+        diffJob = viewModelScope.launch {
+            mutableDiff.value = FileDiffUiState()
+            try {
+                val diff = repository.commitDiff(projectId, path, oldPath)
+                ensureActive()
+                mutableDiff.value = FileDiffUiState(loading = false, diff = diff)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                mutableDiff.value = FileDiffUiState(loading = false, error = safeFailure(error).message)
+            } catch (error: LinkageError) {
+                mutableDiff.value = FileDiffUiState(loading = false, error = safeFailure(error).message)
+            }
         }
     }
 

@@ -3,9 +3,18 @@ package com.au.agit.data
 import com.au.agit.R
 import com.au.agit.appString
 import com.au.agit.model.AGitException
+import com.au.agit.model.PushPlan
 import java.io.IOException
 
 data class Failure(val code: String, val message: String)
+
+fun PushPlan.blockedMessage(): String = appString(when {
+    initialPushConflict -> R.string.initial_push_conflict
+    protectionRejected -> R.string.branch_protected
+    canCreateTemporaryBranch -> R.string.remote_ahead
+    dirty -> R.string.remote_ahead_update_dirty
+    else -> R.string.remote_ahead_update
+})
 
 /** 仅输出受控错误分类，避免网络异常原文携带认证信息或远端响应。 */
 fun safeFailure(error: Throwable): Failure {

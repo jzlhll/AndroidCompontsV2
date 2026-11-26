@@ -20,9 +20,9 @@ data class OperationState(
     val result: String? = null,
     val cancellable: Boolean = false,
     val cancelling: Boolean = false,
-    val allowTemporaryBranch: Boolean = false,
     val preview: PushPlan? = null,
     val kind: String = "",
+    val branchChoice: BranchChoicePlan? = null,
 )
 
 interface OperationReporter {

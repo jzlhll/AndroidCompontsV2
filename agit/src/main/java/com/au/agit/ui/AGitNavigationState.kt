@@ -67,37 +67,56 @@ class AGitNavigationState(
         if (model.catalogFlow.value?.groups.isNullOrEmpty()) go(TokenKey()) else choosingTokenGroup = true
     }
 
+    fun cloneInGroup(groupId: String) {
+        if ((backStack.lastOrNull() as? CloneKey)?.groupId != groupId) go(CloneKey(groupId))
+    }
+
+    suspend fun openCompletedClone(key: CloneKey) {
+        if (backStack.lastOrNull() != key) return
+        if (model.catalogFlow.value?.currentProject?.id != key.projectId && !model.select(key.projectId).await()) return
+        if (backStack.lastOrNull() != key) return
+        backStack.clear()
+        backStack.add(RepositoryKey(key.projectId))
+    }
+
+    fun pruneRemovedEntries(catalog: Catalog) {
+        val groups = catalog.groups.map { it.id }.toSet()
+        val projects = catalog.projects.map { it.id }.toSet()
+        backStack.removeAll { entry ->
+            when (entry) {
+                is TokenKey -> entry.groupId != null && entry.groupId !in groups
+                is CloneKey -> (entry.groupId != null && entry.groupId !in groups) || entry.projectId in catalog.pendingDeletionProjectIds
+                is RepositoryKey -> entry.projectId !in projects
+                is CommitKey -> entry.projectId !in projects
+                is MediaKey -> entry.projectId !in projects
+                is DiffKey -> entry.projectId !in projects
+                else -> false
+            }
+        }
+        val first = backStack.firstOrNull()
+        if (first != HomeKey && first !is RepositoryKey) {
+            backStack.add(0, catalog.currentProject?.let { RepositoryKey(it.id) } ?: HomeKey)
+        }
+    }
+
     fun onFormSaved(saved: SavedForm) {
         val key = backStack.lastOrNull()
         if (saved.kind == "author" && key is AuthorKey) back()
         if (saved.kind == "token_author" && key is AuthorKey && key.tokenGroupSetup) {
             back()
             if (backStack.lastOrNull() is TokenKey) back()
-            if (key.cloneAfterSave && saved.savedGroupId != null) go(CloneKey(saved.savedGroupId))
+            if (key.cloneAfterSave && saved.savedGroupId != null) cloneInGroup(saved.savedGroupId)
         }
         if (saved.kind == "token" && key is TokenKey && key.groupId == saved.groupId) {
             back()
-            if (key.cloneAfterSave && saved.savedGroupId != null) go(CloneKey(saved.savedGroupId))
-        }
-        if (saved.kind == "token_deleted") {
-            backStack.removeAll { entry ->
-                when (entry) {
-                    is TokenKey -> entry.groupId == saved.groupId
-                    is CloneKey -> entry.groupId == saved.groupId
-                    is RepositoryKey -> entry.projectId in saved.removedProjectIds
-                    is CommitKey -> entry.projectId in saved.removedProjectIds
-                    is MediaKey -> entry.projectId in saved.removedProjectIds
-                    else -> false
-                }
-            }
-            if (backStack.isEmpty()) backStack.add(HomeKey)
+            if (key.cloneAfterSave && saved.savedGroupId != null) cloneInGroup(saved.savedGroupId)
         }
         model.acknowledgeSavedForm(saved.id)
     }
 }
 
 @Composable
-fun rememberAGitNavigationState(model: AppViewModel, catalog: Catalog?, savedForm: SavedForm?): AGitNavigationState {
+fun rememberAGitNavigationState(model: AppViewModel, catalog: Catalog?, savedForm: SavedForm?, hasOperation: Boolean): AGitNavigationState {
     val backStack = rememberNavBackStack(HomeKey)
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -105,8 +124,19 @@ fun rememberAGitNavigationState(model: AppViewModel, catalog: Catalog?, savedFor
     val navigation = remember(model, backStack, drawer, scope, choosingTokenGroup) {
         AGitNavigationState(backStack, drawer, model, scope, choosingTokenGroup)
     }
-    LaunchedEffect(savedForm?.id) {
-        savedForm?.let(navigation::onFormSaved)
+    val readySavedForm = savedForm?.takeIf { saved ->
+        saved.savedGroupId == null || catalog?.groups?.any { it.id == saved.savedGroupId } == true
+    }
+    LaunchedEffect(readySavedForm?.id) {
+        readySavedForm?.let(navigation::onFormSaved)
+    }
+    LaunchedEffect(catalog?.groups, catalog?.projects, catalog?.pendingDeletionProjectIds, backStack.toList()) {
+        catalog?.let(navigation::pruneRemovedEntries)
+    }
+    val cloneKey = backStack.lastOrNull() as? CloneKey
+    val completedClone = cloneKey?.takeIf { key -> catalog?.projects?.any { it.id == key.projectId && it.groupId == key.groupId } == true }
+    LaunchedEffect(completedClone, hasOperation) {
+        if (!hasOperation && completedClone != null) navigation.openCompletedClone(completedClone)
     }
     LaunchedEffect(catalog?.currentProject?.id, backStack.singleOrNull()) {
         if (backStack.singleOrNull() == HomeKey) {

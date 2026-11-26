@@ -5,6 +5,7 @@ import com.au.agit.appString
 import com.au.agit.model.AGitException
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.LinkOption.NOFOLLOW_LINKS
 import java.security.MessageDigest
 
 /** 限制所有文件入口在当前项目内，并拒绝符号链接和 Git 元数据。 */
@@ -32,10 +33,11 @@ class RepositoryPaths(private val shared: File) {
     }
 
     fun fingerprint(file: File): String {
-        if (!file.exists()) return "missing"
-        if (!file.isFile) throw AGitException(appString(R.string.regular_files_only), "REGULAR_FILES_ONLY")
+        val path = file.toPath()
+        if (Files.notExists(path, NOFOLLOW_LINKS)) return "missing"
+        if (!Files.isRegularFile(path, NOFOLLOW_LINKS)) throw AGitException(appString(R.string.regular_files_only), "REGULAR_FILES_ONLY")
         val hash = MessageDigest.getInstance("SHA-256")
-        file.inputStream().use { input ->
+        Files.newInputStream(path, NOFOLLOW_LINKS).use { input ->
             val buffer = ByteArray(65536)
             while (true) {
                 val count = input.read(buffer)
