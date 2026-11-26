@@ -2,8 +2,8 @@ package com.allan.mydroid.client.download
 
 import android.app.PendingIntent
 import android.content.Intent
+import com.allan.mydroid.MyDroidActivity
 import com.allan.mydroid.R
-import com.allan.mydroid.SplashActivity
 import com.allan.mydroid.repository.TransferFiles
 import com.au.module_android.Globals
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -104,7 +104,7 @@ class GlobalDownloadObj {
     companion object {
         const val EXTRA_ATTEMPT = "download_attempt"
         fun buildHomePendingIntent(): PendingIntent {
-            val intent = Intent(Globals.app, SplashActivity::class.java).apply {
+            val intent = Intent(Globals.app, MyDroidActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
             return PendingIntent.getActivity(Globals.app, 0, intent,

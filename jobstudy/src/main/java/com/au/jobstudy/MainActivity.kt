@@ -2,6 +2,7 @@ package com.au.jobstudy
 
 import android.os.Bundle
 import androidx.core.graphics.toColorInt
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.recyclerview.widget.RecyclerView
 import com.au.jobstudy.databinding.ActivityMainBinding
 import com.au.jobstudy.databinding.BottomPageMenuBinding
@@ -16,6 +17,7 @@ import com.au.module_nested.viewpager2.simplePagerAdapter
 class MainActivity : BindingActivity<ActivityMainBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         binding.mainViewPager.isSaveEnabled = false

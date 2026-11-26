@@ -2,6 +2,7 @@
     <style name="Theme.AndroidLearning" parent="CustomModuleTheme" />
 
     <style name="SplashTheme" parent="AbsStyleSplashTheme">
+        <item name="postSplashScreenTheme">@style/Theme.AndroidLearning</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
     </style>
 </resources>

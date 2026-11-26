@@ -39,28 +39,13 @@
         tools:targetApi="31">
         <activity
             android:name=".EntryActivity"
-            android:exported="true"
-            android:label="AllanComponents">
+            android:theme="@style/SplashTheme"
+            android:exported="true">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
-
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
-        </activity>
-
-        <activity
-            android:name=".SplashActivity"
-            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|orientation|screenLayout|navigation"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

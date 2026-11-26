@@ -81,7 +81,6 @@ dependencies {
 
     api(libs.androidx.datastore.preferences)
 
-    implementation(libs.androidx.core.splashscreen)
     // implementation(libs.android.cn.oaid)
 }
 

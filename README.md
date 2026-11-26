@@ -63,7 +63,7 @@ android.signing.keyPassword=<私钥密码>
 
 #### `init`框架
 
-* 兼容`android12+`的`SplashScreen`抽象类。参考文章：https://blog.csdn.net/jzlhll123/article/details/136628746
+* `app`、`jobstudy` 和 `mydroid` 在业务 Activity 中调用 `installSplashScreen()`，共用 `AbsStyleSplashTheme` 适配 Android 10、11 的启动预览窗口和 Android 12 及以上的系统启动画面。
 
 * `Globals`单例，持有大量全局需要使用的变量，比如：
 

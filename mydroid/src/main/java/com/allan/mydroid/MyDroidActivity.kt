@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -55,6 +56,7 @@ class MyDroidActivity : BindingActivity<ActivityMyDroidBinding>() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         pendingOpenSendSelector = savedInstanceState?.getBoolean(KEY_PENDING_OPEN_SEND_SELECTOR) == true
         pendingAutoEnterSend = savedInstanceState?.getBoolean(KEY_PENDING_AUTO_ENTER_SEND) == true

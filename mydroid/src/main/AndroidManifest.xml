@@ -63,9 +63,15 @@
         android:theme="@style/CustomModuleTheme">
         <activity
             android:name=".MyDroidActivity"
-            android:exported="false"
+            android:theme="@style/SplashTheme"
+            android:exported="true"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustResize|stateHidden" />
+            android:windowSoftInputMode="adjustResize|stateHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name="com.allan.mydroid.views.ShareImportActivity"
@@ -97,19 +103,6 @@
         <receiver
             android:name=".apk.ApkInstallResultReceiver"
             android:exported="false" />
-
-        <activity
-            android:name=".SplashActivity"
-            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|orientation|screenLayout|navigation"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
     </application>
 
 </manifest>

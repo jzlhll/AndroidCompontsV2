@@ -2,15 +2,15 @@ package com.allan.androidlearning
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.Space
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.allan.androidlearning.activities.FontTestFragment
 import com.allan.androidlearning.activities.LiveDataFragment
+import com.allan.androidlearning.crashtest.debugEntryActivityCreateCrash
+import com.allan.androidlearning.crashtest.debugEntryActivityPostMainThreadCrash
 import com.allan.androidlearning.databinding.ActivityEntryBinding
 import com.au.module_android.Globals
 import com.au.module_android.click.onClick
@@ -42,8 +42,11 @@ class EntryActivity : BindingActivity<ActivityEntryBinding>() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
+        debugEntryActivityCreateCrash()
+        debugEntryActivityPostMainThreadCrash()
         mHelper.test()
 
         binding.refreshLayout.apply {

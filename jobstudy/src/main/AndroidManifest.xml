@@ -12,20 +12,13 @@
         android:theme="@style/Theme.AndroidLearning">
         <activity
             android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/SplashTheme"
             android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|orientation|screenLayout|navigation"
             android:windowSoftInputMode="adjustPan|stateHidden"
             android:screenOrientation="portrait">
-        </activity>
-
-        <activity
-            android:name="com.au.jobstudy.CompactSplashActivity"
-            android:configChanges="screenSize|keyboard|keyboardHidden|fontScale|orientation|screenLayout|navigation"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

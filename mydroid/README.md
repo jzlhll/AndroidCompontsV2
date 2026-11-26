@@ -2,14 +2,15 @@
 
 ## 启动入口与 Splash 图标
 
-桌面入口与外部分享入口分别为：
+桌面、下载通知和外部分享使用以下入口。
 
 | 入口 | 启动路径 |
 | --- | --- |
-| 点击桌面图标 | `SplashActivity` → `MyDroidActivity` |
+| 点击桌面图标 | `MyDroidActivity` |
+| 点击下载通知 | `MyDroidActivity` |
 | Gallery 等应用通过 `ACTION_SEND` / `ACTION_SEND_MULTIPLE` 分享文件 | `ShareImportActivity` → `MyDroidActivity` → `SendListSelectorFragment` |
 
-两个入口均在 Manifest 中使用 `SplashTheme`。`SplashActivity` 通过 `AbsSplashActivity` 安装 Splash；`ShareImportActivity` 在 `super.onCreate()` 前调用 `installSplashScreen()`，随后切换到 `postSplashScreenTheme` 指定的 `CustomModuleTheme`，在导入期间显示 `activity_import.xml` 中的进度指示。
+`MyDroidActivity` 和 `ShareImportActivity` 均使用 `SplashTheme`，在 `super.onCreate()` 前调用 `installSplashScreen()`，再由 `postSplashScreenTheme` 切换到 `CustomModuleTheme`。
 
 ### Android 13+ 的图标显示偏好
 
@@ -26,7 +27,7 @@ Android 13（API 33）起，使用 `android:windowSplashScreenBehavior` 声明�
 
 `icon_preferred` 用于优先显示 Splash 图标，避免默认样式选择导致的纯色启动屏；调用方显式指定 `SPLASH_SCREEN_STYLE_EMPTY` 时仍可隐藏图标。版本限定目录中的 `SplashTheme` 保留相同的父主题与图标配置；Android 12L 及以下继续使用 `values` 的 [themes.xml](src/main/res/values/themes.xml)，不使用 API 33 的属性。
 
-外部分享直接启动 `ShareImportActivity`，因此只配置 `SplashActivity` 无法覆盖此入口。`ShareImportActivity` 使用可显示启动预览的 `SplashTheme`；透明主题 `TranslucentActivityTheme` 设置了 `windowDisablePreview=true` 和 `windowIsTranslucent=true`，不适合作为此 Splash 入口的启动主题。导入页面使用应用主题背景显示进度。
+外部分享直接启动 `ShareImportActivity`，导入期间由 `activity_import.xml` 显示进度。
 
 ### 排查与设备验收
 
